@@ -1,0 +1,20 @@
+<?php
+$MESS['MAINOPTIONS'] = 'Основные настройки';
+$MESS['DOMAIN'] = 'Домен API в Mindbox';
+$MESS['ENDPOINT'] = 'Endpoint (Точка интеграции)';
+$MESS['SECRET_KEY'] = 'Ключ авторизации в API Mindbox';
+$MESS['LOG_PATH'] = 'Директория лог файла';
+$MESS['TIMEOUT'] = 'Таймаут в секундах';
+$MESS['QUEUE_TIMEOUT'] = 'Таймаут очереди в секундах';
+$MESS['HTTP_CLIENT'] = 'Тип HTTP клиента';
+$MESS['WEBSITE_PREFIX'] = 'Префикс операций';
+$MESS['OPERATION_MAPPING'] = 'Маппинг операций';
+$MESS['TRANSACTION_ID'] = 'Идентификатор заказа сайта';
+$MESS['USE_BONUSES'] = 'Использовать бонусные баллы';
+$MESS['CATALOG_IBLOCK_ID'] = 'ID инфоблока каталога';
+$MESS['YML_NAME'] = 'Имя файла выгрузки в формате xml';
+$MESS['USE_SKU'] = 'SKU в каталоге';
+$MESS['EXTERNAL_SYSTEM'] = 'Название идентификатора товара';
+$MESS['POINT_OF_CONTACT'] = 'Точка контакта';
+$MESS['WEBSITE_ID'] = 'Идентификатор сайта';
+$MESS['DOCS_LINK'] = 'Документация по <a href="https://github.com/mindbox-moscow/bitrix" target="_blank">модулю</a>. Документация <a href="https://developers.mindbox.ru/" target="_blank">Mindbox API</a>';

@@ -1,0 +1,21 @@
+<?php
+$MESS['MB_AUS_INPUT_PHONE'] = 'Номер телефона';
+$MESS['MB_AUS_MOBILE_PHONE'] = 'Мобильный телефон: ';
+$MESS['MB_AUS_AUTH_CODE'] = 'Код авторизации';
+$MESS['MB_AUS_CONTINUE'] = 'Далее';
+$MESS['MB_AUS_RESEND_BUTTON'] = 'Переотправить';
+$MESS['MB_AUS_RESET_BUTTON'] = 'Отмена';
+$MESS['MB_AUS_CHECK_CODE'] = 'Проверить код';
+$MESS['MB_AUS_FILLUP_SUBMIT'] = 'Заполнить';
+$MESS['MB_AUS_FIRST_NAME'] = 'Имя';
+$MESS['MB_AUS_LAST_NAME'] = 'Фамилия';
+$MESS['MB_AUS_EMAIL'] = 'E-mail';
+$MESS['MB_AUS_BIRTH_DATE'] = 'Дата рождения';
+$MESS['MB_AUS_GENDER'] = 'Пол';
+$MESS['MB_AUS_MALE'] = 'Мужской';
+$MESS['MB_AUS_FEMALE'] = 'Женский';
+$MESS['MB_AUS_NEXT_BUTTON'] = 'Далее';
+$MESS['MB_AUS_PASSWORD'] = 'Пароль';
+$MESS['MB_AUS_PERSONAL_AGREEMENT'] = 'Настоящим подтверждаю, что я ознакомлен и согласен с условиями политики конфиденциальности и даю согласие на обработку персональных данных';
+$MESS['MB_AUS_CAPTCHA_TITLE'] = 'Защита от автоматической регистрации';
+$MESS['MB_AUS_CAPTCHA_PROMPT'] = 'Введите слово на картинке';

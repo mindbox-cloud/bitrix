@@ -1,0 +1,13 @@
+{
+    "name": "qsoft/mindbox",
+    "type": "bitrix-module",
+    "license": "MIT",
+    "require": {
+        "mindbox/sdk": "^0.0.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Mindbox\\": "lib/"
+        }
+    }
+}

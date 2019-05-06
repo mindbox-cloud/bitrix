@@ -1,0 +1,21 @@
+<?php
+$MESS['MB_AUS_INPUT_PHONE'] = 'Phone number';
+$MESS['MB_AUS_MOBILE_PHONE'] = 'Mobile phone: ';
+$MESS['MB_AUS_AUTH_CODE'] = 'Authorization code';
+$MESS['MB_AUS_CONTINUE'] = 'Further';
+$MESS['MB_AUS_RESEND_BUTTON'] = 'Resend';
+$MESS['MB_AUS_RESET_BUTTON'] = 'Cancel';
+$MESS['MB_AUS_CHECK_CODE'] = 'Check code';
+$MESS['MB_AUS_FILLUP_SUBMIT'] = 'Fill';
+$MESS['MB_AUS_FIRST_NAME'] = 'Name';
+$MESS['MB_AUS_LAST_NAME'] = 'Last Name';
+$MESS['MB_AUS_EMAIL'] = 'E-mail';
+$MESS['MB_AUS_BIRTH_DATE'] = 'Date of Birth';
+$MESS['MB_AUS_GENDER'] = 'Gender';
+$MESS['MB_AUS_MALE'] = 'Male';
+$MESS['MB_AUS_FEMALE'] = 'Female';
+$MESS['MB_AUS_NEXT_BUTTON'] = 'Further';
+$MESS['MB_AUS_PASSWORD'] = 'Password';
+$MESS['MB_AUS_PERSONAL_AGREEMENT'] = 'I hereby confirm that I have read and agree to the terms of the privacy policy and agree to the processing of personal data';
+$MESS['MB_AUS_CAPTCHA_TITLE'] = 'Protection against automatic registration';
+$MESS['MB_AUS_CAPTCHA_PROMPT'] = 'Enter the word in the picture';
