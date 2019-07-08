@@ -79,6 +79,9 @@ class YmlFeedMindbox
                     $offer = $dom->createElement("offer");
                     $offer->setAttribute("group_id", $prods[$prodId]['XML_ID']);
                     $offer->setAttribute("id", $ofr["XML_ID"]);
+                    $available = $ofr['ACTIVE'] == 'Y';
+                    $offer->setAttribute("available", $available);
+                    unset($available);
                     $offer = $offers->appendChild($offer);
                     $offerName = $dom->createElement("name", htmlspecialchars($ofr["NAME"], ENT_XML1 | ENT_QUOTES));
                     $offer->appendChild($offerName);
@@ -107,6 +110,9 @@ class YmlFeedMindbox
             foreach ($prods as $prod) {
                 $offer = $dom->createElement("offer");
                 $offer->setAttribute("id", $prod["XML_ID"]);
+                $available = $prod['ACTIVE'] == 'Y';
+                $offer->setAttribute("available", $available);
+                unset($available);
                 $offer = $offers->appendChild($offer);
                 $offerName = $dom->createElement("name", htmlspecialchars($prod["NAME"], ENT_XML1 | ENT_QUOTES));
                 $offer->appendChild($offerName);
@@ -190,13 +196,14 @@ class YmlFeedMindbox
             "CATALOG_GROUP_" . $basePriceId,
             "IBLOCK_SECTION_ID",
             "DETAIL_PICTURE",
-            "XML_ID"
+            "XML_ID",
+            "ACTIVE"
 
         );
         return \CCatalogSKU::getOffersList(
             $prodIds,
             intval(Options::getModuleOption("CATALOG_IBLOCK_ID")),
-            array("ACTIVE" => "Y"),
+            array(),
             $arSelect,
             array()
         );
@@ -234,12 +241,13 @@ class YmlFeedMindbox
             "CATALOG_GROUP_" . $basePriceId,
             "NAME",
             "DETAIL_PICTURE",
-            "XML_ID"
+            "XML_ID",
+            "ACTIVE"
         );
 
         $prods = \CIBlockElement::GetList(
             array("SORT" => "ASC"),
-            array("IBLOCK_ID" => intval(Options::getModuleOption("CATALOG_IBLOCK_ID")), "ACTIVE" => "Y"),
+            array("IBLOCK_ID" => intval(Options::getModuleOption("CATALOG_IBLOCK_ID"))),
             false,
             false,
             $arSelect
