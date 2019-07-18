@@ -30,7 +30,7 @@ Asset::getInstance()->addCss("/bitrix/css/mindbox/style.css");
                 </div>
 
                 <div class="col col-md-5">
-                    <input type="text" class="form-control js-mask" name="mindbox-card" id="mindbox-card" data-type="decimal" required>
+                    <input type="text" class="form-control js-mask" name="mindbox-card" id="mindbox-card" required>
                 </div>
             </div>
 

@@ -9,3 +9,4 @@ $MESS['MB_OH_ORDER_START_HEAD'] = '<p>';
 $MESS['MB_OH_ORDER_START_TABLE'] = '<table class="table table-bordered table-striped"><tr><th>Product Name</th><th>Price</th></tr>';
 $MESS['MB_OH_ORDER_END_TABLE'] = '</table>';
 $MESS['MB_OH_ORDER_LINE'] = '<tr><td><a href="#LINK#" target="_blank">#NAME#</a></td><td>#PRICE#</td></tr>';
+$MESS['MB_OH_BAD_MODULE_SETTING'] = 'Invalid module settings';

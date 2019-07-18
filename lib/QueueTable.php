@@ -24,6 +24,9 @@ class QueueTable extends Entity\DataManager
     public static function execute()
     {
         $mindbox = Options::getConfig(true);
+        if (!$mindbox) {
+            return;
+        }
 
         foreach (self::getPendingTasks() as $task) {
             $request = unserialize($task['REQUEST_DATA']);

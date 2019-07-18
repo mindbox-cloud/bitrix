@@ -56,6 +56,9 @@ class Subscripion extends CBitrixComponent implements Controllerable
 
     public function subscribeAction($email)
     {
+        if (!$this->mindbox) {
+            return Ajax::errorResponse(GetMessage('MB_SU_BAD_MODULE_SETTING'));
+        }
         $email = htmlspecialcharsEx(trim($email));
 
         $customer = new CustomerRequestDTO(['email' => $email]);

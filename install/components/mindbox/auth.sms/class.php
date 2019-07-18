@@ -54,6 +54,9 @@ class AuthSms extends CBitrixComponent implements Controllerable
 
     public function sendCodeAction($phone)
     {
+        if (!$this->mindbox) {
+            return Ajax::errorResponse(GetMessage('MB_AUS_BAD_MODULE_SETTING'));
+        }
         $phone = htmlspecialcharsEx(trim($phone));
         $this->user->setMobilePhone(Helper::formatPhone($phone));
 
@@ -81,6 +84,9 @@ class AuthSms extends CBitrixComponent implements Controllerable
 
     public function resendAction($phone)
     {
+        if (!$this->mindbox) {
+            return Ajax::errorResponse(GetMessage('MB_AUS_BAD_MODULE_SETTING'));
+        }
         if (empty($phone)) {
             return Ajax::errorResponse('empty phone');
         }
@@ -101,6 +107,9 @@ class AuthSms extends CBitrixComponent implements Controllerable
 
     public function checkCodeAction($code, $phone)
     {
+        if (!$this->mindbox) {
+            return Ajax::errorResponse(GetMessage('MB_AUS_BAD_MODULE_SETTING'));
+        }
         global $USER;
 
         $code = htmlspecialcharsEx(trim($code));
@@ -144,7 +153,7 @@ class AuthSms extends CBitrixComponent implements Controllerable
                 ];
 
             } else {
-                $_SESSION['NEW_USER_MINDBOX_ID'] = $user->getId('mindboxId');
+                $_SESSION['NEW_USER_MB_ID'] = $user->getId('mindboxId');
                 return [
                     'type' => 'fillup',
                     'phone' => $phone
@@ -157,6 +166,9 @@ class AuthSms extends CBitrixComponent implements Controllerable
 
     public function fillupAction($fields)
     {
+        if (!$this->mindbox) {
+            return Ajax::errorResponse(GetMessage('MB_AUS_BAD_MODULE_SETTING'));
+        }
         global $USER;
         
         foreach($fields as $key => $value) {
@@ -187,7 +199,7 @@ class AuthSms extends CBitrixComponent implements Controllerable
             $customer->setField('sex', $sex);
         }
 
-        $customer->setId('mindboxId', $_SESSION['NEW_USER_MINDBOX_ID']);
+        $customer->setId('mindboxId', $_SESSION['NEW_USER_MB_ID']);
 
         try {
             $registerResponse = $this->mindbox->customer()->fill($customer,
@@ -220,23 +232,7 @@ class AuthSms extends CBitrixComponent implements Controllerable
         if ($reg['TYPE'] !== 'OK') {
             return Ajax::errorResponse($reg['MESSAGE']);
         }
-
-		$fields['UF_PHONE_CONFIRMED'] = true;
-        $fields['UF_EMAIL_CONFIRMED'] = false;
-        $fields['UF_MINDBOX_ID'] = $_SESSION['NEW_USER_MINDBOX_ID'];
-
-        $id = $USER->GetID();
-
-        $update = $USER->Update(
-            $id,
-            $fields
-        );
-
-        if (!$update) {
-            return Ajax::errorResponse($USER->LAST_ERROR);
-        }
-
-        unset($_SESSION['NEW_USER_MINDBOX_ID']);
+        
         return ['type' => 'success'];
     }
     

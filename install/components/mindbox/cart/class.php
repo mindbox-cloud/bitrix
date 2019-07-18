@@ -74,6 +74,9 @@ class Cart extends CBitrixComponent implements Controllerable
 
     public function applyCodeAction($code)
     {
+        if (!$this->mindbox) {
+            return Ajax::errorResponse(GetMessage('MB_CART_BAD_MODULE_SETTING'));
+        }
         $code = htmlspecialcharsEx(trim($code));
         global $USER;
         $mindbox = $this->mindbox;
@@ -235,6 +238,9 @@ class Cart extends CBitrixComponent implements Controllerable
 
     public function applyBonusesAction($bonuses)
     {
+        if (!$this->mindbox) {
+            return Ajax::errorResponse(GetMessage('MB_CART_BAD_MODULE_SETTING'));
+        }
         $bonuses = intval($bonuses);
 
         global $USER;
@@ -394,6 +400,9 @@ class Cart extends CBitrixComponent implements Controllerable
 
     protected function calculateCart($basket)
     {
+        if (!$this->mindbox) {
+            return Ajax::errorResponse(GetMessage('MB_CART_BAD_MODULE_SETTING'));
+        }
         global $USER;
         $mindbox = $this->mindbox;
         $preorder = new PreorderRequestDTO();
