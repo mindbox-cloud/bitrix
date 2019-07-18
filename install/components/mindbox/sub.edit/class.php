@@ -55,6 +55,9 @@ class SubEdit extends CBitrixComponent implements Controllerable
 
     public function saveAction($fields)
     {
+        if (!$this->mindbox) {
+            return Ajax::errorResponse(GetMessage('MB_SE_BAD_MODULE_SETTING'));
+        }
         $customer = new CustomerRequestDTO([
             'ids' => ['mindboxId' => $this->userInfo['UF_MINDBOX_ID']],
         ]);

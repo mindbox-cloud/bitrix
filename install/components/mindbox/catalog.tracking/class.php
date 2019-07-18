@@ -49,6 +49,9 @@ class CatalogTracking extends CBitrixComponent implements Controllerable
 
     public function viewCategoryAction($id)
     {
+        if (!$this->mindbox) {
+            return Ajax::errorResponse(GetMessage('MB_CT_BAD_MODULE_SETTING'));
+        }
         $ids = [
             Options::getModuleOption('EXTERNAL_SYSTEM') => $id
         ];
@@ -77,6 +80,9 @@ class CatalogTracking extends CBitrixComponent implements Controllerable
 
     public function viewProductAction($id)
     {
+        if (!$this->mindbox) {
+            return Ajax::errorResponse(GetMessage('MB_CT_BAD_MODULE_SETTING'));
+        }
         $data = [
             'viewProduct' => [
                 'product' => []

@@ -5,3 +5,4 @@ $MESS['MB_DC_PHONE_NOT_FOUND'] = 'Карта не привязанна к тел
 $MESS['MB_DC_WRONG_CODE'] = 'Неверный код';
 $MESS['MB_DC_CARD_ERROR'] = 'Ошибка привязки карты';
 $MESS['MB_DC_CARD_SUCCESS'] = 'Карта успешно добавленна';
+$MESS['MB_DC_BAD_MODULE_SETTING'] = 'Ошибка в настройках модуля;

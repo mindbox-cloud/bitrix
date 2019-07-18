@@ -89,6 +89,9 @@ class EmailConfirm extends CBitrixComponent implements Controllerable
 
     public function resendAction()
     {
+        if (!$this->mindbox) {
+            return Ajax::errorResponse(GetMessage('MB_EC_BAD_MODULE_SETTING'));
+        }
         $customer = new CustomerRequestDTO(['ids' => ['mindboxId' => $this->userInfo['UF_MINDBOX_ID']]]);
         try {
             $this->mindbox->customer()->resendConfirmationCode($customer,

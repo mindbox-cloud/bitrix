@@ -5,3 +5,4 @@ $MESS['MB_DC_PHONE_NOT_FOUND'] = 'The card is not attached to the phone';
 $MESS['MB_DC_WRONG_CODE'] = 'Incorrect code';
 $MESS['MB_DC_CARD_ERROR'] = 'Card binding error';
 $MESS['MB_DC_CARD_SUCCESS'] = 'Map successfully added';
+$MESS['MB_DC_BAD_MODULE_SETTING'] = 'Invalid module settings';

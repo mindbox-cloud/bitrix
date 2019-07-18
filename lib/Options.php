@@ -79,7 +79,13 @@ class Options
         }
         $path = COption::GetOptionString('qsoftm.mindbox', 'LOG_PATH');
 
-        return new Mindbox($config, new MindboxFileLogger($path, 'debug'));
+        try {
+            $mindbox =  new Mindbox($config, new MindboxFileLogger($path, 'debug'));
+
+            return $mindbox;
+        } catch (MindboxConfigException $e) {
+            return false;
+        }
     }
 
 

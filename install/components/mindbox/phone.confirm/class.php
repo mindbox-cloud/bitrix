@@ -67,6 +67,9 @@ class PhoneConfirm extends CBitrixComponent implements Controllerable
 
     public function checkCodeAction($code)
     {
+        if (!$this->mindbox) {
+            return Ajax::errorResponse(GetMessage('MB_PC_BAD_MODULE_SETTING'));
+        }
         $code = htmlspecialcharsEx(trim($code));
         global $USER;
 		$customer = new CustomerRequestDTO(['ids' => ['mindboxId' => $this->userInfo['UF_MINDBOX_ID']]]);
@@ -101,6 +104,9 @@ class PhoneConfirm extends CBitrixComponent implements Controllerable
 
     public function resendCodeAction()
     {
+        if (!$this->mindbox) {
+            return Ajax::errorResponse(GetMessage('MB_PC_BAD_MODULE_SETTING'));
+        }
         $customer = new CustomerRequestDTO(['ids' => ['mindboxId' => $this->userInfo['UF_MINDBOX_ID']]]);
         try {
             $this->mindbox->customer()->resendConfirmationCode($customer,

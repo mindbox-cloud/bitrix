@@ -55,6 +55,9 @@ class DiscountCard extends CBitrixComponent implements Controllerable
 
     public function sendCardAction($card)
     {
+        if (!$this->mindbox) {
+            return Ajax::errorResponse(GetMessage('MB_DC_BAD_MODULE_SETTING'));
+        }
         $card = htmlspecialcharsEx(trim($card));
 
         $customerDto = new CustomerRequestDTO([
@@ -101,6 +104,9 @@ class DiscountCard extends CBitrixComponent implements Controllerable
 
     public function resendAction($phone)
     {
+        if (!$this->mindbox) {
+            return Ajax::errorResponse(GetMessage('MB_DC_BAD_MODULE_SETTING'));
+        }
         $phone = htmlspecialcharsEx(trim($phone));
 
         $customerDto = new CustomerRequestDTO(['mobilePhone' => $phone]);
@@ -127,6 +133,9 @@ class DiscountCard extends CBitrixComponent implements Controllerable
 
     public function sendCodeAction($code, $phone)
     {
+        if (!$this->mindbox) {
+            return Ajax::errorResponse(GetMessage('MB_DC_BAD_MODULE_SETTING'));
+        }
         $code = htmlspecialcharsEx(trim($code));
         $phone = htmlspecialcharsEx(trim($phone));
 
