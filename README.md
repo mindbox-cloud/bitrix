@@ -6,7 +6,7 @@
 1. Устанавливаем файлы модуля через Bitrix Marketplace. Либо с помощью composer.
 ```
     cd [document_root]/bitrix/modules
-    php composer.phar create-project qsoft/mindbox qsoftm.mindbox 1.0.0
+    php composer.phar create-project qsoft/mindbox qsoftm.mindbox 1.3.0
 ```
 2. Устанавливаем модуль в административном разделе в меню Marketplace->Установленные решения
 3. Заполняем поля настроек модуля в административном разделе.
@@ -142,7 +142,7 @@ __Примечание:__
 **mindboxViewProduct**  
 Пример вызова в шаблоне компонента bitrix:catalog.element
 ```php
-$APPLICATION->IncludeComponent('mindbox:catalog.tracking', '', []);
+<?php $APPLICATION->IncludeComponent('mindbox:catalog.tracking', '', []);
 ?>
 <script>
     mindboxViewProduct('<?=$arResult['OFFERS'][0]['XML_ID']?>');
