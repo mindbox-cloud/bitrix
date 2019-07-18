@@ -83,9 +83,6 @@ class OrderHistory extends CBitrixComponent implements Controllerable
      */
     public function getOrders($page)
     {
-        if (!$this->mindbox) {
-            return Ajax::errorResponse(GetMessage('MB_OH_BAD_MODULE_SETTING'));
-        }
         $page = intval($page);
 
         list($start, $range) = $this->getInterval($page);

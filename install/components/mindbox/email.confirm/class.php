@@ -68,9 +68,6 @@ class EmailConfirm extends CBitrixComponent implements Controllerable
 
     public function checkEmailConfirm()
     {
-        if (!$this->mindbox) {
-            return Ajax::errorResponse(GetMessage('MB_EC_BAD_MODULE_SETTING'));
-        }
         global $USER;
         if (!empty($this->userInfo['UF_MINDBOX_ID'])) {
             $request = $this->mindbox->getClientV3()->prepareRequest('POST',

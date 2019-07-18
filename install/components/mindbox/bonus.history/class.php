@@ -76,9 +76,6 @@ class BonusHistory extends CBitrixComponent implements Controllerable
      */
     public function getHistory($page)
     {
-        if (!$this->mindbox) {
-            return Ajax::errorResponse(GetMessage('MB_BH_BAD_MODULE_SETTING'));
-        }
         $page = intval($page);
         $history = [];
         $mindboxId = $this->getMindboxId();

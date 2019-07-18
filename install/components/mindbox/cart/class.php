@@ -400,9 +400,6 @@ class Cart extends CBitrixComponent implements Controllerable
 
     protected function calculateCart($basket)
     {
-        if (!$this->mindbox) {
-            return Ajax::errorResponse(GetMessage('MB_CART_BAD_MODULE_SETTING'));
-        }
         global $USER;
         $mindbox = $this->mindbox;
         $preorder = new PreorderRequestDTO();

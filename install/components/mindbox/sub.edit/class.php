@@ -97,9 +97,6 @@ class SubEdit extends CBitrixComponent implements Controllerable
 
     protected function getSubscriptions()
     {
-        if (!$this->mindbox) {
-            return Ajax::errorResponse(GetMessage('MB_SE_BAD_MODULE_SETTING'));
-        }
         $subscriptions = ['Email' => false, 'Sms' => false];
 
         $request = $this->mindbox->getClientV3()->prepareRequest('POST', Options::getOperationName('getSubscriptions'),
