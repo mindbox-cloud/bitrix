@@ -133,7 +133,6 @@ class SubEdit extends CBitrixComponent implements Controllerable
 
     public function executeComponent()
     {
-        parent::executeComponent();
         $this->getSubscriptions();
         $this->includeComponentTemplate();
     }

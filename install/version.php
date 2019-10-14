@@ -5,8 +5,8 @@
 
 $arModuleVersion =
 	[
-		"VERSION" => "1.3.0",
-		"VERSION_DATE" => "2019-07-18 14:45:00",
-		"MODULE_NAME" => "Mindbox",
-		"MODULE_DESCRIPTION" => "Модуль для mindbox"
+		"VERSION" => "1.4.0",
+		"VERSION_DATE" => "2019-10-14 14:45:00",
+		"MODULE_NAME" => GetMessage("MODULE_NAME"),
+		"MODULE_DESCRIPTION" => GetMessage("MODULE_DESCRIPTION")
 	];

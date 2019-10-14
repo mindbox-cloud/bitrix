@@ -20,7 +20,6 @@ class Ajax
     public static function errorResponse($error)
     {
         $response['type'] = 'error';
-
         if(is_subclass_of($error, \Exception::class)) {
             $response['message'] = $error->getMessage();
         } else {

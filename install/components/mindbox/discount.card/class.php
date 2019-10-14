@@ -59,6 +59,9 @@ class DiscountCard extends CBitrixComponent implements Controllerable
             return Ajax::errorResponse(GetMessage('MB_DC_BAD_MODULE_SETTING'));
         }
         $card = htmlspecialcharsEx(trim($card));
+        if (empty($card)) {
+            return Ajax::errorResponse(GetMessage('MB_DC_CARD_NOT_FOUND'));
+        }
 
         $customerDto = new CustomerRequestDTO([
             'discountCard' => [
@@ -72,6 +75,13 @@ class DiscountCard extends CBitrixComponent implements Controllerable
             return Ajax::errorResponse(GetMessage('MB_DC_CARD_ERROR'));
         }
         $customer = $response->getResult()->getCustomer();
+
+        if (!$customer) {
+            return [
+                'type' => 'warning',
+                'message' => GetMessage('MB_DC_CARD_NOT_FOUND')
+            ];
+        }
 
         if ($customer->getProcessingStatus() === 'NotFound') {
             return [
@@ -194,8 +204,6 @@ class DiscountCard extends CBitrixComponent implements Controllerable
 
     public function executeComponent()
     {
-        parent::executeComponent();
-
         $this->prepareResult();
 
         $this->includeComponentTemplate();
