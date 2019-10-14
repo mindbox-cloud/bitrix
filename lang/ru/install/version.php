@@ -1,3 +1,3 @@
 <?php
 $MESS['MODULE_NAME'] = 'Mindbox';
-$MESS['MODULE_DESCRIPTION'] = 'Ìîäóëü äëÿ mindbox';
+$MESS['MODULE_DESCRIPTION'] = 'ÐœÐ¾Ð´ÑƒÐ»ÑŒ Ð´Ð»Ñ mindbox';
