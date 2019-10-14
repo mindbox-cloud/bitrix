@@ -993,7 +993,7 @@ class Event
             } else {
                 $product->setId(Options::getModuleOption('EXTERNAL_SYSTEM'), Helper::getProductId($basketItem->getField('PRODUCT_XML_ID')));
             }
-            $product->setPrice($basketItem->getFinalPrice());
+            $product->setPrice($basketItem->getPrice());
 
             $line = new ProductListItemRequestDTO();
             $line->setProduct($product);
