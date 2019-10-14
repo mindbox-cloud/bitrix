@@ -1,9 +1,9 @@
 <?php
-$MESS['/customer/firstName'] = 'Èìÿ';
-$MESS['/customer/lastName'] = 'Ôàìèëèÿ';
+$MESS['/customer/firstName'] = 'Ð˜Ð¼Ñ';
+$MESS['/customer/lastName'] = 'Ð¤Ð°Ð¼Ð¸Ð»Ð¸Ñ';
 $MESS['/customer/email'] = 'e-mail';
-$MESS['/customer/middleName'] = 'Îò÷åñòâî';
-$MESS['/customer/birthDate'] = 'Äàòà ðîæäåíèÿ';
-$MESS['/customer/mobilePhone'] = 'Òåëåôîí';
-$MESS['MB_USER_REGISTER_ERROR'] = 'Îøèáêà ðåãèñòðàöèè. Ïîïðîáóéòå ïîâòîðèòü ïîçæå';
-$MESS['MB_USER_EDIT_ERROR'] = 'Îøèáêà ïðè èçìåíåíè äàííûõ. Ïîïðîáóéòå ïîâòîðèòü ïîçæå';
+$MESS['/customer/middleName'] = 'ÐžÑ‚Ñ‡ÐµÑÑ‚Ð²Ð¾';
+$MESS['/customer/birthDate'] = 'Ð”Ð°Ñ‚Ð° Ñ€Ð¾Ð¶Ð´ÐµÐ½Ð¸Ñ';
+$MESS['/customer/mobilePhone'] = 'Ð¢ÐµÐ»ÐµÑ„Ð¾Ð½';
+$MESS['MB_USER_REGISTER_ERROR'] = 'ÐžÑˆÐ¸Ð±ÐºÐ° Ñ€ÐµÐ³Ð¸ÑÑ‚Ñ€Ð°Ñ†Ð¸Ð¸. ÐŸÐ¾Ð¿Ñ€Ð¾Ð±ÑƒÐ¹Ñ‚Ðµ Ð¿Ð¾Ð²Ñ‚Ð¾Ñ€Ð¸Ñ‚ÑŒ Ð¿Ð¾Ð·Ð¶Ðµ';
+$MESS['MB_USER_EDIT_ERROR'] = 'ÐžÑˆÐ¸Ð±ÐºÐ° Ð¿Ñ€Ð¸ Ð¸Ð·Ð¼ÐµÐ½ÐµÐ½Ð¸ Ð´Ð°Ð½Ð½Ñ‹Ñ…. ÐŸÐ¾Ð¿Ñ€Ð¾Ð±ÑƒÐ¹Ñ‚Ðµ Ð¿Ð¾Ð²Ñ‚Ð¾Ñ€Ð¸Ñ‚ÑŒ Ð¿Ð¾Ð·Ð¶Ðµ';

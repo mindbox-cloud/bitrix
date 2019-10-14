@@ -1,2 +1,2 @@
 <?php
-$MESS['PERSONAL_PAGE_URL'] = 'URL личного кабинета';
+$MESS['PERSONAL_PAGE_URL'] = 'URL Р»РёС‡РЅРѕРіРѕ РєР°Р±РёРЅРµС‚Р°';

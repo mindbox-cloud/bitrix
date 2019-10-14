@@ -1,5 +1,5 @@
 <?php
 $MESS["MODULE_NAME"] = "Mindbox";
-$MESS["MODULE_DESCRIPTION"] = "Ìîäóëü èíòåãðàöèè ñ Mindbox";
-$MESS["MINDBOX_INSTALL_TITLE"] = "Óñòàíîâêà ìîäóëÿ Mindbox";
-$MESS["MINDBOX_UNINSTALL_TITLE"] = "Óäàëåíèå ìîäóëÿ Mindbox";
+$MESS["MODULE_DESCRIPTION"] = "ÐœÐ¾Ð´ÑƒÐ»ÑŒ Ð¸Ð½Ñ‚ÐµÐ³Ñ€Ð°Ñ†Ð¸Ð¸ Ñ Mindbox";
+$MESS["MINDBOX_INSTALL_TITLE"] = "Ð£ÑÑ‚Ð°Ð½Ð¾Ð²ÐºÐ° Ð¼Ð¾Ð´ÑƒÐ»Ñ Mindbox";
+$MESS["MINDBOX_UNINSTALL_TITLE"] = "Ð£Ð´Ð°Ð»ÐµÐ½Ð¸Ðµ Ð¼Ð¾Ð´ÑƒÐ»Ñ Mindbox";

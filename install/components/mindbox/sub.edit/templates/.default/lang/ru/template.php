@@ -1,5 +1,5 @@
 <?php
-$MESS['MB_SE_SUBSCRIBES'] = 'Ïîäïèñêè';
+$MESS['MB_SE_SUBSCRIBES'] = 'ÐŸÐ¾Ð´Ð¿Ð¸ÑÐºÐ¸';
 $MESS['MB_SE_EMAIL'] = 'E-mail';
 $MESS['MB_SE_SMS'] = 'Sms';
-$MESS['MB_SE_SAVE'] = 'Cîõðàíèòü';
+$MESS['MB_SE_SAVE'] = 'CÐ¾Ñ…Ñ€Ð°Ð½Ð¸Ñ‚ÑŒ';

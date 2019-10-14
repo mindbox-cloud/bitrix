@@ -1,2 +1,2 @@
 <?php
-$MESS['NAME'] = 'E-mail ïîäïèñêà';
+$MESS['NAME'] = 'E-mail Ð¿Ð¾Ð´Ð¿Ð¸ÑÐºÐ°';
