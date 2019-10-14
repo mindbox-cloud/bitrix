@@ -1,7 +1,7 @@
 <?php
-$MESS['MB_CART_MODULE_NOT_INCLUDED'] = 'ÐžÑˆÐ¸Ð±ÐºÐ°: Ð¼Ð¾Ð´ÑƒÐ»ÑŒ #MODULE# Ð½Ðµ Ð¿Ð¾Ð´ÐºÐ»ÑŽÑ‡ÐµÐ½';
-$MESS['MB_CART_PROMOCODE_SUCCESS'] = 'ÐŸÑ€Ð¾Ð¼Ð¾ÐºÐ¾Ð´ ÑƒÑÐ¿ÐµÑˆÐ½Ð¾ Ð¿Ñ€Ð¸Ð¼ÐµÐ½ÐµÐ½';
-$MESS['MB_CART_PROMOCODE_ERR'] = 'ÐÐµÐ»ÑŒÐ·Ñ Ð¿Ñ€Ð¸Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ Ð´Ð°Ð½Ð½Ñ‹Ð¹ Ð¿Ñ€Ð¾Ð¼Ð¾ÐºÐ¾Ð´';
-$MESS['MB_CART_PROMO_UNAVAILABLE'] = 'ÐŸÑ€Ð¾Ð¼Ð¾ÐºÐ¾Ð´Ñ‹ Ð²Ñ€ÐµÐ¼ÐµÐ½Ð½Ð¾ Ð½ÐµÐ´Ð¾ÑÑ‚ÑƒÐ¿Ð½Ñ‹';
-$MESS['MB_CART_BONUSES_LIMIT'] = 'Ð”Ð»Ñ Ð¾Ð¿Ð»Ð°Ñ‚Ñ‹ Ð½ÐµÐ»ÑŒÐ·Ñ Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÑŒ Ð±Ð¾Ð»ÑŒÑˆÐµ #LIMIT# Ð±Ð¾Ð½ÑƒÑÐ¾Ð²';
-$MESS['MB_CART_BAD_MODULE_SETTING'] = 'ÐžÑˆÐ¸Ð±ÐºÐ° Ð² Ð½Ð°ÑÑ‚Ñ€Ð¾Ð¹ÐºÐ°Ñ… Ð¼Ð¾Ð´ÑƒÐ»Ñ;
+$MESS['MB_CART_MODULE_NOT_INCLUDED'] = 'Îøèáêà: ìîäóëü #MODULE# íå ïîäêëþ÷åí';
+$MESS['MB_CART_PROMOCODE_SUCCESS'] = 'Ïðîìîêîä óñïåøíî ïðèìåíåí';
+$MESS['MB_CART_PROMOCODE_ERR'] = 'Íåëüçÿ ïðèìåíèòü äàííûé ïðîìîêîä';
+$MESS['MB_CART_PROMO_UNAVAILABLE'] = 'Ïðîìîêîäû âðåìåííî íåäîñòóïíû';
+$MESS['MB_CART_BONUSES_LIMIT'] = 'Äëÿ îïëàòû íåëüçÿ èñïîëüçîâàòü áîëüøå #LIMIT# áîíóñîâ';
+$MESS['MB_CART_BAD_MODULE_SETTING'] = 'Îøèáêà â íàñòðîéêàõ ìîäóëÿ';

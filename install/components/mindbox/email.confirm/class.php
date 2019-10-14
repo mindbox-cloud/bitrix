@@ -51,7 +51,7 @@ class EmailConfirm extends CBitrixComponent implements Controllerable
 
     public function executeComponent()
     {
-        parent::executeComponent();
+
         if (!$this->userInfo['UF_EMAIL_CONFIRMED'] && !empty($this->userInfo['EMAIL'])) {
             $this->checkEmailConfirm();
         }
@@ -79,8 +79,9 @@ class EmailConfirm extends CBitrixComponent implements Controllerable
             } catch (MindboxClientException $e) {
                 return;
             }
-            if ($response->getResult()->getCustomer()->getProcessingStatus() === 'Found') {
-                if (!empty($response->getResult()->getCustomer()->getIsEmailConfirmed()) && empty($response->getResult()->getCustomer()->getPendingEmail())) {
+            $customer = $response->getResult()->getCustomer();
+            if ($customer && $customer->getProcessingStatus() === 'Found') {
+                if (!empty($customer->getIsEmailConfirmed()) && empty($customer->getPendingEmail())) {
                     $USER->Update($this->userInfo['ID'], ['UF_EMAIL_CONFIRMED' => '1']);
                 }
             }

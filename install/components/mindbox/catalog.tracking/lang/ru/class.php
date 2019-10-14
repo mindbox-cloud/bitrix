@@ -1,2 +1,2 @@
 <?php
-$MESS['MB_CT_BAD_MODULE_SETTING'] = 'ÐžÑˆÐ¸Ð±ÐºÐ° Ð² Ð½Ð°ÑÑ‚Ñ€Ð¾Ð¹ÐºÐ°Ñ… Ð¼Ð¾Ð´ÑƒÐ»Ñ;
+$MESS['MB_CT_BAD_MODULE_SETTING'] = 'Îøèáêà â íàñòðîéêàõ ìîäóëÿ';

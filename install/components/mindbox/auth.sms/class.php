@@ -69,7 +69,7 @@ class AuthSms extends CBitrixComponent implements Controllerable
 
         $validationErrors = $response->getValidationErrors();
         if (!empty($validationErrors)) {
-            return Ajax::errorResponse($validationErrors[0]->getMessage());
+            return Ajax::errorResponse(reset($validationErrors)->getMessage());
         }
 
         if ($response->getResult()->getCustomer()->getProcessingStatus() !== 'Found') {
@@ -127,7 +127,7 @@ class AuthSms extends CBitrixComponent implements Controllerable
 
             $validationErrors = $checkCodeResponse->getValidationErrors();
             if (!empty($validationErrors)) {
-                return Ajax::errorResponse($validationErrors[0]->GetMessage());
+                return Ajax::errorResponse(reset($validationErrors)->GetMessage());
             }
 
             $user = $checkCodeResponse->getResult()->getCustomer();
@@ -244,7 +244,6 @@ class AuthSms extends CBitrixComponent implements Controllerable
 
     public function executeComponent()
     {
-        parent::executeComponent();
         $this->getCaptcha();
         $this->includeComponentTemplate();
     }

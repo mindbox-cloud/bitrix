@@ -15,4 +15,6 @@ $MESS['CATALOG_IBLOCK_ID'] = 'Directory Infoblock ID';
 $MESS['YML_NAME'] = 'Yml file name';
 $MESS['USE_SKU'] = 'SKU in catalog';
 $MESS['EXTERNAL_SYSTEM'] = 'External system';
+$MESS['POINT_OF_CONTACT'] = 'Point of contact';
+$MESS['WEBSITE_ID'] = 'Website ID';
 $MESS['DOCS_LINK'] = 'Docs for <a href="https://github.com/mindbox-moscow/bitrix" target="_blank">module</a>. Docs for <a href="https://developers.mindbox.ru/" target="_blank">Mindbox API</a>';

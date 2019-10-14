@@ -1,8 +1,8 @@
 <?php
-$MESS['MB_CART_PROMOCODE'] = 'ÐŸÑ€Ð¾Ð¼Ð¾ÐºÐ¾Ð´';
-$MESS['MB_CART_APPLY_BUTTON'] = 'ÐŸÑ€Ð¸Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ';
-$MESS['MB_CART_PROMO_DISCOUNT'] = 'Ð¡ÐºÐ¸Ð´ÐºÐ° Ð¿Ð¾ Ð¿Ñ€Ð¾Ð¼Ð¾ÐºÐ¾Ð´Ñƒ';
-$MESS['MB_CART_AVAILABLE_BONUSES'] = 'Ð”Ð»Ñ Ð¾Ð¿Ð»Ð°Ñ‚Ñ‹ Ð´Ð¾ÑÑ‚ÑƒÐ¿Ð½Ð¾';
-$MESS['MB_CART_BONUSES'] = 'Ð±Ð¾Ð½ÑƒÑÐ¾Ð²';
-$MESS['MB_CART_APPLY_BONUSES'] = 'Ð¡Ð¿Ð¸ÑÐ°Ñ‚ÑŒ';
-$MESS['MB_CART_CLEAR'] = 'ÐžÑ‡Ð¸ÑÑ‚Ð¸Ñ‚ÑŒ';
+$MESS['MB_CART_PROMOCODE'] = 'Ïðîìîêîä';
+$MESS['MB_CART_APPLY_BUTTON'] = 'Ïðèìåíèòü';
+$MESS['MB_CART_PROMO_DISCOUNT'] = 'Ñêèäêà ïî ïðîìîêîäó';
+$MESS['MB_CART_AVAILABLE_BONUSES'] = 'Äëÿ îïëàòû äîñòóïíî';
+$MESS['MB_CART_BONUSES'] = 'áîíóñîâ';
+$MESS['MB_CART_APPLY_BONUSES'] = 'Ñïèñàòü';
+$MESS['MB_CART_CLEAR'] = 'Î÷èñòèòü';

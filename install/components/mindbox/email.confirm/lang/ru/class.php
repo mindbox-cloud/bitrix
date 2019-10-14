@@ -1,3 +1,3 @@
 <?php
-$MESS['MB_EC_MODULE_NOT_INCLUDED'] = 'ÐžÑˆÐ¸Ð±ÐºÐ°: Ð¼Ð¾Ð´ÑƒÐ»ÑŒ #MODULE# Ð½Ðµ Ð¿Ð¾Ð´ÐºÐ»ÑŽÑ‡ÐµÐ½';
-$MESS['MB_EC_BAD_MODULE_SETTING'] = 'ÐžÑˆÐ¸Ð±ÐºÐ° Ð² Ð½Ð°ÑÑ‚Ñ€Ð¾Ð¹ÐºÐ°Ñ… Ð¼Ð¾Ð´ÑƒÐ»Ñ;
+$MESS['MB_EC_MODULE_NOT_INCLUDED'] = 'Îøèáêà: ìîäóëü #MODULE# íå ïîäêëþ÷åí';
+$MESS['MB_EC_BAD_MODULE_SETTING'] = 'Îøèáêà â íàñòðîéêàõ ìîäóëÿ';

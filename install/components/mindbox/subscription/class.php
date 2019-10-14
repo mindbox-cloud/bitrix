@@ -60,6 +60,9 @@ class Subscripion extends CBitrixComponent implements Controllerable
             return Ajax::errorResponse(GetMessage('MB_SU_BAD_MODULE_SETTING'));
         }
         $email = htmlspecialcharsEx(trim($email));
+        if (empty($email)) {
+            return Ajax::errorResponse('Incorrect email');
+        }
 
         $customer = new CustomerRequestDTO(['email' => $email]);
         $subscripton = new SubscriptionRequestDTO(['pointOfContact' => 'Email']);
@@ -88,7 +91,6 @@ class Subscripion extends CBitrixComponent implements Controllerable
 
     public function executeComponent()
     {
-        parent::executeComponent();
         $this->includeComponentTemplate();
     }
 }

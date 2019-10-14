@@ -49,6 +49,9 @@ class BonusHistory extends CBitrixComponent implements Controllerable
 
     public function pageAction($page)
     {
+        if (!$this->mindbox) {
+            return Ajax::errorResponse('Incorrect module settings');
+        }
         $page = intval($page);
         $this->arParams = Ajax::loadParams(self::getName());
         $size = isset($this->arParams['PAGE_SIZE']) ? $this->arParams['PAGE_SIZE'] : 0;
@@ -76,6 +79,9 @@ class BonusHistory extends CBitrixComponent implements Controllerable
      */
     public function getHistory($page)
     {
+        if (!$this->mindbox) {
+            throw new MindboxException('Incorrect module settings');
+        }
         $page = intval($page);
         $history = [];
         $mindboxId = $this->getMindboxId();
@@ -104,9 +110,9 @@ class BonusHistory extends CBitrixComponent implements Controllerable
         foreach ($result->getCustomerActions() as $action) {
             $history[] = [
                 'start' => $this->formatTime($action->getDateTimeUtc()),
-                'size' => $action->getCustomerBalanceChanges()[0]->getChangeAmount(),
+                'size' => reset($action->getCustomerBalanceChanges())->getChangeAmount(),
                 'name' => $action->getActionTemplate()->getName(),
-                'end' => $this->formatTime($action->getCustomerBalanceChanges()[0]->getExpirationDateTimeUtc())
+                'end' => $this->formatTime(reset($action->getCustomerBalanceChanges())->getExpirationDateTimeUtc())
             ];
         }
 
@@ -129,7 +135,7 @@ class BonusHistory extends CBitrixComponent implements Controllerable
 
     public function executeComponent()
     {
-        parent::executeComponent();
+
 
         $_SESSION[self::getName()] = $this->arParams;
 

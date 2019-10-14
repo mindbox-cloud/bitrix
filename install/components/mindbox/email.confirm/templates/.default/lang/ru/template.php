@@ -1,5 +1,5 @@
 <?php
-$MESS['MB_EC_INPUT_EMAIL'] = 'Р—Р°РїРѕР»РЅРёС‚Рµ email РґР»СЏ РµРіРѕ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ';
-$MESS['MB_EC_SUCCESS_CONFIRM'] = 'Email: <b>#EMAIL#</b>, СѓСЃРїРµС€РЅРѕ РїРѕРґС‚РІРµСЂР¶РґРµРЅ';
-$MESS['MB_EC_RESEND_BUTTON'] = 'РџРµСЂРµРѕС‚РїСЂР°РІРёС‚СЊ';
-$MESS['MB_EC_RESEND_LABEL'] = 'РќРµ РїРѕР»СѓС‡РёР»Рё РїРёСЃСЊРјРѕ СЃ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёРµРј?';
+$MESS['MB_EC_INPUT_EMAIL'] = 'Заполните email для его подтверждения';
+$MESS['MB_EC_SUCCESS_CONFIRM'] = 'Email: <b>#EMAIL#</b>, успешно подтвержден';
+$MESS['MB_EC_RESEND_BUTTON'] = 'Переотправить';
+$MESS['MB_EC_RESEND_LABEL'] = 'Не получили письмо с подтверждением?';

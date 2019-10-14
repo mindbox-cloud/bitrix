@@ -1,4 +1,4 @@
 <?php
-$MESS['MB_BH_MODULE_NOT_INCLUDED'] = 'ÐžÑˆÐ¸Ð±ÐºÐ°: Ð¼Ð¾Ð´ÑƒÐ»ÑŒ #MODULE# Ð½Ðµ Ð¿Ð¾Ð´ÐºÐ»ÑŽÑ‡ÐµÐ½';
-$MESS['MB_BH_ERROR_MESSAGE'] = 'Ð˜ÑÑ‚Ð¾Ñ€Ð¸Ñ Ð±Ð¾Ð½ÑƒÑÐ¾Ð² Ð¿ÑƒÑÑ‚Ð°';
+$MESS['MB_BH_MODULE_NOT_INCLUDED'] = 'Îøèáêà: ìîäóëü #MODULE# íå ïîäêëþ÷åí';
+$MESS['MB_BH_ERROR_MESSAGE'] = 'Èñòîðèÿ áîíóñîâ ïóñòà';
 $MESS['MB_BH_BALANCE_HTML'] = '<tr><td>#START#</td><td>#SIZE#</td><td>#NAME#</td><td>#END#</td></tr>';

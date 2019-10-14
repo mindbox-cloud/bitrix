@@ -1,11 +1,11 @@
 <?php
-$MESS['MB_OH_MODULE_NOT_INCLUDED'] = 'РћС€РёР±РєР°: РјРѕРґСѓР»СЊ #MODULE# РЅРµ РїРѕРґРєР»СЋС‡РµРЅ';
-$MESS['MB_OH_ORDER_HEADER'] = '<p>Р—Р°РєР°Р· <b>в„– #ID#</b> РѕС‚ #CREATED#.</p><p>';
-$MESS['MB_OH_ORDER_SPENT'] = 'Р”Р»СЏ РѕРїР»Р°С‚С‹ Р·Р°РєР°Р·Р° Р±С‹Р»Рѕ РёСЃРїРѕР»СЊР·РѕРІР°РЅРѕ #SPENT# Р±Р°Р»Р»#END#.';
-$MESS['MB_OH_ORDER_ACUIRED'] = 'Р—Р° Р·Р°РєР°Р· РЅР°С‡РёСЃР»РµРЅРѕ #ACUIRED# Р±Р°Р»Р»#END#.';
-$MESS['MB_OH_ENDINGS_ARRAY'] = ['', 'Р°', 'РѕРІ'];
+$MESS['MB_OH_MODULE_NOT_INCLUDED'] = 'Ошибка: модуль #MODULE# не подключен';
+$MESS['MB_OH_ORDER_HEADER'] = '<p>Заказ <b>№ #ID#</b> от #CREATED#.</p><p>';
+$MESS['MB_OH_ORDER_SPENT'] = 'Для оплаты заказа было использовано #SPENT# балл#END#.';
+$MESS['MB_OH_ORDER_ACUIRED'] = 'За заказ начислено #ACUIRED# балл#END#.';
+$MESS['MB_OH_ENDINGS_ARRAY'] = ['', 'а', 'ов'];
 $MESS['MB_OH_ORDER_END_HEAD'] = '</p>';
 $MESS['MB_OH_ORDER_START_HEAD'] = '<p>';
-$MESS['MB_OH_ORDER_START_TABLE'] = '<table class="table table-bordered table-striped"><tr><th>РќР°Р·РІР°РЅРёРµ С‚РѕРІР°СЂР°</th><th>Р¦РµРЅР°</th></tr>';
+$MESS['MB_OH_ORDER_START_TABLE'] = '<table class="table table-bordered table-striped"><tr><th>Название товара</th><th>Цена</th></tr>';
 $MESS['MB_OH_ORDER_END_TABLE'] = '</table>';
 $MESS['MB_OH_ORDER_LINE'] = '<tr><td><a href="#LINK#" target="_blank">#NAME#</a></td><td>#PRICE#</td></tr>';

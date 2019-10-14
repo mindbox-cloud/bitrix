@@ -96,7 +96,8 @@ class Cart extends CBitrixComponent implements Controllerable
             $line = new LineRequestDTO();
             $line->setField('lineId', $basketItem->getId());
             $line->setQuantity($basketItem->getQuantity());
-            $catalogPrice = CPrice::GetBasePrice($basketItem->getProductId())['PRICE'];
+            $catalogPrice = CPrice::GetBasePrice($basketItem->getProductId());
+            $catalogPrice = $catalogPrice['PRICE'] ?: 0;
             $line->setSku([
                 $skuId => Helper::getProductId($basketItem->getField('PRODUCT_XML_ID')),
                 'basePricePerItem' => $catalogPrice
@@ -157,72 +158,73 @@ class Cart extends CBitrixComponent implements Controllerable
             $preorderInfo = $mindbox->order()->calculateCart($preorder,
                 Options::getOperationName('calculateCart'))->sendRequest()->getResult()->getField('order');
 
-            $discounts = $preorderInfo->getDiscountsInfo();
-            foreach ($discounts as $discount) {
-                if ($discount->getType() === 'balance') {
-                    $_SESSION['ORDER_AVAILABLE_BONUSES'] = $discount->getField('availableAmountForCurrentOrder');
-                    if($_SESSION['PAY_BONUSES'] >  $_SESSION['ORDER_AVAILABLE_BONUSES']) {
-                        $_SESSION['PAY_BONUSES'] = 0;
+            if($preorderInfo) {
+                $discounts = $preorderInfo->getDiscountsInfo();
+                foreach ($discounts as $discount) {
+                    if ($discount->getType() === 'balance') {
+                        $_SESSION['ORDER_AVAILABLE_BONUSES'] = $discount->getField('availableAmountForCurrentOrder');
+                        if ($_SESSION['PAY_BONUSES'] > $_SESSION['ORDER_AVAILABLE_BONUSES']) {
+                            $_SESSION['PAY_BONUSES'] = 0;
+                        }
+
+                        $balance = $discount->getField('balance');
+                        if ($balance && $balance['balanceType']['ids']['systemName'] === 'Main') {
+                            setcookie('USER_AVAILABLE_BONUSES', $balance['available'], 0, '/');
+                            setcookie('USER_BLOCKED_BONUSES', $balance['blocked'], 0, '/');
+                        }
                     }
 
-                    $balance = $discount->getField('balance');
-                    if ($balance['balanceType']['ids']['systemName'] === 'Main') {
-                        setcookie('USER_AVAILABLE_BONUSES', $balance['available'], 0, '/');
-                        setcookie('USER_BLOCKED_BONUSES', $balance['blocked'], 0, '/');
+                    if ($discount->getType() === 'promoCode') {
+                        $status = $discount->getField('promoCode')['status'];
+                        if ($status !== 'CanBeUsed') {
+                            $response = Ajax::errorResponse(GetMessage('MB_CART_PROMOCODE_ERR'));
+                        } else {
+                            $_SESSION['PROMO_CODE_AMOUNT'] = $discount->getField('availableAmountForCurrentOrder');
+                            $_SESSION['PROMO_CODE'] = $code;
+                        }
                     }
                 }
 
-                if ($discount->getType() === 'promoCode') {
-                    $status = $discount->getField('promoCode')['status'];
-                    if ($status !== 'CanBeUsed') {
-                        $response = Ajax::errorResponse(GetMessage('MB_CART_PROMOCODE_ERR'));
+
+                $lines = $preorderInfo->getLines();
+                $mindboxBasket = [];
+                $mindboxAdditional = [];
+                $context = $basket->getContext();
+
+                foreach ($lines as $line) {
+                    $lineId = $line->getField('lineId');
+                    $bitrixProduct = $bitrixBasket[$lineId];
+
+                    if (isset($mindboxBasket[$lineId])) {
+                        $mindboxAdditional[] = [
+                            'PRODUCT_ID' => $bitrixProduct->getProductId(),
+                            'PRICE' => floatval($line->getDiscountedPrice()) / floatval($line->getQuantity()),
+                            'CUSTOM_PRICE' => 'Y',
+                            'QUANTITY' => $line->getQuantity(),
+                            'CURRENCY' => $context['CURRENCY'],
+                            'NAME' => $bitrixProduct->getField('NAME'),
+                            'LID' => SITE_ID,
+                            'DETAIL_PAGE_URL' => $bitrixProduct->getField('DETAIL_PAGE_URL'),
+                            'CATALOG_XML_ID' => $bitrixProduct->getField('CATALOG_XML_ID'),
+                            'PRODUCT_XML_ID' => $bitrixProduct->getField('PRODUCT_XML_ID'),
+                            'PRODUCT_PROVIDER_CLASS' => $bitrixProduct->getProviderName()
+                        ];
                     } else {
-                        $_SESSION['PROMO_CODE_AMOUNT'] = $discount->getField('availableAmountForCurrentOrder');
-                        $_SESSION['PROMO_CODE'] = $code;
+                        $mindboxPrice = floatval($line->getDiscountedPrice()) / floatval($line->getQuantity());
+                        $bitrixProduct->setField('CUSTOM_PRICE', 'Y');
+                        $bitrixProduct->setFieldNoDemand('PRICE', $mindboxPrice);
+                        $bitrixProduct->setFieldNoDemand('QUANTITY', $line->getQuantity());
+                        $bitrixProduct->save();
+
+                        $mindboxBasket[$lineId] = $bitrixProduct;
                     }
                 }
-            }
 
-
-            $lines = $preorderInfo->getLines();
-            $mindboxBasket = [];
-            $mindboxAdditional = [];
-            $context = $basket->getContext();
-
-            foreach ($lines as $line) {
-                $lineId = $line->getField('lineId');
-                $bitrixProduct = $bitrixBasket[$lineId];
-
-                if(isset($mindboxBasket[$lineId])) {
-                    $mindboxAdditional[] = [
-                        'PRODUCT_ID' => $bitrixProduct->getProductId(),
-                        'PRICE' => floatval($line->getDiscountedPrice()) / floatval($line->getQuantity()),
-                        'CUSTOM_PRICE' => 'Y',
-                        'QUANTITY' => $line->getQuantity(),
-                        'CURRENCY' => $context['CURRENCY'],
-                        'NAME' => $bitrixProduct->getField('NAME'),
-                        'LID'=> SITE_ID,
-                        'DETAIL_PAGE_URL' => $bitrixProduct->getField('DETAIL_PAGE_URL'),
-                        'CATALOG_XML_ID' => $bitrixProduct->getField('CATALOG_XML_ID'),
-                        'PRODUCT_XML_ID' => $bitrixProduct->getField('PRODUCT_XML_ID'),
-                        'PRODUCT_PROVIDER_CLASS' => $bitrixProduct->getProviderName()
-                    ];
-                } else {
-                    $mindboxPrice = floatval($line->getDiscountedPrice()) / floatval($line->getQuantity());
-                    $bitrixProduct->setField('CUSTOM_PRICE', 'Y');
-                    $bitrixProduct->setFieldNoDemand('PRICE', $mindboxPrice);
-                    $bitrixProduct->setFieldNoDemand('QUANTITY', $line->getQuantity());
-                    $bitrixProduct->save();
-
-                    $mindboxBasket[$lineId] = $bitrixProduct;
+                foreach ($mindboxAdditional as $product) {
+                    $item = $basket->createItem("catalog", $product["PRODUCT_ID"]);
+                    unset($product["PRODUCT_ID"]);
+                    $item->setFields($product);
                 }
-            }
-
-            foreach ($mindboxAdditional as $product)
-            {
-                $item = $basket->createItem("catalog", $product["PRODUCT_ID"]);
-                unset($product["PRODUCT_ID"]);
-                $item->setFields($product);
             }
 
         } catch (MindboxClientException $e) {
@@ -260,7 +262,8 @@ class Cart extends CBitrixComponent implements Controllerable
             $line = new LineRequestDTO();
             $line->setField('lineId', $basketItem->getId());
             $line->setQuantity($basketItem->getQuantity());
-            $catalogPrice = CPrice::GetBasePrice($basketItem->getProductId())['PRICE'];
+            $catalogPrice = CPrice::GetBasePrice($basketItem->getProductId());
+            $catalogPrice = $catalogPrice['PRICE'] ?: 0;
             $line->setSku([
                 $skuId => Helper::getProductId($basketItem->getField('PRODUCT_XML_ID')),
                 'basePricePerItem' => $catalogPrice
@@ -315,57 +318,58 @@ class Cart extends CBitrixComponent implements Controllerable
             $preorderInfo = $mindbox->order()->calculateCart($preorder,
                 Options::getOperationName('calculateCart'))->sendRequest()->getResult()->getField('order');
 
-            $discounts = $preorderInfo->getDiscountsInfo();
-            foreach ($discounts as $discount) {
-                if ($discount->getType() === 'balance') {
-                    $balance = $discount->getField('balance');
-                    if ($balance['balanceType']['ids']['systemName'] === 'Main') {
-                        $_SESSION['ORDER_AVAILABLE_BONUSES'] = $discount->getField('availableAmountForCurrentOrder');
+            if ($preorderInfo) {
+                $discounts = $preorderInfo->getDiscountsInfo();
+                foreach ($discounts as $discount) {
+                    if ($discount->getType() === 'balance') {
+                        $balance = $discount->getField('balance');
+                        if ($balance['balanceType']['ids']['systemName'] === 'Main') {
+                            $_SESSION['ORDER_AVAILABLE_BONUSES'] = $discount->getField('availableAmountForCurrentOrder');
+                        }
+                        $_SESSION['PAY_BONUSES'] = $bonuses;
                     }
-                    $_SESSION['PAY_BONUSES'] = $bonuses;
                 }
-            }
 
 
-            $lines = $preorderInfo->getLines();
-            $mindboxBasket = [];
-            $mindboxAdditional = [];
-            $context = $basket->getContext();
+                $lines = $preorderInfo->getLines();
+                $mindboxBasket = [];
+                $mindboxAdditional = [];
+                $context = $basket->getContext();
 
-            foreach ($lines as $line) {
-                $lineId = $line->getField('lineId');
-                $bitrixProduct = $bitrixBasket[$lineId];
+                foreach ($lines as $line) {
+                    $lineId = $line->getField('lineId');
+                    $bitrixProduct = $bitrixBasket[$lineId];
 
-                if(isset($mindboxBasket[$lineId])) {
-                    $mindboxAdditional[] = [
-                        'PRODUCT_ID' => $bitrixProduct->getProductId(),
-                        'PRICE' => floatval($line->getDiscountedPrice()) / floatval($line->getQuantity()),
-                        'CUSTOM_PRICE' => 'Y',
-                        'QUANTITY' => $line->getQuantity(),
-                        'CURRENCY' => $context['CURRENCY'],
-                        'NAME' => $bitrixProduct->getField('NAME'),
-                        'LID'=> SITE_ID,
-                        'DETAIL_PAGE_URL' => $bitrixProduct->getField('DETAIL_PAGE_URL'),
-                        'CATALOG_XML_ID' => $bitrixProduct->getField('CATALOG_XML_ID'),
-                        'PRODUCT_XML_ID' => $bitrixProduct->getField('PRODUCT_XML_ID'),
-                        'PRODUCT_PROVIDER_CLASS' => $bitrixProduct->getProviderName()
-                    ];
-                } else {
-                    $mindboxPrice = floatval($line->getDiscountedPrice()) / floatval($line->getQuantity());
-                    $bitrixProduct->setField('CUSTOM_PRICE', 'Y');
-                    $bitrixProduct->setFieldNoDemand('PRICE', $mindboxPrice);
-                    $bitrixProduct->setFieldNoDemand('QUANTITY', $line->getQuantity());
-                    $bitrixProduct->save();
+                    if (isset($mindboxBasket[$lineId])) {
+                        $mindboxAdditional[] = [
+                            'PRODUCT_ID' => $bitrixProduct->getProductId(),
+                            'PRICE' => floatval($line->getDiscountedPrice()) / floatval($line->getQuantity()),
+                            'CUSTOM_PRICE' => 'Y',
+                            'QUANTITY' => $line->getQuantity(),
+                            'CURRENCY' => $context['CURRENCY'],
+                            'NAME' => $bitrixProduct->getField('NAME'),
+                            'LID' => SITE_ID,
+                            'DETAIL_PAGE_URL' => $bitrixProduct->getField('DETAIL_PAGE_URL'),
+                            'CATALOG_XML_ID' => $bitrixProduct->getField('CATALOG_XML_ID'),
+                            'PRODUCT_XML_ID' => $bitrixProduct->getField('PRODUCT_XML_ID'),
+                            'PRODUCT_PROVIDER_CLASS' => $bitrixProduct->getProviderName()
+                        ];
+                    } else {
+                        $mindboxPrice = floatval($line->getDiscountedPrice()) / floatval($line->getQuantity());
+                        $bitrixProduct->setField('CUSTOM_PRICE', 'Y');
+                        $bitrixProduct->setFieldNoDemand('PRICE', $mindboxPrice);
+                        $bitrixProduct->setFieldNoDemand('QUANTITY', $line->getQuantity());
+                        $bitrixProduct->save();
 
-                    $mindboxBasket[$lineId] = $bitrixProduct;
+                        $mindboxBasket[$lineId] = $bitrixProduct;
+                    }
                 }
-            }
 
-            foreach ($mindboxAdditional as $product)
-            {
-                $item = $basket->createItem("catalog", $product["PRODUCT_ID"]);
-                unset($product["PRODUCT_ID"]);
-                $item->setFields($product);
+                foreach ($mindboxAdditional as $product) {
+                    $item = $basket->createItem("catalog", $product["PRODUCT_ID"]);
+                    unset($product["PRODUCT_ID"]);
+                    $item->setFields($product);
+                }
             }
         } catch (MindboxClientException $e) {
             foreach ($basketItems as $basketItem) {
@@ -383,7 +387,7 @@ class Cart extends CBitrixComponent implements Controllerable
 
     public function executeComponent()
     {
-        parent::executeComponent();
+
 
         $basket = Bitrix\Sale\Basket::loadItemsForFUser(Bitrix\Sale\Fuser::getId(),
             Bitrix\Main\Context::getCurrent()->getSite());
@@ -402,6 +406,9 @@ class Cart extends CBitrixComponent implements Controllerable
     {
         global $USER;
         $mindbox = $this->mindbox;
+        if (!$mindbox) {
+            return false;
+        }
         $preorder = new PreorderRequestDTO();
 
         $basketItems = $basket->getBasketItems();
@@ -422,7 +429,7 @@ class Cart extends CBitrixComponent implements Controllerable
             $lines[] = $line;
         }
         if (empty($lines)) {
-            return;
+            return false;
         }
         $preorder->setLines($lines);
 

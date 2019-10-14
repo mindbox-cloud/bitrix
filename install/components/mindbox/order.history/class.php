@@ -144,7 +144,7 @@ class OrderHistory extends CBitrixComponent implements Controllerable
 
     public function executeComponent()
     {
-        parent::executeComponent();
+
 
         $_SESSION[self::getName()] = $this->arParams;
 

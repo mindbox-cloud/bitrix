@@ -1,2 +1,2 @@
 <?php
-$MESS['MB_SU_SUBSCRIBE'] = 'ÐŸÐ¾Ð´Ð¿Ð¸ÑÐ°Ñ‚ÑŒÑÑ';
+$MESS['MB_SU_SUBSCRIBE'] = 'Ïîäïèñàòüñÿ';

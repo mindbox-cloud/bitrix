@@ -52,8 +52,6 @@ class PhoneConfirm extends CBitrixComponent implements Controllerable
 
     public function executeComponent()
     {
-        parent::executeComponent();
-
         $this->arResult['USER_INFO']['UF_PHONE_CONFIRMED'] = $this->userInfo['UF_PHONE_CONFIRMED'];
         $this->arResult['USER_INFO']['PERSONAL_PHONE'] = $this->userInfo['PERSONAL_PHONE'];
         $this->includeComponentTemplate();
@@ -70,7 +68,12 @@ class PhoneConfirm extends CBitrixComponent implements Controllerable
         if (!$this->mindbox) {
             return Ajax::errorResponse(GetMessage('MB_PC_BAD_MODULE_SETTING'));
         }
+
         $code = htmlspecialcharsEx(trim($code));
+        if (!$code) {
+            return Ajax::errorResponse(GetMessage('MB_PC_EMPTY'));
+        }
+
         global $USER;
 		$customer = new CustomerRequestDTO(['ids' => ['mindboxId' => $this->userInfo['UF_MINDBOX_ID']]]);
         $sms = new SmsConfirmationRequestDTO(['code' => $code]);
