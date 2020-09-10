@@ -12,7 +12,6 @@ $mindbox_default_option = [
     'TRANSACTION_ID' => 'websiteTransactionId',
     'CATALOG_IBLOCK_ID' => '0',
     'YML_NAME' => 'test.xml',
-    'USE_SKU' => false,
     'EXTERNAL_SYSTEM' => 'sap',
     'WEBSITE_ID' => 'websiteId'
 ];

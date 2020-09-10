@@ -93,13 +93,9 @@ class CatalogTracking extends CBitrixComponent implements Controllerable
             Options::getModuleOption('EXTERNAL_SYSTEM') => $id
         ];
 
-        if (Options::getModuleOption('USE_SKU')) {
-            $data['viewProduct']['product'] = [
-                'sku' => ['ids' => $ids]
-            ];
-        } else {
-            $data['viewProduct']['product'] = ['ids' => $ids];
-        }
+
+        $data['viewProduct']['product'] = ['ids' => $ids];
+
 
         $dto = new DTO($data);
 

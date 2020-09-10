@@ -98,12 +98,11 @@ class Helper
     public static function getProductId($id)
     {
         $result = '';
-        if(Options::getModuleOption('USE_SKU')) {
+        if(strpos($id, '#') !==false) {
             $result = ltrim(stristr($id, '#'), '#');
         } else {
             $result = $id;
         }
-
         return $result;
     }
 
