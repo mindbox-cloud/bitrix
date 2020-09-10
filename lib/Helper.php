@@ -16,22 +16,23 @@ class Helper
     {
         $number = $number % 100;
         if ($number >= 11 && $number <= 19) {
-            $ending = $endingArray[2];
+            $ending = $endingArray[ 2 ];
         } else {
             $i = $number % 10;
             switch ($i) {
                 case (1):
-                    $ending = $endingArray[0];
+                    $ending = $endingArray[ 0 ];
                     break;
                 case (2):
                 case (3):
                 case (4):
-                    $ending = $endingArray[1];
+                    $ending = $endingArray[ 1 ];
                     break;
                 default:
-                    $ending = $endingArray[2];
+                    $ending = $endingArray[ 2 ];
             }
         }
+
         return $ending;
     }
 
@@ -44,32 +45,34 @@ class Helper
                     'UF_MINDBOX_ID'
                 ],
                 'filter' => ['ID' => $id],
-                'limit' => 1
+                'limit'  => 1
             ]
         )->fetch();
 
-        if ($rsUser && isset($rsUser['UF_MINDBOX_ID'])) {
-            $mindboxId = $rsUser['UF_MINDBOX_ID'];
+        if ($rsUser && isset($rsUser[ 'UF_MINDBOX_ID' ])) {
+            $mindboxId = $rsUser[ 'UF_MINDBOX_ID' ];
         }
 
         return $mindboxId;
     }
 
-    public static function formatPhone($phone) {
+    public static function formatPhone($phone)
+    {
         return str_replace([' ', '(', ')', '-', '+'], "", $phone);
     }
 
-    public static function formatDate($date) {
+    public static function formatDate($date)
+    {
         return ConvertDateTime($date, "YYYY-MM-DD") ?: null;
     }
 
     public static function iconvDTO(DTO $dto, $in = true)
     {
-        if(LANG_CHARSET === 'UTF-8') {
+        if (LANG_CHARSET === 'UTF-8') {
             return $dto;
         }
 
-        if($in) {
+        if ($in) {
             return self::convertDTO($dto, LANG_CHARSET, 'UTF-8');
         } else {
             return self::convertDTO($dto, 'UTF-8', LANG_CHARSET);
@@ -87,7 +90,7 @@ class Helper
 
     private static function encodeDTOArray($arr, $in, $out)
     {
-        $dtoArray = array_map(function ($field) use($in, $out) {
+        $dtoArray = array_map(function ($field) use ($in, $out) {
             return is_array($field) ?
                 self::encodeDTOArray($field, $in, $out) : iconv($in, $out, $field);
         }, $arr);
@@ -98,13 +101,34 @@ class Helper
     public static function getProductId($id)
     {
         $result = '';
-        if(Options::getModuleOption('USE_SKU')) {
+        if (Options::getModuleOption('USE_SKU')) {
             $result = ltrim(stristr($id, '#'), '#');
         } else {
             $result = $id;
         }
 
         return $result;
+    }
+
+    /**
+     * Метод формирует массив инфоблоков
+     *
+     * @return $arIblock
+     */
+    public static function getIblocks()
+    {
+        $arIblock = [];
+        $result = \CIBlock::GetList(
+            [],
+            [
+                'ACTIVE' => 'Y',
+            ]
+        );
+        while ($ar_res = $result->Fetch()) {
+            $arIblock[ $ar_res[ 'ID' ] ] = $ar_res[ 'NAME' ] . " (" . $ar_res[ 'ID' ] . ")";
+        }
+
+        return $arIblock;
     }
 
 }

@@ -5,6 +5,7 @@ defined('ADMIN_MODULE_NAME') or define('ADMIN_MODULE_NAME', 'qsoftm.mindbox');
 global $APPLICATION;
 
 Cmodule::IncludeModule('qsoftm.mindbox');
+Cmodule::IncludeModule('iblock');
 
 if (!$USER->isAdmin()) {
     $APPLICATION->authForm('Nope');
@@ -13,15 +14,15 @@ function ShowParamsHTMLByarray($arParams)
 {
     foreach ($arParams as $Option) {
         if (is_array($Option)) {
-            $Option[0] = 'MINDBOX_' . $Option[0];
+            $Option[ 0 ] = 'MINDBOX_' . $Option[ 0 ];
         }
         __AdmSettingsDrawRow(ADMIN_MODULE_NAME, $Option);
     }
 }
 
-if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
+if (isset($_REQUEST[ 'save' ]) && check_bitrix_sessid()) {
 
-    $sku = !empty($_POST['MINDBOX_USE_SKU']);
+    $sku = !empty($_POST[ 'MINDBOX_USE_SKU' ]);
     foreach ($_POST as $key => $option) {
         if (strpos($key, 'MINDBOX_') !== false) {
             COption::SetOptionString(ADMIN_MODULE_NAME, str_replace('MINDBOX_', '', $key), $option);
@@ -30,36 +31,36 @@ if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
     COption::SetOptionString(ADMIN_MODULE_NAME, 'USE_SKU', $sku);
 }
 
-IncludeModuleLangFile($_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/options.php');
+IncludeModuleLangFile($_SERVER[ 'DOCUMENT_ROOT' ] . '/bitrix/modules/main/options.php');
 IncludeModuleLangFile(__FILE__);
 
 $tabControl = new CAdminTabControl('tabControl', [
     [
-        'DIV' => 'edit1',
-        'TAB' => getMessage('MAIN_TAB_SET'),
+        'DIV'   => 'edit1',
+        'TAB'   => getMessage('MAIN_TAB_SET'),
         'TITLE' => getMessage('MAIN_TAB_TITLE_SET'),
     ]
 ]);
 
+
 $arAllOptions = array(
-    getMessage('MAINOPTIONS'),
     getMessage('DOCS_LINK'),
+    getMessage('MAINOPTIONS'),
+    [
+        'MODE',
+        getMessage('MODE'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'MODE', 'standard'),
+        [
+            'selectbox',
+            [
+                'standard' => 'Стандартный',
+            ]
+        ]
+    ],
     [
         'ENDPOINT',
         getMessage('ENDPOINT'),
         COption::GetOptionString(ADMIN_MODULE_NAME, 'ENDPOINT', ''),
-        ['text']
-    ],
-    [
-        'DOMAIN',
-        getMessage('DOMAIN'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'DOMAIN', ''),
-        ['text']
-    ],
-    [
-        'POINT_OF_CONTACT',
-        getMessage('POINT_OF_CONTACT'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'POINT_OF_CONTACT', ''),
         ['text']
     ],
     [
@@ -70,6 +71,19 @@ $arAllOptions = array(
 
     ],
     [
+        'WEBSITE_PREFIX',
+        getMessage('WEBSITE_PREFIX'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'WEBSITE_PREFIX', 'Website'),
+        ['text']
+    ],
+    getMessage('IDENTIFIERS'),
+    [
+        'EXTERNAL_SYSTEM',
+        getMessage('EXTERNAL_SYSTEM'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'EXTERNAL_SYSTEM', 'sap'),
+        ['text']
+    ],
+    [
         'WEBSITE_ID',
         getMessage('WEBSITE_ID'),
         COption::GetOptionString(ADMIN_MODULE_NAME, 'WEBSITE_ID', 'websiteId'),
@@ -77,9 +91,16 @@ $arAllOptions = array(
 
     ],
     [
+        'TRANSACTION_ID',
+        getMessage('TRANSACTION_ID'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'TRANSACTION_ID', 'websiteTransactionId'),
+        ['text']
+    ],
+    getMessage('CONNECTION_SETTINGS'),
+    [
         'LOG_PATH',
         getMessage('LOG_PATH'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'LOG_PATH', $_SERVER['DOCUMENT_ROOT'] .'/logs/'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'LOG_PATH', $_SERVER[ 'DOCUMENT_ROOT' ] . '/logs/'),
         ['text']
     ],
     [
@@ -90,15 +111,9 @@ $arAllOptions = array(
             'selectbox',
             [
                 'stream' => 'Stream',
-                'curl' => 'Curl'
+                'curl'   => 'Curl'
             ]
         ]
-    ],
-    [
-        'TIMEOUT',
-        getMessage('TIMEOUT'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'TIMEOUT', '5'),
-        ['text']
     ],
     [
         'QUEUE_TIMEOUT',
@@ -107,22 +122,20 @@ $arAllOptions = array(
         ['text']
     ],
     [
-        'WEBSITE_PREFIX',
-        getMessage('WEBSITE_PREFIX'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'WEBSITE_PREFIX', 'Website'),
+        'TIMEOUT',
+        getMessage('TIMEOUT'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'TIMEOUT', '5'),
         ['text']
     ],
-    [
-        'TRANSACTION_ID',
-        getMessage('TRANSACTION_ID'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'TRANSACTION_ID', 'websiteTransactionId'),
-        ['text']
-    ],
+    getMessage('CATALOG_SETTINGS'),
     [
         'CATALOG_IBLOCK_ID',
         getMessage('CATALOG_IBLOCK_ID'),
         COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '0'),
-        ['text']
+        [
+            'selectbox',
+            \Mindbox\Helper::getIblocks()
+        ]
     ],
     [
         'YML_NAME',
@@ -130,20 +143,6 @@ $arAllOptions = array(
         COption::GetOptionString(ADMIN_MODULE_NAME, 'YML_NAME', 'test.xml'),
         ['text']
     ],
-    [
-        'USE_SKU',
-        getMessage('USE_SKU'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'USE_SKU', false) ? 'Y' : 'N',
-        [
-            'checkbox'
-        ]
-    ],
-    [
-        'EXTERNAL_SYSTEM',
-        getMessage('EXTERNAL_SYSTEM'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'EXTERNAL_SYSTEM', 'sap'),
-        ['text']
-    ]
 );
 
 ?>
