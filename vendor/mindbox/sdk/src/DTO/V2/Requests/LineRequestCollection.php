@@ -1,0 +1,24 @@
+<?php
+
+
+namespace Mindbox\DTO\V2\Requests;
+
+use Mindbox\DTO\DTOCollection;
+
+/**
+ * Class LineRequestCollection
+ *
+ * @package Mindbox\DTO\V2\Requests
+ */
+class LineRequestCollection extends DTOCollection
+{
+    /**
+     * @var string Название элементов коллекции для корректной генерации xml.
+     */
+    protected static $collectionItemsName = LineRequestDTO::class;
+
+    /**
+     * @var string Название элемента для корректной генерации xml.
+     */
+    protected static $xmlName = 'lines';
+}
