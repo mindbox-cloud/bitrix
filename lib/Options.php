@@ -22,6 +22,8 @@ class Options
         'confirmOrder' => 'ConfirmOrder',
         'confirmMobile' => 'ConfirmMobilePhone',
         'createOrder' => 'CreateOrder',
+        'createAuthorizedOrder' =>  'CreateAuthorizedOrder',
+        'createUnauthorizedOrder'   =>  'CreateUnauthorizedOrder',
         'edit' => 'EditCustomer',
         'fill' => 'FillCustomerProfile',
         'getBalance' => 'GetCustomerBalance',

@@ -201,7 +201,7 @@ class Mindbox
     public function order()
     {
         if (!isset($this->order)) {
-            $this->order = new OrderHelper($this->clientV2);
+            $this->order = new OrderHelper($this->client);
         }
 
         return $this->order;

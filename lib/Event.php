@@ -98,13 +98,13 @@ class Event
 
         $customer = new CustomerRequestDTO([
             'ids' => [
-                'mindboxId' => $mindboxId
+                Options::getModuleOption('WEBSITE_ID') => $mindboxId
             ]
         ]);
 
         try {
             $mindbox->customer()->authorize($customer,
-                Options::getOperationName('authorize'))->sendRequest();
+                Options::getOperationName('authorize'), true, false)->sendRequest();
         } catch (Exceptions\MindboxUnavailableException $e) {
             $lastResponse = $mindbox->customer()->getLastResponse();
 
@@ -179,7 +179,7 @@ class Event
 
         try {
             $registerResponse = $mindbox->customer()->register($customer,
-                Options::getOperationName('register'))->sendRequest()->getResult();
+                Options::getOperationName('register'), true, Helper::isSync())->sendRequest()->getResult();
         } catch (Exceptions\MindboxClientException $e) {
             $APPLICATION->ThrowException(Loc::getMessage('MB_USER_REGISTER_ERROR'));
             return false;
@@ -252,7 +252,7 @@ class Event
             unset($fields);
 
             try {
-                $mindbox->customer()->edit($customer, Options::getOperationName('edit'))->sendRequest();
+                $mindbox->customer()->edit($customer, Options::getOperationName('edit'), true, Helper::isSync())->sendRequest();
             } catch (Exceptions\MindboxClientException $e) {
                 $APPLICATION->ThrowException(Loc::getMessage('MB_USER_EDIT_ERROR'));
                 return false;
@@ -261,13 +261,13 @@ class Event
 
         $customer = new CustomerRequestDTO([
             'ids' => [
-                'mindboxId' => $mindBoxId
+                Options::getModuleOption('WEBSITE_ID') => $mindBoxId
             ]
         ]);
 
         try {
             $mindbox->customer()->authorize($customer,
-                Options::getOperationName('authorize'))->sendRequest();
+                Options::getOperationName('authorize'), true, false)->sendRequest();
         } catch (Exceptions\MindboxUnavailableException $e) {
             $lastResponse = $mindbox->customer()->getLastResponse();
 
@@ -351,7 +351,7 @@ class Event
             unset($fields);
 
             try {
-                $updateResponse = $mindbox->customer()->edit($customer, Options::getOperationName('edit'))->sendRequest()->getResult();
+                $updateResponse = $mindbox->customer()->edit($customer, Options::getOperationName('edit'), true, Helper::isSync())->sendRequest()->getResult();
             } catch (Exceptions\MindboxClientException $e) {
                 $APPLICATION->ThrowException(Loc::getMessage('MB_USER_EDIT_ERROR'));
                 return false;
@@ -455,8 +455,19 @@ class Event
         $orderDTO->setField('preOrderDiscountedTotalPrice', $basket->getPrice());
 
         try {
-            $createOrderResult = $mindbox->order()->createOrder($orderDTO,
-                Options::getOperationName('createOrder'))->sendRequest();
+
+            if (\COption::GetOptionString('qsoftm.mindbox', 'MODE') == 'standard') {
+                if ($USER->IsAuthorized()) {
+                    $createOrderResult = $mindbox->order()->CreateAuthorizedOrder($orderDTO,
+                        Options::getOperationName('createAuthorizedOrder'))->sendRequest();
+                } else {
+                    $createOrderResult = $mindbox->order()->CreateUnauthorizedOrder($orderDTO,
+                        Options::getOperationName('createUnauthorizedOrder'))->sendRequest();
+                }
+            } else {
+                $createOrderResult = $mindbox->order()->createOrder($orderDTO,
+                    Options::getOperationName('createOrder'))->sendRequest();
+            }
 
             if ($createOrderResult->getValidationErrors()) {
                 return new Main\EventResult(Main\EventResult::ERROR);
@@ -846,7 +857,7 @@ class Event
 
             $customerDTO = Helper::iconvDTO($customerDTO);
             try {
-                $updateResponse = $mindbox->customer()->edit($customerDTO, Options::getOperationName('edit'))->sendRequest()->getResult();
+                $updateResponse = $mindbox->customer()->edit($customerDTO, Options::getOperationName('edit'), true, Helper::isSync())->sendRequest()->getResult();
             } catch (Exceptions\MindboxClientException $e) {
                 $_SESSION['ANONYM']['PHONE'] = $arFields['PERSONAL_PHONE'];
                 return $arFields;
@@ -942,7 +953,7 @@ class Event
             $customer->setId(Options::getModuleOption('WEBSITE_ID'), $arFields["ID"]);
 
             try {
-                $mindbox->customer()->edit($customer, Options::getOperationName('edit'))->sendRequest();
+                $mindbox->customer()->edit($customer, Options::getOperationName('edit'), true, Helper::isSync())->sendRequest();
             } catch (Exceptions\MindboxClientException $e) {
                 $lastResponse = $mindbox->customer()->getLastResponse();
                 if ($lastResponse) {

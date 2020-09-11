@@ -131,4 +131,19 @@ class Helper
         return $arIblock;
     }
 
+
+    /**
+     * Метод определяет режим передачи данных (синхронный/асинхронный)
+     *
+     * @return $isSync
+     */
+    public static function isSync()
+    {
+        if (\COption::GetOptionString('qsoftm.mindbox', 'MODE') == 'standard') {
+            $isSync = false;
+        } else {
+            $isSync = true;
+        }
+        return $isSync;
+    }
 }
