@@ -101,12 +101,15 @@ class Helper
     public static function getProductId($id)
     {
         $result = '';
+<<<<<<< HEAD
         if (Options::getModuleOption('USE_SKU')) {
+=======
+        if(strpos($id, '#') !==false) {
+>>>>>>> MB-522
             $result = ltrim(stristr($id, '#'), '#');
         } else {
             $result = $id;
         }
-
         return $result;
     }
 

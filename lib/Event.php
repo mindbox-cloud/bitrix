@@ -387,18 +387,16 @@ class Event
         $basketItems = $basket->getBasketItems();
         $lines = [];
 
-        $skuId = Options::getModuleOption('USE_SKU') ? 'skuId' : 'productId';
         foreach ($basketItems as $basketItem) {
             $line = new LineRequestDTO();
             $line->setQuantity($basketItem->getQuantity());
             $line->setField('lineId', $basketItem->getId());
             $catalogPrice = \CPrice::GetBasePrice($basketItem->getProductId());
             $catalogPrice = $catalogPrice['PRICE'] ?: 0;
-            $line->setSku([
-                $skuId => Helper::getProductId($basketItem->getField('PRODUCT_XML_ID')),
+            $line->setProduct([
+                'productId' =>  Helper::getProductId($basketItem->getField('PRODUCT_XML_ID')),
                 'basePricePerItem' => $catalogPrice
             ]);
-
             $lines[] = $line;
         }
 
@@ -523,8 +521,8 @@ class Event
                 $line->setField('lineId', $basketItem->getId());
                 $line->setQuantity($basketItem->getQuantity());
                 $catalogPrice = \CPrice::GetBasePrice($basketItem->getProductId())['PRICE'];
-                $line->setSku([
-                    $skuId => Helper::getProductId($basketItem->getField('PRODUCT_XML_ID')),
+                $line->setProduct([
+                    'productId' => Helper::getProductId($basketItem->getField('PRODUCT_XML_ID')),
                     'basePricePerItem' => $catalogPrice
                 ]);
 
@@ -579,15 +577,14 @@ class Event
 
         $basketItems = $basket->getBasketItems();
         $lines = [];
-        $skuId = Options::getModuleOption('USE_SKU') ? 'skuId' : 'productId';
         foreach ($basketItems as $basketItem) {
             $line = new LineRequestDTO();
             $line->setQuantity($basketItem->getQuantity());
             $line->setField('lineId', $basketItem->getId());
             $catalogPrice = \CPrice::GetBasePrice($basketItem->getProductId());
             $catalogPrice = $catalogPrice['PRICE'] ?: 0;
-            $line->setSku([
-                $skuId => Helper::getProductId($basketItem->getField('PRODUCT_XML_ID')),
+            $line->setProduct([
+                'productId' => Helper::getProductId($basketItem->getField('PRODUCT_XML_ID')),
                 'basePricePerItem' => $catalogPrice
             ]);
 
@@ -684,7 +681,6 @@ class Event
         self::setCartMindbox($basketItems);
         $lines = [];
         $bitrixBasket = [];
-        $skuId = Options::getModuleOption('USE_SKU') ? 'skuId' : 'productId';
         foreach ($basketItems as $basketItem) {
             $quantity = $basketItem->getQuantity();
             if($quantity === 0) {
@@ -698,8 +694,8 @@ class Event
             $catalogPrice = $catalogPrice['PRICE'] ?: 0;
             $line->setField('lineId', $basketItem->getId());
 
-            $line->setSku([
-                $skuId => Helper::getProductId($basketItem->getField('PRODUCT_XML_ID')),
+            $line->setProduct([
+                'productId' => Helper::getProductId($basketItem->getField('PRODUCT_XML_ID')),
                 'basePricePerItem' => $catalogPrice
             ]);
 
@@ -997,14 +993,9 @@ class Event
         $lines = [];
         foreach ($basketItems as $basketItem) {
             $product = new ProductRequestDTO();
-            if (Options::getModuleOption('USE_SKU')) {
-                $product->setSku([
-                    'ids' => [Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getProductId($basketItem->getField('PRODUCT_XML_ID'))]
-                ]);
-            } else {
-                $product->setId(Options::getModuleOption('EXTERNAL_SYSTEM'), Helper::getProductId($basketItem->getField('PRODUCT_XML_ID')));
-            }
-            $product->setPrice($basketItem->getPrice());
+            $product->setId(Options::getModuleOption('EXTERNAL_SYSTEM'), Helper::getProductId($basketItem->getField('PRODUCT_XML_ID')));
+            $product->setPricePerItem($basketItem->getPrice());
+            $product->setPriceOfLine($basketItem->getPrice());
 
             $line = new ProductListItemRequestDTO();
             $line->setProduct($product);

@@ -7,7 +7,7 @@ class YmlFeedMindbox
 {
     public static function start()
     {
-        $cond = empty(Options::getModuleOption("YML_NAME")) || empty(Options::getModuleOption("USE_SKU")) || empty(Options::getModuleOption("CATALOG_IBLOCK_ID"));
+        $cond = empty(Options::getModuleOption("YML_NAME")) || empty(Options::getModuleOption("CATALOG_IBLOCK_ID"));
 
         if ($cond) {
             return '\Mindbox\YmlFeedMindbox::start();';
@@ -71,9 +71,10 @@ class YmlFeedMindbox
         $basePriceId = self::getBasePriceId();
         $prods = self::getProds($basePriceId);
 
-        if (Options::getModuleOption("USE_SKU")) {
-            $prodIds = self::getProdsIds($prods);
-            $prodsOfrs = self::getOffers($basePriceId, $prodIds);
+        $prodIds = self::getProdsIds($prods);
+        $prodsOfrs = self::getOffers($basePriceId, $prodIds);
+
+        if (!empty($prodsOfrs)) {
             foreach ($prodsOfrs as $prodId => $ofrs) {
                 foreach ($ofrs as $ofr) {
                     $offer = $dom->createElement("offer");

@@ -20,15 +20,18 @@ function ShowParamsHTMLByarray($arParams)
     }
 }
 
+<<<<<<< HEAD
 if (isset($_REQUEST[ 'save' ]) && check_bitrix_sessid()) {
 
     $sku = !empty($_POST[ 'MINDBOX_USE_SKU' ]);
+=======
+if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
+>>>>>>> MB-522
     foreach ($_POST as $key => $option) {
         if (strpos($key, 'MINDBOX_') !== false) {
             COption::SetOptionString(ADMIN_MODULE_NAME, str_replace('MINDBOX_', '', $key), $option);
         }
     }
-    COption::SetOptionString(ADMIN_MODULE_NAME, 'USE_SKU', $sku);
 }
 
 IncludeModuleLangFile($_SERVER[ 'DOCUMENT_ROOT' ] . '/bitrix/modules/main/options.php');
@@ -143,6 +146,15 @@ $arAllOptions = array(
         COption::GetOptionString(ADMIN_MODULE_NAME, 'YML_NAME', 'test.xml'),
         ['text']
     ],
+<<<<<<< HEAD
+=======
+    [
+        'EXTERNAL_SYSTEM',
+        getMessage('EXTERNAL_SYSTEM'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'EXTERNAL_SYSTEM', 'sap'),
+        ['text']
+    ]
+>>>>>>> MB-522
 );
 
 ?>

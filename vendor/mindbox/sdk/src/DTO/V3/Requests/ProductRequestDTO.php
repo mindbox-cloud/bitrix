@@ -65,6 +65,25 @@ class ProductRequestDTO extends ProductIdentityRequestDTO
     }
 
     /**
+<<<<<<< HEAD
+=======
+     * @param mixed $price
+     */
+    public function setPricePerItem($price)
+    {
+        $this->setField('pricePerItem', $price);
+    }
+
+    /**
+     * @param mixed $price
+     */
+    public function setPriceOfLine($price)
+    {
+        $this->setField('priceOfLine', $price);
+    }
+
+    /**
+>>>>>>> MB-522
      * @param mixed $name
      */
     public function setName($name)

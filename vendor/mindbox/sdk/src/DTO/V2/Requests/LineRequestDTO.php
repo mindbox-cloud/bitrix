@@ -58,6 +58,17 @@ class LineRequestDTO extends LineDTO
     }
 
     /**
+<<<<<<< HEAD
+=======
+     * @param array|ProductRequestDTO $product
+     */
+    public function setProduct($product)
+    {
+        $this->setField('product', $product);
+    }
+
+    /**
+>>>>>>> MB-522
      * @return GiftCardRequestDTO
      */
     public function getGiftCard()

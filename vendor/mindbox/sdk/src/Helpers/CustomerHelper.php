@@ -34,12 +34,20 @@ class CustomerHelper extends AbstractMindboxHelper
      *
      * @return \Mindbox\Clients\AbstractMindboxClient
      */
+<<<<<<< HEAD
     public function authorize(CustomerRequestDTO $customer, $operationName, $addDeviceUUID = true, $isSync)
+=======
+    public function authorize(CustomerRequestDTO $customer, $operationName, $addDeviceUUID = true)
+>>>>>>> MB-522
     {
         $operation = $this->createOperation();
         $operation->setCustomer($customer);
 
+<<<<<<< HEAD
         return $this->client->prepareRequest('POST', $operationName, $operation, '', [], $isSync, $addDeviceUUID);
+=======
+        return $this->client->prepareRequest('POST', $operationName, $operation, '', [], false, $addDeviceUUID);
+>>>>>>> MB-522
     }
 
     /**
@@ -95,14 +103,22 @@ class CustomerHelper extends AbstractMindboxHelper
      *
      * @return \Mindbox\Clients\AbstractMindboxClient
      */
+<<<<<<< HEAD
     public function register(CustomerRequestDTO $customer, $operationName, $addDeviceUUID = true, $isSync)
+=======
+    public function register(CustomerRequestDTO $customer, $operationName, $addDeviceUUID = true)
+>>>>>>> MB-522
     {
         $operation = $this->createOperation();
         $operation->setCustomer($customer);
 
         $this->client->setResponseType(MindboxCustomerIdentityResponse::class);
 
+<<<<<<< HEAD
         return $this->client->prepareRequest('POST', $operationName, $operation, '', [], $isSync, $addDeviceUUID);
+=======
+        return $this->client->prepareRequest('POST', $operationName, $operation, '', [], true, $addDeviceUUID);
+>>>>>>> MB-522
     }
 
     /**
@@ -116,14 +132,22 @@ class CustomerHelper extends AbstractMindboxHelper
      *
      * @return \Mindbox\Clients\AbstractMindboxClient
      */
+<<<<<<< HEAD
     public function edit(CustomerRequestDTO $customer, $operationName, $addDeviceUUID = true, $isSync)
+=======
+    public function edit(CustomerRequestDTO $customer, $operationName, $addDeviceUUID = true)
+>>>>>>> MB-522
     {
         $operation = $this->createOperation();
         $operation->setCustomer($customer);
 
         $this->client->setResponseType(MindboxCustomerIdentityResponse::class);
 
+<<<<<<< HEAD
         return $this->client->prepareRequest('POST', $operationName, $operation, '', [], $isSync, $addDeviceUUID);
+=======
+        return $this->client->prepareRequest('POST', $operationName, $operation, '', [], true, $addDeviceUUID);
+>>>>>>> MB-522
     }
 
     /**
