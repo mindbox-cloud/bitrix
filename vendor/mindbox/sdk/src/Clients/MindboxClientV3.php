@@ -134,6 +134,7 @@ class MindboxClientV3 extends AbstractMindboxClient
         return static::SECRET_KEY_NAME . '="' . $this->secretKey . '"';
     }
 
+
     /**
      * Конвертация тела запроса в формат, пригодный для HTTP клиента (json).
      *
