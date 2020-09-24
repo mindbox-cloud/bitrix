@@ -121,6 +121,11 @@ class Event
 
     public function OnBeforeUserRegisterHandler(&$arFields)
     {
+
+        if (\COption::GetOptionString('qsoftm.mindbox', 'MODE') == 'standard') {
+            return $arFields;
+        }
+
         global $APPLICATION, $USER;
 
         $mindbox = static::mindbox();
@@ -175,6 +180,7 @@ class Event
         ];
 
         $customer = Helper::iconvDTO(new CustomerRequestDTO($fields));
+
         unset($fields);
 
         try {
@@ -188,6 +194,7 @@ class Event
         $registerResponse = Helper::iconvDTO($registerResponse, false);
         $status = $registerResponse->getStatus();
 
+
         if ($status === 'ValidationError') {
             $errors = $registerResponse->getValidationMessages();
 
@@ -197,6 +204,8 @@ class Event
         }
 
         $customer = $registerResponse->getCustomer();
+
+
         if (!$customer) {
             return false;
         }
@@ -204,10 +213,13 @@ class Event
         $mindBoxId = $customer->getId('mindboxId');
         $_SESSION['NEW_USER_MB_ID'] = $mindBoxId;
         $_SESSION['NEW_USER_MINDBOX'] = true;
+
     }
 
     public function OnAfterUserRegisterHandler(&$arFields)
     {
+        // all for standard mode
+
         global $APPLICATION;
         $mindbox = static::mindbox();
         if(!$mindbox) {
@@ -218,7 +230,7 @@ class Event
         unset($_SESSION['NEW_USER_MB_ID']);
 
         if (!$mindBoxId) {
-            return false;
+            //return false;
         }
 
         $fields = [
@@ -246,13 +258,13 @@ class Event
                 return true;
             }
 
-            $fields['ids']['mindboxId'] = $mindBoxId;
+            //$fields['ids']['mindboxId'] = $mindBoxId;
 
             $customer = new CustomerRequestDTO($fields);
             unset($fields);
 
             try {
-                $mindbox->customer()->edit($customer, Options::getOperationName('edit'), true, Helper::isSync())->sendRequest();
+                $mindbox->customer()->register($customer, Options::getOperationName('register'), true, Helper::isSync())->sendRequest();
             } catch (Exceptions\MindboxClientException $e) {
                 $APPLICATION->ThrowException(Loc::getMessage('MB_USER_EDIT_ERROR'));
                 return false;
