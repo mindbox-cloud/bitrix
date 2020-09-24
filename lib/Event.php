@@ -273,7 +273,7 @@ class Event
 
         $customer = new CustomerRequestDTO([
             'ids' => [
-                Options::getModuleOption('WEBSITE_ID') => $mindBoxId
+                Options::getModuleOption('WEBSITE_ID') => $arFields['USER_ID']
             ]
         ]);
 
