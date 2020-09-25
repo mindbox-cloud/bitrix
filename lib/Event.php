@@ -246,7 +246,15 @@ class Event
 
 
         if ($arFields['USER_ID']) {
+            $sex = substr(ucfirst($arFields['PERSONAL_GENDER']), 0, 1) ?: null;
             $fields = [
+                'email' => $arFields['EMAIL'],
+                'lastName' => $arFields['LAST_NAME'],
+                'middleName' => $arFields['SECOND_NAME'],
+                'firstName' => $arFields['NAME'],
+                'mobilePhone' => $arFields['PERSONAL_PHONE'],
+                'birthDate' => Helper::formatDate($arFields['PERSONAL_BIRTHDAY']),
+                'sex' => $sex,
                 'ids' => [Options::getModuleOption('WEBSITE_ID') => $arFields['USER_ID']]
             ];
 
