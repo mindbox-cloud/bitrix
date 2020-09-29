@@ -1014,12 +1014,13 @@ class Event
         foreach ($basketItems as $basketItem) {
             $product = new ProductRequestDTO();
             $product->setId(Options::getModuleOption('EXTERNAL_SYSTEM'), Helper::getProductId($basketItem->getField('PRODUCT_XML_ID')));
-            $product->setPricePerItem($basketItem->getPrice());
-            $product->setPriceOfLine($basketItem->getPrice());
+
 
             $line = new ProductListItemRequestDTO();
             $line->setProduct($product);
             $line->setCount($basketItem->getQuantity());
+            $line->setPricePerItem($basketItem->getPrice());
+            $line->setPriceOfLine($basketItem->getPrice());
             $lines[] = $line;
         }
 
