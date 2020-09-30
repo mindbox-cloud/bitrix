@@ -279,26 +279,6 @@ class Event
             }
         }
 
-        $customer = new CustomerRequestDTO([
-            'ids' => [
-                Options::getModuleOption('WEBSITE_ID') => $arFields['USER_ID']
-            ]
-        ]);
-
-        try {
-            $mindbox->customer()->authorize($customer,
-                Options::getOperationName('authorize'), true, false)->sendRequest();
-        } catch (Exceptions\MindboxUnavailableException $e) {
-            $lastResponse = $mindbox->customer()->getLastResponse();
-
-            if ($lastResponse) {
-                $request = $lastResponse->getRequest();
-                QueueTable::push($request);
-            }
-        } catch (Exceptions\MindboxClientException $e) {
-            return $arFields;
-        }
-
         return $arFields;
     }
 
