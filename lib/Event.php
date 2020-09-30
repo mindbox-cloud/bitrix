@@ -743,74 +743,77 @@ class Event
             $preorder->setDiscounts($discounts);
         }
 
-        try {
-            $preorderInfo = $mindbox->order()->calculateCart($preorder,
-                Options::getOperationName('calculateCart'))->sendRequest()->getResult()->getField('order');
+        if (\COption::GetOptionString('qsoftm.mindbox', 'MODE') != 'standard') {
+            try {
+                $preorderInfo = $mindbox->order()->calculateCart($preorder,
+                    Options::getOperationName('calculateCart'))->sendRequest()->getResult()->getField('order');
 
-            if (!$preorderInfo) {
-                return new Main\EventResult(Main\EventResult::SUCCESS);
-            }
+                if (!$preorderInfo) {
+                    return new Main\EventResult(Main\EventResult::SUCCESS);
+                }
 
-            $discounts = $preorderInfo->getDiscountsInfo();
-            foreach ($discounts as $discount) {
-                if ($discount->getType() === 'balance') {
-                    $balance = $discount->getField('balance');
-                    if ($balance['balanceType']['ids']['systemName'] === 'Main') {
-                        $_SESSION['ORDER_AVAILABLE_BONUSES'] = $discount->getField('availableAmountForCurrentOrder');
+                $discounts = $preorderInfo->getDiscountsInfo();
+                foreach ($discounts as $discount) {
+                    if ($discount->getType() === 'balance') {
+                        $balance = $discount->getField('balance');
+                        if ($balance['balanceType']['ids']['systemName'] === 'Main') {
+                            $_SESSION['ORDER_AVAILABLE_BONUSES'] = $discount->getField('availableAmountForCurrentOrder');
+                        }
+                    }
+
+                    if ($discount->getType() === 'promoCode') {
+                        $_SESSION['PROMO_CODE_AMOUNT'] = $discount['availableAmountForCurrentOrder'];
                     }
                 }
 
-                if ($discount->getType() === 'promoCode') {
-                    $_SESSION['PROMO_CODE_AMOUNT'] = $discount['availableAmountForCurrentOrder'];
+
+                $lines = $preorderInfo->getLines();
+                $mindboxBasket = [];
+                $mindboxAdditional = [];
+                $context = $basket->getContext();
+
+                foreach ($lines as $line) {
+                    $lineId = $line->getField('lineId');
+                    $bitrixProduct = $bitrixBasket[$lineId];
+
+                    if(isset($mindboxBasket[$lineId])) {
+                        $mindboxAdditional[] = [
+                            'PRODUCT_ID' => $bitrixProduct->getProductId(),
+                            'PRICE' => floatval($line->getDiscountedPrice()) / floatval($line->getQuantity()),
+                            'CUSTOM_PRICE' => 'Y',
+                            'QUANTITY' => $line->getQuantity(),
+                            'CURRENCY' => $context['CURRENCY'],
+                            'NAME' => $bitrixProduct->getField('NAME'),
+                            'LID'=> SITE_ID,
+                            'DETAIL_PAGE_URL' => $bitrixProduct->getField('DETAIL_PAGE_URL'),
+                            'CATALOG_XML_ID' => $bitrixProduct->getField('CATALOG_XML_ID'),
+                            'PRODUCT_XML_ID' => $bitrixProduct->getField('PRODUCT_XML_ID'),
+                            'PRODUCT_PROVIDER_CLASS' => $bitrixProduct->getProviderName(),
+                            'CAN_BUY' => 'Y'
+                        ];
+                    } else {
+                        $mindboxPrice = floatval($line->getDiscountedPrice()) / floatval($line->getQuantity());
+                        $bitrixProduct->setField('CUSTOM_PRICE', 'Y');
+                        $bitrixProduct->setFieldNoDemand('PRICE', $mindboxPrice);
+                        $bitrixProduct->setFieldNoDemand('QUANTITY', $line->getQuantity());
+                        $bitrixProduct->save();
+
+                        $mindboxBasket[$lineId] = $bitrixProduct;
+                    }
                 }
-            }
 
-
-            $lines = $preorderInfo->getLines();
-            $mindboxBasket = [];
-            $mindboxAdditional = [];
-            $context = $basket->getContext();
-
-            foreach ($lines as $line) {
-                $lineId = $line->getField('lineId');
-                $bitrixProduct = $bitrixBasket[$lineId];
-
-                if(isset($mindboxBasket[$lineId])) {
-                    $mindboxAdditional[] = [
-                        'PRODUCT_ID' => $bitrixProduct->getProductId(),
-                        'PRICE' => floatval($line->getDiscountedPrice()) / floatval($line->getQuantity()),
-                        'CUSTOM_PRICE' => 'Y',
-                        'QUANTITY' => $line->getQuantity(),
-                        'CURRENCY' => $context['CURRENCY'],
-                        'NAME' => $bitrixProduct->getField('NAME'),
-                        'LID'=> SITE_ID,
-                        'DETAIL_PAGE_URL' => $bitrixProduct->getField('DETAIL_PAGE_URL'),
-                        'CATALOG_XML_ID' => $bitrixProduct->getField('CATALOG_XML_ID'),
-                        'PRODUCT_XML_ID' => $bitrixProduct->getField('PRODUCT_XML_ID'),
-                        'PRODUCT_PROVIDER_CLASS' => $bitrixProduct->getProviderName(),
-                        'CAN_BUY' => 'Y'
-                    ];
-                } else {
-                    $mindboxPrice = floatval($line->getDiscountedPrice()) / floatval($line->getQuantity());
-                    $bitrixProduct->setField('CUSTOM_PRICE', 'Y');
-                    $bitrixProduct->setFieldNoDemand('PRICE', $mindboxPrice);
-                    $bitrixProduct->setFieldNoDemand('QUANTITY', $line->getQuantity());
-                    $bitrixProduct->save();
-
-                    $mindboxBasket[$lineId] = $bitrixProduct;
+                foreach ($mindboxAdditional as $product)
+                {
+                    $item = $basket->createItem("catalog", $product["PRODUCT_ID"]);
+                    unset($product["PRODUCT_ID"]);
+                    $item->setFields($product);
                 }
-            }
 
-            foreach ($mindboxAdditional as $product)
-            {
-                $item = $basket->createItem("catalog", $product["PRODUCT_ID"]);
-                unset($product["PRODUCT_ID"]);
-                $item->setFields($product);
+            } catch (Exceptions\MindboxClientException $e) {
+                return new Main\EventResult(Main\EventResult::SUCCESS);
             }
-
-        } catch (Exceptions\MindboxClientException $e) {
-            return new Main\EventResult(Main\EventResult::SUCCESS);
         }
+
 
         return new Main\EventResult(Main\EventResult::SUCCESS);
     }
