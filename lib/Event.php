@@ -1000,7 +1000,6 @@ class Event
             $line->setProduct($product);
             $line->setCount($basketItem->getQuantity());
             $line->setPricePerItem($basketItem->getPrice());
-            $line->setPriceOfLine($basketItem->getPrice());
             $lines[] = $line;
         }
 
