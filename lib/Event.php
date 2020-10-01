@@ -820,6 +820,11 @@ class Event
 
     public function OnBeforeUserAddHandler(&$arFields)
     {
+
+        if (\COption::GetOptionString('qsoftm.mindbox', 'MODE') == 'standard') {
+            return $arFields;
+        }
+
         global $APPLICATION;
 
         $mindbox = static::mindbox();
@@ -904,7 +909,7 @@ class Event
         $anonym = Helper::iconvDTO($anonym);
         try {
             $response = $mindbox->customer()
-                ->register($anonym, Options::getOperationName('registerFromAnonymousOrder'))
+                ->register($anonym, Options::getOperationName('registerFromAnonymousOrder'), true, Helper::isSync())
                 ->sendRequest()->getResult();
         } catch (Exceptions\MindboxClientException $e) {
             $_SESSION['ANONYM']['PHONE'] = $arFields['PERSONAL_PHONE'];
