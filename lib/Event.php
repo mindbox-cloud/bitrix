@@ -429,7 +429,7 @@ class Event
 
         $orderDTO->setField('order', [
                 'ids' => [
-                    'mindboxId' => $order->getId()
+                    Options::getModuleOption('TRANSACTION_ID') => $order->getId()
                 ],
                 'lines' =>  $lines
             ]
