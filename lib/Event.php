@@ -410,7 +410,6 @@ class Event
             */
             //$lines[] = $line;
             $lines[] = [
-              'line'    =>  [
                   'basePricePerItem' => $catalogPrice,
                   'quantity'         => $basketItem->getQuantity(),
                   'lineId'           => $basketItem->getId(),
@@ -419,8 +418,7 @@ class Event
                         'website' =>  Helper::getProductId($basketItem->getField('PRODUCT_XML_ID'))
                       ]
                   ]
-              ]
-            ];
+              ];
         }
 
         if (empty($lines)) {
