@@ -400,12 +400,14 @@ class Event
             $line = new LineRequestDTO();
             $catalogPrice = \CPrice::GetBasePrice($basketItem->getProductId());
             $catalogPrice = $catalogPrice[ 'PRICE' ] ?: 0;
+            /*
             $line->setLine([
                 'productId'        => Helper::getProductId($basketItem->getField('PRODUCT_XML_ID')),
                 'basePricePerItem' => $catalogPrice,
                 'quantity'         => $basketItem->getQuantity(),
                 'lineId'           => $basketItem->getId()
             ]);
+            */
             //$lines[] = $line;
             $lines[] = [
               'line'    =>  [
