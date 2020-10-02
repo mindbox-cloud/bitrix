@@ -551,6 +551,11 @@ class Event
 
     public function OnSaleOrderSavedHandler($order)
     {
+
+        if (\COption::GetOptionString('qsoftm.mindbox', 'MODE') == 'standard') {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+
         $mindbox = static::mindbox();
         if (!$mindbox) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
