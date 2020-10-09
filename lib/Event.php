@@ -49,7 +49,7 @@ class Event
             $logger->debug('$arUser', $arUser);
         }
 
-        if(empty($arUser['LAST_LOGIN'])) {
+        if(empty($arUser['user_fields']['LAST_LOGIN'])) {
             return true;
         }
 
@@ -74,7 +74,6 @@ class Event
         $mindboxId = $arUser[ 'user_fields' ][ 'ID' ];
 
         if (empty($mindboxId)) {
-
             $request = $mindbox->getClientV3()->prepareRequest('POST',
                 Options::getOperationName('getCustomerInfo'),
                 new DTO([
@@ -312,7 +311,6 @@ class Event
         $mindboxId = $arFields[ 'USER_ID' ];
 
         if (empty($mindboxId)) {
-
             $request = $mindbox->getClientV3()->prepareRequest('POST',
                 Options::getOperationName('getCustomerInfo'),
                 new DTO([
@@ -373,6 +371,8 @@ class Event
     {
         global $APPLICATION;
 
+
+
         $mindbox = static::mindbox();
 
         if (!$mindbox) {
@@ -409,7 +409,9 @@ class Event
         }
 
         $fields = [];
-        $mindboxId = Helper::getMindboxId($arFields[ 'ID' ]);
+        //$mindboxId = Helper::getMindboxId($arFields[ 'ID' ]);
+
+        $mindboxId = $arFields[ 'ID' ];
 
         if (!empty($mindboxId)) {
             $sex = substr(ucfirst($arFields[ 'PERSONAL_GENDER' ]), 0, 1) ?: null;
@@ -436,6 +438,8 @@ class Event
             $customer = new CustomerRequestDTO($fields);
             $customer = Helper::iconvDTO($customer);
             unset($fields);
+
+
 
             try {
                 $updateResponse = $mindbox->customer()->edit($customer, Options::getOperationName('edit'), true,
