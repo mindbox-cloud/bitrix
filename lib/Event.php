@@ -44,6 +44,15 @@ class Event
      */
     public function OnAfterUserAuthorizeHandler($arUser)
     {
+        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('OnAfterUserAuthorizeHandler');
+            $logger->debug('$arUser', $arUser);
+        }
+
+        if(empty($arUser['LAST_LOGIN'])) {
+            return true;
+        }
+
         $mindbox = static::mindbox();
         if (!$mindbox) {
             return true;
@@ -283,6 +292,78 @@ class Event
 
                 return false;
             }
+        }
+
+        //  authorize
+
+        sleep(1);
+
+        if (isset($_SESSION[ 'NEW_USER_MINDBOX' ]) && $_SESSION[ 'NEW_USER_MINDBOX' ] === true) {
+            unset($_SESSION[ 'NEW_USER_MINDBOX' ]);
+
+            return true;
+        }
+        if ($_SESSION[ 'AUTH_BY_SMS' ] === true) {
+            $_SESSION[ 'AUTH_BY_SMS' ] = false;
+
+            return true;
+        }
+
+        $mindboxId = $arFields[ 'USER_ID' ];
+
+        if (empty($mindboxId)) {
+
+            $request = $mindbox->getClientV3()->prepareRequest('POST',
+                Options::getOperationName('getCustomerInfo'),
+                new DTO([
+                    'customer' => [
+                        'ids' => [
+                            Options::getModuleOption('WEBSITE_ID') => $arFields[ 'USER_ID' ]
+                        ]
+                    ]
+                ]));
+
+            try {
+                $response = $request->sendRequest();
+            } catch (Exceptions\MindboxClientException $e) {
+                return false;
+            }
+
+            if ($response->getResult()->getCustomer()->getProcessingStatus() === 'Found') {
+                $fields = [
+                    'UF_EMAIL_CONFIRMED' => $response->getResult()->getCustomer()->getIsEmailConfirmed(),
+                    'UF_MINDBOX_ID'      => $response->getResult()->getCustomer()->getId('mindboxId')
+                ];
+
+                $user = new CUser;
+                $user->Update(
+                    $arFields[ 'USER_ID' ],
+                    $fields
+                );
+                $dbUser[ 'UF_MINDBOX_ID' ] = $fields[ 'UF_MINDBOX_ID' ];
+            } else {
+                return true;
+            }
+        }
+
+        $customer = new CustomerRequestDTO([
+            'ids' => [
+                Options::getModuleOption('WEBSITE_ID') => $mindboxId
+            ]
+        ]);
+
+        try {
+            $mindbox->customer()->authorize($customer,
+                Options::getOperationName('authorize'), true, false)->sendRequest();
+        } catch (Exceptions\MindboxUnavailableException $e) {
+            $lastResponse = $mindbox->customer()->getLastResponse();
+
+            if ($lastResponse) {
+                $request = $lastResponse->getRequest();
+                QueueTable::push($request);
+            }
+        } catch (Exceptions\MindboxClientException $e) {
+            return false;
         }
 
         return $arFields;
