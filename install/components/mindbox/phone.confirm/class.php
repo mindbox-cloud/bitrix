@@ -130,32 +130,34 @@ class PhoneConfirm extends CBitrixComponent implements Controllerable
             ]
         )->fetch();
 
-        $mindbox = Options::getConfig();
-		$request = $mindbox->getClientV3()->prepareRequest('POST',
-			Options::getOperationName('getCustomerInfo'),
-			new DTO([
-				'customer' => [
-					'ids' => [
-						'mindboxId' => $rsUser['UF_MINDBOX_ID']
-					]
-				]
-			]));
+        if($rsUser['UF_MINDBOX_ID']) {
+            $mindbox = Options::getConfig();
+            $request = $mindbox->getClientV3()->prepareRequest('POST',
+                Options::getOperationName('getCustomerInfo'),
+                new DTO([
+                    'customer' => [
+                        'ids' => [
+                            'mindboxId' => $rsUser[ 'UF_MINDBOX_ID' ]
+                        ]
+                    ]
+                ]));
 
-		try {
-			$response = $request->sendRequest()->getResult();
-		} catch (MindboxClientException $e) {
-			return $rsUser;
-		}
-
-		$customer = $response->getCustomer();
-		if ($customer && $customer->getProcessingStatus() === 'Found') {
-		    $pending = $customer->getPendingMobilePhone();
-		    if($pending) {
-                $rsUser['UF_PHONE_CONFIRMED'] = false;
-            } else {
-                $rsUser['UF_PHONE_CONFIRMED'] = $customer->getIsMobilePhoneConfirmed();
+            try {
+                $response = $request->sendRequest()->getResult();
+            } catch (MindboxClientException $e) {
+                return $rsUser;
             }
-		}
+
+            $customer = $response->getCustomer();
+            if ($customer && $customer->getProcessingStatus() === 'Found') {
+                $pending = $customer->getPendingMobilePhone();
+                if ($pending) {
+                    $rsUser[ 'UF_PHONE_CONFIRMED' ] = false;
+                } else {
+                    $rsUser[ 'UF_PHONE_CONFIRMED' ] = $customer->getIsMobilePhoneConfirmed();
+                }
+            }
+        }
 
         return $rsUser;
     }
