@@ -434,7 +434,7 @@ class Event
                 return true;
             }
 
-            $fields[ 'ids' ][ 'mindboxId' ] = $mindboxId;
+            $fields[ 'ids' ][ Options::getModuleOption('WEBSITE_ID')] = $mindboxId;
             $customer = new CustomerRequestDTO($fields);
             $customer = Helper::iconvDTO($customer);
             unset($fields);
