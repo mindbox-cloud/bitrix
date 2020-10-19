@@ -589,7 +589,7 @@ class Event
                 if (\Mindbox\Helper::isUnAuthorizedOrder($arUser)) {
                     $createOrderResult = $mindbox->order()->CreateUnauthorizedOrder($orderDTO,
                         Options::getOperationName('createUnauthorizedOrder'))->sendRequest();
-                } else {
+                } elseif ($USER->IsAuthorized()) {
                     $createOrderResult = $mindbox->order()->CreateAuthorizedOrder($orderDTO,
                         Options::getOperationName('createAuthorizedOrder'))->sendRequest();
                 }
