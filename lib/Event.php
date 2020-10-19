@@ -578,12 +578,12 @@ class Event
         try {
 
             if (\COption::GetOptionString('qsoftm.mindbox', 'MODE') == 'standard') {
-                if ($USER->IsAuthorized()) {
-                    $createOrderResult = $mindbox->order()->CreateAuthorizedOrder($orderDTO,
-                        Options::getOperationName('createAuthorizedOrder'))->sendRequest();
-                } else if ($arUser['LAST_LOGIN'] === $arUser['DATE_REGISTER']) {
+                if ($arUser['LAST_LOGIN'] === $arUser['DATE_REGISTER']) {
                     $createOrderResult = $mindbox->order()->CreateUnauthorizedOrder($orderDTO,
                         Options::getOperationName('createUnauthorizedOrder'))->sendRequest();
+                } else {
+                    $createOrderResult = $mindbox->order()->CreateAuthorizedOrder($orderDTO,
+                        Options::getOperationName('createAuthorizedOrder'))->sendRequest();
                 }
             } else {
                 $createOrderResult = $mindbox->order()->createOrder($orderDTO,
