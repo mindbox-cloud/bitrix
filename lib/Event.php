@@ -477,6 +477,9 @@ class Event
         $basket = $order->getBasket();
         global $USER;
 
+        $rsUser = \CUser::GetByID($USER->GetID());
+        $arUser = $rsUser->Fetch();
+
         $orderDTO = new OrderCreateRequestDTO();
         $basketItems = $basket->getBasketItems();
         $lines = [];
@@ -532,10 +535,11 @@ class Event
 
         $mindboxId = Helper::getMindboxId($order->getUserId());
 
+        if($arUser['LAST_LOGIN'] !== $arUser['DATE_REGISTER']) {
+            $customer->setId(Options::getModuleOption('WEBSITE_ID'), $order->getUserId());
+            $orderDTO->setCustomer($customer);
+        }
 
-        $customer->setId(Options::getModuleOption('WEBSITE_ID'), $order->getUserId());
-
-        $orderDTO->setCustomer($customer);
 
         //$orderDTO->setPointOfContact(Options::getModuleOption('POINT_OF_CONTACT'));
 
@@ -577,7 +581,7 @@ class Event
                 if ($USER->IsAuthorized()) {
                     $createOrderResult = $mindbox->order()->CreateAuthorizedOrder($orderDTO,
                         Options::getOperationName('createAuthorizedOrder'))->sendRequest();
-                } else {
+                } else if ($arUser['LAST_LOGIN'] === $arUser['DATE_REGISTER']) {
                     $createOrderResult = $mindbox->order()->CreateUnauthorizedOrder($orderDTO,
                         Options::getOperationName('createUnauthorizedOrder'))->sendRequest();
                 }
