@@ -480,6 +480,11 @@ class Event
         $rsUser = \CUser::GetByID($USER->GetID());
         $arUser = $rsUser->Fetch();
 
+        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('OnSaleOrderSavedHandler');
+            $logger->debug('$arUser', $arUser);
+        }
+
         $orderDTO = new OrderCreateRequestDTO();
         $basketItems = $basket->getBasketItems();
         $lines = [];
@@ -535,7 +540,10 @@ class Event
 
         $mindboxId = Helper::getMindboxId($order->getUserId());
 
-        if($arUser['LAST_LOGIN'] !== $arUser['DATE_REGISTER']) {
+
+        $logger->log('isUnAuthorizedOrder', [intval(\Mindbox\Helper::isUnAuthorizedOrder($arUser))]);
+
+        if(!\Mindbox\Helper::isUnAuthorizedOrder($arUser)) {
             $customer->setId(Options::getModuleOption('WEBSITE_ID'), $order->getUserId());
             $orderDTO->setCustomer($customer);
         }
@@ -578,7 +586,7 @@ class Event
         try {
 
             if (\COption::GetOptionString('qsoftm.mindbox', 'MODE') == 'standard') {
-                if ($arUser['LAST_LOGIN'] === $arUser['DATE_REGISTER']) {
+                if (\Mindbox\Helper::isUnAuthorizedOrder($arUser)) {
                     $createOrderResult = $mindbox->order()->CreateUnauthorizedOrder($orderDTO,
                         Options::getOperationName('createUnauthorizedOrder'))->sendRequest();
                 } else {

@@ -145,4 +145,14 @@ class Helper
         }
         return $isSync;
     }
+
+
+    /**
+     * Метод определяет что заказ от неавторизованного пользователя
+     *
+     * @return boolean
+     */
+    public static function isUnAuthorizedOrder($arUser) {
+        return date('dmYHi', time()) === date('dmYHi', strtotime($arUser['DATE_REGISTER']));
+    }
 }
