@@ -543,10 +543,10 @@ class Event
 
         $logger->log('isUnAuthorizedOrder', [intval(\Mindbox\Helper::isUnAuthorizedOrder($arUser))]);
 
-        if(!\Mindbox\Helper::isUnAuthorizedOrder($arUser)) {
-            $customer->setId(Options::getModuleOption('WEBSITE_ID'), $order->getUserId());
-            $orderDTO->setCustomer($customer);
-        }
+
+        $customer->setId(Options::getModuleOption('WEBSITE_ID'), $order->getUserId());
+        $orderDTO->setCustomer($customer);
+
 
 
         //$orderDTO->setPointOfContact(Options::getModuleOption('POINT_OF_CONTACT'));
