@@ -20,3 +20,6 @@ $MESS['WEBSITE_ID'] = 'Website ID';
 $MESS['DOCS_LINK'] = 'Docs for <a href="https://github.com/mindbox-moscow/bitrix" target="_blank">module</a>. Docs for <a href="https://developers.mindbox.ru/" target="_blank">Mindbox API</a>';
 $MESS['MODE'] = "Mode";
 $MESS['BRAND'] = "Brand";
+$MESS['IDENTIFIERS'] =  "Identifiers";
+$MESS['CONNECTION_SETTINGS'] = "Connection settings";
+$MESS['CATALOG_SETTINGS'] = "Catalog settings";
