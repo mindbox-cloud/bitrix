@@ -133,6 +133,8 @@ class Event
     public function OnBeforeUserRegisterHandler(&$arFields)
     {
 
+
+
         if (\COption::GetOptionString('qsoftm.mindbox', 'MODE') == 'standard') {
             return $arFields;
         }
@@ -232,6 +234,12 @@ class Event
     {
         // all for standard mode
 
+        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('OnAfterUserRegisterHandler');
+            $logger->debug('$arFields', $arFields);
+        }
+
+
         global $APPLICATION;
         $mindbox = static::mindbox();
         if (!$mindbox) {
@@ -288,7 +296,6 @@ class Event
                     Helper::isSync())->sendRequest();
             } catch (Exceptions\MindboxClientException $e) {
                 $APPLICATION->ThrowException(Loc::getMessage('MB_USER_EDIT_ERROR'));
-
                 return false;
             }
         }
@@ -480,9 +487,11 @@ class Event
         $rsUser = \CUser::GetByID($USER->GetID());
         $arUser = $rsUser->Fetch();
 
+
         if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
             $logger = new \Intensa\Logger\ILog('OnSaleOrderSavedHandler');
             $logger->debug('$arUser', $arUser);
+            $logger->debug('$ar', $ar);
         }
 
         $orderDTO = new OrderCreateRequestDTO();
@@ -543,8 +552,38 @@ class Event
 
         $logger->log('isUnAuthorizedOrder', [intval(\Mindbox\Helper::isUnAuthorizedOrder($arUser))]);
 
+        
+        /*
+         *
+         * $fields = [
+                'email'       => $arFields[ 'EMAIL' ],
+                'lastName'    => $arFields[ 'LAST_NAME' ],
+                'middleName'  => $arFields[ 'SECOND_NAME' ],
+                'firstName'   => $arFields[ 'NAME' ],
+                'mobilePhone' => $arFields[ 'PERSONAL_PHONE' ],
+                'birthDate'   => Helper::formatDate($arFields[ 'PERSONAL_BIRTHDAY' ]),
+                'sex'         => $sex,
+                'ids'         => [Options::getModuleOption('WEBSITE_ID') => $arFields[ 'USER_ID' ]]
+            ];
+         * */
 
+        $propertyCollection = $order->getPropertyCollection();
+        $ar = $propertyCollection->getArray();
+        foreach ($ar['properties'] as $arProperty) {
+            $arOrderProperty[$arProperty['CODE']] = array_pop($arProperty['VALUE']);
+        }
+
+        $customer->setEmail($arOrderProperty['EMAIL']);
+        $customer->setLastName($arOrderProperty['FIO']);
+        $customer->setFirstName($arOrderProperty['NAME']);
+        $customer->setMobilePhone($arOrderProperty['PHONE']);
         $customer->setId(Options::getModuleOption('WEBSITE_ID'), $order->getUserId());
+
+
+
+
+
+
         $orderDTO->setCustomer($customer);
 
 
@@ -1088,6 +1127,12 @@ class Event
 
     public function OnAfterUserAddHandler(&$arFields)
     {
+
+        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('OnAfterUserAddHandler');
+            $logger->debug('$arFields', $arFields);
+        }
+
         $mindBoxId = $arFields[ 'UF_MINDBOX_ID' ];
 
         if ($mindBoxId) {
