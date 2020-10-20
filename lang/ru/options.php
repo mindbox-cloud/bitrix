@@ -22,3 +22,4 @@ $MESS['MODE'] = "Режим работы";
 $MESS['IDENTIFIERS'] = 'Идентификаторы';
 $MESS['CONNECTION_SETTINGS'] = 'Настройки подключения';
 $MESS['CATALOG_SETTINGS'] = 'Настройки каталога';
+$MESS['BRAND'] = "Бренд";

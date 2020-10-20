@@ -74,6 +74,12 @@ $arAllOptions = array(
         COption::GetOptionString(ADMIN_MODULE_NAME, 'WEBSITE_PREFIX', 'Website'),
         ['text']
     ],
+    [
+        'BRAND',
+        getMessage('BRAND'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'BRAND', 'brand'),
+        ['text']
+    ],
     getMessage('IDENTIFIERS'),
     [
         'EXTERNAL_SYSTEM',

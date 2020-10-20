@@ -133,8 +133,6 @@ class Event
     public function OnBeforeUserRegisterHandler(&$arFields)
     {
 
-
-
         if (\COption::GetOptionString('qsoftm.mindbox', 'MODE') == 'standard') {
             return $arFields;
         }
@@ -289,7 +287,19 @@ class Event
             //$fields['ids']['mindboxId'] = $mindBoxId;
 
             $customer = new CustomerRequestDTO($fields);
+
             unset($fields);
+
+            $subscriptions = [
+                'subscription' => [
+                    'brand' =>  Options::getModuleOption('BRAND'),
+                    'pointOfContact' => 'Email',
+                    'isSubscribed'   => true,
+                    'valueByDefault' => true
+                ]
+            ];
+            $customer->setSubscriptions($subscriptions);
+
 
             try {
                 $mindbox->customer()->register($customer, Options::getOperationName('register'), true,
@@ -579,12 +589,21 @@ class Event
         $customer->setMobilePhone($arOrderProperty['PHONE']);
         $customer->setId(Options::getModuleOption('WEBSITE_ID'), $order->getUserId());
 
-
-
-
+        $subscriptions = [
+            'subscription' => [
+                'brand' =>  Options::getModuleOption('BRAND'),
+                'pointOfContact' => 'Email',
+                'isSubscribed'   => true,
+                'valueByDefault' => true
+            ]
+        ];
+        $customer->setSubscriptions($subscriptions);
 
 
         $orderDTO->setCustomer($customer);
+
+
+
 
 
 
