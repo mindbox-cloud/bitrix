@@ -59,7 +59,7 @@ class SubEdit extends CBitrixComponent implements Controllerable
             return Ajax::errorResponse(GetMessage('MB_SE_BAD_MODULE_SETTING'));
         }
         $customer = new CustomerRequestDTO([
-            'ids' => ['mindboxId' => $this->userInfo['UF_MINDBOX_ID']],
+            'ids' => [Options::getModuleOption('WEBSITE_ID') => $this->userInfo['ID']],
         ]);
 
         $subscriptions = [
@@ -123,7 +123,7 @@ class SubEdit extends CBitrixComponent implements Controllerable
 
         $rsUser = UserTable::getList(
             [
-                'select' => ['UF_MINDBOX_ID', 'EMAIL'],
+                'select' => ['UF_MINDBOX_ID', 'EMAIL', 'ID'],
                 'filter' => ['ID' => $USER->GetID()]
             ]
         )->fetch();
