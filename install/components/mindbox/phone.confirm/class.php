@@ -75,7 +75,7 @@ class PhoneConfirm extends CBitrixComponent implements Controllerable
         }
 
         global $USER;
-		$customer = new CustomerRequestDTO(['ids' => ['mindboxId' => $this->userInfo['UF_MINDBOX_ID']]]);
+		$customer = new CustomerRequestDTO(['ids' => [Options::getModuleOption('WEBSITE_ID') => $this->userInfo['ID']]]);
         $sms = new SmsConfirmationRequestDTO(['code' => $code]);
 
         try {
@@ -110,7 +110,7 @@ class PhoneConfirm extends CBitrixComponent implements Controllerable
         if (!$this->mindbox) {
             return Ajax::errorResponse(GetMessage('MB_PC_BAD_MODULE_SETTING'));
         }
-        $customer = new CustomerRequestDTO(['ids' => ['mindboxId' => $this->userInfo['UF_MINDBOX_ID']]]);
+        $customer = new CustomerRequestDTO(['ids' => [Options::getModuleOption('WEBSITE_ID') => $this->userInfo['ID']]]);
         try {
             $this->mindbox->customer()->resendConfirmationCode($customer,
                 Options::getOperationName('resendConfirmationCode'))->sendRequest();
@@ -130,14 +130,13 @@ class PhoneConfirm extends CBitrixComponent implements Controllerable
             ]
         )->fetch();
 
-        if($rsUser['UF_MINDBOX_ID']) {
             $mindbox = Options::getConfig();
             $request = $mindbox->getClientV3()->prepareRequest('POST',
                 Options::getOperationName('getCustomerInfo'),
                 new DTO([
                     'customer' => [
                         'ids' => [
-                            'mindboxId' => $rsUser[ 'UF_MINDBOX_ID' ]
+                            Options::getModuleOption('WEBSITE_ID') => $rsUser[ 'ID' ]
                         ]
                     ]
                 ]));
@@ -157,7 +156,7 @@ class PhoneConfirm extends CBitrixComponent implements Controllerable
                     $rsUser[ 'UF_PHONE_CONFIRMED' ] = $customer->getIsMobilePhoneConfirmed();
                 }
             }
-        }
+
 
         return $rsUser;
     }

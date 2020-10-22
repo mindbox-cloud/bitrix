@@ -69,6 +69,9 @@ class Options
             $sdkOptions[$key] = COption::GetOptionString('qsoftm.mindbox', $option);
         }
 
+        // for standard mode
+        $sdkOptions['domain'] = 'demo-services.mindbox.cloud';
+
         return $sdkOptions;
     }
 

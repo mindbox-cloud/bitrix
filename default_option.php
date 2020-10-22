@@ -2,7 +2,7 @@
 
 $mindbox_default_option = [
     'ENDPOINT' => '',
-    'DOMAIN' => '',
+    'DOMAIN' => 'demo-services.mindbox.cloud',
     'SECRET_KEY' => '',
     'LOG_PATH' => $_SERVER['DOCUMENT_ROOT'] .'/logs/',
     'HTTP_CLIENT' => '',
