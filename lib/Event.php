@@ -44,10 +44,6 @@ class Event
      */
     public function OnAfterUserAuthorizeHandler($arUser)
     {
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('OnAfterUserAuthorizeHandler');
-            $logger->debug('$arUser', $arUser);
-        }
 
         if(empty($arUser['user_fields']['LAST_LOGIN'])) {
             return true;
@@ -232,12 +228,6 @@ class Event
     {
         // all for standard mode
 
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('OnAfterUserRegisterHandler');
-            $logger->debug('$arFields', $arFields);
-        }
-
-
         global $APPLICATION;
         $mindbox = static::mindbox();
         if (!$mindbox) {
@@ -284,8 +274,6 @@ class Event
                 return true;
             }
 
-            //$fields['ids']['mindboxId'] = $mindBoxId;
-
             $customer = new CustomerRequestDTO($fields);
 
             unset($fields);
@@ -311,7 +299,6 @@ class Event
         }
 
         //  authorize
-
         sleep(1);
 
         if (isset($_SESSION[ 'NEW_USER_MINDBOX' ]) && $_SESSION[ 'NEW_USER_MINDBOX' ] === true) {
@@ -425,9 +412,6 @@ class Event
             return true;
         }
 
-        $fields = [];
-        //$mindboxId = Helper::getMindboxId($arFields[ 'ID' ]);
-
         $mindboxId = $arFields[ 'ID' ];
 
         if (!empty($mindboxId)) {
@@ -498,12 +482,6 @@ class Event
         $arUser = $rsUser->Fetch();
 
 
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('OnSaleOrderSavedHandler');
-            $logger->debug('$arUser', $arUser);
-            $logger->debug('$ar', $ar);
-        }
-
         $orderDTO = new OrderCreateRequestDTO();
         $basketItems = $basket->getBasketItems();
         $lines = [];
@@ -512,15 +490,6 @@ class Event
             $line = new LineRequestDTO();
             $catalogPrice = \CPrice::GetBasePrice($basketItem->getProductId());
             $catalogPrice = $catalogPrice[ 'PRICE' ] ?: 0;
-            /*
-            $line->setLine([
-                'productId'        => Helper::getProductId($basketItem->getField('PRODUCT_XML_ID')),
-                'basePricePerItem' => $catalogPrice,
-                'quantity'         => $basketItem->getQuantity(),
-                'lineId'           => $basketItem->getId()
-            ]);
-            */
-            //$lines[] = $line;
             $lines[] = [
                   'basePricePerItem' => $catalogPrice,
                   'quantity'         => $basketItem->getQuantity(),
@@ -536,7 +505,6 @@ class Event
         if (empty($lines)) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
-        //$orderDTO->setLines($lines);
 
 
         $orderDTO->setField('order', [
@@ -549,33 +517,8 @@ class Event
 
 
         $customer = new CustomerRequestV2DTO();
-        /*
-        if ($USER->IsAuthorized()) {
-            $customer->setField('isAuthorized', true);
-        } else {
-            $customer->setField('isAuthorized', false);
-        }
-        */
 
         $mindboxId = Helper::getMindboxId($order->getUserId());
-
-
-        $logger->log('isUnAuthorizedOrder', [intval(\Mindbox\Helper::isUnAuthorizedOrder($arUser))]);
-
-        
-        /*
-         *
-         * $fields = [
-                'email'       => $arFields[ 'EMAIL' ],
-                'lastName'    => $arFields[ 'LAST_NAME' ],
-                'middleName'  => $arFields[ 'SECOND_NAME' ],
-                'firstName'   => $arFields[ 'NAME' ],
-                'mobilePhone' => $arFields[ 'PERSONAL_PHONE' ],
-                'birthDate'   => Helper::formatDate($arFields[ 'PERSONAL_BIRTHDAY' ]),
-                'sex'         => $sex,
-                'ids'         => [Options::getModuleOption('WEBSITE_ID') => $arFields[ 'USER_ID' ]]
-            ];
-         * */
 
         $propertyCollection = $order->getPropertyCollection();
         $ar = $propertyCollection->getArray();
@@ -603,12 +546,6 @@ class Event
         $orderDTO->setCustomer($customer);
 
 
-
-
-
-
-        //$orderDTO->setPointOfContact(Options::getModuleOption('POINT_OF_CONTACT'));
-
         $discounts = [];
         $bonuses = $_SESSION[ 'PAY_BONUSES' ];
         if (!empty($bonuses)) {
@@ -633,13 +570,6 @@ class Event
         if (!empty($discounts)) {
             $orderDTO->setDiscounts($discounts);
         }
-
-        //$now = new DateTime();
-        //$now = $now->setTimezone(new DateTimeZone("UTC"))->format("Y-m-d H:i:s");
-        //$orderDTO->setCreatedDateTimeUtc($now);
-
-        //$orderDTO->setField('paidAmount', $basket->getPrice());
-        //$orderDTO->setField('preOrderDiscountedTotalPrice', $basket->getPrice());
 
         try {
 
@@ -738,128 +668,6 @@ class Event
         return new Main\EventResult(Main\EventResult::SUCCESS);
     }
 
-    /*
-    public function OnSaleOrderSavedHandler($order)
-    {
-
-        if (\COption::GetOptionString('qsoftm.mindbox', 'MODE') == 'standard') {
-            return new Main\EventResult(Main\EventResult::SUCCESS);
-        }
-
-        $mindbox = static::mindbox();
-        if (!$mindbox) {
-            return new Main\EventResult(Main\EventResult::SUCCESS);
-        }
-
-        if (isset($_SESSION['OFFLINE_ORDER']['DTO'])) {
-            $orderDTO = $_SESSION['OFFLINE_ORDER']['DTO'];
-
-            $transactionId = Options::getModuleOption('TRANSACTION_ID');
-            $orderDTO->setId($transactionId, $order->getId());
-
-            $request = $mindbox->order()->offlineOrder($orderDTO,
-                Options::getOperationName('offlineOrder'))->getRequest();
-            QueueTable::push($request);
-
-            unset($_SESSION['OFFLINE_ORDER']);
-            return new Main\EventResult(Main\EventResult::SUCCESS);
-        }
-
-        $basket = $order->getBasket();
-        global $USER;
-
-        $orderDTO = new OrderUpdateRequestDTO();
-
-        $basketItems = $basket->getBasketItems();
-        $lines = [];
-        foreach ($basketItems as $basketItem) {
-            $line = new LineRequestDTO();
-            $line->setQuantity($basketItem->getQuantity());
-            $line->setField('lineId', $basketItem->getId());
-            $catalogPrice = \CPrice::GetBasePrice($basketItem->getProductId());
-            $catalogPrice = $catalogPrice['PRICE'] ?: 0;
-            $line->setProduct([
-                'productId' => Helper::getProductId($basketItem->getField('PRODUCT_XML_ID')),
-                'basePricePerItem' => $catalogPrice
-            ]);
-
-            $lines[] = $line;
-        }
-        if (empty($lines)) {
-            return new Main\EventResult(Main\EventResult::SUCCESS);
-        }
-        $orderDTO->setLines($lines);
-
-        $customer = new CustomerRequestV2DTO();
-        if ($USER->IsAuthorized()) {
-            $customer->setField('isAuthorized', true);
-        } else {
-            $customer->setField('isAuthorized', false);
-        }
-
-        $mindboxId = Helper::getMindboxId($order->getUserId());
-
-        if ($mindboxId) {
-            $customer->setId('mindbox', $mindboxId);
-        }
-        $orderDTO->setCustomer($customer);
-        $orderDTO->setPointOfContact(Options::getModuleOption('POINT_OF_CONTACT'));
-
-        $discounts = [];
-        $bonuses = $_SESSION['PAY_BONUSES'];
-        if (!empty($bonuses)) {
-            $discounts[] = new DiscountRequestDTO([
-                'type' => 'balance',
-                'amount' => $bonuses,
-                'balanceType' => [
-                    'ids' => ['systemName' => 'Main']
-                ]
-            ]);
-        }
-
-        $code = $_SESSION['PROMO_CODE'];
-        if ($code) {
-            $discounts[] = new DiscountRequestDTO([
-                'type' => 'promoCode',
-                'id' => $code,
-                'amount' => $_SESSION['PROMO_CODE_AMOUNT']
-            ]);
-        }
-
-        if (!empty($discounts)) {
-            $orderDTO->setDiscounts($discounts);
-        }
-
-        $_SESSION['PAY_BONUSES'] = 0;
-        unset($_SESSION['PROMO_CODE']);
-        unset($_SESSION['PROMO_CODE_AMOUNT']);
-
-        $transactionId = Options::getModuleOption('TRANSACTION_ID');
-        $orderDTO->setId($transactionId, $order->getId());
-        $orderDTO->setId('mindbox', $_SESSION['MINDBOX_ORDER']);
-
-        $now = new DateTime();
-        $now = $now->setTimezone(new DateTimeZone("UTC"))->format("Y-m-d H:i:s");
-        $orderDTO->setUpdatedDateTimeUtc($now);
-
-        $orderDTO->setField('totalPrice', $basket->getPrice());
-
-        try {
-            $mindbox->order()->confirmOrder($orderDTO,
-                Options::getOperationName('confirmOrder'))->sendRequest();
-        } catch (Exceptions\MindboxClientErrorException $e) {
-            return new Main\EventResult(Main\EventResult::ERROR);
-        } catch (Exceptions\MindboxClientException $e) {
-            $lastResponse = $mindbox->order()->getLastResponse();
-
-            if ($lastResponse) {
-                $request = $lastResponse->getRequest();
-                QueueTable::push($request);
-            }
-        }
-
-        return new Main\EventResult(Main\EventResult::SUCCESS);
-    }   */
 
     public function OnSaleBasketBeforeSavedHadler($basket)
     {
@@ -1146,11 +954,6 @@ class Event
 
     public function OnAfterUserAddHandler(&$arFields)
     {
-
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('OnAfterUserAddHandler');
-            $logger->debug('$arFields', $arFields);
-        }
 
         $mindBoxId = $arFields[ 'UF_MINDBOX_ID' ];
 
