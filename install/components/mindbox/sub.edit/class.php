@@ -35,12 +35,12 @@ class SubEdit extends CBitrixComponent implements Controllerable
         parent::__construct($component);
 
         try {
-            if (!Loader::includeModule('qsoftm.mindbox')) {
-                ShowError(GetMessage('MB_SE_MODULE_NOT_INCLUDED', ['#MODULE#' => 'qsoftm.mindbox']));
+            if (!Loader::includeModule('mindbox.marketing')) {
+                ShowError(GetMessage('MB_SE_MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));
                 return;
             }
         } catch (LoaderException $e) {
-            ShowError(GetMessage('MB_SE_MODULE_NOT_INCLUDED', ['#MODULE#' => 'qsoftm.mindbox']));;
+            ShowError(GetMessage('MB_SE_MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));
             return;
         }
 

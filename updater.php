@@ -1,5 +1,5 @@
 <?
-if(IsModuleInstalled('qsoftm.mindbox'))
+if(IsModuleInstalled('mindbox.marketing'))
 {
 	if (is_dir(dirname(__FILE__).'/install/components'))
 	{
@@ -7,14 +7,14 @@ if(IsModuleInstalled('qsoftm.mindbox'))
 	}
 	if (is_dir(dirname(__FILE__).'/install/js'))
 	{
-		$updater->CopyFiles("install/js", "js/qsoftm.mindbox/");
+		$updater->CopyFiles("install/js", "js/mindbox.marketing/");
 	}
 	if (is_dir(dirname(__FILE__).'install/css/'))
 	{
-		$updater->CopyFiles("install/css", "css/qsoftm.mindbox/");
+		$updater->CopyFiles("install/css", "css/mindbox.marketing/");
 	}
 	if (is_dir(dirname(__FILE__).'install/images/'))
         {
-                $updater->CopyFiles("install/images", "images/qsoftm.mindbox/");
+                $updater->CopyFiles("install/images", "images/mindbox.marketing/");
         }
 }

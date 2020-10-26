@@ -51,7 +51,7 @@ __Примечание:__
     use Mindbox\YmlFeedMindbox;
     
     try {
-        if (!Loader::includeModule('qsoftm.mindbox')) {
+        if (!Loader::includeModule('mindbox.marketing')) {
             die();
         }
     } catch (LoaderException $e) {

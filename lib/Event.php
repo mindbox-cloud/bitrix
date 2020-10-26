@@ -129,7 +129,7 @@ class Event
     public function OnBeforeUserRegisterHandler(&$arFields)
     {
 
-        if (\COption::GetOptionString('qsoftm.mindbox', 'MODE') == 'standard') {
+        if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
             return $arFields;
         }
 
@@ -573,7 +573,7 @@ class Event
 
         try {
 
-            if (\COption::GetOptionString('qsoftm.mindbox', 'MODE') == 'standard') {
+            if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
                 if (\Mindbox\Helper::isUnAuthorizedOrder($arUser)) {
                     $createOrderResult = $mindbox->order()->CreateUnauthorizedOrder($orderDTO,
                         Options::getOperationName('createUnauthorizedOrder'))->sendRequest();
@@ -746,7 +746,7 @@ class Event
             $preorder->setDiscounts($discounts);
         }
 
-        if (\COption::GetOptionString('qsoftm.mindbox', 'MODE') != 'standard') {
+        if (\COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {
             try {
                 $preorderInfo = $mindbox->order()->calculateCart($preorder,
                     Options::getOperationName('calculateCart'))->sendRequest()->getResult()->getField('order');
@@ -823,7 +823,7 @@ class Event
     public function OnBeforeUserAddHandler(&$arFields)
     {
 
-        if (\COption::GetOptionString('qsoftm.mindbox', 'MODE') == 'standard') {
+        if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
             return $arFields;
         }
 

@@ -8,8 +8,8 @@ use \Bitrix\Main\Type\DateTime;
 
 IncludeModuleLangFile(__FILE__);
 
-class qsoftm_mindbox extends CModule {
-	var $MODULE_ID = "qsoftm.mindbox";
+class mindbox_marketing extends CModule {
+	var $MODULE_ID = "mindbox.marketing";
 	var $MODULE_VERSION;
 	var $MODULE_VERSION_DATE;
 	var $MODULE_NAME;
@@ -19,14 +19,14 @@ class qsoftm_mindbox extends CModule {
 
 	var $PATH_INST = "/";
 
-	function qsoftm_mindbox()
+	function __construct()
 	{
 		$arModuleVersion = [];
 
 		include($this->getPath() . "/version.php");
 
-		$this->PARTNER_NAME = "QSOFT";
-		$this->PARTNER_URI = "https://qsoft.ru/";
+		$this->PARTNER_NAME = "Mindbox";
+		$this->PARTNER_URI = "https://mindbox.ru/";
 
 		if (is_array($arModuleVersion) && isset($arModuleVersion["VERSION"])) {
 			$this->MODULE_VERSION = $arModuleVersion["VERSION"];

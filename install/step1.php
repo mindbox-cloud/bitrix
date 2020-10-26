@@ -27,7 +27,7 @@ if ($ex = $APPLICATION->GetException()) {
 <form action="<? echo $APPLICATION->GetCurPage() ?>">
     <input type="hidden" name="lang" value="<?= LANG ?>">
     <input type="submit" name="" value="<?= GetMessage('MOD_BACK') ?>">
-    <a href="/bitrix/admin/settings.php?lang=ru&mid=qsoftm.mindbox">
+    <a href="/bitrix/admin/settings.php?lang=ru&mid=mindbox.marketing">
         <input type="button" value="<?= GetMessage('GOTO_SETTINGS') ?>">
     </a>
 </form>

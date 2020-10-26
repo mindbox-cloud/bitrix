@@ -138,7 +138,7 @@ class Helper
      */
     public static function isSync()
     {
-        if (\COption::GetOptionString('qsoftm.mindbox', 'MODE') == 'standard') {
+        if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
             $isSync = false;
         } else {
             $isSync = true;

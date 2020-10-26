@@ -35,8 +35,8 @@ class Cart extends CBitrixComponent implements Controllerable
         parent::__construct($component);
 
         try {
-            if(!Loader::includeModule('qsoftm.mindbox')) {
-                ShowError(GetMessage('MB_CART_MODULE_NOT_INCLUDED', ['#MODULE#' => 'qsoftm.mindbox']));;
+            if(!Loader::includeModule('mindbox.marketing')) {
+                ShowError(GetMessage('MB_CART_MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));;
                 return;
             }
 
@@ -154,7 +154,7 @@ class Cart extends CBitrixComponent implements Controllerable
             'message' => GetMessage('MB_CART_PROMOCODE_SUCCESS')
         ];
 
-        if (\COption::GetOptionString('qsoftm.mindbox', 'MODE') != 'standard') {
+        if (\COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {
             try {
                 $preorderInfo = $mindbox->order()->calculateCart($preorder,
                     Options::getOperationName('calculateCart'))->sendRequest()->getResult()->getField('order');
@@ -317,7 +317,7 @@ class Cart extends CBitrixComponent implements Controllerable
 
         $preorder->setDiscounts($discounts);
 
-        if (\COption::GetOptionString('qsoftm.mindbox', 'MODE') != 'standard') {
+        if (\COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {
             try {
                 $preorderInfo = $mindbox->order()->calculateCart($preorder,
                     Options::getOperationName('calculateCart'))->sendRequest()->getResult()->getField('order');
@@ -401,7 +401,7 @@ class Cart extends CBitrixComponent implements Controllerable
             return;
         }
 
-        if (\COption::GetOptionString('qsoftm.mindbox', 'MODE') != 'standard') {
+        if (\COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {
             $this->calculateCart($basket);
         }
 
