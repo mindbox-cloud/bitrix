@@ -19,7 +19,7 @@ class mindbox_marketing extends CModule {
 
 	var $PATH_INST = "/";
 
-	function __construct()
+	function mindbox_marketing()
 	{
 		$arModuleVersion = [];
 

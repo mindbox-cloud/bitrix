@@ -51,7 +51,7 @@ $arAllOptions = array(
         [
             'selectbox',
             [
-                'standard' => 'Стандартный',
+                'standard' => getMessage('STANDARD'),
             ]
         ]
     ],
