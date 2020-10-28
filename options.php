@@ -163,7 +163,7 @@ $arAllOptions = array(
     $tabControl->EndTab();
 
     $tabControl->Buttons(); ?>
-    <input type='submit' class='adm-btn-save' name='save' value='Сохранить'>
+    <input type='submit' class='adm-btn-save' name='save' value='<?=getMessage('SAVE')?>'>
     <?= bitrix_sessid_post(); ?>
     <? $tabControl->End(); ?>
 
