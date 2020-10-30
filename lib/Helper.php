@@ -98,9 +98,20 @@ class Helper
         return $dtoArray;
     }
 
-    public static function getProductId($id)
+    /**
+     * Метод возвращает ид товара
+     * @param \Bitrix\Sale\Basket $basketItem
+     *
+     * @return $result
+     */
+
+    public static function getProductId($basketItem)
     {
         $result = '';
+        $id = $basketItem->getField('PRODUCT_XML_ID');
+        if(!$id) {
+            $id = $basketItem->getField('ID');
+        }
         if(strpos($id, '#') !==false) {
             $result = ltrim(stristr($id, '#'), '#');
         } else {

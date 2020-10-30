@@ -99,7 +99,7 @@ class Cart extends CBitrixComponent implements Controllerable
             $catalogPrice = CPrice::GetBasePrice($basketItem->getProductId());
             $catalogPrice = $catalogPrice['PRICE'] ?: 0;
             $line->setSku([
-                $skuId => Helper::getProductId($basketItem->getField('PRODUCT_XML_ID')),
+                $skuId => Helper::getProductId($basketItem),
                 'basePricePerItem' => $catalogPrice
             ]);
 
@@ -269,7 +269,7 @@ class Cart extends CBitrixComponent implements Controllerable
             $catalogPrice = CPrice::GetBasePrice($basketItem->getProductId());
             $catalogPrice = $catalogPrice['PRICE'] ?: 0;
             $line->setSku([
-                $skuId => Helper::getProductId($basketItem->getField('PRODUCT_XML_ID')),
+                $skuId => Helper::getProductId($basketItem),
                 'basePricePerItem' => $catalogPrice
             ]);
 
@@ -429,7 +429,7 @@ class Cart extends CBitrixComponent implements Controllerable
             $line->setQuantity($basketItem->getQuantity());
             $catalogPrice = \CPrice::GetBasePrice($basketItem->getProductId())['PRICE'];
             $line->setSku([
-                $skuId => Helper::getProductId($basketItem->getField('PRODUCT_XML_ID')),
+                $skuId => Helper::getProductId($basketItem),
                 'basePricePerItem' => $catalogPrice
             ]);
 
