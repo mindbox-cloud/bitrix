@@ -188,16 +188,16 @@ class mindbox_marketing extends CModule {
 	function UnInstallEvents()
 	{
 		$eventManager = \Bitrix\Main\EventManager::getInstance();
-		$eventManager->unRegisterEventHandler("main", "OnAfterUserAuthorize", MODULE_ID);
-		$eventManager->unRegisterEventHandler("main", "OnAfterUserRegister", MODULE_ID);
-		$eventManager->unRegisterEventHandler("main", "OnBeforeUserRegister", MODULE_ID);
-		$eventManager->unRegisterEventHandler("main", "OnBeforeUserUpdate", MODULE_ID);
-		$eventManager->unRegisterEventHandler("main", "OnBeforeUserAdd", MODULE_ID);
-		$eventManager->unRegisterEventHandler("main", "OnAfterUserAdd", MODULE_ID);
-		$eventManager->unRegisterEventHandler("sale", "OnSaleBasketSaved", MODULE_ID);
-		$eventManager->unRegisterEventHandler("sale", "OnBasketAdd", MODULE_ID);
-		$eventManager->unRegisterEventHandler("sale", "OnBasketDelete", MODULE_ID);
-		$eventManager->unRegisterEventHandler("sale", "OnBasketUpdate", MODULE_ID);
+		$eventManager->unRegisterEventHandler("main", "OnAfterUserAuthorize", $this->MODULE_ID);
+		$eventManager->unRegisterEventHandler("main", "OnAfterUserRegister", $this->MODULE_ID);
+		$eventManager->unRegisterEventHandler("main", "OnBeforeUserRegister", $this->MODULE_ID);
+		$eventManager->unRegisterEventHandler("main", "OnBeforeUserUpdate", $this->MODULE_ID);
+		$eventManager->unRegisterEventHandler("main", "OnBeforeUserAdd", $this->MODULE_ID);
+		$eventManager->unRegisterEventHandler("main", "OnAfterUserAdd", $this->MODULE_ID);
+		$eventManager->unRegisterEventHandler("sale", "OnSaleBasketSaved", $this->MODULE_ID);
+		$eventManager->unRegisterEventHandler("sale", "OnBasketAdd", $this->MODULE_ID);
+		$eventManager->unRegisterEventHandler("sale", "OnBasketDelete", $this->MODULE_ID);
+		$eventManager->unRegisterEventHandler("sale", "OnBasketUpdate", $this->MODULE_ID);
 
 		return true;
 	}

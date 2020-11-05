@@ -1,5 +1,5 @@
 {
-    "name": "qsoft/mindbox",
+    "name": "mindbox/marketing",
     "type": "bitrix-module",
     "license": "MIT",
     "require": {
