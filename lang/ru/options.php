@@ -13,7 +13,6 @@ $MESS['TRANSACTION_ID'] = 'Идентификатор заказа';
 $MESS['USE_BONUSES'] = 'Использовать бонусные баллы';
 $MESS['CATALOG_IBLOCK_ID'] = 'ИД каталога в Битриксе';
 $MESS['YML_NAME'] = 'Название yml фида';
-$MESS['USE_SKU'] = 'SKU в каталоге';
 $MESS['EXTERNAL_SYSTEM'] = 'Идентификатор продукта';
 $MESS['POINT_OF_CONTACT'] = 'Точка контакта';
 $MESS['WEBSITE_ID'] = 'Идентификатор клиента';

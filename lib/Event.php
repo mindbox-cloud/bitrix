@@ -111,7 +111,7 @@ class Event
 
         try {
             $mindbox->customer()->authorize($customer,
-                Options::getOperationName('authorize'), true, false)->sendRequest();
+                Options::getOperationName('authorize'))->sendRequest();
         } catch (Exceptions\MindboxUnavailableException $e) {
             $lastResponse = $mindbox->customer()->getLastResponse();
 
@@ -356,7 +356,7 @@ class Event
 
         try {
             $mindbox->customer()->authorize($customer,
-                Options::getOperationName('authorize'), true, false)->sendRequest();
+                Options::getOperationName('authorize'))->sendRequest();
         } catch (Exceptions\MindboxUnavailableException $e) {
             $lastResponse = $mindbox->customer()->getLastResponse();
 
@@ -574,7 +574,7 @@ class Event
         try {
 
             if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
-                if (\Mindbox\Helper::isUnAuthorizedOrder($arUser)) {
+                if (\Mindbox\Helper::isUnAuthorizedOrder($arUser) || !$USER->IsAuthorized()) {
                     $createOrderResult = $mindbox->order()->CreateUnauthorizedOrder($orderDTO,
                         Options::getOperationName('createUnauthorizedOrder'))->sendRequest();
                 } else {

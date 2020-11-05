@@ -108,9 +108,8 @@ class OrderHistory extends CBitrixComponent implements Controllerable
                 $acuiredBonuses = 0;
                 $spentBonuses = 0;
                 $lines = $order->getLines();
-                $skuId = Options::getModuleOption('USE_SKU') ? 'skuId' : 'productId';
                 foreach ($lines as $line) {
-                    $product = $this->getProductById($line->getSku()->getField($skuId));
+                    $product = $this->getProductById($line->getProduct()->getField('productId'));
                     $orders[$id]['lines'][] = [
                         'name' => $product['NAME'],
                         'link' => $product['DETAIL_PAGE_URL'],

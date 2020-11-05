@@ -90,7 +90,6 @@ class Cart extends CBitrixComponent implements Controllerable
         $basketItems = $basket->getBasketItems();
         $lines = [];
         $bitrixBasket = [];
-        $skuId = Options::getModuleOption('USE_SKU') ? 'skuId' : 'productId';
         foreach ($basketItems as $basketItem) {
             $bitrixBasket[$basketItem->getId()] = $basketItem;
             $line = new LineRequestDTO();
@@ -98,8 +97,8 @@ class Cart extends CBitrixComponent implements Controllerable
             $line->setQuantity($basketItem->getQuantity());
             $catalogPrice = CPrice::GetBasePrice($basketItem->getProductId());
             $catalogPrice = $catalogPrice['PRICE'] ?: 0;
-            $line->setSku([
-                $skuId => Helper::getProductId($basketItem),
+            $line->setProduct([
+                'productId' => Helper::getProductId($basketItem),
                 'basePricePerItem' => $catalogPrice
             ]);
 
@@ -260,7 +259,6 @@ class Cart extends CBitrixComponent implements Controllerable
         $basketItems = $basket->getBasketItems();
         $lines = [];
         $bitrixBasket = [];
-        $skuId = Options::getModuleOption('USE_SKU') ? 'skuId' : 'productId';
         foreach ($basketItems as $basketItem) {
             $bitrixBasket[$basketItem->getId()] = $basketItem;
             $line = new LineRequestDTO();
@@ -268,8 +266,8 @@ class Cart extends CBitrixComponent implements Controllerable
             $line->setQuantity($basketItem->getQuantity());
             $catalogPrice = CPrice::GetBasePrice($basketItem->getProductId());
             $catalogPrice = $catalogPrice['PRICE'] ?: 0;
-            $line->setSku([
-                $skuId => Helper::getProductId($basketItem),
+            $line->setProduct([
+                'productId' => Helper::getProductId($basketItem),
                 'basePricePerItem' => $catalogPrice
             ]);
 
@@ -421,15 +419,14 @@ class Cart extends CBitrixComponent implements Controllerable
         $basketItems = $basket->getBasketItems();
         $lines = [];
         $bitrixBasket = [];
-        $skuId = Options::getModuleOption('USE_SKU') ? 'skuId' : 'productId';
         foreach ($basketItems as $basketItem) {
             $bitrixBasket[$basketItem->getId()] = $basketItem;
             $line = new LineRequestDTO();
             $line->setField('lineId', $basketItem->getId());
             $line->setQuantity($basketItem->getQuantity());
             $catalogPrice = \CPrice::GetBasePrice($basketItem->getProductId())['PRICE'];
-            $line->setSku([
-                $skuId => Helper::getProductId($basketItem),
+            $line->setProduct([
+                'productId' => Helper::getProductId($basketItem),
                 'basePricePerItem' => $catalogPrice
             ]);
 
