@@ -110,7 +110,7 @@ class Helper
         $result = '';
         $id = $basketItem->getField('PRODUCT_XML_ID');
         if(!$id) {
-            $id = $basketItem->getField('ID');
+            $id = $basketItem->getField('PRODUCT_ID');
         }
         if(strpos($id, '#') !==false) {
             $result = ltrim(stristr($id, '#'), '#');
