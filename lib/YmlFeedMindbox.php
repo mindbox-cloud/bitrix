@@ -79,6 +79,9 @@ class YmlFeedMindbox
                 foreach ($ofrs as $ofr) {
                     $offer = $dom->createElement("offer");
                     $offer->setAttribute("group_id", $prods[$prodId]['XML_ID']);
+                    if(!$ofr["XML_ID"]) {
+                        $ofr['XML_ID'] = $ofr['ID'];
+                    }
                     $offer->setAttribute("id", $ofr["XML_ID"]);
                     $available = $ofr['ACTIVE'] == 'Y';
                     $offer->setAttribute("available", $available);
@@ -255,6 +258,9 @@ class YmlFeedMindbox
         );
         $prodsInfo = array();
         while ($prod = $prods->GetNext()) {
+            if(!$prod['XML_ID']) {
+                $prod['XML_ID'] = $prod['ID'];
+            }
             $prodsInfo[$prod["ID"]] = $prod;
         }
         return $prodsInfo;

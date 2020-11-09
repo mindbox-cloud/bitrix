@@ -109,8 +109,15 @@ class Helper
     {
         $result = '';
         $id = $basketItem->getField('PRODUCT_XML_ID');
+
         if(!$id) {
-            $id = $basketItem->getField('ID');
+            $productId = $basketItem->getField('PRODUCT_ID');
+            $arProduct = \CIBlockElement::GetByID($productId)->GetNext();
+            $id = $arProduct['XML_ID'];
+        }
+
+        if(!$id) {
+            $id = $basketItem->getField('PRODUCT_ID');
         }
         if(strpos($id, '#') !==false) {
             $result = ltrim(stristr($id, '#'), '#');
