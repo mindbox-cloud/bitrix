@@ -23,4 +23,5 @@ $MESS['CONNECTION_SETTINGS'] = 'Настройки подключения';
 $MESS['CATALOG_SETTINGS'] = 'Настройки каталога';
 $MESS['BRAND'] = "Бренд";
 $MESS['STANDARD'] = 'Стандартный';
+$MESS['LOYALTY'] = 'Лояльность';
 $MESS['SAVE'] = 'Сохранить';

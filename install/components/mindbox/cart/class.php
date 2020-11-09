@@ -155,8 +155,15 @@ class Cart extends CBitrixComponent implements Controllerable
 
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {
             try {
-                $preorderInfo = $mindbox->order()->calculateCart($preorder,
-                    Options::getOperationName('calculateCart'))->sendRequest()->getResult()->getField('order');
+
+                if($USER->IsAuthorized()) {
+                    $preorderInfo = $mindbox->order()->calculateAuthorizedCart($preorder,
+                        Options::getOperationName('calculateAuthorizedCart'))->sendRequest()->getResult()->getField('order');
+                } else {
+
+                }
+
+
 
                 if($preorderInfo) {
                     $discounts = $preorderInfo->getDiscountsInfo();
@@ -317,8 +324,15 @@ class Cart extends CBitrixComponent implements Controllerable
 
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {
             try {
-                $preorderInfo = $mindbox->order()->calculateCart($preorder,
-                    Options::getOperationName('calculateCart'))->sendRequest()->getResult()->getField('order');
+
+                if($USER->IsAuthorized()) {
+                    $preorderInfo = $mindbox->order()->calculateAuthorizedCart($preorder,
+                        Options::getOperationName('calculateAuthorizedCart'))->sendRequest()->getResult()->getField('order');
+                } else {
+
+                }
+
+
 
                 if ($preorderInfo) {
                     $discounts = $preorderInfo->getDiscountsInfo();
@@ -390,8 +404,6 @@ class Cart extends CBitrixComponent implements Controllerable
 
     public function executeComponent()
     {
-
-
         $basket = Bitrix\Sale\Basket::loadItemsForFUser(Bitrix\Sale\Fuser::getId(),
             Bitrix\Main\Context::getCurrent()->getSite());
 
@@ -409,6 +421,7 @@ class Cart extends CBitrixComponent implements Controllerable
 
     protected function calculateCart($basket)
     {
+
         global $USER;
         $mindbox = $this->mindbox;
         if (!$mindbox) {
@@ -424,7 +437,7 @@ class Cart extends CBitrixComponent implements Controllerable
             $line = new LineRequestDTO();
             $line->setField('lineId', $basketItem->getId());
             $line->setQuantity($basketItem->getQuantity());
-            $catalogPrice = \CPrice::GetBasePrice($basketItem->getProductId())['PRICE'];
+            $catalogPrice = $basketItem->getPrice();
             $line->setProduct([
                 'productId' => Helper::getProductId($basketItem),
                 'basePricePerItem' => $catalogPrice
@@ -475,8 +488,13 @@ class Cart extends CBitrixComponent implements Controllerable
         }
 
         try {
-            $preorderInfo = $mindbox->order()->calculateCart($preorder,
-                Options::getOperationName('calculateCart'))->sendRequest()->getResult()->getField('order');
+
+            if($USER->IsAuthorized()) {
+                $preorderInfo = $mindbox->order()->calculateAuthorizedCart($preorder,
+                    Options::getOperationName('calculateAuthorizedCart'))->sendRequest()->getResult()->getField('order');
+            } else {
+
+            }
 
             $discounts = $preorderInfo->getDiscountsInfo();
             foreach ($discounts as $discount) {

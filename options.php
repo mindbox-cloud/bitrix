@@ -52,6 +52,7 @@ $arAllOptions = array(
             'selectbox',
             [
                 'standard' => getMessage('STANDARD'),
+                'loyalty'   =>  getMessage('LOYALTY'),
             ]
         ]
     ],

@@ -314,7 +314,7 @@ class Event
 
         $mindboxId = $arFields[ 'USER_ID' ];
 
-        if (empty($mindboxId)) {
+        if (!empty($mindboxId)) {
             $request = $mindbox->getClientV3()->prepareRequest('POST',
                 Options::getOperationName('getCustomerInfo'),
                 new DTO([
@@ -748,8 +748,15 @@ class Event
 
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {
             try {
-                $preorderInfo = $mindbox->order()->calculateCart($preorder,
-                    Options::getOperationName('calculateCart'))->sendRequest()->getResult()->getField('order');
+
+                if($USER->IsAuthorized()) {
+                    $preorderInfo = $mindbox->order()->calculateAuthorizedCart($preorder,
+                        Options::getOperationName('calculateAuthorizedCart'))->sendRequest()->getResult()->getField('order');
+                } else {
+
+                }
+
+
 
                 if (!$preorderInfo) {
                     return new Main\EventResult(Main\EventResult::SUCCESS);

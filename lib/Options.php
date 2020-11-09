@@ -13,6 +13,7 @@ class Options
         'addToCart' => 'AddToCart',
         'autoConfirmMobile' => 'AutoConfirmMobilePhone',
         'calculateCart' => 'CalculateCart',
+        'calculateAuthorizedCart' => 'CalculateAuthorizedCart',
         'cancelOrder' => 'CancelOrder',
         'checkActive' => 'CheckCustomerIsInLoyalityProgram',
         'checkAuthorizationCode' => 'CheckMobilePhoneAuthorizationCode',
