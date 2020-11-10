@@ -133,6 +133,8 @@ class Event
             return $arFields;
         }
 
+        return $arFields;
+
         global $APPLICATION, $USER;
 
         $mindbox = static::mindbox();
@@ -195,7 +197,6 @@ class Event
                 Options::getOperationName('register'), true, Helper::isSync())->sendRequest()->getResult();
         } catch (Exceptions\MindboxClientException $e) {
             $APPLICATION->ThrowException(Loc::getMessage('MB_USER_REGISTER_ERROR'));
-
             return false;
         }
 
@@ -314,7 +315,9 @@ class Event
 
         $mindboxId = $arFields[ 'USER_ID' ];
 
+
         if (!empty($mindboxId)) {
+
             $request = $mindbox->getClientV3()->prepareRequest('POST',
                 Options::getOperationName('getCustomerInfo'),
                 new DTO([
@@ -328,6 +331,7 @@ class Event
             try {
                 $response = $request->sendRequest();
             } catch (Exceptions\MindboxClientException $e) {
+                $APPLICATION->ThrowException($e->getMessage());
                 return false;
             }
 
@@ -342,31 +346,32 @@ class Event
                     $arFields[ 'USER_ID' ],
                     $fields
                 );
-                $dbUser[ 'UF_MINDBOX_ID' ] = $fields[ 'UF_MINDBOX_ID' ];
             } else {
                 return true;
             }
-        }
 
-        $customer = new CustomerRequestDTO([
-            'ids' => [
-                Options::getModuleOption('WEBSITE_ID') => $mindboxId
-            ]
-        ]);
+            $customer = new CustomerRequestDTO([
+                'ids' => [
+                    Options::getModuleOption('WEBSITE_ID') => $mindboxId
+                ]
+            ]);
 
-        try {
-            $mindbox->customer()->authorize($customer,
-                Options::getOperationName('authorize'))->sendRequest();
-        } catch (Exceptions\MindboxUnavailableException $e) {
-            $lastResponse = $mindbox->customer()->getLastResponse();
+            try {
+                $mindbox->customer()->authorize($customer,
+                    Options::getOperationName('authorize'))->sendRequest();
+            } catch (Exceptions\MindboxUnavailableException $e) {
+                $lastResponse = $mindbox->customer()->getLastResponse();
 
-            if ($lastResponse) {
-                $request = $lastResponse->getRequest();
-                QueueTable::push($request);
+                if ($lastResponse) {
+                    $request = $lastResponse->getRequest();
+                    QueueTable::push($request);
+                }
+            } catch (Exceptions\MindboxClientException $e) {
+                return false;
             }
-        } catch (Exceptions\MindboxClientException $e) {
-            return false;
         }
+
+
 
         return $arFields;
     }
