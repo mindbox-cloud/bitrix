@@ -689,66 +689,76 @@ class Event
         self::setCartMindbox($basketItems);
         $lines = [];
         $bitrixBasket = [];
+
+        $preorder = new \Mindbox\DTO\V3\Requests\PreorderRequestDTO();
+
+
         foreach ($basketItems as $basketItem) {
-            $quantity = $basketItem->getQuantity();
-            if ($quantity === 0) {
-                continue;
-            }
-            $bitrixBasket[ $basketItem->getId() ] = $basketItem;
-
-            $line = new LineRequestDTO();
-            $line->setQuantity($quantity);
-            $catalogPrice = \CPrice::GetBasePrice($basketItem->getProductId());
-            $catalogPrice = $catalogPrice[ 'PRICE' ] ?: 0;
-            $line->setField('lineId', $basketItem->getId());
-
-            $line->setProduct([
-                'productId'        => Helper::getProductId($basketItem),
-                'basePricePerItem' => $catalogPrice
-            ]);
-
-            $lines[] = $line;
+            $bitrixBasket[$basketItem->getId()] = $basketItem;
+            $catalogPrice = $basketItem->getBasePrice();
+            $lines[] = [
+                'basePricePerItem' => $catalogPrice,
+                'quantity'         => $basketItem->getQuantity(),
+                'lineId'           => $basketItem->getId(),
+                'product' =>  [
+                    'ids' =>  [
+                        Options::getModuleOption('EXTERNAL_SYSTEM') =>  Helper::getProductId($basketItem)
+                    ]
+                ],
+                'status'    =>  [
+                    'ids'   =>  [
+                        'externalId'    =>  'CheckedOut'
+                    ]
+                ]
+            ];
         }
+
         if (empty($lines)) {
-            return new Main\EventResult(Main\EventResult::SUCCESS);
+            return false;
         }
-        $preorder->setLines($lines);
 
-        $customer = new CustomerRequestV2DTO();
+        $preorder->setField('order', [
+                'ids' => [
+                    Options::getModuleOption('TRANSACTION_ID') => '',
+                ],
+                'lines' =>  $lines
+            ]
+        );
+
+        //$preorder->setLines($lines);
+
+        $customer = new CustomerRequestDTO();
         if ($USER->IsAuthorized()) {
-            $customer->setField('isAuthorized', true);
-
             $mindboxId = Helper::getMindboxId($USER->GetID());
-
             if ($mindboxId) {
-                $customer->setId('mindbox', $mindboxId);
+                $customer->setId('mindboxId', $mindboxId);
             }
-        } else {
-            $customer->setField('isAuthorized', false);
         }
 
         $preorder->setCustomer($customer);
-        $preorder->setPointOfContact(Options::getModuleOption('POINT_OF_CONTACT'));
+        //$preorder->setPointOfContact(Options::getModuleOption('POINT_OF_CONTACT'));
 
-        $bonuses = $_SESSION[ 'PAY_BONUSES' ] ?: 0;
+        $bonuses = $_SESSION['PAY_BONUSES'] ?: 0;
+
 
         $discounts[] = new DiscountRequestDTO([
-            'type'        => 'balance',
-            'amount'      => $bonuses,
+            'type' => 'balance',
+            'amount' => $bonuses,
             'balanceType' => [
                 'ids' => ['systemName' => 'Main']
             ]
         ]);
 
-        if ($code = $_SESSION[ 'PROMO_CODE' ]) {
+
+        if ($code = $_SESSION['PROMO_CODE']) {
             $discounts[] = new DiscountRequestDTO([
                 'type' => 'promoCode',
-                'id'   => $code
+                'id' => $code
             ]);
         }
 
         if ($discounts) {
-            $preorder->setDiscounts($discounts);
+            //$preorder->setDiscounts($discounts);
         }
 
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {
@@ -783,6 +793,15 @@ class Event
 
 
                 $lines = $preorderInfo->getLines();
+
+                if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+                    $logger = new \Intensa\Logger\ILog('OnSaleBasketBeforeSavedHadler');
+                    $logger->log('$lines', $lines);
+                }
+
+
+
+
                 $mindboxBasket = [];
                 $mindboxAdditional = [];
                 $context = $basket->getContext();
