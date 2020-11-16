@@ -93,13 +93,9 @@ class CatalogTracking extends CBitrixComponent implements Controllerable
             Options::getModuleOption('EXTERNAL_SYSTEM') => $id
         ];
 
-        if (Options::getModuleOption('USE_SKU')) {
-            $data['viewProduct']['product'] = [
-                'sku' => ['ids' => $ids]
-            ];
-        } else {
-            $data['viewProduct']['product'] = ['ids' => $ids];
-        }
+
+        $data['viewProduct']['product'] = ['ids' => $ids];
+
 
         $dto = new DTO($data);
 
@@ -121,7 +117,7 @@ class CatalogTracking extends CBitrixComponent implements Controllerable
     private function loadModule()
     {
         try {
-            if (!Loader::includeModule('qsoftm.mindbox')) {
+            if (!Loader::includeModule('mindbox.marketing')) {
                 return false;
             }
         } catch (LoaderException $e) {

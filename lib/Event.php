@@ -44,23 +44,30 @@ class Event
      */
     public function OnAfterUserAuthorizeHandler($arUser)
     {
+
+        if(empty($arUser['user_fields']['LAST_LOGIN'])) {
+            return true;
+        }
+
         $mindbox = static::mindbox();
         if (!$mindbox) {
             return true;
         }
 
-        if (isset($_SESSION['NEW_USER_MINDBOX']) && $_SESSION['NEW_USER_MINDBOX'] === true) {
-            unset($_SESSION['NEW_USER_MINDBOX']);
+        if (isset($_SESSION[ 'NEW_USER_MINDBOX' ]) && $_SESSION[ 'NEW_USER_MINDBOX' ] === true) {
+            unset($_SESSION[ 'NEW_USER_MINDBOX' ]);
 
             return true;
         }
-        if ($_SESSION['AUTH_BY_SMS'] === true) {
-            $_SESSION['AUTH_BY_SMS'] = false;
+        if ($_SESSION[ 'AUTH_BY_SMS' ] === true) {
+            $_SESSION[ 'AUTH_BY_SMS' ] = false;
 
             return true;
         }
 
-        $mindboxId = Helper::getMindboxId($arUser['user_fields']['ID']);
+        //$mindboxId = Helper::getMindboxId($arUser['user_fields']['ID']);
+
+        $mindboxId = $arUser[ 'user_fields' ][ 'ID' ];
 
         if (empty($mindboxId)) {
             $request = $mindbox->getClientV3()->prepareRequest('POST',
@@ -68,7 +75,7 @@ class Event
                 new DTO([
                     'customer' => [
                         'ids' => [
-                            Options::getModuleOption('WEBSITE_ID') => $arUser['user_fields']['ID']
+                            Options::getModuleOption('WEBSITE_ID') => $arUser[ 'user_fields' ][ 'ID' ]
                         ]
                     ]
                 ]));
@@ -82,15 +89,15 @@ class Event
             if ($response->getResult()->getCustomer()->getProcessingStatus() === 'Found') {
                 $fields = [
                     'UF_EMAIL_CONFIRMED' => $response->getResult()->getCustomer()->getIsEmailConfirmed(),
-                    'UF_MINDBOX_ID' => $response->getResult()->getCustomer()->getId('mindboxId')
+                    'UF_MINDBOX_ID'      => $response->getResult()->getCustomer()->getId('mindboxId')
                 ];
 
                 $user = new CUser;
                 $user->Update(
-                    $arUser['user_fields']['ID'],
+                    $arUser[ 'user_fields' ][ 'ID' ],
                     $fields
                 );
-                $dbUser['UF_MINDBOX_ID'] = $fields['UF_MINDBOX_ID'];
+                $dbUser[ 'UF_MINDBOX_ID' ] = $fields[ 'UF_MINDBOX_ID' ];
             } else {
                 return true;
             }
@@ -98,7 +105,7 @@ class Event
 
         $customer = new CustomerRequestDTO([
             'ids' => [
-                'mindboxId' => $mindboxId
+                Options::getModuleOption('WEBSITE_ID') => $mindboxId
             ]
         ]);
 
@@ -121,6 +128,11 @@ class Event
 
     public function OnBeforeUserRegisterHandler(&$arFields)
     {
+
+        if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
+            return $arFields;
+        }
+
         global $APPLICATION, $USER;
 
         $mindbox = static::mindbox();
@@ -128,15 +140,15 @@ class Event
             return $arFields;
         }
 
-        if(!isset($arFields['PERSONAL_PHONE'])) {
-            $arFields['PERSONAL_PHONE'] = $arFields['PERSONAL_MOBILE'];
+        if (!isset($arFields[ 'PERSONAL_PHONE' ])) {
+            $arFields[ 'PERSONAL_PHONE' ] = $arFields[ 'PERSONAL_MOBILE' ];
         }
 
-        if (isset($arFields['PERSONAL_PHONE'])) {
-            $arFields['PERSONAL_PHONE'] = Helper::formatPhone($arFields['PERSONAL_PHONE']);
+        if (isset($arFields[ 'PERSONAL_PHONE' ])) {
+            $arFields[ 'PERSONAL_PHONE' ] = Helper::formatPhone($arFields[ 'PERSONAL_PHONE' ]);
         }
 
-        if (isset($_SESSION['OFFLINE_REGISTER']) && $_SESSION['OFFLINE_REGISTER']) {
+        if (isset($_SESSION[ 'OFFLINE_REGISTER' ]) && $_SESSION[ 'OFFLINE_REGISTER' ]) {
             return $arFields;
         }
 
@@ -146,47 +158,50 @@ class Event
             return false;
         }
 
-        $sex = substr(ucfirst($arFields['PERSONAL_GENDER']), 0, 1) ?: null;
+        $sex = substr(ucfirst($arFields[ 'PERSONAL_GENDER' ]), 0, 1) ?: null;
         $fields = [
-            'email' => $arFields['EMAIL'],
-            'lastName' => $arFields['LAST_NAME'],
-            'middleName' => $arFields['SECOND_NAME'],
-            'firstName' => $arFields['NAME'],
-            'mobilePhone' => $arFields['PERSONAL_PHONE'],
-            'birthDate' => Helper::formatDate($arFields['PERSONAL_BIRTHDAY']),
-            'sex' => $sex,
+            'email'       => $arFields[ 'EMAIL' ],
+            'lastName'    => $arFields[ 'LAST_NAME' ],
+            'middleName'  => $arFields[ 'SECOND_NAME' ],
+            'firstName'   => $arFields[ 'NAME' ],
+            'mobilePhone' => $arFields[ 'PERSONAL_PHONE' ],
+            'birthDate'   => Helper::formatDate($arFields[ 'PERSONAL_BIRTHDAY' ]),
+            'sex'         => $sex,
         ];
 
         $fields = array_filter($fields, function ($item) {
             return isset($item);
         });
 
-        $fields['subscriptions'] = [
+        $fields[ 'subscriptions' ] = [
             [
                 'pointOfContact' => 'Email',
-                'isSubscribed' => true,
+                'isSubscribed'   => true,
                 'valueByDefault' => true
             ],
             [
                 'pointOfContact' => 'Sms',
-                'isSubscribed' => true,
+                'isSubscribed'   => true,
                 'valueByDefault' => true
             ],
         ];
 
         $customer = Helper::iconvDTO(new CustomerRequestDTO($fields));
+
         unset($fields);
 
         try {
             $registerResponse = $mindbox->customer()->register($customer,
-                Options::getOperationName('register'))->sendRequest()->getResult();
+                Options::getOperationName('register'), true, Helper::isSync())->sendRequest()->getResult();
         } catch (Exceptions\MindboxClientException $e) {
             $APPLICATION->ThrowException(Loc::getMessage('MB_USER_REGISTER_ERROR'));
+
             return false;
         }
 
         $registerResponse = Helper::iconvDTO($registerResponse, false);
         $status = $registerResponse->getStatus();
+
 
         if ($status === 'ValidationError') {
             $errors = $registerResponse->getValidationMessages();
@@ -197,45 +212,58 @@ class Event
         }
 
         $customer = $registerResponse->getCustomer();
+
+
         if (!$customer) {
             return false;
         }
 
         $mindBoxId = $customer->getId('mindboxId');
-        $_SESSION['NEW_USER_MB_ID'] = $mindBoxId;
-        $_SESSION['NEW_USER_MINDBOX'] = true;
+        $_SESSION[ 'NEW_USER_MB_ID' ] = $mindBoxId;
+        $_SESSION[ 'NEW_USER_MINDBOX' ] = true;
+
     }
 
     public function OnAfterUserRegisterHandler(&$arFields)
     {
+        // all for standard mode
+
         global $APPLICATION;
         $mindbox = static::mindbox();
-        if(!$mindbox) {
+        if (!$mindbox) {
             return $arFields;
         }
 
-        $mindBoxId = $_SESSION['NEW_USER_MB_ID'];
-        unset($_SESSION['NEW_USER_MB_ID']);
+        $mindBoxId = $_SESSION[ 'NEW_USER_MB_ID' ];
+        unset($_SESSION[ 'NEW_USER_MB_ID' ]);
 
         if (!$mindBoxId) {
-            return false;
+            //return false;
         }
 
         $fields = [
             'UF_EMAIL_CONFIRMED' => '0',
-            'UF_MINDBOX_ID' => $mindBoxId
+            'UF_MINDBOX_ID'      => $mindBoxId
         ];
 
         $user = new CUser;
         $user->Update(
-            $arFields['USER_ID'],
+            $arFields[ 'USER_ID' ],
             $fields
         );
 
 
-        if ($arFields['USER_ID']) {
+        if ($arFields[ 'USER_ID' ]) {
+            $sex = substr(ucfirst($arFields[ 'PERSONAL_GENDER' ]), 0, 1) ?: null;
             $fields = [
-                'ids' => [Options::getModuleOption('WEBSITE_ID') => $arFields['USER_ID']]
+                'email'       => $arFields[ 'EMAIL' ],
+                'lastName'    => $arFields[ 'LAST_NAME' ],
+                'middleName'  => $arFields[ 'SECOND_NAME' ],
+                'firstName'   => $arFields[ 'NAME' ],
+                'mobilePhone' => $arFields[ 'PERSONAL_PHONE' ],
+                'birthDate'   => Helper::formatDate($arFields[ 'PERSONAL_BIRTHDAY' ]),
+                'sex'         => $sex,
+                'ids'         => [Options::getModuleOption('WEBSITE_ID') => $arFields[ 'USER_ID' ]]
             ];
 
             $fields = array_filter($fields, function ($item) {
@@ -246,22 +274,83 @@ class Event
                 return true;
             }
 
-            $fields['ids']['mindboxId'] = $mindBoxId;
-
             $customer = new CustomerRequestDTO($fields);
+
             unset($fields);
 
+            $subscriptions = [
+                'subscription' => [
+                    'brand' =>  Options::getModuleOption('BRAND'),
+                    'pointOfContact' => 'Email',
+                    'isSubscribed'   => true,
+                    'valueByDefault' => true
+                ]
+            ];
+            $customer->setSubscriptions($subscriptions);
+
+
             try {
-                $mindbox->customer()->edit($customer, Options::getOperationName('edit'))->sendRequest();
+                $mindbox->customer()->register($customer, Options::getOperationName('register'), true,
+                    Helper::isSync())->sendRequest();
             } catch (Exceptions\MindboxClientException $e) {
                 $APPLICATION->ThrowException(Loc::getMessage('MB_USER_EDIT_ERROR'));
                 return false;
             }
         }
 
+        //  authorize
+        sleep(1);
+
+        if (isset($_SESSION[ 'NEW_USER_MINDBOX' ]) && $_SESSION[ 'NEW_USER_MINDBOX' ] === true) {
+            unset($_SESSION[ 'NEW_USER_MINDBOX' ]);
+
+            return true;
+        }
+        if ($_SESSION[ 'AUTH_BY_SMS' ] === true) {
+            $_SESSION[ 'AUTH_BY_SMS' ] = false;
+
+            return true;
+        }
+
+        $mindboxId = $arFields[ 'USER_ID' ];
+
+        if (empty($mindboxId)) {
+            $request = $mindbox->getClientV3()->prepareRequest('POST',
+                Options::getOperationName('getCustomerInfo'),
+                new DTO([
+                    'customer' => [
+                        'ids' => [
+                            Options::getModuleOption('WEBSITE_ID') => $arFields[ 'USER_ID' ]
+                        ]
+                    ]
+                ]));
+
+            try {
+                $response = $request->sendRequest();
+            } catch (Exceptions\MindboxClientException $e) {
+                return false;
+            }
+
+            if ($response->getResult()->getCustomer()->getProcessingStatus() === 'Found') {
+                $fields = [
+                    'UF_EMAIL_CONFIRMED' => $response->getResult()->getCustomer()->getIsEmailConfirmed(),
+                    'UF_MINDBOX_ID'      => $response->getResult()->getCustomer()->getId('mindboxId')
+                ];
+
+                $user = new CUser;
+                $user->Update(
+                    $arFields[ 'USER_ID' ],
+                    $fields
+                );
+                $dbUser[ 'UF_MINDBOX_ID' ] = $fields[ 'UF_MINDBOX_ID' ];
+            } else {
+                return true;
+            }
+        }
+
         $customer = new CustomerRequestDTO([
             'ids' => [
-                'mindboxId' => $mindBoxId
+                Options::getModuleOption('WEBSITE_ID') => $mindboxId
             ]
         ]);
 
@@ -276,7 +365,7 @@ class Event
                 QueueTable::push($request);
             }
         } catch (Exceptions\MindboxClientException $e) {
-            return $arFields;
+            return false;
         }
 
         return $arFields;
@@ -285,6 +374,8 @@ class Event
     public function OnBeforeUserUpdateHandler(&$arFields)
     {
         global $APPLICATION;
+
+
 
         $mindbox = static::mindbox();
 
@@ -295,7 +386,7 @@ class Event
         $dbUser = UserTable::getList(
             [
                 'select' => ['EMAIL', 'PERSONAL_PHONE'],
-                'filter' => ['ID' => $arFields['ID']]
+                'filter' => ['ID' => $arFields[ 'ID' ]]
             ]
         )->fetch();
 
@@ -303,38 +394,37 @@ class Event
             return false;
         }
 
-        if(!isset($arFields['PERSONAL_PHONE'])) {
-            $arFields['PERSONAL_PHONE'] = $arFields['PERSONAL_MOBILE'];
+        if (!isset($arFields[ 'PERSONAL_PHONE' ])) {
+            $arFields[ 'PERSONAL_PHONE' ] = $arFields[ 'PERSONAL_MOBILE' ];
         }
 
-        if (isset($arFields['EMAIL']) && $dbUser['EMAIL'] != $arFields['EMAIL']) {
-            $arFields['UF_EMAIL_CONFIRMED'] = '0';
+        if (isset($arFields[ 'EMAIL' ]) && $dbUser[ 'EMAIL' ] != $arFields[ 'EMAIL' ]) {
+            $arFields[ 'UF_EMAIL_CONFIRMED' ] = '0';
         }
 
-        if (isset($arFields['PERSONAL_PHONE'])) {
-            $arFields['PERSONAL_PHONE'] = Helper::formatPhone($arFields['PERSONAL_PHONE']);
+        if (isset($arFields[ 'PERSONAL_PHONE' ])) {
+            $arFields[ 'PERSONAL_PHONE' ] = Helper::formatPhone($arFields[ 'PERSONAL_PHONE' ]);
         }
 
-        if (isset($_SESSION['OFFLINE_REGISTER']) && $_SESSION['OFFLINE_REGISTER']) {
-            unset($_SESSION['OFFLINE_REGISTER']);
+        if (isset($_SESSION[ 'OFFLINE_REGISTER' ]) && $_SESSION[ 'OFFLINE_REGISTER' ]) {
+            unset($_SESSION[ 'OFFLINE_REGISTER' ]);
 
             return true;
         }
 
-        $fields = [];
-        $mindboxId = Helper::getMindboxId($arFields['ID']);
+        $mindboxId = $arFields[ 'ID' ];
 
         if (!empty($mindboxId)) {
-            $sex = substr(ucfirst($arFields['PERSONAL_GENDER']), 0, 1) ?: null;
+            $sex = substr(ucfirst($arFields[ 'PERSONAL_GENDER' ]), 0, 1) ?: null;
 
             $fields = [
-                'birthDate' => Helper::formatDate($arFields["PERSONAL_BIRTHDAY"]),
-                'firstName' => $arFields['NAME'],
-                'middleName' => $arFields['SECOND_NAME'],
-                'lastName' => $arFields["LAST_NAME"],
-                'mobilePhone' => $arFields['PERSONAL_PHONE'],
-                'email' => $arFields['EMAIL'],
-                'sex' => $sex
+                'birthDate'   => Helper::formatDate($arFields[ "PERSONAL_BIRTHDAY" ]),
+                'firstName'   => $arFields[ 'NAME' ],
+                'middleName'  => $arFields[ 'SECOND_NAME' ],
+                'lastName'    => $arFields[ "LAST_NAME" ],
+                'mobilePhone' => $arFields[ 'PERSONAL_PHONE' ],
+                'email'       => $arFields[ 'EMAIL' ],
+                'sex'         => $sex
             ];
 
             $fields = array_filter($fields, function ($item) {
@@ -345,15 +435,19 @@ class Event
                 return true;
             }
 
-            $fields['ids']['mindboxId'] = $mindboxId;
+            $fields[ 'ids' ][ Options::getModuleOption('WEBSITE_ID')] = $mindboxId;
             $customer = new CustomerRequestDTO($fields);
             $customer = Helper::iconvDTO($customer);
             unset($fields);
 
+
+
             try {
-                $updateResponse = $mindbox->customer()->edit($customer, Options::getOperationName('edit'))->sendRequest()->getResult();
+                $updateResponse = $mindbox->customer()->edit($customer, Options::getOperationName('edit'), true,
+                    Helper::isSync())->sendRequest()->getResult();
             } catch (Exceptions\MindboxClientException $e) {
                 $APPLICATION->ThrowException(Loc::getMessage('MB_USER_EDIT_ERROR'));
+
                 return false;
             }
 
@@ -372,8 +466,9 @@ class Event
         return true;
     }
 
-    public function OnSaleOrderBeforeSavedHandler($order)
+    public function OnSaleOrderSavedHandler($order)
     {
+
         $mindbox = static::mindbox();
         if (!$mindbox) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
@@ -383,63 +478,92 @@ class Event
         $basket = $order->getBasket();
         global $USER;
 
+        $rsUser = \CUser::GetByID($USER->GetID());
+        $arUser = $rsUser->Fetch();
+
+
         $orderDTO = new OrderCreateRequestDTO();
         $basketItems = $basket->getBasketItems();
         $lines = [];
 
-        $skuId = Options::getModuleOption('USE_SKU') ? 'skuId' : 'productId';
         foreach ($basketItems as $basketItem) {
             $line = new LineRequestDTO();
-            $line->setQuantity($basketItem->getQuantity());
-            $line->setField('lineId', $basketItem->getId());
             $catalogPrice = \CPrice::GetBasePrice($basketItem->getProductId());
-            $catalogPrice = $catalogPrice['PRICE'] ?: 0;
-            $line->setSku([
-                $skuId => Helper::getProductId($basketItem->getField('PRODUCT_XML_ID')),
-                'basePricePerItem' => $catalogPrice
-            ]);
-
-            $lines[] = $line;
+            $catalogPrice = $catalogPrice[ 'PRICE' ] ?: 0;
+            $lines[] = [
+                  'basePricePerItem' => $catalogPrice,
+                  'quantity'         => $basketItem->getQuantity(),
+                  'lineId'           => $basketItem->getId(),
+                  'product' =>  [
+                      'ids' =>  [
+                          Options::getModuleOption('EXTERNAL_SYSTEM') =>  Helper::getProductId($basketItem)
+                      ]
+                  ]
+              ];
         }
 
         if (empty($lines)) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
-        $orderDTO->setLines($lines);
+
+
+        $orderDTO->setField('order', [
+                'ids' => [
+                    Options::getModuleOption('TRANSACTION_ID') => $order->getId()
+                ],
+                'lines' =>  $lines
+            ]
+        );
+
 
         $customer = new CustomerRequestV2DTO();
-        if ($USER->IsAuthorized()) {
-            $customer->setField('isAuthorized', true);
-        } else {
-            $customer->setField('isAuthorized', false);
-        }
 
         $mindboxId = Helper::getMindboxId($order->getUserId());
 
-        if ($mindboxId) {
-            $customer->setId('mindbox', $mindboxId);
+        $propertyCollection = $order->getPropertyCollection();
+        $ar = $propertyCollection->getArray();
+        foreach ($ar['properties'] as $arProperty) {
+            $arOrderProperty[$arProperty['CODE']] = array_pop($arProperty['VALUE']);
         }
+
+        $customer->setEmail($arOrderProperty['EMAIL']);
+        $customer->setLastName($arOrderProperty['FIO']);
+        $customer->setFirstName($arOrderProperty['NAME']);
+        $customer->setMobilePhone($arOrderProperty['PHONE']);
+        $customer->setId(Options::getModuleOption('WEBSITE_ID'), $order->getUserId());
+
+        $subscriptions = [
+            'subscription' => [
+                'brand' =>  Options::getModuleOption('BRAND'),
+                'pointOfContact' => 'Email',
+                'isSubscribed'   => true,
+                'valueByDefault' => true
+            ]
+        ];
+        $customer->setSubscriptions($subscriptions);
+
+
         $orderDTO->setCustomer($customer);
-        $orderDTO->setPointOfContact(Options::getModuleOption('POINT_OF_CONTACT'));
+
 
         $discounts = [];
-        $bonuses = $_SESSION['PAY_BONUSES'];
+        $bonuses = $_SESSION[ 'PAY_BONUSES' ];
         if (!empty($bonuses)) {
             $discounts[] = new DiscountRequestDTO([
-                'type' => 'balance',
-                'amount' => $bonuses,
+                'type'        => 'balance',
+                'amount'      => $bonuses,
                 'balanceType' => [
                     'ids' => ['systemName' => 'Main']
                 ]
             ]);
         }
 
-        $code = $_SESSION['PROMO_CODE'];
+        $code = $_SESSION[ 'PROMO_CODE' ];
         if ($code) {
             $discounts[] = new DiscountRequestDTO([
-                'type' => 'promoCode',
-                'id' => $code,
-                'amount' => $_SESSION['PROMO_CODE_AMOUNT'] ?: 0
+                'type'   => 'promoCode',
+                'id'     => $code,
+                'amount' => $_SESSION[ 'PROMO_CODE_AMOUNT' ] ?: 0
             ]);
         }
 
@@ -447,34 +571,38 @@ class Event
             $orderDTO->setDiscounts($discounts);
         }
 
-        $now = new DateTime();
-        $now = $now->setTimezone(new DateTimeZone("UTC"))->format("Y-m-d H:i:s");
-        $orderDTO->setCreatedDateTimeUtc($now);
-
-        $orderDTO->setField('paidAmount', $basket->getPrice());
-        $orderDTO->setField('preOrderDiscountedTotalPrice', $basket->getPrice());
-
         try {
-            $createOrderResult = $mindbox->order()->createOrder($orderDTO,
-                Options::getOperationName('createOrder'))->sendRequest();
+
+            if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
+                if (\Mindbox\Helper::isUnAuthorizedOrder($arUser) || !$USER->IsAuthorized()) {
+                    $createOrderResult = $mindbox->order()->CreateUnauthorizedOrder($orderDTO,
+                        Options::getOperationName('createUnauthorizedOrder'))->sendRequest();
+                } else {
+                    $createOrderResult = $mindbox->order()->CreateAuthorizedOrder($orderDTO,
+                        Options::getOperationName('createAuthorizedOrder'))->sendRequest();
+                }
+            } else {
+                $createOrderResult = $mindbox->order()->createOrder($orderDTO,
+                    Options::getOperationName('createOrder'))->sendRequest();
+            }
 
             if ($createOrderResult->getValidationErrors()) {
                 return new Main\EventResult(Main\EventResult::ERROR);
             }
 
             $createOrderResult = $createOrderResult->getResult()->getField('order');
-            $_SESSION['MINDBOX_ORDER'] = $createOrderResult ? $createOrderResult->getId('mindbox') : false;
+            $_SESSION[ 'MINDBOX_ORDER' ] = $createOrderResult ? $createOrderResult->getId('mindbox') : false;
         } catch (Exceptions\MindboxClientErrorException $e) {
             return new Main\EventResult(Main\EventResult::ERROR);
         } catch (Exceptions\MindboxUnavailableException $e) {
             $orderDTO = new OrderUpdateRequestDTO();
 
-            $_SESSION['PAY_BONUSES'] = 0;
-            unset($_SESSION['PROMO_CODE']);
-            unset($_SESSION['PROMO_CODE_AMOUNT']);
+            $_SESSION[ 'PAY_BONUSES' ] = 0;
+            unset($_SESSION[ 'PROMO_CODE' ]);
+            unset($_SESSION[ 'PROMO_CODE_AMOUNT' ]);
 
-            if ($_SESSION['MINDBOX_ORDER']) {
-                $orderDTO->setId('mindbox', $_SESSION['MINDBOX_ORDER']);
+            if ($_SESSION[ 'MINDBOX_ORDER' ]) {
+                $orderDTO->setId('mindbox', $_SESSION[ 'MINDBOX_ORDER' ]);
             }
 
             $now = new DateTime();
@@ -489,10 +617,10 @@ class Event
             }
 
             $customer->setEmail($USER->GetEmail());
-            $phone = $_SESSION['ANONYM']['PHONE'];
-            unset($_SESSION['ANONYM']['PHONE']);
+            $phone = $_SESSION[ 'ANONYM' ][ 'PHONE' ];
+            unset($_SESSION[ 'ANONYM' ][ 'PHONE' ]);
 
-            if($phone) {
+            if ($phone) {
                 $customer->setMobilePhone(Helper::formatPhone($phone));
             }
             if ($USER->IsAuthorized()) {
@@ -511,9 +639,9 @@ class Event
                 $line = new LineRequestDTO();
                 $line->setField('lineId', $basketItem->getId());
                 $line->setQuantity($basketItem->getQuantity());
-                $catalogPrice = \CPrice::GetBasePrice($basketItem->getProductId())['PRICE'];
-                $line->setSku([
-                    $skuId => Helper::getProductId($basketItem->getField('PRODUCT_XML_ID')),
+                $catalogPrice = \CPrice::GetBasePrice($basketItem->getProductId())[ 'PRICE' ];
+                $line->setProduct([
+                    'productId'        => Helper::getProductId($basketItem),
                     'basePricePerItem' => $catalogPrice
                 ]);
 
@@ -523,7 +651,7 @@ class Event
             $orderDTO->setLines($lines);
             $orderDTO->setField('totalPrice', $basket->getPrice());
 
-            $_SESSION['OFFLINE_ORDER'] = [
+            $_SESSION[ 'OFFLINE_ORDER' ] = [
                 'DTO' => $orderDTO,
             ];
 
@@ -540,123 +668,6 @@ class Event
         return new Main\EventResult(Main\EventResult::SUCCESS);
     }
 
-    public function OnSaleOrderSavedHandler($order)
-    {
-        $mindbox = static::mindbox();
-        if (!$mindbox) {
-            return new Main\EventResult(Main\EventResult::SUCCESS);
-        }
-
-        if (isset($_SESSION['OFFLINE_ORDER']['DTO'])) {
-            $orderDTO = $_SESSION['OFFLINE_ORDER']['DTO'];
-
-            $transactionId = Options::getModuleOption('TRANSACTION_ID');
-            $orderDTO->setId($transactionId, $order->getId());
-
-            $request = $mindbox->order()->offlineOrder($orderDTO,
-                Options::getOperationName('offlineOrder'))->getRequest();
-            QueueTable::push($request);
-
-            unset($_SESSION['OFFLINE_ORDER']);
-            return new Main\EventResult(Main\EventResult::SUCCESS);
-        }
-
-        $basket = $order->getBasket();
-        global $USER;
-
-        $orderDTO = new OrderUpdateRequestDTO();
-
-        $basketItems = $basket->getBasketItems();
-        $lines = [];
-        $skuId = Options::getModuleOption('USE_SKU') ? 'skuId' : 'productId';
-        foreach ($basketItems as $basketItem) {
-            $line = new LineRequestDTO();
-            $line->setQuantity($basketItem->getQuantity());
-            $line->setField('lineId', $basketItem->getId());
-            $catalogPrice = \CPrice::GetBasePrice($basketItem->getProductId());
-            $catalogPrice = $catalogPrice['PRICE'] ?: 0;
-            $line->setSku([
-                $skuId => Helper::getProductId($basketItem->getField('PRODUCT_XML_ID')),
-                'basePricePerItem' => $catalogPrice
-            ]);
-
-            $lines[] = $line;
-        }
-        if (empty($lines)) {
-            return new Main\EventResult(Main\EventResult::SUCCESS);
-        }
-        $orderDTO->setLines($lines);
-
-        $customer = new CustomerRequestV2DTO();
-        if ($USER->IsAuthorized()) {
-            $customer->setField('isAuthorized', true);
-        } else {
-            $customer->setField('isAuthorized', false);
-        }
-
-        $mindboxId = Helper::getMindboxId($order->getUserId());
-
-        if ($mindboxId) {
-            $customer->setId('mindbox', $mindboxId);
-        }
-        $orderDTO->setCustomer($customer);
-        $orderDTO->setPointOfContact(Options::getModuleOption('POINT_OF_CONTACT'));
-
-        $discounts = [];
-        $bonuses = $_SESSION['PAY_BONUSES'];
-        if (!empty($bonuses)) {
-            $discounts[] = new DiscountRequestDTO([
-                'type' => 'balance',
-                'amount' => $bonuses,
-                'balanceType' => [
-                    'ids' => ['systemName' => 'Main']
-                ]
-            ]);
-        }
-
-        $code = $_SESSION['PROMO_CODE'];
-        if ($code) {
-            $discounts[] = new DiscountRequestDTO([
-                'type' => 'promoCode',
-                'id' => $code,
-                'amount' => $_SESSION['PROMO_CODE_AMOUNT']
-            ]);
-        }
-
-        if (!empty($discounts)) {
-            $orderDTO->setDiscounts($discounts);
-        }
-
-        $_SESSION['PAY_BONUSES'] = 0;
-        unset($_SESSION['PROMO_CODE']);
-        unset($_SESSION['PROMO_CODE_AMOUNT']);
-
-        $transactionId = Options::getModuleOption('TRANSACTION_ID');
-        $orderDTO->setId($transactionId, $order->getId());
-        $orderDTO->setId('mindbox', $_SESSION['MINDBOX_ORDER']);
-
-        $now = new DateTime();
-        $now = $now->setTimezone(new DateTimeZone("UTC"))->format("Y-m-d H:i:s");
-        $orderDTO->setUpdatedDateTimeUtc($now);
-
-        $orderDTO->setField('totalPrice', $basket->getPrice());
-
-        try {
-            $mindbox->order()->confirmOrder($orderDTO,
-                Options::getOperationName('confirmOrder'))->sendRequest();
-        } catch (Exceptions\MindboxClientErrorException $e) {
-            return new Main\EventResult(Main\EventResult::ERROR);
-        } catch (Exceptions\MindboxClientException $e) {
-            $lastResponse = $mindbox->order()->getLastResponse();
-
-            if ($lastResponse) {
-                $request = $lastResponse->getRequest();
-                QueueTable::push($request);
-            }
-        }
-
-        return new Main\EventResult(Main\EventResult::SUCCESS);
-    }
 
     public function OnSaleBasketBeforeSavedHadler($basket)
     {
@@ -673,22 +684,21 @@ class Event
         self::setCartMindbox($basketItems);
         $lines = [];
         $bitrixBasket = [];
-        $skuId = Options::getModuleOption('USE_SKU') ? 'skuId' : 'productId';
         foreach ($basketItems as $basketItem) {
             $quantity = $basketItem->getQuantity();
-            if($quantity === 0) {
+            if ($quantity === 0) {
                 continue;
             }
-            $bitrixBasket[$basketItem->getId()] = $basketItem;
+            $bitrixBasket[ $basketItem->getId() ] = $basketItem;
 
             $line = new LineRequestDTO();
             $line->setQuantity($quantity);
             $catalogPrice = \CPrice::GetBasePrice($basketItem->getProductId());
-            $catalogPrice = $catalogPrice['PRICE'] ?: 0;
+            $catalogPrice = $catalogPrice[ 'PRICE' ] ?: 0;
             $line->setField('lineId', $basketItem->getId());
 
-            $line->setSku([
-                $skuId => Helper::getProductId($basketItem->getField('PRODUCT_XML_ID')),
+            $line->setProduct([
+                'productId'        => Helper::getProductId($basketItem),
                 'basePricePerItem' => $catalogPrice
             ]);
 
@@ -715,20 +725,20 @@ class Event
         $preorder->setCustomer($customer);
         $preorder->setPointOfContact(Options::getModuleOption('POINT_OF_CONTACT'));
 
-        $bonuses = $_SESSION['PAY_BONUSES'] ?: 0;
+        $bonuses = $_SESSION[ 'PAY_BONUSES' ] ?: 0;
 
         $discounts[] = new DiscountRequestDTO([
-            'type' => 'balance',
-            'amount' => $bonuses,
+            'type'        => 'balance',
+            'amount'      => $bonuses,
             'balanceType' => [
                 'ids' => ['systemName' => 'Main']
             ]
         ]);
 
-        if ($code = $_SESSION['PROMO_CODE']) {
+        if ($code = $_SESSION[ 'PROMO_CODE' ]) {
             $discounts[] = new DiscountRequestDTO([
                 'type' => 'promoCode',
-                'id' => $code
+                'id'   => $code
             ]);
         }
 
@@ -736,80 +746,87 @@ class Event
             $preorder->setDiscounts($discounts);
         }
 
-        try {
-            $preorderInfo = $mindbox->order()->calculateCart($preorder,
-                Options::getOperationName('calculateCart'))->sendRequest()->getResult()->getField('order');
+        if (\COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {
+            try {
+                $preorderInfo = $mindbox->order()->calculateCart($preorder,
+                    Options::getOperationName('calculateCart'))->sendRequest()->getResult()->getField('order');
 
-            if (!$preorderInfo) {
-                return new Main\EventResult(Main\EventResult::SUCCESS);
-            }
+                if (!$preorderInfo) {
+                    return new Main\EventResult(Main\EventResult::SUCCESS);
+                }
 
-            $discounts = $preorderInfo->getDiscountsInfo();
-            foreach ($discounts as $discount) {
-                if ($discount->getType() === 'balance') {
-                    $balance = $discount->getField('balance');
-                    if ($balance['balanceType']['ids']['systemName'] === 'Main') {
-                        $_SESSION['ORDER_AVAILABLE_BONUSES'] = $discount->getField('availableAmountForCurrentOrder');
+                $discounts = $preorderInfo->getDiscountsInfo();
+                foreach ($discounts as $discount) {
+                    if ($discount->getType() === 'balance') {
+                        $balance = $discount->getField('balance');
+                        if ($balance[ 'balanceType' ][ 'ids' ][ 'systemName' ] === 'Main') {
+                            $_SESSION[ 'ORDER_AVAILABLE_BONUSES' ] = $discount->getField('availableAmountForCurrentOrder');
+                        }
+                    }
+
+                    if ($discount->getType() === 'promoCode') {
+                        $_SESSION[ 'PROMO_CODE_AMOUNT' ] = $discount[ 'availableAmountForCurrentOrder' ];
                     }
                 }
 
-                if ($discount->getType() === 'promoCode') {
-                    $_SESSION['PROMO_CODE_AMOUNT'] = $discount['availableAmountForCurrentOrder'];
+
+                $lines = $preorderInfo->getLines();
+                $mindboxBasket = [];
+                $mindboxAdditional = [];
+                $context = $basket->getContext();
+
+                foreach ($lines as $line) {
+                    $lineId = $line->getField('lineId');
+                    $bitrixProduct = $bitrixBasket[ $lineId ];
+
+                    if (isset($mindboxBasket[ $lineId ])) {
+                        $mindboxAdditional[] = [
+                            'PRODUCT_ID'             => $bitrixProduct->getProductId(),
+                            'PRICE'                  => floatval($line->getDiscountedPrice()) / floatval($line->getQuantity()),
+                            'CUSTOM_PRICE'           => 'Y',
+                            'QUANTITY'               => $line->getQuantity(),
+                            'CURRENCY'               => $context[ 'CURRENCY' ],
+                            'NAME'                   => $bitrixProduct->getField('NAME'),
+                            'LID'                    => SITE_ID,
+                            'DETAIL_PAGE_URL'        => $bitrixProduct->getField('DETAIL_PAGE_URL'),
+                            'CATALOG_XML_ID'         => $bitrixProduct->getField('CATALOG_XML_ID'),
+                            'PRODUCT_XML_ID'         => $bitrixProduct->getField('PRODUCT_XML_ID'),
+                            'PRODUCT_PROVIDER_CLASS' => $bitrixProduct->getProviderName(),
+                            'CAN_BUY'                => 'Y'
+                        ];
+                    } else {
+                        $mindboxPrice = floatval($line->getDiscountedPrice()) / floatval($line->getQuantity());
+                        $bitrixProduct->setField('CUSTOM_PRICE', 'Y');
+                        $bitrixProduct->setFieldNoDemand('PRICE', $mindboxPrice);
+                        $bitrixProduct->setFieldNoDemand('QUANTITY', $line->getQuantity());
+                        $bitrixProduct->save();
+
+                        $mindboxBasket[ $lineId ] = $bitrixProduct;
+                    }
                 }
-            }
 
-
-            $lines = $preorderInfo->getLines();
-            $mindboxBasket = [];
-            $mindboxAdditional = [];
-            $context = $basket->getContext();
-
-            foreach ($lines as $line) {
-                $lineId = $line->getField('lineId');
-                $bitrixProduct = $bitrixBasket[$lineId];
-
-                if(isset($mindboxBasket[$lineId])) {
-                    $mindboxAdditional[] = [
-                        'PRODUCT_ID' => $bitrixProduct->getProductId(),
-                        'PRICE' => floatval($line->getDiscountedPrice()) / floatval($line->getQuantity()),
-                        'CUSTOM_PRICE' => 'Y',
-                        'QUANTITY' => $line->getQuantity(),
-                        'CURRENCY' => $context['CURRENCY'],
-                        'NAME' => $bitrixProduct->getField('NAME'),
-                        'LID'=> SITE_ID,
-                        'DETAIL_PAGE_URL' => $bitrixProduct->getField('DETAIL_PAGE_URL'),
-                        'CATALOG_XML_ID' => $bitrixProduct->getField('CATALOG_XML_ID'),
-                        'PRODUCT_XML_ID' => $bitrixProduct->getField('PRODUCT_XML_ID'),
-                        'PRODUCT_PROVIDER_CLASS' => $bitrixProduct->getProviderName(),
-                        'CAN_BUY' => 'Y'
-                    ];
-                } else {
-                    $mindboxPrice = floatval($line->getDiscountedPrice()) / floatval($line->getQuantity());
-                    $bitrixProduct->setField('CUSTOM_PRICE', 'Y');
-                    $bitrixProduct->setFieldNoDemand('PRICE', $mindboxPrice);
-                    $bitrixProduct->setFieldNoDemand('QUANTITY', $line->getQuantity());
-                    $bitrixProduct->save();
-
-                    $mindboxBasket[$lineId] = $bitrixProduct;
+                foreach ($mindboxAdditional as $product) {
+                    $item = $basket->createItem("catalog", $product[ "PRODUCT_ID" ]);
+                    unset($product[ "PRODUCT_ID" ]);
+                    $item->setFields($product);
                 }
-            }
 
-            foreach ($mindboxAdditional as $product)
-            {
-                $item = $basket->createItem("catalog", $product["PRODUCT_ID"]);
-                unset($product["PRODUCT_ID"]);
-                $item->setFields($product);
+            } catch (Exceptions\MindboxClientException $e) {
+                return new Main\EventResult(Main\EventResult::SUCCESS);
             }
-
-        } catch (Exceptions\MindboxClientException $e) {
-            return new Main\EventResult(Main\EventResult::SUCCESS);
         }
+
 
         return new Main\EventResult(Main\EventResult::SUCCESS);
     }
 
     public function OnBeforeUserAddHandler(&$arFields)
     {
+
+        if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
+            return $arFields;
+        }
+
         global $APPLICATION;
 
         $mindbox = static::mindbox();
@@ -821,18 +838,19 @@ class Event
             return $arFields;
         }
 
-        $arFields['PERSONAL_PHONE'] = Helper::formatPhone($arFields['PERSONAL_PHONE']);
+        $arFields[ 'PERSONAL_PHONE' ] = Helper::formatPhone($arFields[ 'PERSONAL_PHONE' ]);
 
         $customerDTO = new CustomerRequestDTO([
-            'mobilePhone' => $arFields['PERSONAL_PHONE'],
-            'email' => $arFields['EMAIL']
+            'mobilePhone' => $arFields[ 'PERSONAL_PHONE' ],
+            'email'       => $arFields[ 'EMAIL' ]
         ]);
 
         try {
             $response = $mindbox->customer()->checkByPhone($customerDTO, Options::getOperationName('check'), false)
                 ->sendRequest()->getResult();
         } catch (Exceptions\MindboxClientException $e) {
-            $_SESSION['ANONYM']['PHONE'] = $arFields['PERSONAL_PHONE'];
+            $_SESSION[ 'ANONYM' ][ 'PHONE' ] = $arFields[ 'PERSONAL_PHONE' ];
+
             return $arFields;
         }
 
@@ -840,15 +858,17 @@ class Event
         $customer = $response->getCustomer();
         if ($customer && $customer->getProcessingStatus() === 'Found') {
             $mindboxId = $customer->getId('mindboxId');
-            $customerDTO->setFirstName($arFields['NAME']);
-            $customerDTO->setLastName($arFields['LAST_NAME']);
+            $customerDTO->setFirstName($arFields[ 'NAME' ]);
+            $customerDTO->setLastName($arFields[ 'LAST_NAME' ]);
             $customerDTO->setId('mindboxId', $mindboxId);
 
             $customerDTO = Helper::iconvDTO($customerDTO);
             try {
-                $updateResponse = $mindbox->customer()->edit($customerDTO, Options::getOperationName('edit'))->sendRequest()->getResult();
+                $updateResponse = $mindbox->customer()->edit($customerDTO, Options::getOperationName('edit'), true,
+                    Helper::isSync())->sendRequest()->getResult();
             } catch (Exceptions\MindboxClientException $e) {
-                $_SESSION['ANONYM']['PHONE'] = $arFields['PERSONAL_PHONE'];
+                $_SESSION[ 'ANONYM' ][ 'PHONE' ] = $arFields[ 'PERSONAL_PHONE' ];
+
                 return $arFields;
             }
 
@@ -863,28 +883,28 @@ class Event
                 return false;
             }
 
-            $arFields['UF_MINDBOX_ID'] = $mindboxId;
+            $arFields[ 'UF_MINDBOX_ID' ] = $mindboxId;
 
             return $arFields;
         }
 
 
         $anonym = new CustomerRequestDTO([
-            'email' => $arFields['EMAIL'],
-            'firstName' => $arFields['NAME'],
-            'lastName' => $arFields['LAST_NAME'],
-            'mobilePhone' => $arFields['PERSONAL_PHONE']
+            'email'       => $arFields[ 'EMAIL' ],
+            'firstName'   => $arFields[ 'NAME' ],
+            'lastName'    => $arFields[ 'LAST_NAME' ],
+            'mobilePhone' => $arFields[ 'PERSONAL_PHONE' ]
         ]);
 
         $subscriptions = [
             [
                 'pointOfContact' => 'Email',
-                'isSubscribed' => true,
+                'isSubscribed'   => true,
                 'valueByDefault' => true
             ],
             [
                 'pointOfContact' => 'Sms',
-                'isSubscribed' => true,
+                'isSubscribed'   => true,
                 'valueByDefault' => true
             ],
         ];
@@ -894,10 +914,11 @@ class Event
         $anonym = Helper::iconvDTO($anonym);
         try {
             $response = $mindbox->customer()
-                ->register($anonym, Options::getOperationName('registerFromAnonymousOrder'))
+                ->register($anonym, Options::getOperationName('registerFromAnonymousOrder'), true, Helper::isSync())
                 ->sendRequest()->getResult();
         } catch (Exceptions\MindboxClientException $e) {
-            $_SESSION['ANONYM']['PHONE'] = $arFields['PERSONAL_PHONE'];
+            $_SESSION[ 'ANONYM' ][ 'PHONE' ] = $arFields[ 'PERSONAL_PHONE' ];
+
             return $arFields;
         }
 
@@ -908,20 +929,23 @@ class Event
             $errors = $response->getValidationMessages();
 
             $APPLICATION->ThrowException(self::formatValidationMessages($errors));
+
             return false;
         }
 
         $customer = $response->getCustomer();
         if (!$customer) {
             $APPLICATION->ThrowException('');
+
             return false;
         }
 
         $mindboxId = $customer->getId('mindboxId');
-        $arFields['UF_MINDBOX_ID'] = $mindboxId;
+        $arFields[ 'UF_MINDBOX_ID' ] = $mindboxId;
 
         if (!$mindboxId) {
             $APPLICATION->ThrowException('');
+
             return false;
         }
 
@@ -930,19 +954,21 @@ class Event
 
     public function OnAfterUserAddHandler(&$arFields)
     {
-        $mindBoxId = $arFields['UF_MINDBOX_ID'];
+
+        $mindBoxId = $arFields[ 'UF_MINDBOX_ID' ];
 
         if ($mindBoxId) {
             $mindbox = static::mindbox();
-            if(!$mindbox) {
+            if (!$mindbox) {
                 return $arFields;
             }
             $customer = new CustomerRequestDTO();
             $customer->setId('mindboxId', $mindBoxId);
-            $customer->setId(Options::getModuleOption('WEBSITE_ID'), $arFields["ID"]);
+            $customer->setId(Options::getModuleOption('WEBSITE_ID'), $arFields[ "ID" ]);
 
             try {
-                $mindbox->customer()->edit($customer, Options::getOperationName('edit'))->sendRequest();
+                $mindbox->customer()->edit($customer, Options::getOperationName('edit'), true,
+                    Helper::isSync())->sendRequest();
             } catch (Exceptions\MindboxClientException $e) {
                 $lastResponse = $mindbox->customer()->getLastResponse();
                 if ($lastResponse) {
@@ -986,18 +1012,13 @@ class Event
         $lines = [];
         foreach ($basketItems as $basketItem) {
             $product = new ProductRequestDTO();
-            if (Options::getModuleOption('USE_SKU')) {
-                $product->setSku([
-                    'ids' => [Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getProductId($basketItem->getField('PRODUCT_XML_ID'))]
-                ]);
-            } else {
-                $product->setId(Options::getModuleOption('EXTERNAL_SYSTEM'), Helper::getProductId($basketItem->getField('PRODUCT_XML_ID')));
-            }
-            $product->setPrice($basketItem->getPrice());
+            $product->setId(Options::getModuleOption('EXTERNAL_SYSTEM'), Helper::getProductId($basketItem));
+
 
             $line = new ProductListItemRequestDTO();
             $line->setProduct($product);
             $line->setCount($basketItem->getQuantity());
+            $line->setPricePerItem($basketItem->getPrice());
             $lines[] = $line;
         }
 
@@ -1024,6 +1045,7 @@ class Event
         }
 
         $strError = rtrim($strError, PHP_EOL);
+
         return $strError;
     }
 

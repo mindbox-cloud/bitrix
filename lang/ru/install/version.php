@@ -1,3 +1,3 @@
 <?php
 $MESS['MODULE_NAME'] = 'Mindbox';
-$MESS['MODULE_DESCRIPTION'] = 'Модуль для mindbox';
+$MESS['MODULE_DESCRIPTION'] = 'Платформа автоматизации маркетинга Mindbox';

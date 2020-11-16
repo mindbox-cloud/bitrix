@@ -22,6 +22,8 @@ class Options
         'confirmOrder' => 'ConfirmOrder',
         'confirmMobile' => 'ConfirmMobilePhone',
         'createOrder' => 'CreateOrder',
+        'createAuthorizedOrder' =>  'CreateAuthorizedOrder',
+        'createUnauthorizedOrder'   =>  'CreateUnauthorizedOrder',
         'edit' => 'EditCustomer',
         'fill' => 'FillCustomerProfile',
         'getBalance' => 'GetCustomerBalance',
@@ -64,8 +66,11 @@ class Options
     public static function getSDKOptions()
     {
         foreach (static::$sdkOptions as $key => $option) {
-            $sdkOptions[$key] = COption::GetOptionString('qsoftm.mindbox', $option);
+            $sdkOptions[$key] = COption::GetOptionString('mindbox.marketing', $option);
         }
+
+        // for standard mode
+        $sdkOptions['domain'] = 'demo-services.mindbox.cloud';
 
         return $sdkOptions;
     }
@@ -75,9 +80,9 @@ class Options
         $config = static::getSDKOptions();
 
         if($queue) {
-            $config['timeout'] = COption::GetOptionString('qsoftm.mindbox','QUEUE_TIMEOUT', 30);
+            $config['timeout'] = COption::GetOptionString('mindbox.marketing','QUEUE_TIMEOUT', 30);
         }
-        $path = COption::GetOptionString('qsoftm.mindbox', 'LOG_PATH');
+        $path = COption::GetOptionString('mindbox.marketing', 'LOG_PATH');
 
         try {
             $mindbox =  new Mindbox($config, new MindboxFileLogger($path, 'debug'));
@@ -91,10 +96,10 @@ class Options
 
     public static function getPrefix()
     {
-        return  COption::GetOptionString('qsoftm.mindbox', 'WEBSITE_PREFIX', 'Website');
+        return  COption::GetOptionString('mindbox.marketing', 'WEBSITE_PREFIX', 'Website');
     }
 
     public static function getModuleOption($option) {
-        return COption::GetOptionString('qsoftm.mindbox', $option);
+        return COption::GetOptionString('mindbox.marketing', $option);
     }
 }

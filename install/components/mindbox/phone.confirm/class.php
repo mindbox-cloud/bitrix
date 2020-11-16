@@ -35,12 +35,12 @@ class PhoneConfirm extends CBitrixComponent implements Controllerable
         parent::__construct($component);
 
         try {
-            if(!Loader::includeModule('qsoftm.mindbox')) {
-                ShowError(GetMessage('MB_PC_MODULE_NOT_INCLUDED', ['#MODULE#' => 'qsoftm.mindbox']));
+            if(!Loader::includeModule('mindbox.marketing')) {
+                ShowError(GetMessage('MB_PC_MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));
                 return;
             }
         } catch (LoaderException $e) {
-            ShowError(GetMessage('MB_PC_MODULE_NOT_INCLUDED', ['#MODULE#' => 'qsoftm.mindbox']));;
+            ShowError(GetMessage('MB_PC_MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));
             return;
         }
 
@@ -75,7 +75,7 @@ class PhoneConfirm extends CBitrixComponent implements Controllerable
         }
 
         global $USER;
-		$customer = new CustomerRequestDTO(['ids' => ['mindboxId' => $this->userInfo['UF_MINDBOX_ID']]]);
+		$customer = new CustomerRequestDTO(['ids' => [Options::getModuleOption('WEBSITE_ID') => $this->userInfo['ID']]]);
         $sms = new SmsConfirmationRequestDTO(['code' => $code]);
 
         try {
@@ -110,7 +110,7 @@ class PhoneConfirm extends CBitrixComponent implements Controllerable
         if (!$this->mindbox) {
             return Ajax::errorResponse(GetMessage('MB_PC_BAD_MODULE_SETTING'));
         }
-        $customer = new CustomerRequestDTO(['ids' => ['mindboxId' => $this->userInfo['UF_MINDBOX_ID']]]);
+        $customer = new CustomerRequestDTO(['ids' => [Options::getModuleOption('WEBSITE_ID') => $this->userInfo['ID']]]);
         try {
             $this->mindbox->customer()->resendConfirmationCode($customer,
                 Options::getOperationName('resendConfirmationCode'))->sendRequest();
@@ -130,32 +130,33 @@ class PhoneConfirm extends CBitrixComponent implements Controllerable
             ]
         )->fetch();
 
-        $mindbox = Options::getConfig();
-		$request = $mindbox->getClientV3()->prepareRequest('POST',
-			Options::getOperationName('getCustomerInfo'),
-			new DTO([
-				'customer' => [
-					'ids' => [
-						'mindboxId' => $rsUser['UF_MINDBOX_ID']
-					]
-				]
-			]));
+            $mindbox = Options::getConfig();
+            $request = $mindbox->getClientV3()->prepareRequest('POST',
+                Options::getOperationName('getCustomerInfo'),
+                new DTO([
+                    'customer' => [
+                        'ids' => [
+                            Options::getModuleOption('WEBSITE_ID') => $rsUser[ 'ID' ]
+                        ]
+                    ]
+                ]));
 
-		try {
-			$response = $request->sendRequest()->getResult();
-		} catch (MindboxClientException $e) {
-			return $rsUser;
-		}
-
-		$customer = $response->getCustomer();
-		if ($customer && $customer->getProcessingStatus() === 'Found') {
-		    $pending = $customer->getPendingMobilePhone();
-		    if($pending) {
-                $rsUser['UF_PHONE_CONFIRMED'] = false;
-            } else {
-                $rsUser['UF_PHONE_CONFIRMED'] = $customer->getIsMobilePhoneConfirmed();
+            try {
+                $response = $request->sendRequest()->getResult();
+            } catch (MindboxClientException $e) {
+                return $rsUser;
             }
-		}
+
+            $customer = $response->getCustomer();
+            if ($customer && $customer->getProcessingStatus() === 'Found') {
+                $pending = $customer->getPendingMobilePhone();
+                if ($pending) {
+                    $rsUser[ 'UF_PHONE_CONFIRMED' ] = false;
+                } else {
+                    $rsUser[ 'UF_PHONE_CONFIRMED' ] = $customer->getIsMobilePhoneConfirmed();
+                }
+            }
+
 
         return $rsUser;
     }

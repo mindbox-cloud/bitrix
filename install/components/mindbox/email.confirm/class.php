@@ -34,12 +34,12 @@ class EmailConfirm extends CBitrixComponent implements Controllerable
         parent::__construct($component);
 
         try {
-            if(!Loader::includeModule('qsoftm.mindbox')) {
-                ShowError(GetMessage('MB_EC_MODULE_NOT_INCLUDED', ['#MODULE#' => 'qsoftm.mindbox']));
+            if(!Loader::includeModule('mindbox.marketing')) {
+                ShowError(GetMessage('MB_EC_MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));
                 return;
             }
         } catch (LoaderException $e) {
-            ShowError(GetMessage('MB_EC_MODULE_NOT_INCLUDED', ['#MODULE#' => 'qsoftm.mindbox']));;
+            ShowError(GetMessage('MB_EC_MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));;
             return;
         }
 
@@ -69,10 +69,9 @@ class EmailConfirm extends CBitrixComponent implements Controllerable
     public function checkEmailConfirm()
     {
         global $USER;
-        if (!empty($this->userInfo['UF_MINDBOX_ID'])) {
             $request = $this->mindbox->getClientV3()->prepareRequest('POST',
                 Options::getOperationName('getCustomerInfo'),
-                new DTO(['customer' => ['ids' => ['mindboxId' => $this->userInfo['UF_MINDBOX_ID']]]]));
+                new DTO(['customer' => ['ids' => [Options::getModuleOption('WEBSITE_ID') => $this->userInfo['ID']]]]));
 
             try {
                 $response = $request->sendRequest();
@@ -85,7 +84,7 @@ class EmailConfirm extends CBitrixComponent implements Controllerable
                     $USER->Update($this->userInfo['ID'], ['UF_EMAIL_CONFIRMED' => '1']);
                 }
             }
-        }
+
     }
 
     public function resendAction()
@@ -93,7 +92,7 @@ class EmailConfirm extends CBitrixComponent implements Controllerable
         if (!$this->mindbox) {
             return Ajax::errorResponse(GetMessage('MB_EC_BAD_MODULE_SETTING'));
         }
-        $customer = new CustomerRequestDTO(['ids' => ['mindboxId' => $this->userInfo['UF_MINDBOX_ID']]]);
+        $customer = new CustomerRequestDTO(['ids' => [Options::getModuleOption('WEBSITE_ID') => $this->userInfo['ID']]]);
         try {
             $this->mindbox->customer()->resendConfirmationCode($customer,
                 Options::getOperationName('resendEmailConfirm'))->sendRequest();

@@ -8,8 +8,8 @@ use \Bitrix\Main\Type\DateTime;
 
 IncludeModuleLangFile(__FILE__);
 
-class qsoftm_mindbox extends CModule {
-	var $MODULE_ID = "qsoftm.mindbox";
+class mindbox_marketing extends CModule {
+	var $MODULE_ID = "mindbox.marketing";
 	var $MODULE_VERSION;
 	var $MODULE_VERSION_DATE;
 	var $MODULE_NAME;
@@ -19,14 +19,14 @@ class qsoftm_mindbox extends CModule {
 
 	var $PATH_INST = "/";
 
-	function qsoftm_mindbox()
+	function mindbox_marketing()
 	{
 		$arModuleVersion = [];
 
 		include($this->getPath() . "/version.php");
 
-		$this->PARTNER_NAME = "QSOFT";
-		$this->PARTNER_URI = "https://qsoft.ru/";
+		$this->PARTNER_NAME = "Mindbox";
+		$this->PARTNER_URI = "https://mindbox.ru/";
 
 		if (is_array($arModuleVersion) && isset($arModuleVersion["VERSION"])) {
 			$this->MODULE_VERSION = $arModuleVersion["VERSION"];
@@ -188,16 +188,16 @@ class qsoftm_mindbox extends CModule {
 	function UnInstallEvents()
 	{
 		$eventManager = \Bitrix\Main\EventManager::getInstance();
-		$eventManager->unRegisterEventHandler("main", "OnAfterUserAuthorize", MODULE_ID);
-		$eventManager->unRegisterEventHandler("main", "OnAfterUserRegister", MODULE_ID);
-		$eventManager->unRegisterEventHandler("main", "OnBeforeUserRegister", MODULE_ID);
-		$eventManager->unRegisterEventHandler("main", "OnBeforeUserUpdate", MODULE_ID);
-		$eventManager->unRegisterEventHandler("main", "OnBeforeUserAdd", MODULE_ID);
-		$eventManager->unRegisterEventHandler("main", "OnAfterUserAdd", MODULE_ID);
-		$eventManager->unRegisterEventHandler("sale", "OnSaleBasketSaved", MODULE_ID);
-		$eventManager->unRegisterEventHandler("sale", "OnBasketAdd", MODULE_ID);
-		$eventManager->unRegisterEventHandler("sale", "OnBasketDelete", MODULE_ID);
-		$eventManager->unRegisterEventHandler("sale", "OnBasketUpdate", MODULE_ID);
+		$eventManager->unRegisterEventHandler("main", "OnAfterUserAuthorize", $this->MODULE_ID);
+		$eventManager->unRegisterEventHandler("main", "OnAfterUserRegister", $this->MODULE_ID);
+		$eventManager->unRegisterEventHandler("main", "OnBeforeUserRegister", $this->MODULE_ID);
+		$eventManager->unRegisterEventHandler("main", "OnBeforeUserUpdate", $this->MODULE_ID);
+		$eventManager->unRegisterEventHandler("main", "OnBeforeUserAdd", $this->MODULE_ID);
+		$eventManager->unRegisterEventHandler("main", "OnAfterUserAdd", $this->MODULE_ID);
+		$eventManager->unRegisterEventHandler("sale", "OnSaleBasketSaved", $this->MODULE_ID);
+		$eventManager->unRegisterEventHandler("sale", "OnBasketAdd", $this->MODULE_ID);
+		$eventManager->unRegisterEventHandler("sale", "OnBasketDelete", $this->MODULE_ID);
+		$eventManager->unRegisterEventHandler("sale", "OnBasketUpdate", $this->MODULE_ID);
 
 		return true;
 	}

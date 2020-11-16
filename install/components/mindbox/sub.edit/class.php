@@ -35,12 +35,12 @@ class SubEdit extends CBitrixComponent implements Controllerable
         parent::__construct($component);
 
         try {
-            if (!Loader::includeModule('qsoftm.mindbox')) {
-                ShowError(GetMessage('MB_SE_MODULE_NOT_INCLUDED', ['#MODULE#' => 'qsoftm.mindbox']));
+            if (!Loader::includeModule('mindbox.marketing')) {
+                ShowError(GetMessage('MB_SE_MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));
                 return;
             }
         } catch (LoaderException $e) {
-            ShowError(GetMessage('MB_SE_MODULE_NOT_INCLUDED', ['#MODULE#' => 'qsoftm.mindbox']));;
+            ShowError(GetMessage('MB_SE_MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));
             return;
         }
 
@@ -59,7 +59,7 @@ class SubEdit extends CBitrixComponent implements Controllerable
             return Ajax::errorResponse(GetMessage('MB_SE_BAD_MODULE_SETTING'));
         }
         $customer = new CustomerRequestDTO([
-            'ids' => ['mindboxId' => $this->userInfo['UF_MINDBOX_ID']],
+            'ids' => [Options::getModuleOption('WEBSITE_ID') => $this->userInfo['ID']],
         ]);
 
         $subscriptions = [
@@ -123,7 +123,7 @@ class SubEdit extends CBitrixComponent implements Controllerable
 
         $rsUser = UserTable::getList(
             [
-                'select' => ['UF_MINDBOX_ID', 'EMAIL'],
+                'select' => ['UF_MINDBOX_ID', 'EMAIL', 'ID'],
                 'filter' => ['ID' => $USER->GetID()]
             ]
         )->fetch();
