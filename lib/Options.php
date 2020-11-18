@@ -14,6 +14,7 @@ class Options
         'autoConfirmMobile' => 'AutoConfirmMobilePhone',
         'calculateCart' => 'CalculateCart',
         'calculateAuthorizedCart' => 'CalculateAuthorizedCart',
+        'calculateUnauthorizedCart' =>  'CalculateUnauthorizedCart',
         'cancelOrder' => 'CancelOrder',
         'checkActive' => 'CheckCustomerIsInLoyalityProgram',
         'checkAuthorizationCode' => 'CheckMobilePhoneAuthorizationCode',
@@ -23,6 +24,8 @@ class Options
         'confirmOrder' => 'ConfirmOrder',
         'confirmMobile' => 'ConfirmMobilePhone',
         'createOrder' => 'CreateOrder',
+        'beginUnauthorizedOrderTransaction' =>  'BeginUnauthorizedOrderTransaction',
+        'beginAuthorizedOrderTransaction' =>  'BeginAuthorizedOrderTransaction',
         'createAuthorizedOrder' =>  'CreateAuthorizedOrder',
         'createUnauthorizedOrder'   =>  'CreateUnauthorizedOrder',
         'edit' => 'EditCustomer',
@@ -44,7 +47,9 @@ class Options
         'setProductList' => 'SetCart',
         'subscribe' => 'SubscribeCustomer',
         'viewProduct' => 'ViewProduct',
-        'viewCategory' => 'ViewCategory'
+        'viewCategory' => 'ViewCategory',
+        'commitOrderTransaction'    =>  'CommitOrderTransaction',
+        'rollbackOrderTransaction'  =>  'RollbackOrderTransaction'
     ];
 
     private static $sdkOptions = [
