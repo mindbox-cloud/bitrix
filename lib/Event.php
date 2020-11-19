@@ -220,156 +220,192 @@ class Event
         $mindBoxId = $customer->getId('mindboxId');
         $_SESSION[ 'NEW_USER_MB_ID' ] = $mindBoxId;
         $_SESSION[ 'NEW_USER_MINDBOX' ] = true;
-
     }
 
     public function OnAfterUserRegisterHandler(&$arFields)
     {
-        // all for standard mode
 
         global $APPLICATION;
         $mindbox = static::mindbox();
         if (!$mindbox) {
             return $arFields;
         }
+        // all for standard mode
+        if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
+            $mindBoxId = $_SESSION[ 'NEW_USER_MB_ID' ];
+            unset($_SESSION[ 'NEW_USER_MB_ID' ]);
 
-        $mindBoxId = $_SESSION[ 'NEW_USER_MB_ID' ];
-        unset($_SESSION[ 'NEW_USER_MB_ID' ]);
+            if (!$mindBoxId) {
+                //return false;
+            }
 
-        if (!$mindBoxId) {
-            //return false;
-        }
-
-        $fields = [
-            'UF_EMAIL_CONFIRMED' => '0',
-            'UF_MINDBOX_ID'      => $mindBoxId
-        ];
-
-        $user = new CUser;
-        $user->Update(
-            $arFields[ 'USER_ID' ],
-            $fields
-        );
-
-
-        if ($arFields[ 'USER_ID' ]) {
-            $sex = substr(ucfirst($arFields[ 'PERSONAL_GENDER' ]), 0, 1) ?: null;
             $fields = [
-                'email'       => $arFields[ 'EMAIL' ],
-                'lastName'    => $arFields[ 'LAST_NAME' ],
-                'middleName'  => $arFields[ 'SECOND_NAME' ],
-                'firstName'   => $arFields[ 'NAME' ],
-                'mobilePhone' => $arFields[ 'PERSONAL_PHONE' ],
-                'birthDate'   => Helper::formatDate($arFields[ 'PERSONAL_BIRTHDAY' ]),
-                'sex'         => $sex,
-                'ids'         => [Options::getModuleOption('WEBSITE_ID') => $arFields[ 'USER_ID' ]]
+                'UF_EMAIL_CONFIRMED' => '0',
+                'UF_MINDBOX_ID'      => $mindBoxId
             ];
 
-            $fields = array_filter($fields, function ($item) {
-                return isset($item);
-            });
-
-            if (!isset($fields)) {
-                return true;
-            }
-
-            $customer = new CustomerRequestDTO($fields);
-
-            unset($fields);
-
-            $subscriptions = [
-                'subscription' => [
-                    'brand'          => Options::getModuleOption('BRAND'),
-                    'pointOfContact' => 'Email',
-                    'isSubscribed'   => true,
-                ]
-            ];
-            $customer->setSubscriptions($subscriptions);
+            $user = new CUser;
+            $user->Update(
+                $arFields[ 'USER_ID' ],
+                $fields
+            );
 
 
-            try {
-                $mindbox->customer()->register($customer, Options::getOperationName('register'), true,
-                    Helper::isSync())->sendRequest();
-            } catch (Exceptions\MindboxClientException $e) {
-                $APPLICATION->ThrowException(Loc::getMessage('MB_USER_EDIT_ERROR'));
-
-                return false;
-            }
-        }
-
-        //  authorize
-        sleep(1);
-
-        if (isset($_SESSION[ 'NEW_USER_MINDBOX' ]) && $_SESSION[ 'NEW_USER_MINDBOX' ] === true) {
-            unset($_SESSION[ 'NEW_USER_MINDBOX' ]);
-
-            return true;
-        }
-        if ($_SESSION[ 'AUTH_BY_SMS' ] === true) {
-            $_SESSION[ 'AUTH_BY_SMS' ] = false;
-
-            return true;
-        }
-
-        $mindboxId = $arFields[ 'USER_ID' ];
-
-
-        if (!empty($mindboxId)) {
-
-            $request = $mindbox->getClientV3()->prepareRequest('POST',
-                Options::getOperationName('getCustomerInfo'),
-                new DTO([
-                    'customer' => [
-                        'ids' => [
-                            Options::getModuleOption('WEBSITE_ID') => $arFields[ 'USER_ID' ]
-                        ]
-                    ]
-                ]));
-
-            try {
-                $response = $request->sendRequest();
-            } catch (Exceptions\MindboxClientException $e) {
-                $APPLICATION->ThrowException($e->getMessage());
-
-                return false;
-            }
-
-            if ($response->getResult()->getCustomer()->getProcessingStatus() === 'Found') {
+            if ($arFields[ 'USER_ID' ]) {
+                $sex = substr(ucfirst($arFields[ 'PERSONAL_GENDER' ]), 0, 1) ?: null;
                 $fields = [
-                    'UF_EMAIL_CONFIRMED' => $response->getResult()->getCustomer()->getIsEmailConfirmed(),
-                    'UF_MINDBOX_ID'      => $response->getResult()->getCustomer()->getId('mindboxId')
+                    'email'       => $arFields[ 'EMAIL' ],
+                    'lastName'    => $arFields[ 'LAST_NAME' ],
+                    'middleName'  => $arFields[ 'SECOND_NAME' ],
+                    'firstName'   => $arFields[ 'NAME' ],
+                    'mobilePhone' => $arFields[ 'PERSONAL_PHONE' ],
+                    'birthDate'   => Helper::formatDate($arFields[ 'PERSONAL_BIRTHDAY' ]),
+                    'sex'         => $sex,
+                    'ids'         => [Options::getModuleOption('WEBSITE_ID') => $arFields[ 'USER_ID' ]]
                 ];
 
-                $user = new CUser;
-                $user->Update(
-                    $arFields[ 'USER_ID' ],
-                    $fields
-                );
-            } else {
+                $fields = array_filter($fields, function ($item) {
+                    return isset($item);
+                });
+
+                if (!isset($fields)) {
+                    return true;
+                }
+
+                $customer = new CustomerRequestDTO($fields);
+
+                unset($fields);
+
+                $subscriptions = [
+                    'subscription' => [
+                        'brand'          => Options::getModuleOption('BRAND'),
+                        'pointOfContact' => 'Email',
+                        'isSubscribed'   => true,
+                    ]
+                ];
+                $customer->setSubscriptions($subscriptions);
+
+
+                try {
+                    $mindbox->customer()->register($customer, Options::getOperationName('register'), true,
+                        Helper::isSync())->sendRequest();
+                } catch (Exceptions\MindboxClientException $e) {
+                    $APPLICATION->ThrowException(Loc::getMessage('MB_USER_EDIT_ERROR'));
+
+                    return false;
+                }
+            }
+
+            //  authorize
+            sleep(1);
+
+            if (isset($_SESSION[ 'NEW_USER_MINDBOX' ]) && $_SESSION[ 'NEW_USER_MINDBOX' ] === true) {
+                unset($_SESSION[ 'NEW_USER_MINDBOX' ]);
+
+                return true;
+            }
+            if ($_SESSION[ 'AUTH_BY_SMS' ] === true) {
+                $_SESSION[ 'AUTH_BY_SMS' ] = false;
+
                 return true;
             }
 
-            $customer = new CustomerRequestDTO([
-                'ids' => [
-                    Options::getModuleOption('WEBSITE_ID') => $mindboxId
-                ]
-            ]);
+            $mindboxId = $arFields[ 'USER_ID' ];
 
-            try {
-                $mindbox->customer()->authorize($customer,
-                    Options::getOperationName('authorize'))->sendRequest();
-            } catch (Exceptions\MindboxUnavailableException $e) {
-                $lastResponse = $mindbox->customer()->getLastResponse();
 
-                if ($lastResponse) {
-                    $request = $lastResponse->getRequest();
-                    QueueTable::push($request);
+            if (!empty($mindboxId)) {
+
+                $request = $mindbox->getClientV3()->prepareRequest('POST',
+                    Options::getOperationName('getCustomerInfo'),
+                    new DTO([
+                        'customer' => [
+                            'ids' => [
+                                Options::getModuleOption('WEBSITE_ID') => $arFields[ 'USER_ID' ]
+                            ]
+                        ]
+                    ]));
+
+                try {
+                    $response = $request->sendRequest();
+                } catch (Exceptions\MindboxClientException $e) {
+                    $APPLICATION->ThrowException($e->getMessage());
+
+                    return false;
                 }
-            } catch (Exceptions\MindboxClientException $e) {
-                return false;
+
+                if ($response->getResult()->getCustomer()->getProcessingStatus() === 'Found') {
+                    $fields = [
+                        'UF_EMAIL_CONFIRMED' => $response->getResult()->getCustomer()->getIsEmailConfirmed(),
+                        'UF_MINDBOX_ID'      => $response->getResult()->getCustomer()->getId('mindboxId')
+                    ];
+
+                    $user = new CUser;
+                    $user->Update(
+                        $arFields[ 'USER_ID' ],
+                        $fields
+                    );
+                } else {
+                    return true;
+                }
+
+                $customer = new CustomerRequestDTO([
+                    'ids' => [
+                        Options::getModuleOption('WEBSITE_ID') => $mindboxId
+                    ]
+                ]);
+
+                try {
+                    $mindbox->customer()->authorize($customer,
+                        Options::getOperationName('authorize'))->sendRequest();
+                } catch (Exceptions\MindboxUnavailableException $e) {
+                    $lastResponse = $mindbox->customer()->getLastResponse();
+
+                    if ($lastResponse) {
+                        $request = $lastResponse->getRequest();
+                        QueueTable::push($request);
+                    }
+                } catch (Exceptions\MindboxClientException $e) {
+                    return false;
+                }
+            }
+        } else {
+
+            if (!empty($arFields[ 'USER_ID' ])) {
+
+                $request = $mindbox->getClientV3()->prepareRequest('POST',
+                    Options::getOperationName('getCustomerInfo'),
+                    new DTO([
+                        'customer' => [
+                            'ids' => [
+                                'mindboxId' => $_SESSION[ 'NEW_USER_MB_ID' ]
+                            ]
+                        ]
+                    ]));
+
+                try {
+                    $response = $request->sendRequest();
+                } catch (Exceptions\MindboxClientException $e) {
+                    $APPLICATION->ThrowException($e->getMessage());
+                    return false;
+                }
+
+                if ($response->getResult()->getCustomer()->getProcessingStatus() === 'Found') {
+                    $fields = [
+                        'UF_EMAIL_CONFIRMED' => $response->getResult()->getCustomer()->getIsEmailConfirmed(),
+                        'UF_MINDBOX_ID'      => $response->getResult()->getCustomer()->getId('mindboxId')
+                    ];
+
+                    $user = new CUser;
+                    $user->Update(
+                        $arFields[ 'USER_ID' ],
+                        $fields
+                    );
+                    unset($_SESSION[ 'NEW_USER_MB_ID' ]);
+                } else {
+                    return true;
+                }
             }
         }
-
 
         return $arFields;
     }
