@@ -173,4 +173,9 @@ class Helper
     public static function isUnAuthorizedOrder($arUser) {
         return date('dmYHi', time()) === date('dmYHi', strtotime($arUser['DATE_REGISTER']));
     }
+
+    public static function getTransactionId()
+    {
+        return \Bitrix\Sale\Fuser::getId() . date('dmYHi');
+    }
 }
