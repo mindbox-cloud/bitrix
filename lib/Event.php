@@ -552,12 +552,14 @@ class Event
         if(!empty($arOrderProperty[ 'EMAIL' ])) {
             $customer->setEmail($arOrderProperty[ 'EMAIL' ]);
         }
+        /*
         if(!empty($arOrderProperty[ 'FIO' ])) {
             $customer->setLastName($arOrderProperty[ 'FIO' ]);
         }
         if(!empty($arOrderProperty[ 'NAME' ])){
             $customer->setFirstName($arOrderProperty[ 'NAME' ]);
         }
+        */
         if(!empty($arOrderProperty[ 'PHONE' ])) {
             $customer->setMobilePhone($arOrderProperty[ 'PHONE' ]);
         }
