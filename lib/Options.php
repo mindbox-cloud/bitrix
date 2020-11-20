@@ -49,7 +49,8 @@ class Options
         'viewProduct' => 'ViewProduct',
         'viewCategory' => 'ViewCategory',
         'commitOrderTransaction'    =>  'CommitOrderTransaction',
-        'rollbackOrderTransaction'  =>  'RollbackOrderTransaction'
+        'rollbackOrderTransaction'  =>  'RollbackOrderTransaction',
+        'saveOfflineOrder'          =>  'SaveOfflineOrder'
     ];
 
     private static $sdkOptions = [

@@ -703,10 +703,6 @@ class Event
             $_SESSION[ 'MINDBOX_ORDER' ] = $createOrderResult ? $createOrderResult->getId('mindbox') : false;
         } catch (Exceptions\MindboxClientErrorException $e) {
 
-            if($logger) {
-                $logger->log('MindboxClientErrorException', $e->getTraceAsString());
-            }
-
             return new \Bitrix\Main\EventResult(
                 \Bitrix\Main\EventResult::ERROR,
                 new \Bitrix\Sale\ResultError($e->getMessage(), 'SALE_EVENT_WRONG_ORDER'),
@@ -714,19 +710,19 @@ class Event
             );
 
         } catch (Exceptions\MindboxUnavailableException $e) {
-            $orderDTO = new OrderUpdateRequestDTO();
+            $orderOfflineDTO = new OrderUpdateRequestDTO();
 
             $_SESSION[ 'PAY_BONUSES' ] = 0;
             unset($_SESSION[ 'PROMO_CODE' ]);
             unset($_SESSION[ 'PROMO_CODE_AMOUNT' ]);
 
             if ($_SESSION[ 'MINDBOX_ORDER' ]) {
-                $orderDTO->setId('mindbox', $_SESSION[ 'MINDBOX_ORDER' ]);
+                $orderOfflineDTO->setId('mindbox', $_SESSION[ 'MINDBOX_ORDER' ]);
             }
 
             $now = new DateTime();
             $now = $now->setTimezone(new DateTimeZone("UTC"))->format("Y-m-d H:i:s");
-            $orderDTO->setUpdatedDateTimeUtc($now);
+            $orderOfflineDTO->setUpdatedDateTimeUtc($now);
 
             $customer = new CustomerRequestV2DTO();
             $mindboxId = Helper::getMindboxId($order->getUserId());
@@ -748,8 +744,8 @@ class Event
                 $customer->setField('isAuthorized', false);
             }
 
-            $orderDTO->setCustomer($customer);
-            $orderDTO->setPointOfContact(Options::getModuleOption('POINT_OF_CONTACT'));
+            $orderOfflineDTO->setCustomer($customer);
+            $orderOfflineDTO->setPointOfContact(Options::getModuleOption('POINT_OF_CONTACT'));
 
             $lines = [];
             foreach ($basketItems as $basketItem) {
@@ -767,15 +763,43 @@ class Event
                 $lines[] = $line;
             }
 
-            $orderDTO->setLines($lines);
-            $orderDTO->setField('totalPrice', $basket->getPrice());
+            $orderOfflineDTO->setLines($lines);
+            $orderOfflineDTO->setField('totalPrice', $basket->getPrice());
 
             $_SESSION[ 'OFFLINE_ORDER' ] = [
-                'DTO' => $orderDTO,
+                'DTO' => $orderOfflineDTO,
             ];
+
+            try {
+                $mindbox->order()->SaveOfflineOrder($orderDTO,
+                    Options::getOperationName('saveOfflineOrder'))->sendRequest();
+            } catch (Exceptions\MindboxUnavailableException $e) {
+
+                $lastResponse = $mindbox->order()->getLastResponse();
+
+                if ($lastResponse) {
+                    $request = $lastResponse->getRequest();
+                    QueueTable::push($request);
+                }
+
+                return new Main\EventResult(Main\EventResult::SUCCESS);
+            }
+
+            $lastResponse = $mindbox->order()->getLastResponse();
+
+            if ($lastResponse) {
+                $request = $lastResponse->getRequest();
+                QueueTable::push($request);
+            }
+
+
 
             return new Main\EventResult(Main\EventResult::SUCCESS);
         } catch (Exceptions\MindboxClientException $e) {
+
+            $mindbox->order()->SaveOfflineOrder($orderDTO,
+                Options::getOperationName('saveOfflineOrder'))->sendRequest();
+
             $lastResponse = $mindbox->order()->getLastResponse();
 
             if ($lastResponse) {
@@ -1356,7 +1380,6 @@ class Event
                 $lastResponse = $mindbox->customer()->getLastResponse();
                 if ($lastResponse) {
                     $request = $lastResponse->getRequest();
-
                     QueueTable::push($request);
                 }
             }
@@ -1410,6 +1433,7 @@ class Event
             $mindbox->productList()->setProductList(new ProductListItemRequestCollection($lines),
                 Options::getOperationName('setProductList'))->sendRequest();
         } catch (Exceptions\MindboxClientErrorException $e) {
+
         } catch (Exceptions\MindboxClientException $e) {
             $lastResponse = $mindbox->productList()->getLastResponse();
             if ($lastResponse) {
