@@ -41,7 +41,8 @@ class Options
         'resendEmailConfirm' => 'ResendEmailConfirmation',
         'sendAuthorizationCode' => 'SendMobilePhoneAuthorizationCode',
         'setProductList' => 'SetCart',
-        'subscribe' => 'SubscribeCustomer',
+        'subscribeCustomer' => 'SubscribeCustomer',
+        'subscribe' => 'Subscribe',
         'viewProduct' => 'ViewProduct',
         'viewCategory' => 'ViewCategory'
     ];
@@ -86,6 +87,8 @@ class Options
 
         try {
             $mindbox =  new Mindbox($config, new MindboxFileLogger($path, 'debug'));
+            $mindbox->getClientV2()->addHeaders(['Mindbox-Integration' => 'Bitrix']);
+            $mindbox->getClientV3()->addHeaders(['Mindbox-Integration' => 'Bitrix']);
 
             return $mindbox;
         } catch (MindboxConfigException $e) {

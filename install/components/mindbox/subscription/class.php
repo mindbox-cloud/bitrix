@@ -68,8 +68,8 @@ class Subscripion extends CBitrixComponent implements Controllerable
         $subscripton = new SubscriptionRequestDTO(['pointOfContact' => 'Email']);
         $customer->setSubscriptions([$subscripton]);
         try {
-            $this->mindbox->customer()->subscribe($customer,
-                Options::getOperationName('subscribe'))->sendRequest();
+            $this->mindbox->customer()->subscribeCustomer($customer,
+                Options::getOperationName('subscribeCustomer'))->sendRequest();
 
             return [
                 'type' => 'success',

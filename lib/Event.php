@@ -266,6 +266,12 @@ class Event
                 'ids'         => [Options::getModuleOption('WEBSITE_ID') => $arFields[ 'USER_ID' ]]
             ];
 
+            $isSubscribed = true;
+
+            if (!$arFields['UF_IS_SUBSCRIBED'] && $arFields['UF_IS_SUBSCRIBED'] === 'N') {
+                $isSubscribed = false;
+            }
+
             $fields = array_filter($fields, function ($item) {
                 return isset($item);
             });
@@ -282,7 +288,7 @@ class Event
                 'subscription' => [
                     'brand' =>  Options::getModuleOption('BRAND'),
                     'pointOfContact' => 'Email',
-                    'isSubscribed'   => true,
+                    'isSubscribed'   => $isSubscribed,
                     'valueByDefault' => true
                 ]
             ];

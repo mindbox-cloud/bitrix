@@ -77,6 +77,7 @@ class SubEdit extends CBitrixComponent implements Controllerable
         $customer->setSubscriptions($subscriptions);
 
         try {
+            $this->mindbox->customer()->subscribe($customer, Options::getOperationName('subscribe'))->sendRequest();
             $this->mindbox->customer()->edit($customer, Options::getOperationName('edit'))->sendRequest();
         } catch (MindboxUnavailableException $e) {
             $lastResponse = $this->mindbox->customer()->getLastResponse();
