@@ -14,6 +14,7 @@ use Mindbox\Exceptions\MindboxClientException;
 use Mindbox\Exceptions\MindboxException;
 use Mindbox\Options;
 use Mindbox\DTO\DTO;
+use Mindbox\Helper;
 
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) {
     die();
@@ -110,7 +111,7 @@ class PhoneConfirm extends CBitrixComponent implements Controllerable
         if (!$this->mindbox) {
             return Ajax::errorResponse(GetMessage('MB_PC_BAD_MODULE_SETTING'));
         }
-        $customer = new CustomerRequestDTO(['ids' => [Options::getModuleOption('WEBSITE_ID') => $this->userInfo['ID']]]);
+        $customer = new CustomerRequestDTO(['ids' => ['mindboxId' => $this->getMindboxId()]]);
         try {
             $this->mindbox->customer()->resendConfirmationCode($customer,
                 Options::getOperationName('resendConfirmationCode'))->sendRequest();
@@ -136,7 +137,7 @@ class PhoneConfirm extends CBitrixComponent implements Controllerable
                 new DTO([
                     'customer' => [
                         'ids' => [
-                            Options::getModuleOption('WEBSITE_ID') => $rsUser[ 'ID' ]
+                            'mindboxId' => $this->getMindboxId()
                         ]
                     ]
                 ]));
@@ -159,5 +160,12 @@ class PhoneConfirm extends CBitrixComponent implements Controllerable
 
 
         return $rsUser;
+    }
+
+    private function getMindboxId()
+    {
+        global $USER;
+
+        return Helper::getMindboxId($USER->GetID());
     }
 }
