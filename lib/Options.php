@@ -77,7 +77,7 @@ class Options
         }
 
         // for standard mode
-        $sdkOptions['domain'] = 'demo-services.mindbox.cloud';
+        $sdkOptions['domain'] = COption::GetOptionString('mindbox.marketing', 'SYSTEM_NAME') .  '-services.mindbox.ru';
 
         return $sdkOptions;
     }
