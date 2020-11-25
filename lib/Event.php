@@ -129,6 +129,11 @@ class Event
     public function OnBeforeUserRegisterHandler(&$arFields)
     {
 
+        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('OnBeforeUserRegisterHandler');
+            $logger->log('start', ['1']);
+        }
+
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
             return $arFields;
         }
@@ -225,6 +230,11 @@ class Event
     public function OnAfterUserRegisterHandler(&$arFields)
     {
 
+        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('OnAfterUserRegisterHandler');
+            $logger->log('start', ['1']);
+        }
+        
         global $APPLICATION;
         $mindbox = static::mindbox();
         if (!$mindbox) {
@@ -369,6 +379,11 @@ class Event
                 }
             }
         } else {
+
+            if($logger) {
+                $logger->log('loyalty mode', ['$arFields' => $arFields, '$_SESSION' => $_SESSION]);
+            }
+
 
             if (!empty($arFields[ 'USER_ID' ])) {
 
@@ -536,11 +551,25 @@ class Event
         $lines = [];
         $i = 1;
         foreach ($basketItems as $basketItem) {
-            $line = new LineRequestDTO();
-            $catalogPrice = $basketItem->getPrice();
-            $lines[] = [
+            $discountName = $basketItem->getField('DISCOUNT_NAME');
+            $discountPrice = $basketItem->getDiscountPrice();
+            $productBasePrice = $basketItem->getBasePrice();
+            $requestedPromotions = [];
+            if (!empty($discountName) && $discountPrice) {
+                $requestedPromotions = [
+                    'type'      => 'discount',
+                    'promotion' => [
+                        'ids'  => [
+                            'externalId' => preg_match("#\[.*\]#", $discountName)
+                        ],
+                    ],
+                    'amount'    => $discountPrice
+                ];
+            }
+
+            $arLine = [
                 'lineNumber'    =>  $i++,
-                'basePricePerItem' => $catalogPrice,
+                'basePricePerItem' => $productBasePrice,
                 'quantity'         => $basketItem->getQuantity(),
                 'lineId'           => $basketItem->getId(),
                 'product'          => [
@@ -554,6 +583,13 @@ class Event
                     ]
                 ]
             ];
+
+            if(!empty($requestedPromotions)) {
+                $arLine['requestedPromotions'] = [$requestedPromotions];
+            }
+
+
+            $lines[] = $arLine;
         }
 
         if (empty($lines)) {
@@ -1075,7 +1111,24 @@ class Event
         foreach ($basketItems as $basketItem) {
             $bitrixBasket[ $basketItem->getId() ] = $basketItem;
             $catalogPrice = $basketItem->getBasePrice();
-            $lines[] = [
+
+            $discountName = $basketItem->getField('DISCOUNT_NAME');
+            $discountPrice = $basketItem->getDiscountPrice();
+            $productBasePrice = $basketItem->getBasePrice();
+            $requestedPromotions = [];
+            if (!empty($discountName) && $discountPrice) {
+                $requestedPromotions = [
+                    'type'      => 'discount',
+                    'promotion' => [
+                        'ids'  => [
+                            'externalId' => preg_match("#\[.*\]#", $discountName)
+                        ],
+                    ],
+                    'amount'    => $discountPrice
+                ];
+            }
+
+            $arLine = [
                 'basePricePerItem' => $catalogPrice,
                 'quantity'         => $basketItem->getQuantity(),
                 'lineId'           => $basketItem->getId(),
@@ -1090,6 +1143,13 @@ class Event
                     ]
                 ]
             ];
+
+            if(!empty($requestedPromotions)) {
+                $arLine['requestedPromotions'] = [$requestedPromotions];
+            }
+
+
+            $lines[] = $arLine;
         }
 
         if (empty($lines)) {
@@ -1112,9 +1172,10 @@ class Event
             if ($mindboxId) {
                 $customer->setId('mindboxId', $mindboxId);
             }
+            $preorder->setCustomer($customer);
         }
 
-        $preorder->setCustomer($customer);
+
         //$preorder->setPointOfContact(Options::getModuleOption('POINT_OF_CONTACT'));
 
         $bonuses = $_SESSION[ 'PAY_BONUSES' ] ?: 0;
@@ -1147,7 +1208,8 @@ class Event
                     $preorderInfo = $mindbox->order()->calculateAuthorizedCart($preorder,
                         Options::getOperationName('calculateAuthorizedCart'))->sendRequest()->getResult()->getField('order');
                 } else {
-
+                    $preorderInfo = $mindbox->order()->calculateUnauthorizedCart($preorder,
+                        Options::getOperationName('calculateUnauthorizedCart'))->sendRequest()->getResult()->getField('order');
                 }
 
 
