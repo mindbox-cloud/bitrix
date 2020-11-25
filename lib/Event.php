@@ -615,6 +615,10 @@ class Event
 
         $mindboxId = Helper::getMindboxId($order->getUserId());
 
+        if(!$mindboxId) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+
         $propertyCollection = $order->getPropertyCollection();
         $ar = $propertyCollection->getArray();
         foreach ($ar[ 'properties' ] as $arProperty) {
