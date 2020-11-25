@@ -654,7 +654,7 @@ class Cart extends CBitrixComponent implements Controllerable
                 $basketItem->setField('CUSTOM_PRICE', 'N');
                 $basketItem->save();
             }
-            die($e->getMessage());
+            //die($e->getMessage());
 
             return;
         }
