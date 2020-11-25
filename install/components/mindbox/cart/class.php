@@ -149,6 +149,7 @@ class Cart extends CBitrixComponent implements Controllerable
             'lines' => $lines
         ];
 
+
         if ($code) {
             $arOrder['coupons'] = [[
                 'ids'   => [
