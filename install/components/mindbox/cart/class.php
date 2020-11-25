@@ -164,11 +164,21 @@ class Cart extends CBitrixComponent implements Controllerable
 
         $customer = new CustomerRequestDTO();
         if ($USER->IsAuthorized()) {
+            $customer->setField('isAuthorized', true);
 
-            $mindboxId = Helper::getMindboxId($USER->GetID());
-            if ($mindboxId) {
-                $customer->setId('mindboxId', $mindboxId);
+            $dbUser = Bitrix\Main\UserTable::getList(
+                [
+                    'select' => ['UF_MINDBOX_ID'],
+                    'filter' => ['ID' => $USER->GetID()],
+                    'limit'  => 1
+                ]
+            )->fetch();
+
+            if ($dbUser) {
+                $customer->setId('mindboxId', $dbUser[ 'UF_MINDBOX_ID' ]);
             }
+        } else {
+            $customer->setField('isAuthorized', false);
         }
 
         $preorder->setCustomer($customer);
