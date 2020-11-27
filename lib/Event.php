@@ -619,7 +619,7 @@ class Event
         }
 
         $bonuses = $_SESSION[ 'PAY_BONUSES' ] ?: 0;
-        if($bonuses) {
+        if($bonuses && $USER->IsAuthorized()) {
             $bonusPoints = [
                 'amount'    =>  $bonuses
             ];
@@ -633,11 +633,13 @@ class Event
 
         $customer = new CustomerRequestV2DTO();
 
-        $mindboxId = Helper::getMindboxId($order->getUserId());
-
-        if(!$mindboxId) {
-            return new Main\EventResult(Main\EventResult::SUCCESS);
+        if($USER->IsAuthorized()) {
+            $mindboxId = Helper::getMindboxId($USER->GetID());
+            if(!$mindboxId) {
+                return new Main\EventResult(Main\EventResult::SUCCESS);
+            }
         }
+
 
         $propertyCollection = $order->getPropertyCollection();
         $ar = $propertyCollection->getArray();
@@ -727,11 +729,28 @@ class Event
             $_SESSION[ 'MINDBOX_ORDER' ] = $createOrderResult ? $createOrderResult->getId('mindbox') : false;
         } catch (Exceptions\MindboxClientErrorException $e) {
 
+
+                $orderDTO = new OrderCreateRequestDTO();
+                $orderDTO->setField('order', [
+                        'transaction' => [
+                            "ids" => [
+                                "externalId" => Helper::getTransactionId()
+                            ]
+                        ]
+                    ]
+                );
+                $mindbox->order()->rollbackOrderTransaction($orderDTO,
+                    Options::getOperationName('rollbackOrderTransaction'))->sendRequest();
+
+
             return new \Bitrix\Main\EventResult(
                 \Bitrix\Main\EventResult::ERROR,
                 new \Bitrix\Sale\ResultError($e->getMessage(), 'SALE_EVENT_WRONG_ORDER'),
                 'sale'
             );
+
+
+
 
         } catch (Exceptions\MindboxUnavailableException $e) {
             $orderOfflineDTO = new OrderUpdateRequestDTO();
@@ -1285,141 +1304,117 @@ class Event
             return $arFields;
         }
 
-        global $APPLICATION;
+        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('OnBeforeUserAddHandler');
+            $logger->log('$arFields', $arFields);
+        }
+
+        //return $arFields;
+
+        global $APPLICATION, $USER;
 
         $mindbox = static::mindbox();
         if (!$mindbox) {
             return $arFields;
         }
 
-        if (!array_key_exists('location_type', $_POST)) {
+        if (!isset($arFields[ 'PERSONAL_PHONE' ])) {
+            $arFields[ 'PERSONAL_PHONE' ] = $arFields[ 'PERSONAL_MOBILE' ];
+        }
+
+        if (isset($arFields[ 'PERSONAL_PHONE' ])) {
+            $arFields[ 'PERSONAL_PHONE' ] = Helper::formatPhone($arFields[ 'PERSONAL_PHONE' ]);
+        }
+
+        if (isset($_SESSION[ 'OFFLINE_REGISTER' ]) && $_SESSION[ 'OFFLINE_REGISTER' ]) {
             return $arFields;
         }
 
-        $arFields[ 'PERSONAL_PHONE' ] = Helper::formatPhone($arFields[ 'PERSONAL_PHONE' ]);
-
-        $customerDTO = new CustomerRequestDTO([
-            'mobilePhone' => $arFields[ 'PERSONAL_PHONE' ],
-            'email'       => $arFields[ 'EMAIL' ]
-        ]);
-
-        try {
-            $response = $mindbox->customer()->checkByPhone($customerDTO, Options::getOperationName('check'), false)
-                ->sendRequest()->getResult();
-        } catch (Exceptions\MindboxClientException $e) {
-            $_SESSION[ 'ANONYM' ][ 'PHONE' ] = $arFields[ 'PERSONAL_PHONE' ];
-
-            return $arFields;
+        /*
+        if (!$USER->CheckFields($arFields)) {
+            $APPLICATION->ThrowException($USER->LAST_ERROR);
+            return false;
         }
+        */
 
-
-        $customer = $response->getCustomer();
-        if ($customer && $customer->getProcessingStatus() === 'Found') {
-            $mindboxId = $customer->getId('mindboxId');
-            $customerDTO->setFirstName($arFields[ 'NAME' ]);
-            $customerDTO->setLastName($arFields[ 'LAST_NAME' ]);
-            $customerDTO->setId('mindboxId', $mindboxId);
-
-            $customerDTO = Helper::iconvDTO($customerDTO);
-            try {
-                $updateResponse = $mindbox->customer()->edit($customerDTO, Options::getOperationName('edit'), true,
-                    Helper::isSync())->sendRequest()->getResult();
-            } catch (Exceptions\MindboxClientException $e) {
-                $_SESSION[ 'ANONYM' ][ 'PHONE' ] = $arFields[ 'PERSONAL_PHONE' ];
-
-                return $arFields;
-            }
-
-            $updateResponse = Helper::iconvDTO($updateResponse, false);
-            $status = $updateResponse->getStatus();
-
-            if ($status === 'ValidationError') {
-                $errors = $updateResponse->getValidationMessages();
-
-                $APPLICATION->ThrowException(self::formatValidationMessages($errors));
-
-                return false;
-            }
-
-            $arFields[ 'UF_MINDBOX_ID' ] = $mindboxId;
-
-            return $arFields;
-        }
-
-
-        $anonym = new CustomerRequestDTO([
+        $sex = substr(ucfirst($arFields[ 'PERSONAL_GENDER' ]), 0, 1) ?: null;
+        $fields = [
             'email'       => $arFields[ 'EMAIL' ],
-            'firstName'   => $arFields[ 'NAME' ],
             'lastName'    => $arFields[ 'LAST_NAME' ],
-            'mobilePhone' => $arFields[ 'PERSONAL_PHONE' ]
-        ]);
+            'middleName'  => $arFields[ 'SECOND_NAME' ],
+            'firstName'   => $arFields[ 'NAME' ],
+            'mobilePhone' => $arFields[ 'PERSONAL_PHONE' ],
+            'birthDate'   => Helper::formatDate($arFields[ 'PERSONAL_BIRTHDAY' ]),
+            'sex'         => $sex,
+        ];
 
-        $subscriptions = [
+        $fields = array_filter($fields, function ($item) {
+            return isset($item);
+        });
+
+        $fields[ 'subscriptions' ] = [
             [
                 'pointOfContact' => 'Email',
                 'isSubscribed'   => true,
-                'valueByDefault' => true
             ],
             [
                 'pointOfContact' => 'Sms',
                 'isSubscribed'   => true,
-                'valueByDefault' => true
             ],
         ];
-        $anonym->setSubscriptions($subscriptions);
 
+        $customer = Helper::iconvDTO(new CustomerRequestDTO($fields));
 
-        $anonym = Helper::iconvDTO($anonym);
+        unset($fields);
+
         try {
-            $response = $mindbox->customer()
-                ->register($anonym, Options::getOperationName('registerFromAnonymousOrder'), true, Helper::isSync())
-                ->sendRequest()->getResult();
+            $registerResponse = $mindbox->customer()->register($customer,
+                Options::getOperationName('register'), true, Helper::isSync())->sendRequest()->getResult();
         } catch (Exceptions\MindboxClientException $e) {
-            $_SESSION[ 'ANONYM' ][ 'PHONE' ] = $arFields[ 'PERSONAL_PHONE' ];
-
-            return $arFields;
+            $APPLICATION->ThrowException(Loc::getMessage('MB_USER_REGISTER_ERROR'));
+            return false;
         }
 
-        $response = Helper::iconvDTO($response, false);
-        $status = $response->getStatus();
+        $registerResponse = Helper::iconvDTO($registerResponse, false);
+        $status = $registerResponse->getStatus();
+
 
         if ($status === 'ValidationError') {
-            $errors = $response->getValidationMessages();
+            $errors = $registerResponse->getValidationMessages();
 
             $APPLICATION->ThrowException(self::formatValidationMessages($errors));
 
             return false;
+        } else {
+            $customer = $registerResponse->getCustomer();
+            $mindBoxId = $customer->getId('mindboxId');
+            $arFields['UF_MINDBOX_ID'] = $mindBoxId;
+            $_SESSION[ 'NEW_USER_MB_ID' ] = $mindBoxId;
+            $_SESSION[ 'NEW_USER_MINDBOX' ] = true;
         }
 
-        $customer = $response->getCustomer();
-        if (!$customer) {
-            $APPLICATION->ThrowException('');
-
-            return false;
-        }
-
-        $mindboxId = $customer->getId('mindboxId');
-        $arFields[ 'UF_MINDBOX_ID' ] = $mindboxId;
-
-        if (!$mindboxId) {
-            $APPLICATION->ThrowException('');
-
-            return false;
-        }
-
-        return $arFields;
     }
 
     public function OnAfterUserAddHandler(&$arFields)
     {
 
-        $mindBoxId = $arFields[ 'UF_MINDBOX_ID' ];
+
+        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('OnAfterUserAddHandler');
+            $logger->log('$arFields', $arFields);
+        }
+
+        return $arFields;
+
+        $mindBoxId = $_SESSION[ 'NEW_USER_MB_ID' ];
+        $mindbox = static::mindbox();
+
+        if (!$mindbox) {
+            return $arFields;
+        }
 
         if ($mindBoxId) {
-            $mindbox = static::mindbox();
-            if (!$mindbox) {
-                return $arFields;
-            }
+
             $customer = new CustomerRequestDTO();
             $customer->setId('mindboxId', $mindBoxId);
             $customer->setId(Options::getModuleOption('WEBSITE_ID'), $arFields[ "ID" ]);
@@ -1435,6 +1430,8 @@ class Event
                 }
             }
         }
+
+
     }
 
     /**
