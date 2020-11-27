@@ -596,19 +596,39 @@ class Event
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
+        $arCoupons = [];
+        if ($_SESSION[ 'PROMO_CODE' ] && !empty($_SESSION['PROMO_CODE'])) {
+            $arCoupons['ids']['code'] = $_SESSION[ 'PROMO_CODE' ];
+        }
 
-        $orderDTO->setField('order', [
-                'ids'   => [
-                    Options::getModuleOption('TRANSACTION_ID') => ''
-                ],
-                'lines' => $lines,
-                'transaction'   =>  [
-                    'ids'   =>  [
-                        'externalId'    =>  Helper::getTransactionId()
-                    ]
+
+        $arOrder = [
+            'ids'   => [
+                Options::getModuleOption('TRANSACTION_ID') => ''
+            ],
+            'lines' => $lines,
+            'transaction'   =>  [
+                'ids'   =>  [
+                    'externalId'    =>  Helper::getTransactionId()
                 ]
             ]
-        );
+        ];
+
+        if(!empty($arCoupons)) {
+            $arOrder['coupons'] = [$arCoupons];
+        }
+
+        $bonuses = $_SESSION[ 'PAY_BONUSES' ] ?: 0;
+        if($bonuses) {
+            $bonusPoints = [
+                'amount'    =>  $bonuses
+            ];
+            $arOrder['bonusPoints'] = [
+                $bonusPoints
+            ];
+        }
+
+        $orderDTO->setField('order', $arOrder);
 
 
         $customer = new CustomerRequestV2DTO();
@@ -640,49 +660,13 @@ class Event
             $customer->setMobilePhone($arOrderProperty[ 'PHONE' ]);
         }
 
-        //$customer->setId(Options::getModuleOption('WEBSITE_ID'), $order->getUserId());
+
         if(!(\Mindbox\Helper::isUnAuthorizedOrder($arUser) || !$USER->IsAuthorized())) {
             $customer->setId('mindboxId', $mindboxId);
         }
 
 
-        $subscriptions = [
-            'subscription' => [
-                'brand'          => Options::getModuleOption('BRAND'),
-                'pointOfContact' => 'Email',
-                'isSubscribed'   => true,
-            ]
-        ];
-        //$customer->setSubscriptions($subscriptions);
-
-
         $orderDTO->setCustomer($customer);
-
-
-        $discounts = [];
-        $bonuses = $_SESSION[ 'PAY_BONUSES' ];
-        if (!empty($bonuses)) {
-            $discounts[] = new DiscountRequestDTO([
-                'type'        => 'balance',
-                'amount'      => $bonuses,
-                'balanceType' => [
-                    'ids' => ['systemName' => 'Main']
-                ]
-            ]);
-        }
-
-        $code = $_SESSION[ 'PROMO_CODE' ];
-        if ($code) {
-            $discounts[] = new DiscountRequestDTO([
-                'type'   => 'promoCode',
-                'id'     => $code,
-                'amount' => $_SESSION[ 'PROMO_CODE_AMOUNT' ] ?: 0
-            ]);
-        }
-
-        if (!empty($discounts)) {
-            $orderDTO->setDiscounts($discounts);
-        }
 
         try {
 
@@ -716,7 +700,7 @@ class Event
                             ]
                         ]
                     );
-                    $createOrderResult = $mindbox->order()->CommitOrderTransaction($orderDTO,
+                    $createOrderResult = $mindbox->order()->rollbackOrderTransaction($orderDTO,
                         Options::getOperationName('rollbackOrderTransaction'))->sendRequest();
 
                     return new \Bitrix\Main\EventResult(
@@ -867,6 +851,8 @@ class Event
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'loyalty') {
 
             try {
+
+                unset($_SESSION[ 'PROMO_CODE_AMOUNT' ], $_SESSION[ 'PROMO_CODE' ]);
 
                 $orderDTO = new OrderCreateRequestDTO();
                 $orderDTO->setField('order', [
@@ -1160,15 +1146,40 @@ class Event
             return false;
         }
 
-        $preorder->setField('order', [
-                'ids'   => [
-                    Options::getModuleOption('TRANSACTION_ID') => '',
-                ],
-                'lines' => $lines
-            ]
-        );
+        $arOrder = [
+            'ids'   => [
+                Options::getModuleOption('TRANSACTION_ID') => '',
+            ],
+            'lines' => $lines
+        ];
 
-        //$preorder->setLines($lines);
+        $arCoupons = [];
+        if ($_SESSION[ 'PROMO_CODE' ] && !empty($_SESSION['PROMO_CODE'])) {
+            $arCoupons['ids']['code'] = $_SESSION[ 'PROMO_CODE' ];
+        }
+
+        $arOrder = [
+            'ids'   => [
+                Options::getModuleOption('TRANSACTION_ID') => '',
+            ],
+            'lines' => $lines
+        ];
+
+        if(!empty($arCoupons)) {
+            $arOrder['coupons'] = [$arCoupons];
+        }
+
+        $bonuses = $_SESSION[ 'PAY_BONUSES' ] ?: 0;
+        if($bonuses) {
+            $bonusPoints = [
+                'amount'    =>  $bonuses
+            ];
+            $arOrder['bonusPoints'] = [
+                $bonusPoints
+            ];
+        }
+
+        $preorder->setField('order', $arOrder);
 
         $customer = new CustomerRequestDTO();
         if ($USER->IsAuthorized()) {
@@ -1177,32 +1188,6 @@ class Event
                 $customer->setId('mindboxId', $mindboxId);
             }
             $preorder->setCustomer($customer);
-        }
-
-
-        //$preorder->setPointOfContact(Options::getModuleOption('POINT_OF_CONTACT'));
-
-        $bonuses = $_SESSION[ 'PAY_BONUSES' ] ?: 0;
-
-
-        $discounts[] = new DiscountRequestDTO([
-            'type'        => 'balance',
-            'amount'      => $bonuses,
-            'balanceType' => [
-                'ids' => ['systemName' => 'Main']
-            ]
-        ]);
-
-
-        if ($code = $_SESSION[ 'PROMO_CODE' ]) {
-            $discounts[] = new DiscountRequestDTO([
-                'type' => 'promoCode',
-                'id'   => $code
-            ]);
-        }
-
-        if ($discounts) {
-            //$preorder->setDiscounts($discounts);
         }
 
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {

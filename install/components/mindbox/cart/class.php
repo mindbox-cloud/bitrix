@@ -94,7 +94,7 @@ class Cart extends CBitrixComponent implements Controllerable
         $preorder = new PreorderRequestDTO();
 
         foreach ($basket as $basketItem) {
-            $logger->log('$basketItem', $basketItem);
+            //$logger->log('$basketItem', $basketItem);
             $bitrixBasket[ $basketItem->getId() ] = $basketItem;
             $discountName = $basketItem->getField('DISCOUNT_NAME');
             $discountPrice = $basketItem->getDiscountPrice();
@@ -149,7 +149,6 @@ class Cart extends CBitrixComponent implements Controllerable
             'lines' => $lines
         ];
 
-
         if ($code) {
             $arOrder['coupons'] = [[
                 'ids'   => [
@@ -161,40 +160,28 @@ class Cart extends CBitrixComponent implements Controllerable
             unset($_SESSION[ 'PROMO_CODE_AMOUNT' ]);
         }
 
+        $bonuses = $_SESSION[ 'PAY_BONUSES' ] ?: 0;
+        if($bonuses) {
+            $bonusPoints = [
+                'amount'    =>  $bonuses
+            ];
+            $arOrder['bonusPoints'] = [
+                $bonusPoints
+            ];
+        }
+
         $preorder->setField('order', $arOrder);
 
         $customer = new CustomerRequestDTO();
         if ($USER->IsAuthorized()) {
-            $customer->setField('isAuthorized', true);
-
-            $dbUser = Bitrix\Main\UserTable::getList(
-                [
-                    'select' => ['UF_MINDBOX_ID'],
-                    'filter' => ['ID' => $USER->GetID()],
-                    'limit'  => 1
-                ]
-            )->fetch();
-
-            if ($dbUser) {
-                $customer->setId('mindboxId', $dbUser[ 'UF_MINDBOX_ID' ]);
+            $mindboxId = Helper::getMindboxId($USER->GetID());
+            if ($mindboxId) {
+                $customer->setId('mindboxId', $mindboxId);
             }
-        } else {
-            $customer->setField('isAuthorized', false);
+            $preorder->setCustomer($customer);
         }
 
-        $preorder->setCustomer($customer);
 
-        $discounts = [];
-        $bonuses = $_SESSION[ 'PAY_BONUSES' ] ?: 0;
-        if ($bonuses) {
-            $discounts[] = new DiscountRequestDTO([
-                'type'        => 'balance',
-                'amount'      => $bonuses,
-                'balanceType' => [
-                    'ids' => ['systemName' => 'Main']
-                ]
-            ]);
-        }
 
         $response = [
             'type'    => 'success',
@@ -214,35 +201,39 @@ class Cart extends CBitrixComponent implements Controllerable
 
                 if ($preorderInfo) {
                     $discounts = $preorderInfo->getDiscountsInfo();
+                    $couponsInfo = reset($preorderInfo->getField('couponsInfo'));
+                    $totalBonusPointsInfo = $preorderInfo->getField('totalBonusPointsInfo');
                     if($logger) {
                         $logger->log('$preorderInfo', $preorderInfo);
                         $logger->log('$discounts', $discounts);
+                        $logger->log('couponsInfo', $couponsInfo);
                     }
-                    foreach ($discounts as $discount) {
-                        if ($discount->getType() === 'balance') {
-                            $_SESSION[ 'ORDER_AVAILABLE_BONUSES' ] = $discount->getField('availableAmountForCurrentOrder');
-                            if ($_SESSION[ 'PAY_BONUSES' ] > $_SESSION[ 'ORDER_AVAILABLE_BONUSES' ]) {
-                                $_SESSION[ 'PAY_BONUSES' ] = 0;
-                            }
 
-                            $balance = $discount->getField('balance');
-                            if ($balance && $balance[ 'balanceType' ][ 'ids' ][ 'systemName' ] === 'Main') {
-                                setcookie('USER_AVAILABLE_BONUSES', $balance[ 'available' ], 0, '/');
-                                setcookie('USER_BLOCKED_BONUSES', $balance[ 'blocked' ], 0, '/');
-                            }
+                    if(!empty($couponsInfo)) {
+                        if($couponsInfo['coupon']['status'] == 'NotFound') {
+                            $response = Ajax::errorResponse(GetMessage('MB_CART_PROMOCODE_NOT_FOUND'));
                         }
-
-                        if ($discount->getType() === 'promoCode') {
-                            $status = $discount->getField('promoCode')[ 'status' ];
-                            if ($status !== 'CanBeUsed') {
-                                $response = Ajax::errorResponse(GetMessage('MB_CART_PROMOCODE_ERR'));
-                            } else {
-                                $_SESSION[ 'PROMO_CODE_AMOUNT' ] = $discount->getField('availableAmountForCurrentOrder');
-                                $_SESSION[ 'PROMO_CODE' ] = $code;
-                            }
+                        if($couponsInfo['coupon']['status'] == 'CanNotBeUsedForCurrentOrder') {
+                            $response = Ajax::errorResponse(GetMessage('MB_CART_PROMOCODE_ERR'));
+                        }
+                        if($couponsInfo['coupon']['status'] == 'CanBeUsed') {
+                            $_SESSION[ 'PROMO_CODE_AMOUNT' ] = $couponsInfo['discountAmountForCurrentOrder'];
+                            $_SESSION[ 'PROMO_CODE' ] = $code;
                         }
                     }
 
+                    if(!empty($totalBonusPointsInfo)) {
+                        $_SESSION[ 'ORDER_AVAILABLE_BONUSES' ] = $totalBonusPointsInfo['availableAmountForCurrentOrder'];
+                        if ($_SESSION[ 'PAY_BONUSES' ] > $_SESSION[ 'ORDER_AVAILABLE_BONUSES' ]) {
+                            $_SESSION[ 'PAY_BONUSES' ] = 0;
+                        }
+
+                        $balance = $totalBonusPointsInfo['balance'];
+                        if ($balance) {
+                            setcookie('USER_AVAILABLE_BONUSES', $balance[ 'available' ], 0, '/');
+                            setcookie('USER_BLOCKED_BONUSES', $balance[ 'blocked' ], 0, '/');
+                        }
+                    }
 
                     $lines = $preorderInfo->getLines();
                     $mindboxBasket = [];
@@ -306,72 +297,111 @@ class Cart extends CBitrixComponent implements Controllerable
         }
         $bonuses = intval($bonuses);
 
-        global $USER;
-        $mindbox = $this->mindbox;
         $basket = $basket = Bitrix\Sale\Basket::loadItemsForFUser(Bitrix\Sale\Fuser::getId(),
             Bitrix\Main\Context::getCurrent()->getSite());
 
+        global $USER;
+        $mindbox = $this->mindbox;
+
+        if (!$mindbox) {
+            return false;
+        }
         $preorder = new PreorderRequestDTO();
 
-        /** @var Basket $basket */
         $basketItems = $basket->getBasketItems();
         $lines = [];
         $bitrixBasket = [];
-        foreach ($basketItems as $basketItem) {
-            $bitrixBasket[ $basketItem->getId() ] = $basketItem;
-            $line = new LineRequestDTO();
-            $line->setField('lineId', $basketItem->getId());
-            $line->setQuantity($basketItem->getQuantity());
-            $catalogPrice = CPrice::GetBasePrice($basketItem->getProductId());
-            $catalogPrice = $catalogPrice[ 'PRICE' ] ?: 0;
-            $line->setProduct([
-                'productId'        => Helper::getProductId($basketItem),
-                'basePricePerItem' => $catalogPrice
-            ]);
 
-            $lines[] = $line;
+        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('applyBonusesAction');
         }
 
-        $preorder->setLines($lines);
+        foreach ($basketItems as $basketItem) {
+            $bitrixBasket[ $basketItem->getId() ] = $basketItem;
+            $discountName = $basketItem->getField('DISCOUNT_NAME');
+            $discountPrice = $basketItem->getDiscountPrice();
+            $productBasePrice = $basketItem->getBasePrice();
+            $requestedPromotions = [];
+            if (!empty($discountName) && $discountPrice) {
+                $requestedPromotions = [
+                    'type'      => 'discount',
+                    'promotion' => [
+                        'ids'  => [
+                            'externalId' => preg_match("#\[.*\]#", $discountName)
+                        ],
+                    ],
+                    'amount'    => $discountPrice
+                ];
+            }
+
+            $arLine = [
+                'basePricePerItem' => $productBasePrice,
+                'quantity'         => $basketItem->getQuantity(),
+                'lineId'           => $basketItem->getId(),
+                'product'          => [
+                    'ids' => [
+                        Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getProductId($basketItem)
+                    ]
+                ],
+                'status'           => [
+                    'ids' => [
+                        'externalId' => 'CheckedOut'
+                    ]
+                ],
+            ];
+
+            if(!empty($requestedPromotions)) {
+                $arLine['requestedPromotions'] = [$requestedPromotions];
+            }
+
+
+            $lines[] = $arLine;
+        }
+
+        if (empty($lines)) {
+            return false;
+        }
+
+        $arCoupons = [];
+        if ($_SESSION[ 'PROMO_CODE' ] && !empty($_SESSION['PROMO_CODE'])) {
+            $arCoupons['ids']['code'] = $_SESSION[ 'PROMO_CODE' ];
+        }
+
+
+
+        $arOrder = [
+            'ids'   => [
+                Options::getModuleOption('TRANSACTION_ID') => '',
+            ],
+            'lines' => $lines
+        ];
+
+        if(!empty($arCoupons)) {
+            $arOrder['coupons'] = [$arCoupons];
+        }
+
+        if($bonuses) {
+            $bonusPoints = [
+                'amount'    =>  $bonuses
+            ];
+            $arOrder['bonusPoints'] = [
+                $bonusPoints
+            ];
+        }
+
+
+        $preorder->setField('order', $arOrder);
+
 
         $customer = new CustomerRequestDTO();
         if ($USER->IsAuthorized()) {
-            $customer->setField('isAuthorized', true);
-
-            $dbUser = Bitrix\Main\UserTable::getList(
-                [
-                    'select' => ['UF_MINDBOX_ID'],
-                    'filter' => ['ID' => $USER->GetID()],
-                    'limit'  => 1
-                ]
-            )->fetch();
-
-            if ($dbUser) {
-                $customer->setId('mindboxId', $dbUser[ 'UF_MINDBOX_ID' ]);
-            }
-        } else {
-            $customer->setField('isAuthorized', false);
+            $mindboxId = Helper::getMindboxId($USER->GetID());
+            $customer->setId('mindboxId', intval($mindboxId));
+            $preorder->setCustomer($customer);
         }
 
-        $preorder->setCustomer($customer);
-        $preorder->setPointOfContact(Options::getModuleOption('POINT_OF_CONTACT'));
+        $bonuses = $_SESSION[ 'PAY_BONUSES' ] ?: 0;
 
-        $discounts[] = new DiscountRequestDTO([
-            'type'        => 'balance',
-            'amount'      => $bonuses,
-            'balanceType' => [
-                'ids' => ['systemName' => 'Main']
-            ]
-        ]);
-
-        if ($code = $_SESSION[ 'PROMO_CODE' ]) {
-            $discounts[] = new DiscountRequestDTO([
-                'type' => 'promoCode',
-                'id'   => $code
-            ]);
-        }
-
-        $preorder->setDiscounts($discounts);
 
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {
             try {
@@ -380,20 +410,22 @@ class Cart extends CBitrixComponent implements Controllerable
                     $preorderInfo = $mindbox->order()->calculateAuthorizedCart($preorder,
                         Options::getOperationName('calculateAuthorizedCart'))->sendRequest()->getResult()->getField('order');
                 } else {
-
+                    $preorderInfo = $mindbox->order()->calculateUnauthorizedCart($preorder,
+                        Options::getOperationName('calculateUnauthorizedCart'))->sendRequest()->getResult()->getField('order');
                 }
 
 
                 if ($preorderInfo) {
-                    $discounts = $preorderInfo->getDiscountsInfo();
-                    foreach ($discounts as $discount) {
-                        if ($discount->getType() === 'balance') {
-                            $balance = $discount->getField('balance');
-                            if ($balance[ 'balanceType' ][ 'ids' ][ 'systemName' ] === 'Main') {
-                                $_SESSION[ 'ORDER_AVAILABLE_BONUSES' ] = $discount->getField('availableAmountForCurrentOrder');
-                            }
-                            $_SESSION[ 'PAY_BONUSES' ] = $bonuses;
-                        }
+
+                    $totalBonusPointsInfo = $preorderInfo->getField('totalBonusPointsInfo');
+
+                    if($logger) {
+                        $logger->log('$totalBonusPointsInfo', $totalBonusPointsInfo);
+                    }
+
+                    if(!empty($totalBonusPointsInfo)) {
+                        $_SESSION[ 'ORDER_AVAILABLE_BONUSES' ] = $totalBonusPointsInfo['availableAmountForCurrentOrder'];
+                        $_SESSION[ 'PAY_BONUSES' ] = $totalBonusPointsInfo['spentAmountForCurrentOrder'];
                     }
 
 
@@ -537,15 +569,35 @@ class Cart extends CBitrixComponent implements Controllerable
             return false;
         }
 
-        $preorder->setField('order', [
-                'ids'   => [
-                    Options::getModuleOption('TRANSACTION_ID') => '',
-                ],
-                'lines' => $lines
-            ]
-        );
+        $arCoupons = [];
+        if ($_SESSION[ 'PROMO_CODE' ] && !empty($_SESSION['PROMO_CODE'])) {
+            $arCoupons['ids']['code'] = $_SESSION[ 'PROMO_CODE' ];
+        }
 
-        //$preorder->setLines($lines);
+        $arOrder = [
+            'ids'   => [
+                Options::getModuleOption('TRANSACTION_ID') => '',
+            ],
+            'lines' => $lines
+        ];
+
+        if(!empty($arCoupons)) {
+            $arOrder['coupons'] = [$arCoupons];
+        }
+
+        $bonuses = $_SESSION[ 'PAY_BONUSES' ] ?: 0;
+
+        if($bonuses) {
+            $bonusPoints = [
+                'amount'    =>  $bonuses
+            ];
+            $arOrder['bonusPoints'] = [
+                $bonusPoints
+            ];
+        }
+
+        $preorder->setField('order', $arOrder);
+
 
         $customer = new CustomerRequestDTO();
         if ($USER->IsAuthorized()) {
@@ -553,33 +605,6 @@ class Cart extends CBitrixComponent implements Controllerable
             $customer->setId('mindboxId', intval($mindboxId));
             $preorder->setCustomer($customer);
         }
-
-
-        //$preorder->setPointOfContact(Options::getModuleOption('POINT_OF_CONTACT'));
-
-        $bonuses = $_SESSION[ 'PAY_BONUSES' ] ?: 0;
-
-
-        $discounts[] = new DiscountRequestDTO([
-            'type'        => 'balance',
-            'amount'      => $bonuses,
-            'balanceType' => [
-                'ids' => ['systemName' => 'Main']
-            ]
-        ]);
-
-
-        if ($code = $_SESSION[ 'PROMO_CODE' ]) {
-            $discounts[] = new DiscountRequestDTO([
-                'type' => 'promoCode',
-                'id'   => $code
-            ]);
-        }
-
-        if ($discounts) {
-            //$preorder->setDiscounts($discounts);
-        }
-
 
         try {
 
@@ -592,27 +617,17 @@ class Cart extends CBitrixComponent implements Controllerable
             }
 
 
-            $discounts = $preorderInfo->getDiscountsInfo();
-            foreach ($discounts as $discount) {
-                if ($discount->getType() === 'balance') {
-                    $balance = $discount->getField('balance');
-                    if ($balance[ 'balanceType' ][ 'ids' ][ 'systemName' ] === 'Main') {
-                        $_SESSION[ 'ORDER_AVAILABLE_BONUSES' ] = $discount->getField('availableAmountForCurrentOrder');
-                    }
-                }
+            $couponsInfo = reset($preorderInfo->getField('couponsInfo'));
+            $totalBonusPointsInfo = $preorderInfo->getField('totalBonusPointsInfo');
 
-                if ($discount->getType() === 'promoCode') {
-                    $status = $discount->getField('promoCode')[ 'status' ];
-                    if ($status !== 'CanBeUsed') {
-                        unset($_SESSION[ 'PROMO_CODE' ]);
-                        unset($_SESSION[ 'PROMO_CODE_AMOUNT' ]);
-                    } else {
-                        $_SESSION[ 'PROMO_CODE_AMOUNT' ] = $discount->getField('availableAmountForCurrentOrder');
-                        $_SESSION[ 'PROMO_CODE' ] = $code;
-                    }
-                }
+            if($logger) {
+                $logger->log('$preorderInfo', $preorderInfo);
+                $logger->log('$totalBonusPointsInfo', $totalBonusPointsInfo);
             }
 
+            if(!empty($totalBonusPointsInfo)) {
+                $_SESSION[ 'ORDER_AVAILABLE_BONUSES' ] = $totalBonusPointsInfo['availableAmountForCurrentOrder'];
+            }
 
             $lines = $preorderInfo->getLines();
 
@@ -654,7 +669,6 @@ class Cart extends CBitrixComponent implements Controllerable
                 $basketItem->setField('CUSTOM_PRICE', 'N');
                 $basketItem->save();
             }
-            //die($e->getMessage());
 
             return;
         }
