@@ -1300,20 +1300,22 @@ class Event
     public function OnBeforeUserAddHandler(&$arFields)
     {
 
-        return $arFields;
+        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('OnBeforeUserAddHandler');
+            $logger->log('$arFields', $arFields);
+            $logger->log('$_REQUEST', $_REQUEST);
+        }
+
 
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
             return $arFields;
         }
 
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('OnBeforeUserAddHandler');
-            $logger->log('$arFields', $arFields);
-        }
-
-        //return $arFields;
-
         global $APPLICATION, $USER;
+
+        if(isset($_REQUEST['REGISTER'])) {
+            return $arFields;
+        }
 
         $mindbox = static::mindbox();
         if (!$mindbox) {
@@ -1404,6 +1406,7 @@ class Event
         if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
             $logger = new \Intensa\Logger\ILog('OnAfterUserAddHandler');
             $logger->log('$arFields', $arFields);
+            $logger->log('$_SESSION', $_SESSION);
         }
 
         //return $arFields;
@@ -1434,6 +1437,8 @@ class Event
             }
         }
         */
+
+        global $APPLICATION;
 
         if ($mindBoxId) {
 
