@@ -72,7 +72,7 @@ class EmailConfirm extends CBitrixComponent implements Controllerable
         global $USER;
             $request = $this->mindbox->getClientV3()->prepareRequest('POST',
                 Options::getOperationName('getCustomerInfo'),
-                new DTO(['customer' => ['ids' => ['mindboxId' => $this->userInfo['ID']]]]));
+                new DTO(['customer' => ['ids' => ['mindboxId' => $this->getMindboxId()]]]));
 
             try {
                 $response = $request->sendRequest();

@@ -1300,6 +1300,8 @@ class Event
     public function OnBeforeUserAddHandler(&$arFields)
     {
 
+        return $arFields;
+
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
             return $arFields;
         }
