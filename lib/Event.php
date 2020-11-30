@@ -1406,7 +1406,7 @@ class Event
             $logger->log('$arFields', $arFields);
         }
 
-        return $arFields;
+        //return $arFields;
 
         $mindBoxId = $_SESSION[ 'NEW_USER_MB_ID' ];
         $mindbox = static::mindbox();
@@ -1415,6 +1415,7 @@ class Event
             return $arFields;
         }
 
+        /*
         if ($mindBoxId) {
 
             $customer = new CustomerRequestDTO();
@@ -1432,7 +1433,41 @@ class Event
                 }
             }
         }
+        */
 
+        if ($mindBoxId) {
+
+            $request = $mindbox->getClientV3()->prepareRequest('POST',
+                Options::getOperationName('getCustomerInfo'),
+                new DTO([
+                    'customer' => [
+                        'ids' => [
+                            'mindboxId' => $mindBoxId
+                        ]
+                    ]
+                ]));
+
+            try {
+                $response = $request->sendRequest();
+            } catch (Exceptions\MindboxClientException $e) {
+                $APPLICATION->ThrowException($e->getMessage());
+                return false;
+            }
+
+            if ($response->getResult()->getCustomer()->getProcessingStatus() === 'Found') {
+                $fields = [
+                    'UF_EMAIL_CONFIRMED' => $response->getResult()->getCustomer()->getIsEmailConfirmed(),
+                    'UF_MINDBOX_ID'      => $response->getResult()->getCustomer()->getId('mindboxId')
+                ];
+
+                $user = new CUser;
+                $user->Update(
+                    $arFields[ 'USER_ID' ],
+                    $fields
+                );
+                unset($_SESSION[ 'NEW_USER_MB_ID' ]);
+            }
+        }
 
     }
 
