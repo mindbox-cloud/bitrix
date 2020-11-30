@@ -14,6 +14,7 @@ use Mindbox\DTO\V3\Requests\SubscriptionRequestDTO;
 use Mindbox\Exceptions\MindboxClientException;
 use Mindbox\Exceptions\MindboxUnavailableException;
 use Mindbox\Options;
+use Mindbox\Helper;
 use Mindbox\QueueTable;
 
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) {
