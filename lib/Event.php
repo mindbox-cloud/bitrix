@@ -225,6 +225,7 @@ class Event
         $mindBoxId = $customer->getId('mindboxId');
         $_SESSION[ 'NEW_USER_MB_ID' ] = $mindBoxId;
         $_SESSION[ 'NEW_USER_MINDBOX' ] = true;
+        $arFields['UF_MINDBOX_ID'] = $mindBoxId;
     }
 
     public function OnAfterUserRegisterHandler(&$arFields)
