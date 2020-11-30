@@ -62,6 +62,8 @@ class SubEdit extends CBitrixComponent implements Controllerable
             'ids' => [Options::getModuleOption('WEBSITE_ID') => $this->userInfo['ID']],
         ]);
 
+        $customer->setId('mindboxId', $this->userInfo['UF_MINDBOX_ID']);
+
         $subscriptions = [
             new SubscriptionRequestDTO([
                 'pointOfContact' => 'Email',
@@ -77,7 +79,6 @@ class SubEdit extends CBitrixComponent implements Controllerable
         $customer->setSubscriptions($subscriptions);
 
         try {
-            $this->mindbox->customer()->subscribe($customer, Options::getOperationName('subscribe'))->sendRequest();
             $this->mindbox->customer()->edit($customer, Options::getOperationName('edit'))->sendRequest();
         } catch (MindboxUnavailableException $e) {
             $lastResponse = $this->mindbox->customer()->getLastResponse();

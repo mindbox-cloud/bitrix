@@ -41,8 +41,7 @@ class Options
         'resendEmailConfirm' => 'ResendEmailConfirmation',
         'sendAuthorizationCode' => 'SendMobilePhoneAuthorizationCode',
         'setProductList' => 'SetCart',
-        'subscribeCustomer' => 'SubscribeCustomer',
-        'subscribe' => 'Subscribe',
+        'subscribe' => 'SubscribeCustomer',
         'viewProduct' => 'ViewProduct',
         'viewCategory' => 'ViewCategory'
     ];
