@@ -384,15 +384,14 @@ class Event
                 $logger->log('loyalty mode', ['$arFields' => $arFields, '$_SESSION' => $_SESSION]);
             }
 
-
-            if (!empty($arFields[ 'USER_ID' ])) {
+            if ($arFields[ 'UF_MINDBOX_ID' ]) {
 
                 $request = $mindbox->getClientV3()->prepareRequest('POST',
                     Options::getOperationName('getCustomerInfo'),
                     new DTO([
                         'customer' => [
                             'ids' => [
-                                'mindboxId' => $_SESSION[ 'NEW_USER_MB_ID' ]
+                                'mindboxId' => $arFields[ 'UF_MINDBOX_ID' ]
                             ]
                         ]
                     ]));
