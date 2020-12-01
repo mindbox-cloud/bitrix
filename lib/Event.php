@@ -429,6 +429,10 @@ class Event
     {
         global $APPLICATION;
 
+        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('OnBeforeUserUpdateHandler');
+        }
+
 
         $mindbox = static::mindbox();
 
@@ -438,7 +442,7 @@ class Event
 
         $dbUser = UserTable::getList(
             [
-                'select' => ['EMAIL', 'PERSONAL_PHONE'],
+                'select' => ['EMAIL', 'PERSONAL_PHONE', 'UF_MINDBOX_ID'],
                 'filter' => ['ID' => $arFields[ 'ID' ]]
             ]
         )->fetch();
@@ -466,7 +470,7 @@ class Event
         }
 
         $userId = $arFields[ 'ID' ];
-        $mindboxId = $arFields['UF_MINDBOX_ID'];
+        $mindboxId = $dbUser['UF_MINDBOX_ID'];
 
 
         if (!empty($userId) && !empty($mindboxId)) {
@@ -1097,6 +1101,11 @@ class Event
 
     public function OnSaleBasketBeforeSavedHadler($basket)
     {
+
+        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('OnSaleBasketBeforeSavedHadler');
+        }
+
         global $USER;
         $mindbox = static::mindbox();
         if (!$mindbox) {
@@ -1107,6 +1116,11 @@ class Event
 
         /** @var Basket $basket */
         $basketItems = $basket->getBasketItems();
+
+        if($logger) {
+            $logger->log('$basketItems', $basketItems);
+        }
+
         self::setCartMindbox($basketItems);
         $lines = [];
         $bitrixBasket = [];
@@ -1239,10 +1253,7 @@ class Event
 
                 $lines = $preorderInfo->getLines();
 
-                if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-                    $logger = new \Intensa\Logger\ILog('OnSaleBasketBeforeSavedHadler');
-                    $logger->log('$lines', $lines);
-                }
+
 
 
                 $mindboxBasket = [];
