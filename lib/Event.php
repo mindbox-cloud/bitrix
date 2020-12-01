@@ -555,6 +555,11 @@ class Event
         $lines = [];
         $i = 1;
         foreach ($basketItems as $basketItem) {
+
+            if($basketItem->getField('CAN_BUY') == 'N') {
+                continue;
+            }
+
             $discountName = $basketItem->getField('DISCOUNT_NAME');
             $discountPrice = $basketItem->getDiscountPrice();
             $productBasePrice = $basketItem->getBasePrice();
@@ -919,6 +924,11 @@ class Event
             $lines = [];
 
             foreach ($basketItems as $basketItem) {
+
+                if($basketItem->getField('CAN_BUY') == 'N') {
+                    continue;
+                }
+
                 $line = new LineRequestDTO();
                 $catalogPrice = \CPrice::GetBasePrice($basketItem->getProductId());
                 $catalogPrice = $catalogPrice[ 'PRICE' ] ?: 0;
@@ -1063,6 +1073,11 @@ class Event
 
                 $lines = [];
                 foreach ($basketItems as $basketItem) {
+
+                    if($basketItem->getField('CAN_BUY') == 'N') {
+                        continue;
+                    }
+
                     $basketItem->setField('CUSTOM_PRICE', 'N');
                     $basketItem->save();
                     $line = new LineRequestDTO();
@@ -1117,9 +1132,7 @@ class Event
         /** @var Basket $basket */
         $basketItems = $basket->getBasketItems();
 
-        if($logger) {
-            $logger->log('$basketItems', $basketItems);
-        }
+
 
         self::setCartMindbox($basketItems);
         $lines = [];
@@ -1129,6 +1142,13 @@ class Event
 
 
         foreach ($basketItems as $basketItem) {
+
+            if($basketItem->getField('CAN_BUY') == 'N') {
+                continue;
+            }
+
+
+
             $bitrixBasket[ $basketItem->getId() ] = $basketItem;
             $catalogPrice = $basketItem->getBasePrice();
 
@@ -1174,6 +1194,10 @@ class Event
 
         if (empty($lines)) {
             return false;
+        }
+
+        if($logger) {
+            $logger->log('$lines', $lines);
         }
 
         $arOrder = [

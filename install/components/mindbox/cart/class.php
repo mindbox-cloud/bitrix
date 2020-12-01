@@ -94,7 +94,11 @@ class Cart extends CBitrixComponent implements Controllerable
         $preorder = new PreorderRequestDTO();
 
         foreach ($basket as $basketItem) {
-            //$logger->log('$basketItem', $basketItem);
+
+            if($basketItem->getField('CAN_BUY') == 'N') {
+                continue;
+            }
+
             $bitrixBasket[ $basketItem->getId() ] = $basketItem;
             $discountName = $basketItem->getField('DISCOUNT_NAME');
             $discountPrice = $basketItem->getDiscountPrice();
@@ -317,6 +321,11 @@ class Cart extends CBitrixComponent implements Controllerable
         }
 
         foreach ($basketItems as $basketItem) {
+
+            if($basketItem->getField('CAN_BUY') == 'N') {
+                continue;
+            }
+
             $bitrixBasket[ $basketItem->getId() ] = $basketItem;
             $discountName = $basketItem->getField('DISCOUNT_NAME');
             $discountPrice = $basketItem->getDiscountPrice();
@@ -523,7 +532,13 @@ class Cart extends CBitrixComponent implements Controllerable
         }
 
         foreach ($basketItems as $basketItem) {
+
+            if($basketItem->getField('CAN_BUY') == 'N') {
+                continue;
+            }
+
             $logger->log('$basketItem', $basketItem);
+
             $bitrixBasket[ $basketItem->getId() ] = $basketItem;
             $discountName = $basketItem->getField('DISCOUNT_NAME');
             $discountPrice = $basketItem->getDiscountPrice();
@@ -587,17 +602,20 @@ class Cart extends CBitrixComponent implements Controllerable
 
         $bonuses = $_SESSION[ 'PAY_BONUSES' ] ?: 0;
 
-        if($bonuses) {
+        if($bonuses && $USER->IsAuthorized()) {
             $bonusPoints = [
                 'amount'    =>  $bonuses
             ];
             $arOrder['bonusPoints'] = [
                 $bonusPoints
             ];
+        } else {
+            unset($_SESSION['ORDER_AVAILABLE_BONUSES'], $_SESSION['PAY_BONUSES']);
         }
 
         $preorder->setField('order', $arOrder);
 
+        //$preorder->setLines($lines);
 
         $customer = new CustomerRequestDTO();
         if ($USER->IsAuthorized()) {
@@ -605,6 +623,13 @@ class Cart extends CBitrixComponent implements Controllerable
             $customer->setId('mindboxId', intval($mindboxId));
             $preorder->setCustomer($customer);
         }
+
+
+        //$preorder->setPointOfContact(Options::getModuleOption('POINT_OF_CONTACT'));
+
+
+
+
 
         try {
 
@@ -617,11 +642,14 @@ class Cart extends CBitrixComponent implements Controllerable
             }
 
 
+            $discounts = $preorderInfo->getDiscountsInfo();
+
             $couponsInfo = reset($preorderInfo->getField('couponsInfo'));
             $totalBonusPointsInfo = $preorderInfo->getField('totalBonusPointsInfo');
 
             if($logger) {
                 $logger->log('$preorderInfo', $preorderInfo);
+                $logger->log('$discounts', $discounts);
                 $logger->log('$totalBonusPointsInfo', $totalBonusPointsInfo);
             }
 
@@ -669,6 +697,7 @@ class Cart extends CBitrixComponent implements Controllerable
                 $basketItem->setField('CUSTOM_PRICE', 'N');
                 $basketItem->save();
             }
+            //die($e->getMessage());
 
             return;
         }
