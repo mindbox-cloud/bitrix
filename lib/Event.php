@@ -875,10 +875,7 @@ class Event
 
                 $orderDTO = new OrderCreateRequestDTO();
                 $orderDTO->setField('order', [
-                        'ids'         => [
-                            Options::getModuleOption('TRANSACTION_ID') => $order->getId()
-                        ],
-                        'transaction' => [
+                    'transaction' => [
                             "ids" => [
                                 "externalId" => Helper::getTransactionId()
                             ]
@@ -1278,7 +1275,7 @@ class Event
                         $bitrixProduct->setFieldNoDemand('QUANTITY', $line->getQuantity());
                         $bitrixProduct->save();
 
-                        $mindboxBasket[ $lineId ] = $bitrixProduct;
+                        //$mindboxBasket[ $lineId ] = $bitrixProduct;
                     }
                 }
 
