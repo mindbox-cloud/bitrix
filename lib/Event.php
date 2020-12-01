@@ -1275,7 +1275,7 @@ class Event
                         $bitrixProduct->setFieldNoDemand('QUANTITY', $line->getQuantity());
                         $bitrixProduct->save();
 
-                        //$mindboxBasket[ $lineId ] = $bitrixProduct;
+                        $mindboxBasket[ $lineId ] = $bitrixProduct;
                     }
                 }
 
