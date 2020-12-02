@@ -24,3 +24,4 @@ $MESS['CATALOG_SETTINGS'] = 'Настройки каталога';
 $MESS['BRAND'] = "Бренд";
 $MESS['STANDARD'] = 'Стандартный';
 $MESS['SAVE'] = 'Сохранить';
+$MESS['MODULE_VERSION'] = 'Версия модуля ';

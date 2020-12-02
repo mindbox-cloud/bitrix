@@ -32,6 +32,8 @@ if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
 IncludeModuleLangFile($_SERVER[ 'DOCUMENT_ROOT' ] . '/bitrix/modules/main/options.php');
 IncludeModuleLangFile(__FILE__);
 
+include("install/version.php");
+
 $tabControl = new CAdminTabControl('tabControl', [
     [
         'DIV'   => 'edit1',
@@ -43,6 +45,7 @@ $tabControl = new CAdminTabControl('tabControl', [
 
 $arAllOptions = array(
     getMessage('DOCS_LINK'),
+    '<span style="color: red;">' . getMessage('MODULE_VERSION') . $arModuleVersion['VERSION'] . '</span>',
     getMessage('MAINOPTIONS'),
     [
         'MODE',
