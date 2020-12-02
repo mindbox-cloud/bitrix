@@ -45,7 +45,7 @@ $tabControl = new CAdminTabControl('tabControl', [
 
 $arAllOptions = array(
     getMessage('DOCS_LINK'),
-    '<span style="color: red;">' . getMessage('MODULE_VERSION') . $arModuleVersion['VERSION'] . '</span>',
+    '<span style="font-size: 13px; font-weight: normal; color: #000;">' . getMessage('MODULE_VERSION') . $arModuleVersion['VERSION'] . '</span>',
     getMessage('MAINOPTIONS'),
     [
         'MODE',
