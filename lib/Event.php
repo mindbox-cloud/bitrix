@@ -561,6 +561,9 @@ class Event
             }
 
             $discountName = $basketItem->getField('DISCOUNT_NAME');
+            preg_match("#\[(.*)\]#", $discountName, $matches);
+            $discountId = $matches[1];
+
             $discountPrice = $basketItem->getDiscountPrice();
             $productBasePrice = $basketItem->getBasePrice();
             $requestedPromotions = [];
@@ -569,7 +572,7 @@ class Event
                     'type'      => 'discount',
                     'promotion' => [
                         'ids'  => [
-                            'externalId' => preg_match("#\[.*\]#", $discountName)
+                            'externalId' => $discountId
                         ],
                     ],
                     'amount'    => $discountPrice
@@ -1151,8 +1154,11 @@ class Event
 
             $bitrixBasket[ $basketItem->getId() ] = $basketItem;
             $catalogPrice = $basketItem->getBasePrice();
-
             $discountName = $basketItem->getField('DISCOUNT_NAME');
+
+            preg_match("#\[(.*)\]#", $discountName, $matches);
+            $discountId = $matches[1];
+
             $discountPrice = $basketItem->getDiscountPrice();
             $productBasePrice = $basketItem->getBasePrice();
             $requestedPromotions = [];
@@ -1161,7 +1167,7 @@ class Event
                     'type'      => 'discount',
                     'promotion' => [
                         'ids'  => [
-                            'externalId' => preg_match("#\[.*\]#", $discountName)
+                            'externalId' => $discountId
                         ],
                     ],
                     'amount'    => $discountPrice

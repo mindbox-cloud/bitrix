@@ -101,6 +101,8 @@ class Cart extends CBitrixComponent implements Controllerable
 
             $bitrixBasket[ $basketItem->getId() ] = $basketItem;
             $discountName = $basketItem->getField('DISCOUNT_NAME');
+            preg_match("#\[(.*)\]#", $discountName, $matches);
+            $discountId = $matches[1];
             $discountPrice = $basketItem->getDiscountPrice();
             $productBasePrice = $basketItem->getBasePrice();
             $requestedPromotions = [];
@@ -109,7 +111,7 @@ class Cart extends CBitrixComponent implements Controllerable
                     'type'      => 'discount',
                     'promotion' => [
                         'ids'  => [
-                            'externalId' => preg_match("#\[.*\]#", $discountName)
+                            'externalId' => $discountId
                         ],
                     ],
                     'amount'    => $discountPrice
@@ -328,6 +330,8 @@ class Cart extends CBitrixComponent implements Controllerable
 
             $bitrixBasket[ $basketItem->getId() ] = $basketItem;
             $discountName = $basketItem->getField('DISCOUNT_NAME');
+            preg_match("#\[(.*)\]#", $discountName, $matches);
+            $discountId = $matches[1];
             $discountPrice = $basketItem->getDiscountPrice();
             $productBasePrice = $basketItem->getBasePrice();
             $requestedPromotions = [];
@@ -336,7 +340,7 @@ class Cart extends CBitrixComponent implements Controllerable
                     'type'      => 'discount',
                     'promotion' => [
                         'ids'  => [
-                            'externalId' => preg_match("#\[.*\]#", $discountName)
+                            'externalId' => $discountId
                         ],
                     ],
                     'amount'    => $discountPrice
@@ -541,6 +545,8 @@ class Cart extends CBitrixComponent implements Controllerable
 
             $bitrixBasket[ $basketItem->getId() ] = $basketItem;
             $discountName = $basketItem->getField('DISCOUNT_NAME');
+            preg_match("#\[(.*)\]#", $discountName, $matches);
+            $discountId = $matches[1];
             $discountPrice = $basketItem->getDiscountPrice();
             $productBasePrice = $basketItem->getBasePrice();
             $requestedPromotions = [];
@@ -549,7 +555,7 @@ class Cart extends CBitrixComponent implements Controllerable
                         'type'      => 'discount',
                         'promotion' => [
                             'ids'  => [
-                                'externalId' => preg_match("#\[.*\]#", $discountName)
+                                'externalId' => $discountId
                             ],
                         ],
                         'amount'    => $discountPrice
