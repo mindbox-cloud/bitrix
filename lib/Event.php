@@ -1135,8 +1135,6 @@ class Event
         /** @var Basket $basket */
         $basketItems = $basket->getBasketItems();
 
-
-
         self::setCartMindbox($basketItems);
         $lines = [];
         $bitrixBasket = [];
@@ -1543,16 +1541,30 @@ class Event
             return;
         }
 
-        $lines = [];
+
+        $arLines = [];
         foreach ($basketItems as $basketItem) {
+            $productId = $basketItem->getProductId();
+            $arLines[$productId]['basketItem'] = $basketItem;
+            $arLines[$productId]['quantity'] += $basketItem->getQuantity();
+            $arLines[$productId]['priceOfLine'] += $basketItem->getPrice()*$basketItem->getQuantity();
+        }
+
+        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('setCartMindbox');
+            $logger->log('$arLines', $arLines);
+        }
+
+        $lines = [];
+        foreach ($arLines as $arLine) {
             $product = new ProductRequestDTO();
-            $product->setId(Options::getModuleOption('EXTERNAL_SYSTEM'), Helper::getProductId($basketItem));
+            $product->setId(Options::getModuleOption('EXTERNAL_SYSTEM'), Helper::getProductId($arLine['basketItem']));
 
 
             $line = new ProductListItemRequestDTO();
             $line->setProduct($product);
-            $line->setCount($basketItem->getQuantity());
-            $line->setPriceOfLine($basketItem->getPrice());
+            $line->setCount($arLine['quantity']);
+            $line->setPriceOfLine($arLine['priceOfLine']);
             $lines[] = $line;
         }
 
