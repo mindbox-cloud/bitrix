@@ -685,8 +685,10 @@ class Event
 
         $preorder = new PreorderRequestDTO();
 
-        /** @var Basket $basket */
-        $basketItems = $basket->getBasketItems();
+        /** @var \Bitrix\Sale\Basket $basket */
+        $basketClone = $basket->createClone(null);
+        $basketItems = $basketClone->getBasketItems();
+        $basketItems = Helper::removeDuplicates($basketItems);
         self::setCartMindbox($basketItems);
         $lines = [];
         $bitrixBasket = [];

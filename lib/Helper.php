@@ -99,7 +99,7 @@ class Helper
     }
 
     /**
-     * Метод возвращает ид товара
+     * пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
      * @param \Bitrix\Sale\Basket $basketItem
      *
      * @return $result
@@ -128,7 +128,7 @@ class Helper
     }
 
     /**
-     * Метод формирует массив инфоблоков
+     * пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
      *
      * @return $arIblock
      */
@@ -150,7 +150,7 @@ class Helper
 
 
     /**
-     * Метод определяет режим передачи данных (синхронный/асинхронный)
+     * пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ/пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
      *
      * @return $isSync
      */
@@ -166,11 +166,45 @@ class Helper
 
 
     /**
-     * Метод определяет что заказ от неавторизованного пользователя
+     * пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
      *
      * @return boolean
      */
     public static function isUnAuthorizedOrder($arUser) {
         return date('dmYHi', time()) === date('dmYHi', strtotime($arUser['DATE_REGISTER']));
+    }
+
+    /**
+     * @param array $basketItems
+     * @return array
+     */
+    public static function removeDuplicates($basketItems)
+    {
+        $uniqueItems = [];
+
+        /**
+         * @var \Bitrix\Sale\BasketItem $item
+         */
+        foreach ($basketItems as $item) {
+            $uniqueItems[$item->getField('PRODUCT_ID')][] = $item;
+        }
+
+        if (count($uniqueItems) === count($basketItems)) {
+            return $basketItems;
+        }
+
+        $uniqueBasketItems = [];
+
+        foreach ($uniqueItems as $id => $groupItems) {
+            $item = current($groupItems);
+            $quantity = 0;
+            foreach ($groupItems as $groupItem) {
+                $quantity += $groupItem->getField('QUANTITY');
+            }
+            $item->setField('QUANTITY', $quantity);
+            $uniqueBasketItems[] = $item;
+        }
+
+        return $uniqueBasketItems;
     }
 }
