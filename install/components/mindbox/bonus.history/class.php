@@ -108,12 +108,14 @@ class BonusHistory extends CBitrixComponent implements Controllerable
         }
 
         foreach ($result->getCustomerActions() as $action) {
-            $history[] = [
-                'start' => $this->formatTime($action->getDateTimeUtc()),
-                'size' => reset($action->getCustomerBalanceChanges())[0]->getChangeAmount(),
-                'name' => $action->getActionTemplate()->getName(),
-                'end' => $this->formatTime(reset($action->getCustomerBalanceChanges())[0]->getExpirationDateTimeUtc())
-            ];
+            foreach ($action->getCustomerBalanceChanges() as $customerBalanceChanges) {
+                $history[] = [
+                    'start' => $this->formatTime($action->getDateTimeUtc()),
+                    'size' => $customerBalanceChanges->getChangeAmount(),
+                    'name' => $action->getActionTemplate()->getName(),
+                    'end' => $this->formatTime($customerBalanceChanges->getExpirationDateTimeUtc())
+                ];
+            }
         }
 
         foreach ($result->getBalances() as $balance) {
