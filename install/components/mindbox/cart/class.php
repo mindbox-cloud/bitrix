@@ -114,7 +114,7 @@ class Cart extends CBitrixComponent implements Controllerable
                             'externalId' => $discountId
                         ],
                     ],
-                    'amount'    => $discountPrice
+                    'amount'    => $discountPrice*$basketItem->getQuantity()
                 ];
             }
 
@@ -343,7 +343,7 @@ class Cart extends CBitrixComponent implements Controllerable
                             'externalId' => $discountId
                         ],
                     ],
-                    'amount'    => $discountPrice
+                    'amount'    => $discountPrice*$basketItem->getQuantity()
                 ];
             }
 
@@ -558,7 +558,7 @@ class Cart extends CBitrixComponent implements Controllerable
                                 'externalId' => $discountId
                             ],
                         ],
-                        'amount'    => $discountPrice
+                        'amount'    => $discountPrice*$basketItem->getQuantity()
                     ];
             }
 

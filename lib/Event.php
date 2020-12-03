@@ -575,7 +575,7 @@ class Event
                             'externalId' => $discountId
                         ],
                     ],
-                    'amount'    => $discountPrice
+                    'amount'    => $discountPrice*$basketItem->getQuantity()
                 ];
             }
 
@@ -1170,7 +1170,7 @@ class Event
                             'externalId' => $discountId
                         ],
                     ],
-                    'amount'    => $discountPrice
+                    'amount'    => $discountPrice*$basketItem->getQuantity()
                 ];
             }
 
