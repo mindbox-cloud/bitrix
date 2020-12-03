@@ -176,13 +176,11 @@ class Event
         $fields[ 'subscriptions' ] = [
             [
                 'pointOfContact' => 'Email',
-                'isSubscribed'   => true,
-                'valueByDefault' => true
+                'isSubscribed'   => true
             ],
             [
                 'pointOfContact' => 'Sms',
-                'isSubscribed'   => true,
-                'valueByDefault' => true
+                'isSubscribed'   => true
             ],
         ];
 
@@ -288,8 +286,7 @@ class Event
                 'subscription' => [
                     'brand' =>  Options::getModuleOption('BRAND'),
                     'pointOfContact' => 'Email',
-                    'isSubscribed'   => $isSubscribed,
-                    'valueByDefault' => true
+                    'isSubscribed'   => $isSubscribed
                 ]
             ];
             $customer->setSubscriptions($subscriptions);
@@ -542,8 +539,7 @@ class Event
             'subscription' => [
                 'brand' =>  Options::getModuleOption('BRAND'),
                 'pointOfContact' => 'Email',
-                'isSubscribed'   => true,
-                'valueByDefault' => true
+                'isSubscribed'   => true
             ]
         ];
         $customer->setSubscriptions($subscriptions);
@@ -907,13 +903,11 @@ class Event
         $subscriptions = [
             [
                 'pointOfContact' => 'Email',
-                'isSubscribed'   => true,
-                'valueByDefault' => true
+                'isSubscribed'   => true
             ],
             [
                 'pointOfContact' => 'Sms',
-                'isSubscribed'   => true,
-                'valueByDefault' => true
+                'isSubscribed'   => true
             ],
         ];
         $anonym->setSubscriptions($subscriptions);

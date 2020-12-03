@@ -62,8 +62,6 @@ class SubEdit extends CBitrixComponent implements Controllerable
             'ids' => [Options::getModuleOption('WEBSITE_ID') => $this->userInfo['ID']],
         ]);
 
-        $customer->setId('mindboxId', $this->userInfo['UF_MINDBOX_ID']);
-
         $subscriptions = [
             new SubscriptionRequestDTO([
                 'pointOfContact' => 'Email',
