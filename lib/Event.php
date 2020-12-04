@@ -266,7 +266,7 @@ class Event
 
             $isSubscribed = true;
 
-            if (!$arFields['UF_IS_SUBSCRIBED'] && $arFields['UF_IS_SUBSCRIBED'] === 'N') {
+            if ($arFields['UF_IS_SUBSCRIBED'] === '0') {
                 $isSubscribed = false;
             }
 
