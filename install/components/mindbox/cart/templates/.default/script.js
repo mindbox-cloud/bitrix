@@ -22,12 +22,14 @@ $(document).ready(function() {
 
        var code = $('#mindbox-cart-promo').val();
 
+       /*
        if(isEmpty($('#mindbox-cart-promo'))) {
            console.log('is empty');
            $error.text('Promo code is empty');
            $error.show();
            return;
        }
+       */
 
        var request = BX.ajax.runComponentAction('mindbox:cart', 'applyCode', {
            mode:'class',
