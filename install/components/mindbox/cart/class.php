@@ -222,6 +222,9 @@ class Cart extends CBitrixComponent implements Controllerable
                         if($couponsInfo['coupon']['status'] == 'CanNotBeUsedForCurrentOrder') {
                             $response = Ajax::errorResponse(GetMessage('MB_CART_PROMOCODE_ERR'));
                         }
+                        if($couponsInfo['coupon']['status'] == 'Used') {
+                            $response = Ajax::errorResponse(GetMessage('MB_CART_PROMO_USED'));
+                        }
                         if($couponsInfo['coupon']['status'] == 'CanBeUsed') {
                             $_SESSION[ 'PROMO_CODE_AMOUNT' ] = $couponsInfo['discountAmountForCurrentOrder'];
                             $_SESSION[ 'PROMO_CODE' ] = $code;
