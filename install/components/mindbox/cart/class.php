@@ -67,7 +67,7 @@ class Cart extends CBitrixComponent implements Controllerable
 
     public function getBalanceAction()
     {
-        $balance = $_SESSION[ 'ORDER_AVAILABLE_BONUSES' ] - $_SESSION[ 'PAY_BONUSES' ];
+        $balance = $_SESSION[ 'ORDER_AVAILABLE_BONUSES' ];
 
         return [
             'balance' => $balance,
