@@ -12,6 +12,7 @@ use Mindbox\DTO\V3\Requests\PageRequestDTO;
 use Mindbox\Exceptions\MindboxException;
 use Mindbox\Helper;
 use Mindbox\Options;
+use Mindbox\DTO\DTO;
 
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) {
     die();
@@ -107,6 +108,7 @@ class BonusHistory extends CBitrixComponent implements Controllerable
             throw new MindboxException('Requested page is empty or doesn\'t exist');
         }
 
+
         foreach ($result->getCustomerActions() as $action) {
             foreach ($action->getCustomerBalanceChanges() as $customerBalanceChanges) {
                 $history[] = [
@@ -118,13 +120,20 @@ class BonusHistory extends CBitrixComponent implements Controllerable
             }
         }
 
-        foreach ($result->getBalances() as $balance) {
-            if($balance->getField('systemName') === 'Main') {
-                $this->arResult['BALANCE'] = [
-                    'available' => $balance->getField('available'),
-                    'blocked' => $balance->getField('blocked')
-                ];
-            }
+
+        $request = $this->mindbox->getClientV3()->prepareRequest('POST',
+            Options::getOperationName('getCustomerInfo'),
+            new DTO(['customer' => ['ids' => ['mindboxId' => $this->getMindboxId()]]]));
+
+        try {
+            $response = $request->sendRequest()->getResult();
+            $arBalances = reset($response->getBalances()->getFieldsAsArray());
+            $this->arResult['BALANCE'] = [
+                'available' => $arBalances['available'],
+                'blocked' => $arBalances['blocked']
+            ];
+        } catch (MindboxClientException $e) {
+            throw new MindboxException($e->getMessage());
         }
 
         return $history;

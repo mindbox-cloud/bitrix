@@ -135,7 +135,7 @@ class OrderHistory extends CBitrixComponent implements Controllerable
                     }
                 }
 
-                $acuiredBonuses += intval($order->getTotalAcquiredBalanceChange()) / 2;
+                $acuiredBonuses += intval($order->getTotalAcquiredBalanceChange());
 
                 $orders[$id]['spentBonuses'] = $spentBonuses;
                 $orders[$id]['acuiredBonuses'] = $acuiredBonuses;
