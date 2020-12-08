@@ -76,7 +76,7 @@ class PhoneConfirm extends CBitrixComponent implements Controllerable
         }
 
         global $USER;
-		$customer = new CustomerRequestDTO(['ids' => [Options::getModuleOption('WEBSITE_ID') => $this->userInfo['ID']]]);
+		$customer = new CustomerRequestDTO(['ids' => ['mindboxId' => $this->getMindboxId()]]);
         $sms = new SmsConfirmationRequestDTO(['code' => $code]);
 
         try {
