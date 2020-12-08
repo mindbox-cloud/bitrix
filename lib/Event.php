@@ -1340,6 +1340,7 @@ class Event
             $logger = new \Intensa\Logger\ILog('OnBeforeUserAddHandler');
             $logger->log('$arFields', $arFields);
             $logger->log('$_REQUEST', $_REQUEST);
+            $logger->log('$_SESSION', $_SESSION);
         }
 
 
