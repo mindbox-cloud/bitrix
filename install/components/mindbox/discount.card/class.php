@@ -99,7 +99,7 @@ class DiscountCard extends CBitrixComponent implements Controllerable
         }
 
         try {
-            $this->mindbox->customer()->sendAuthorizationCode(new CustomerRequestDTO(['ids' => ['mindboxId' => $this->getMindboxId()]]),
+            $this->mindbox->customer()->sendAuthorizationCode(new CustomerRequestDTO(['mobilePhone' => $phone, /*'ids' => ['mindboxId' => $this->getMindboxId()]*/]),
                 Options::getOperationName('sendAuthorizationCode'))->sendRequest();
         } catch (MindboxClientException $e) {
             return Ajax::errorResponse(GetMessage('MB_DC_CARD_ERROR'));
