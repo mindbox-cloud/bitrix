@@ -155,9 +155,11 @@ class Event
             $arFields[ 'PERSONAL_PHONE' ] = Helper::formatPhone($arFields[ 'PERSONAL_PHONE' ]);
         }
 
+        /*
         if (isset($_SESSION[ 'OFFLINE_REGISTER' ]) && $_SESSION[ 'OFFLINE_REGISTER' ]) {
             return $arFields;
         }
+        */
 
         if (!$USER->CheckFields($arFields)) {
             $APPLICATION->ThrowException($USER->LAST_ERROR);
