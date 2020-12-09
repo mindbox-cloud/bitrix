@@ -889,6 +889,9 @@ class Event
 
                 $orderDTO = new OrderCreateRequestDTO();
                 $orderDTO->setField('order', [
+                    'ids'   =>  [
+                        'externalSystemId'  =>  $order->getId()
+                    ],
                     'transaction' => [
                             "ids" => [
                                 "externalId" => Helper::getTransactionId()
