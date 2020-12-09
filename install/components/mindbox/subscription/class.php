@@ -69,7 +69,7 @@ class Subscripion extends CBitrixComponent implements Controllerable
         $customer->setSubscriptions([$subscripton]);
         try {
             $this->mindbox->customer()->subscribe($customer,
-                Options::getOperationName('subscribe'))->sendRequest();
+                Options::getOperationName('subscribe'), true)->sendRequest();
 
             return [
                 'type' => 'success',
