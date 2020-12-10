@@ -65,9 +65,7 @@ class Event
             return true;
         }
 
-        //$mindboxId = Helper::getMindboxId($arUser['user_fields']['ID']);
-
-        $mindboxId = $arUser[ 'user_fields' ][ 'ID' ];
+        $mindboxId = Helper::getMindboxId($arUser['user_fields']['ID']);
 
         if (empty($mindboxId)) {
             $request = $mindbox->getClientV3()->prepareRequest('POST',
