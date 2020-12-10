@@ -740,7 +740,7 @@ class Event
             }
 
             $createOrderResult = $createOrderResult->getResult()->getField('order');
-            $_SESSION[ 'MINDBOX_ORDER' ] = $createOrderResult ? $createOrderResult->getId('mindbox') : false;
+            $_SESSION[ 'MINDBOX_ORDER' ] = $createOrderResult ? $createOrderResult->getId('mindboxId') : false;
         } catch (Exceptions\MindboxClientErrorException $e) {
 
 
@@ -890,7 +890,8 @@ class Event
                 $orderDTO = new OrderCreateRequestDTO();
                 $orderDTO->setField('order', [
                     'ids'   =>  [
-                        'externalSystemId'  =>  $order->getId()
+                        'websiteId'  =>  $order->getId(),
+                        'mindboxId' =>  $_SESSION['MINDBOX_ORDER']
                     ],
                     'transaction' => [
                             "ids" => [
