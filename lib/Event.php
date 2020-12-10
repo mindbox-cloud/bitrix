@@ -537,6 +537,7 @@ class Event
         if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
             $logger = new \Intensa\Logger\ILog('OnSaleOrderBeforeSavedHandler');
             $logger->log('start', '1');
+            $logger->log('order id', $order->getId());
         }
 
         $mindbox = static::mindbox();
