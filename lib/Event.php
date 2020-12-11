@@ -1516,17 +1516,12 @@ class Event
             $registerResponse = $mindbox->customer()->register($customer,
                 Options::getOperationName('register'), true, Helper::isSync())->sendRequest()->getResult();
         } catch (Exceptions\MindboxUnavailableException $e) {
-
-            $logger->log('MindboxUnavailableException', $e->getMessage());
-
             $lastResponse = $mindbox->customer()->getLastResponse();
             if ($lastResponse) {
                 $request = $lastResponse->getRequest();
                 QueueTable::push($request);
             }
-
         } catch (Exceptions\MindboxClientException $e) {
-            $logger->log('MindboxClientException', $e->getMessage());
             $lastResponse = $mindbox->customer()->getLastResponse();
             if ($lastResponse) {
                 $request = $lastResponse->getRequest();
@@ -1538,8 +1533,6 @@ class Event
 
             $registerResponse = Helper::iconvDTO($registerResponse, false);
             $status = $registerResponse->getStatus();
-
-            $logger->log('$status', $status);
 
             if ($status === 'ValidationError') {
                 $errors = $registerResponse->getValidationMessages();
@@ -1553,7 +1546,6 @@ class Event
                 $_SESSION[ 'NEW_USER_MINDBOX' ] = true;
             }
         }
-
 
         return $arFields;
     }
