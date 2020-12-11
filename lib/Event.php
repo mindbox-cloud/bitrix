@@ -205,8 +205,11 @@ class Event
                 QueueTable::push($request);
             }
         } catch (Exceptions\MindboxClientException $e) {
-            $APPLICATION->ThrowException(Loc::getMessage('MB_USER_REGISTER_ERROR'));
-            return false;
+            $lastResponse = $mindbox->customer()->getLastResponse();
+            if ($lastResponse) {
+                $request = $lastResponse->getRequest();
+                QueueTable::push($request);
+            }
         }
 
         if($registerResponse) {
@@ -1520,9 +1523,12 @@ class Event
             }
 
         } catch (Exceptions\MindboxClientException $e) {
-            $APPLICATION->ThrowException($e->getMessage());
-            return false;
             $logger->log('MindboxClientException', $e->getMessage());
+            $lastResponse = $mindbox->customer()->getLastResponse();
+            if ($lastResponse) {
+                $request = $lastResponse->getRequest();
+                QueueTable::push($request);
+            }
         }
 
         if($registerResponse) {
