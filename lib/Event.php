@@ -560,7 +560,7 @@ class Event
         $arUser = $rsUser->Fetch();
 
 
-        $orderDTO = new OrderCreateRequestDTO();
+        $orderDTO = new \Mindbox\DTO\V3\Requests\OrderCreateRequestDTO();
         $basketItems = $basket->getBasketItems();
         $lines = [];
         $i = 1;
@@ -783,15 +783,18 @@ class Event
 
         } catch (Exceptions\MindboxClientException $e) {
 
-            $mindbox->order()->SaveOfflineOrder($orderDTO,
-                Options::getOperationName('saveOfflineOrder'))->sendRequest();
+            try {
+                $mindbox->order()->SaveOfflineOrder($orderDTO,
+                    Options::getOperationName('saveOfflineOrder'))->sendRequest();
+            } catch (Exceptions\MindboxClientException $e) {
+                $lastResponse = $mindbox->order()->getLastResponse();
 
-            $lastResponse = $mindbox->order()->getLastResponse();
-
-            if ($lastResponse) {
-                $request = $lastResponse->getRequest();
-                QueueTable::push($request);
+                if ($lastResponse) {
+                    $request = $lastResponse->getRequest();
+                    QueueTable::push($request);
+                }
             }
+
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
