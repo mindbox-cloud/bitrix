@@ -837,7 +837,7 @@ class Event
             $arUser = $rsUser->Fetch();
 
 
-            $orderDTO = new \Mindbox\DTO\V3\Requests\OrderCreateRequestDTO();
+            $offlineOrderDTO = new \Mindbox\DTO\V3\Requests\OrderCreateRequestDTO();
             $basketItems = $basket->getBasketItems();
             $lines = [];
             $i = 1;
@@ -923,7 +923,7 @@ class Event
                 ];
             }
 
-            $orderDTO->setField('order', $arOrder);
+            $offlineOrderDTO->setField('order', $arOrder);
 
 
             $customer = new CustomerRequestV2DTO();
@@ -963,7 +963,7 @@ class Event
             }
 
 
-            $orderDTO->setCustomer($customer);
+            $offlineOrderDTO->setCustomer($customer);
 
 
             try {
@@ -993,7 +993,7 @@ class Event
             } catch (Exceptions\MindboxUnavailableException $e) {
 
                 try {
-                    $mindbox->order()->SaveOfflineOrder($orderDTO,
+                    $mindbox->order()->SaveOfflineOrder($offlineOrderDTO,
                         Options::getOperationName('saveOfflineOrder'))->sendRequest();
                 } catch (Exceptions\MindboxUnavailableException $e) {
                     $lastResponse = $mindbox->order()->getLastResponse();
@@ -1014,7 +1014,7 @@ class Event
             } catch (Exceptions\MindboxClientException $e) {
 
                 try {
-                    $mindbox->order()->SaveOfflineOrder($orderDTO,
+                    $mindbox->order()->SaveOfflineOrder($offlineOrderDTO,
                         Options::getOperationName('saveOfflineOrder'))->sendRequest();
                 } catch (Exceptions\MindboxUnavailableException $e) {
                     $lastResponse = $mindbox->order()->getLastResponse();
