@@ -199,16 +199,11 @@ class Event
             $registerResponse = $mindbox->customer()->register($customer,
                 Options::getOperationName('register'), true, Helper::isSync())->sendRequest()->getResult();
         } catch (Exceptions\MindboxUnavailableException $e) {
-            $lastResponse = $mindbox->productList()->getLastResponse();
-            if ($lastResponse) {
-                $request = $lastResponse->getRequest();
-                QueueTable::push($request);
-            }
+            $APPLICATION->ThrowException(Loc::getMessage("MB_USER_REGISTER_LOYALTY_ERROR"));
+            return false;
         } catch (Exceptions\MindboxClientException $e) {
-            $request = $mindbox->customer()->getRequest();
-            if ($request) {
-                QueueTable::push($request);
-            }
+            $APPLICATION->ThrowException(Loc::getMessage("MB_USER_REGISTER_LOYALTY_ERROR"));
+            return false;
         }
 
         if($registerResponse) {
