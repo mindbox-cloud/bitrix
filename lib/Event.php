@@ -815,7 +815,7 @@ class Event
 
         if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
             $logger = new \Intensa\Logger\ILog('OnSaleOrderSavedHandler');
-            $logger->log('$order', $order);
+            $logger->log('order id', $order->getId());
         }
 
         $mindbox = static::mindbox();
@@ -1001,10 +1001,9 @@ class Event
                     return new Main\EventResult(Main\EventResult::SUCCESS);
                 }
 
-                $lastResponse = $mindbox->order()->getLastResponse();
+                $request = $mindbox->order()->getRequest();
 
-                if ($lastResponse) {
-                    $request = $lastResponse->getRequest();
+                if ($request) {
                     QueueTable::push($request);
                 }
 
