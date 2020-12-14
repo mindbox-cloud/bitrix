@@ -784,10 +784,8 @@ class Event
                 $mindbox->order()->SaveOfflineOrder($orderDTO,
                     Options::getOperationName('saveOfflineOrder'))->sendRequest();
             } catch (Exceptions\MindboxClientException $e) {
-                $lastResponse = $mindbox->order()->getLastResponse();
-
-                if ($lastResponse) {
-                    $request = $lastResponse->getRequest();
+                $request = $mindbox->order()->getRequest();
+                if ($request) {
                     QueueTable::push($request);
                 }
             }
@@ -999,10 +997,8 @@ class Event
                 return new Main\EventResult(Main\EventResult::SUCCESS);
 
             } catch (Exceptions\MindboxClientException $e) {
-                $lastResponse = $mindbox->order()->getLastResponse();
-
-                if ($lastResponse) {
-                    $request = $lastResponse->getRequest();
+                $request = $mindbox->order()->getRequest();
+                if ($request) {
                     QueueTable::push($request);
                 }
             }
@@ -1201,10 +1197,8 @@ class Event
 
                 return new Main\EventResult(Main\EventResult::SUCCESS);
             } catch (Exceptions\MindboxClientException $e) {
-                $lastResponse = $mindbox->order()->getLastResponse();
-
-                if ($lastResponse) {
-                    $request = $lastResponse->getRequest();
+                $request = $mindbox->order()->getRequest();
+                if ($request) {
                     QueueTable::push($request);
                 }
             }
@@ -1524,14 +1518,11 @@ class Event
                 QueueTable::push($request);
             }
         } catch (Exceptions\MindboxClientException $e) {
-
             if($logger) {
                 $logger->log('MindboxClientException', $e->getMessage());
             }
-
-            $lastRequest = $mindbox->customer()->getRequest();
-
-            if ($lastRequest) {
+            $request = $mindbox->customer()->getRequest();
+            if ($request) {
                 QueueTable::push($lastRequest);
             }
         } catch (\Exception $e ) {
