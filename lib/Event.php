@@ -205,9 +205,8 @@ class Event
                 QueueTable::push($request);
             }
         } catch (Exceptions\MindboxClientException $e) {
-            $lastResponse = $mindbox->customer()->getLastResponse();
-            if ($lastResponse) {
-                $request = $lastResponse->getRequest();
+            $request = $mindbox->customer()->getRequest();
+            if ($request) {
                 QueueTable::push($request);
             }
         }
@@ -740,10 +739,8 @@ class Event
                 } catch (Exceptions\MindboxUnavailableException $e) {
                     return new Main\EventResult(Main\EventResult::SUCCESS);
                 } catch (Exceptions\MindboxClientException $e) {
-                    $lastResponse = $mindbox->order()->getLastResponse();
-
-                    if ($lastResponse) {
-                        $request = $lastResponse->getRequest();
+                    $request = $mindbox->order()->getRequest();
+                    if ($request) {
                         QueueTable::push($request);
                     }
                 }
@@ -1516,16 +1513,30 @@ class Event
             $registerResponse = $mindbox->customer()->register($customer,
                 Options::getOperationName('register'), true, Helper::isSync())->sendRequest()->getResult();
         } catch (Exceptions\MindboxUnavailableException $e) {
+
+            if($logger) {
+                $logger->log('MindboxUnavailableException', $e->getMessage());
+            }
+
             $lastResponse = $mindbox->customer()->getLastResponse();
             if ($lastResponse) {
                 $request = $lastResponse->getRequest();
                 QueueTable::push($request);
             }
         } catch (Exceptions\MindboxClientException $e) {
-            $lastResponse = $mindbox->customer()->getLastResponse();
-            if ($lastResponse) {
-                $request = $lastResponse->getRequest();
-                QueueTable::push($request);
+
+            if($logger) {
+                $logger->log('MindboxClientException', $e->getMessage());
+            }
+
+            $lastRequest = $mindbox->customer()->getRequest();
+
+            if ($lastRequest) {
+                QueueTable::push($lastRequest);
+            }
+        } catch (\Exception $e ) {
+            if($logger) {
+                $logger->log('Exception', $e->getMessage());
             }
         }
 
