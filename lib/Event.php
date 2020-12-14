@@ -751,6 +751,10 @@ class Event
         } catch (Exceptions\MindboxClientErrorException $e) {
 
 
+            if($logger) {
+                $logger->log('MindboxClientErrorException', $e->getMessage());
+            }
+
                 $orderDTO = new OrderCreateRequestDTO();
                 $orderDTO->setField('order', [
                         'transaction' => [
@@ -771,19 +775,29 @@ class Event
             );
 
 
-
-
         } catch (Exceptions\MindboxUnavailableException $e) {
 
+            if($logger) {
+                $logger->log('MindboxUnavailableException', $e->getMessage());
+            }
 
             return new Main\EventResult(Main\EventResult::SUCCESS);
 
         } catch (Exceptions\MindboxClientException $e) {
 
+            if($logger) {
+                $logger->log('MindboxClientException', $e->getMessage());
+            }
+
             try {
                 $mindbox->order()->SaveOfflineOrder($orderDTO,
                     Options::getOperationName('saveOfflineOrder'))->sendRequest();
             } catch (Exceptions\MindboxClientException $e) {
+
+                if($logger) {
+                    $logger->log('SaveOfflineOrder MindboxClientException', $e->getMessage());
+                }
+
                 $request = $mindbox->order()->getRequest();
                 if ($request) {
                     QueueTable::push($request);
@@ -1523,7 +1537,7 @@ class Event
             }
             $request = $mindbox->customer()->getRequest();
             if ($request) {
-                QueueTable::push($lastRequest);
+                QueueTable::push($request);
             }
         } catch (\Exception $e ) {
             if($logger) {
