@@ -789,6 +789,7 @@ class Event
                 $logger->log('MindboxClientException', $e->getMessage());
             }
 
+            /*
             try {
                 $mindbox->order()->SaveOfflineOrder($orderDTO,
                     Options::getOperationName('saveOfflineOrder'))->sendRequest();
@@ -803,6 +804,7 @@ class Event
                     QueueTable::push($request);
                 }
             }
+            */
 
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
@@ -823,7 +825,146 @@ class Event
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
+
+
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'loyalty') {
+
+            /** @var \Bitrix\Sale\Basket $basket */
+            $basket = $order->getBasket();
+            global $USER;
+
+            $rsUser = \CUser::GetByID($USER->GetID());
+            $arUser = $rsUser->Fetch();
+
+
+            $orderDTO = new \Mindbox\DTO\V3\Requests\OrderCreateRequestDTO();
+            $basketItems = $basket->getBasketItems();
+            $lines = [];
+            $i = 1;
+            foreach ($basketItems as $basketItem) {
+
+                if($basketItem->getField('CAN_BUY') == 'N') {
+                    continue;
+                }
+
+                $discountName = $basketItem->getField('DISCOUNT_NAME');
+                preg_match("#\[(.*)\]#", $discountName, $matches);
+                $discountId = $matches[1];
+
+                $discountPrice = $basketItem->getDiscountPrice();
+                $productBasePrice = $basketItem->getBasePrice();
+                $requestedPromotions = [];
+                if (!empty($discountName) && $discountPrice) {
+                    $requestedPromotions = [
+                        'type'      => 'discount',
+                        'promotion' => [
+                            'ids'  => [
+                                'externalId' => $discountId
+                            ],
+                        ],
+                        'amount'    => $discountPrice*$basketItem->getQuantity()
+                    ];
+                }
+
+                $arLine = [
+                    'lineNumber'    =>  $i++,
+                    'basePricePerItem' => $productBasePrice,
+                    'quantity'         => $basketItem->getQuantity(),
+                    'lineId'           => $basketItem->getId(),
+                    'product'          => [
+                        'ids' => [
+                            Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getProductId($basketItem)
+                        ]
+                    ],
+                    'status'    =>  [
+                        'ids'   =>  [
+                            'externalId'    =>  'CheckedOut'
+                        ]
+                    ]
+                ];
+
+                if(!empty($requestedPromotions)) {
+                    $arLine['requestedPromotions'] = [$requestedPromotions];
+                }
+
+
+                $lines[] = $arLine;
+            }
+
+            if (empty($lines)) {
+                return new Main\EventResult(Main\EventResult::SUCCESS);
+            }
+
+            $arCoupons = [];
+            if ($_SESSION[ 'PROMO_CODE' ] && !empty($_SESSION['PROMO_CODE'])) {
+                $arCoupons['ids']['code'] = $_SESSION[ 'PROMO_CODE' ];
+            }
+
+
+            $arOrder = [
+                'ids'   => [
+                    'websiteId' => $order->getId(),
+                    'mindboxId' =>  $_SESSION['MINDBOX_ORDER']
+                ],
+                'lines' => $lines,
+            ];
+
+            if(!empty($arCoupons)) {
+                $arOrder['coupons'] = [$arCoupons];
+            }
+
+            $bonuses = $_SESSION[ 'PAY_BONUSES' ] ?: 0;
+            if($bonuses && $USER->IsAuthorized()) {
+                $bonusPoints = [
+                    'amount'    =>  $bonuses
+                ];
+                $arOrder['bonusPoints'] = [
+                    $bonusPoints
+                ];
+            }
+
+            $orderDTO->setField('order', $arOrder);
+
+
+            $customer = new CustomerRequestV2DTO();
+
+            if($USER->IsAuthorized()) {
+                $mindboxId = Helper::getMindboxId($USER->GetID());
+                if(!$mindboxId) {
+                    return new Main\EventResult(Main\EventResult::SUCCESS);
+                }
+            }
+
+
+            $propertyCollection = $order->getPropertyCollection();
+            $ar = $propertyCollection->getArray();
+            foreach ($ar[ 'properties' ] as $arProperty) {
+                $arOrderProperty[ $arProperty[ 'CODE' ] ] = array_pop($arProperty[ 'VALUE' ]);
+            }
+
+            if(!empty($arOrderProperty[ 'EMAIL' ])) {
+                $customer->setEmail($arOrderProperty[ 'EMAIL' ]);
+            }
+            /*
+            if(!empty($arOrderProperty[ 'FIO' ])) {
+                $customer->setLastName($arOrderProperty[ 'FIO' ]);
+            }
+            if(!empty($arOrderProperty[ 'NAME' ])){
+                $customer->setFirstName($arOrderProperty[ 'NAME' ]);
+            }
+            */
+            if(!empty($arOrderProperty[ 'PHONE' ])) {
+                $customer->setMobilePhone($arOrderProperty[ 'PHONE' ]);
+            }
+
+
+            if(!(\Mindbox\Helper::isUnAuthorizedOrder($arUser) || !$USER->IsAuthorized())) {
+                $customer->setId('mindboxId', $mindboxId);
+            }
+
+
+            $orderDTO->setCustomer($customer);
+
 
             try {
 
@@ -851,169 +992,46 @@ class Event
 
             } catch (Exceptions\MindboxUnavailableException $e) {
 
-                /** @var \Bitrix\Sale\Basket $basket */
-                $basket = $order->getBasket();
-                global $USER;
-
-                $rsUser = \CUser::GetByID($USER->GetID());
-                $arUser = $rsUser->Fetch();
-
-
-                $orderDTO = new \Mindbox\DTO\V3\Requests\OrderCreateRequestDTO();
-                $basketItems = $basket->getBasketItems();
-                $lines = [];
-                $i = 1;
-                foreach ($basketItems as $basketItem) {
-
-                    if($basketItem->getField('CAN_BUY') == 'N') {
-                        continue;
-                    }
-
-                    $discountName = $basketItem->getField('DISCOUNT_NAME');
-                    preg_match("#\[(.*)\]#", $discountName, $matches);
-                    $discountId = $matches[1];
-
-                    $discountPrice = $basketItem->getDiscountPrice();
-                    $productBasePrice = $basketItem->getBasePrice();
-                    $requestedPromotions = [];
-                    if (!empty($discountName) && $discountPrice) {
-                        $requestedPromotions = [
-                            'type'      => 'discount',
-                            'promotion' => [
-                                'ids'  => [
-                                    'externalId' => $discountId
-                                ],
-                            ],
-                            'amount'    => $discountPrice*$basketItem->getQuantity()
-                        ];
-                    }
-
-                    $arLine = [
-                        'lineNumber'    =>  $i++,
-                        'basePricePerItem' => $productBasePrice,
-                        'quantity'         => $basketItem->getQuantity(),
-                        'lineId'           => $basketItem->getId(),
-                        'product'          => [
-                            'ids' => [
-                                Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getProductId($basketItem)
-                            ]
-                        ],
-                        'status'    =>  [
-                            'ids'   =>  [
-                                'externalId'    =>  'CheckedOut'
-                            ]
-                        ]
-                    ];
-
-                    if(!empty($requestedPromotions)) {
-                        $arLine['requestedPromotions'] = [$requestedPromotions];
-                    }
-
-
-                    $lines[] = $arLine;
-                }
-
-                if (empty($lines)) {
-                    return new Main\EventResult(Main\EventResult::SUCCESS);
-                }
-
-                $arCoupons = [];
-                if ($_SESSION[ 'PROMO_CODE' ] && !empty($_SESSION['PROMO_CODE'])) {
-                    $arCoupons['ids']['code'] = $_SESSION[ 'PROMO_CODE' ];
-                }
-
-
-                $arOrder = [
-                    'ids'   => [
-                        'websiteId' => $order->getId()
-                    ],
-                    'lines' => $lines,
-                ];
-
-                if(!empty($arCoupons)) {
-                    $arOrder['coupons'] = [$arCoupons];
-                }
-
-                $bonuses = $_SESSION[ 'PAY_BONUSES' ] ?: 0;
-                if($bonuses && $USER->IsAuthorized()) {
-                    $bonusPoints = [
-                        'amount'    =>  $bonuses
-                    ];
-                    $arOrder['bonusPoints'] = [
-                        $bonusPoints
-                    ];
-                }
-
-                $orderDTO->setField('order', $arOrder);
-
-
-                $customer = new CustomerRequestV2DTO();
-
-                if($USER->IsAuthorized()) {
-                    $mindboxId = Helper::getMindboxId($USER->GetID());
-                    if(!$mindboxId) {
-                        return new Main\EventResult(Main\EventResult::SUCCESS);
-                    }
-                }
-
-
-                $propertyCollection = $order->getPropertyCollection();
-                $ar = $propertyCollection->getArray();
-                foreach ($ar[ 'properties' ] as $arProperty) {
-                    $arOrderProperty[ $arProperty[ 'CODE' ] ] = array_pop($arProperty[ 'VALUE' ]);
-                }
-
-                if(!empty($arOrderProperty[ 'EMAIL' ])) {
-                    $customer->setEmail($arOrderProperty[ 'EMAIL' ]);
-                }
-                /*
-                if(!empty($arOrderProperty[ 'FIO' ])) {
-                    $customer->setLastName($arOrderProperty[ 'FIO' ]);
-                }
-                if(!empty($arOrderProperty[ 'NAME' ])){
-                    $customer->setFirstName($arOrderProperty[ 'NAME' ]);
-                }
-                */
-                if(!empty($arOrderProperty[ 'PHONE' ])) {
-                    $customer->setMobilePhone($arOrderProperty[ 'PHONE' ]);
-                }
-
-
-                if(!(\Mindbox\Helper::isUnAuthorizedOrder($arUser) || !$USER->IsAuthorized())) {
-                    $customer->setId('mindboxId', $mindboxId);
-                }
-
-
-                $orderDTO->setCustomer($customer);
-
                 try {
                     $mindbox->order()->SaveOfflineOrder($orderDTO,
                         Options::getOperationName('saveOfflineOrder'))->sendRequest();
                 } catch (Exceptions\MindboxUnavailableException $e) {
-
                     $lastResponse = $mindbox->order()->getLastResponse();
-
                     if ($lastResponse) {
                         $request = $lastResponse->getRequest();
                         QueueTable::push($request);
                     }
 
                     return new Main\EventResult(Main\EventResult::SUCCESS);
+                } catch (Exceptions\MindboxClientException $e) {
+                    $request = $mindbox->order()->getRequest();
+                    if ($request) {
+                        QueueTable::push($request);
+                    }
                 }
-
-                $request = $mindbox->order()->getRequest();
-
-                if ($request) {
-                    QueueTable::push($request);
-                }
-
                 return new Main\EventResult(Main\EventResult::SUCCESS);
 
             } catch (Exceptions\MindboxClientException $e) {
-                $request = $mindbox->order()->getRequest();
-                if ($request) {
-                    QueueTable::push($request);
+
+                try {
+                    $mindbox->order()->SaveOfflineOrder($orderDTO,
+                        Options::getOperationName('saveOfflineOrder'))->sendRequest();
+                } catch (Exceptions\MindboxUnavailableException $e) {
+                    $lastResponse = $mindbox->order()->getLastResponse();
+                    if ($lastResponse) {
+                        $request = $lastResponse->getRequest();
+                        QueueTable::push($request);
+                    }
+
+                    return new Main\EventResult(Main\EventResult::SUCCESS);
+                } catch (Exceptions\MindboxClientException $e) {
+                    $request = $mindbox->order()->getRequest();
+                    if ($request) {
+                        QueueTable::push($request);
+                    }
                 }
+
+                return new Main\EventResult(Main\EventResult::SUCCESS);
             }
 
         } else {    //  standard mode
