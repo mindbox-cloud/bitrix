@@ -13,5 +13,7 @@ $mindbox_default_option = [
     'CATALOG_IBLOCK_ID' => '0',
     'YML_NAME' => 'test.xml',
     'EXTERNAL_SYSTEM' => 'website',
-    'WEBSITE_ID' => 'websiteId'
+    'WEBSITE_ID' => 'websiteId',
+    'CATALOG_PROPS' => '',
+    'CATALOG_OFFER_PROPS' => ''
 ];

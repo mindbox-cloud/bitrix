@@ -87,7 +87,12 @@ class YmlFeedMindbox
                     $offer->setAttribute("available", $available);
                     unset($available);
                     $offer = $offers->appendChild($offer);
-                    $offerName = $dom->createElement("name", htmlspecialchars($ofr["NAME"], ENT_XML1 | ENT_QUOTES));
+                    if (!empty($ofr["NAME"])) {
+                        $name = htmlspecialchars($ofr["NAME"], ENT_XML1 | ENT_QUOTES);
+                    } else {
+                        $name = htmlspecialchars($prods[$prodId]["NAME"], ENT_XML1 | ENT_QUOTES);
+                    }
+                    $offerName = $dom->createElement("name", $name);
                     $offer->appendChild($offerName);
                     if ($prods[$prodId]["DETAIL_PAGE_URL"]) {
                         $offerUrl = $dom->createElement("url", htmlspecialchars(self::getProtocol() . $_SERVER["SERVER_NAME"] . $prods[$prodId]["DETAIL_PAGE_URL"], ENT_XML1 | ENT_QUOTES));
@@ -99,10 +104,30 @@ class YmlFeedMindbox
                     $offer->appendChild($offerCurrencyId);
                     $offerCategoryId = $dom->createElement("categoryId", $prods[$prodId]["IBLOCK_SECTION_ID"]);
                     $offer->appendChild($offerCategoryId);
-                    $url = self::getPictureUrl($ofr["DETAIL_PICTURE"]);
+                    if (!empty($ofr["DETAIL_PICTURE"])) {
+                        $url = self::getPictureUrl($ofr["DETAIL_PICTURE"]);
+                    } else {
+                        $url = self::getPictureUrl($prods[$prodId]["DETAIL_PICTURE"]);
+                    }
                     if($url) {
                         $offerPicture = $dom->createElement("picture", htmlspecialchars(self::getProtocol() . $url, ENT_XML1 | ENT_QUOTES));
                         $offer->appendChild($offerPicture);
+                    }
+                    if (!empty ($ofr['props'])) {
+                        foreach ($ofr['props'] as $prop) {
+                            if (!empty($prop['VALUE'])) {
+                                if (is_array($prop['VALUE'])) {
+                                    $prop['VALUE'] = implode('|', $prop['VALUE']);
+                                }
+                                if (empty($prop['XML_ID'])) {
+                                    $prop['XML_ID'] = $prop['CODE'];
+                                }
+                                $param = $dom->createElement('param', htmlspecialchars($prop['VALUE'], ENT_XML1 | ENT_QUOTES));
+                                $param->setAttribute("name", $prop["XML_ID"]);
+
+                                $offer->appendChild($param);
+                            }
+                        }
                     }
 
                 }
@@ -135,7 +160,22 @@ class YmlFeedMindbox
                     $offerPicture = $dom->createElement("picture", htmlspecialchars(self::getProtocol() . $url, ENT_XML1 | ENT_QUOTES));
                     $offer->appendChild($offerPicture);
                 }
+                if (!empty ($prod['props'])) {
+                    foreach ($prod['props'] as $prop) {
+                        if (!empty($prop['VALUE'])) {
+                            if (is_array($prop['VALUE'])) {
+                                $prop['VALUE'] = implode('|', $prop['VALUE']);
+                            }
+                            if (empty($prop['XML_ID'])) {
+                                $prop['XML_ID'] = $prop['CODE'];
+                            }
+                            $param = $dom->createElement('param', htmlspecialchars($prop['VALUE'], ENT_XML1 | ENT_QUOTES));
+                            $param->setAttribute("name", $prop["XML_ID"]);
 
+                            $offer->appendChild($param);
+                        }
+                    }
+                }
             }
         }
 
@@ -202,15 +242,32 @@ class YmlFeedMindbox
             "DETAIL_PICTURE",
             "XML_ID",
             "ACTIVE"
-
         );
-        return \CCatalogSKU::getOffersList(
+
+        $offersByProducts = \CCatalogSKU::getOffersList(
             $prodIds,
-            intval(Options::getModuleOption("CATALOG_IBLOCK_ID")),
+            (int)Options::getModuleOption("CATALOG_IBLOCK_ID"),
             array(),
             $arSelect,
             array()
         );
+
+        $addProps = Options::getModuleOption("CATALOG_OFFER_PROPS");
+        if (!empty($addProps)) {
+            $addProps = explode(',', $addProps);
+            $offersCatalogId = \CCatalog::GetList([], ['IBLOCK_ID' => Options::getModuleOption("CATALOG_IBLOCK_ID")], false, [], ['ID', 'IBLOCK_ID', 'OFFERS_IBLOCK_ID'])->Fetch()['OFFERS_IBLOCK_ID'];
+            $props = self::getProps($addProps, $offersCatalogId);
+
+            foreach ($offersByProducts as &$offers) {
+                foreach ($offers as $offerId => &$offer) {
+                    if (!empty($props[$offerId])) {
+                        $offer['props'] = $props[$offerId];
+                    }
+                }
+            }
+        }
+
+        return $offersByProducts;
     }
 
     /**
@@ -228,6 +285,11 @@ class YmlFeedMindbox
         );
         $price = $price->GetNext();
         return $price["ID"];
+    }
+
+    public static function getIblockInfo($iblockId)
+    {
+        return \CIBlock::GetByID($iblockId)->Fetch();
     }
 
     /**
@@ -251,18 +313,73 @@ class YmlFeedMindbox
 
         $prods = \CIBlockElement::GetList(
             array("SORT" => "ASC"),
-            array("IBLOCK_ID" => intval(Options::getModuleOption("CATALOG_IBLOCK_ID"))),
+            array("IBLOCK_ID" => (int)Options::getModuleOption("CATALOG_IBLOCK_ID")),
             false,
             false,
             $arSelect
         );
-        $prodsInfo = array();
+
         while ($prod = $prods->GetNext()) {
-            if(!$prod['XML_ID']) {
+            if (!$prod['XML_ID']) {
                 $prod['XML_ID'] = $prod['ID'];
             }
             $prodsInfo[$prod["ID"]] = $prod;
         }
+
+        $addProps = Options::getModuleOption("CATALOG_PROPS");
+        if (!empty($addProps)) {
+            $addProps = explode(',', $addProps);
+            $props = self::getProps($addProps, Options::getModuleOption("CATALOG_IBLOCK_ID"));
+            foreach ($props as $elementId => $prop)
+            {
+                $prodsInfo[$elementId]['props'] = $prop;
+            }
+        }
+
+        return $prodsInfo;
+    }
+
+    protected static function getProps($propSelect, $iblockId)
+    {
+        $info = self::getIblockInfo($iblockId);
+        $minimalSelect = ['ID', 'IBLOCK_ID'];
+        $prodsInfo = [];
+
+        if ($info['VERSION'] === '1' && count($propSelect) > 25) {
+            $propSelect = array_chunk($propSelect, 17);
+
+            foreach ($propSelect as $select) {
+                $select = array_merge($select, $minimalSelect);
+
+                $prods = \CIBlockElement::GetList(
+                    array("SORT" => "ASC"),
+                    array("IBLOCK_ID" => $iblockId),
+                    false,
+                    false,
+                    $select
+                );
+
+                while ($prod = $prods->GetNextElement()) {
+                    $fields = $prod->GetFields();
+                    $prodsInfo[$fields["ID"]] = $prod->GetProperties();
+                }
+            }
+        } else {
+            $propSelect = array_merge($propSelect, $minimalSelect);
+            $prods = \CIBlockElement::GetList(
+                array("SORT" => "ASC"),
+                array("IBLOCK_ID" => $iblockId),
+                false,
+                false,
+                $propSelect
+            );
+
+            while ($prod = $prods->GetNextElement()) {
+                $fields = $prod->GetFields();
+                $prodsInfo[$fields["ID"]] = $prod->GetProperties();
+            }
+        }
+
         return $prodsInfo;
     }
 
