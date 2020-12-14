@@ -76,9 +76,8 @@ class Subscripion extends CBitrixComponent implements Controllerable
                 'message' => GetMessage('MB_SU_SUCCESS')
             ];
         } catch (MindboxClientException $e) {
-            $lastResponse = $this->mindbox->customer()->getLastResponse();
-            if ($lastResponse) {
-                $request = $lastResponse->getRequest();
+            $request = $this->mindbox->customer()->getRequest();
+            if ($request) {
                 QueueTable::push($request);
             }
             return [
