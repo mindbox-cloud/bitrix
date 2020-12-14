@@ -930,9 +930,9 @@ class Event
 
             if($USER->IsAuthorized()) {
                 $mindboxId = Helper::getMindboxId($USER->GetID());
-                if(!$mindboxId) {
-                    return new Main\EventResult(Main\EventResult::SUCCESS);
-                }
+                //if(!$mindboxId) {
+                  //  return new Main\EventResult(Main\EventResult::SUCCESS);
+                //}
             }
 
 
@@ -1035,7 +1035,6 @@ class Event
             }
 
         } else {    //  standard mode
-
 
 
             /** @var \Bitrix\Sale\Basket $basket */
