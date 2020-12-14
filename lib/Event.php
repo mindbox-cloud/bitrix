@@ -329,11 +329,9 @@ class Event
                 return true;
             }
 
-            $mindboxId = $arFields[ 'USER_ID' ];
+            $mindboxId = $arFields[ 'UF_MINDBOX_ID' ];
 
-
-            if (!empty($mindboxId)) {
-
+            if (empty($mindboxId)) {
                 $request = $mindbox->getClientV3()->prepareRequest('POST',
                     Options::getOperationName('getCustomerInfo'),
                     new DTO([
@@ -1365,8 +1363,8 @@ class Event
             $mindboxId = Helper::getMindboxId($USER->GetID());
             if ($mindboxId) {
                 $customer->setId('mindboxId', $mindboxId);
+                $preorder->setCustomer($customer);
             }
-            $preorder->setCustomer($customer);
         }
 
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {
@@ -1624,7 +1622,6 @@ class Event
         global $APPLICATION;
 
         if ($mindBoxId) {
-
             $request = $mindbox->getClientV3()->prepareRequest('POST',
                 Options::getOperationName('getCustomerInfo'),
                 new DTO([

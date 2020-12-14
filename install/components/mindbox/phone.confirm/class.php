@@ -131,6 +131,12 @@ class PhoneConfirm extends CBitrixComponent implements Controllerable
             ]
         )->fetch();
 
+
+        if(!$this->getMindboxId()) {
+            return $rsUser;
+        }
+
+
             $mindbox = Options::getConfig();
             $request = $mindbox->getClientV3()->prepareRequest('POST',
                 Options::getOperationName('getCustomerInfo'),

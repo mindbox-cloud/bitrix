@@ -120,6 +120,9 @@ class BonusHistory extends CBitrixComponent implements Controllerable
             }
         }
 
+        if(!$this->getMindboxId()) {
+            return $history;
+        }
 
         $request = $this->mindbox->getClientV3()->prepareRequest('POST',
             Options::getOperationName('getCustomerInfo'),

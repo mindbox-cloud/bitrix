@@ -183,8 +183,8 @@ class Cart extends CBitrixComponent implements Controllerable
             $mindboxId = Helper::getMindboxId($USER->GetID());
             if ($mindboxId) {
                 $customer->setId('mindboxId', $mindboxId);
+                $preorder->setCustomer($customer);
             }
-            $preorder->setCustomer($customer);
         }
 
 
@@ -412,8 +412,10 @@ class Cart extends CBitrixComponent implements Controllerable
         $customer = new CustomerRequestDTO();
         if ($USER->IsAuthorized()) {
             $mindboxId = Helper::getMindboxId($USER->GetID());
-            $customer->setId('mindboxId', intval($mindboxId));
-            $preorder->setCustomer($customer);
+            if($mindboxId) {
+                $customer->setId('mindboxId', intval($mindboxId));
+                $preorder->setCustomer($customer);
+            }
         }
 
         $bonuses = $_SESSION[ 'PAY_BONUSES' ] ?: 0;
@@ -629,16 +631,11 @@ class Cart extends CBitrixComponent implements Controllerable
         $customer = new CustomerRequestDTO();
         if ($USER->IsAuthorized()) {
             $mindboxId = Helper::getMindboxId($USER->GetID());
-            $customer->setId('mindboxId', intval($mindboxId));
-            $preorder->setCustomer($customer);
+            if($mindboxId) {
+                $customer->setId('mindboxId', intval($mindboxId));
+                $preorder->setCustomer($customer);
+            }
         }
-
-
-        //$preorder->setPointOfContact(Options::getModuleOption('POINT_OF_CONTACT'));
-
-
-
-
 
         try {
 

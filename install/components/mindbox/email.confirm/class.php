@@ -70,6 +70,11 @@ class EmailConfirm extends CBitrixComponent implements Controllerable
     public function checkEmailConfirm()
     {
         global $USER;
+
+        if(!$this->getMindboxId()) {
+            return;
+        }
+
             $request = $this->mindbox->getClientV3()->prepareRequest('POST',
                 Options::getOperationName('getCustomerInfo'),
                 new DTO(['customer' => ['ids' => ['mindboxId' => $this->getMindboxId()]]]));
