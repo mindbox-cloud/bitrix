@@ -1466,7 +1466,11 @@ class Event
 
         global $APPLICATION, $USER;
 
-        if(isset($_REQUEST['REGISTER'])) {
+        if(
+            isset($_REQUEST['REGISTER']) ||
+            $_REQUEST['register'] == 'yes' ||
+            $_REQUEST['TYPE'] == 'REGISTRATION'
+        ) {
             return $arFields;
         }
 
