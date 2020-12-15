@@ -684,7 +684,9 @@ class Event
 
         $orderDTO->setCustomer($customer);
 
-        $logger->log('$customer', $customer);
+        if($logger){
+            $logger->log('$customer', $customer);
+        }
 
         try {
 
