@@ -341,6 +341,10 @@ class YmlFeedMindbox
 
     protected static function getProps($propSelect, $iblockId)
     {
+        $propNames = array_map(static function ($prop) {
+            return str_replace('PROPERTY_', '', $prop);
+        }, $propSelect);
+
         $info = self::getIblockInfo($iblockId);
         $minimalSelect = ['ID', 'IBLOCK_ID'];
         $prodsInfo = [];
@@ -361,13 +365,16 @@ class YmlFeedMindbox
 
                 while ($prod = $prods->GetNextElement()) {
                     $fields = $prod->GetFields();
-                    $prodsInfo[$fields["ID"]] = $prod->GetProperties();
+                    $properties = $prod->GetProperties();
+                    $prodsInfo[$fields["ID"]] = array_filter($properties, static function ($prop) use ($propNames) {
+                        return in_array($prop['CODE'], $propNames, true);
+                    });
                 }
             }
         } else {
             $propSelect = array_merge($propSelect, $minimalSelect);
             $prods = \CIBlockElement::GetList(
-                array("SORT" => "ASC"),
+                ['sort' => 'asc'],
                 array("IBLOCK_ID" => $iblockId),
                 false,
                 false,
@@ -376,7 +383,10 @@ class YmlFeedMindbox
 
             while ($prod = $prods->GetNextElement()) {
                 $fields = $prod->GetFields();
-                $prodsInfo[$fields["ID"]] = $prod->GetProperties();
+                $properties = $prod->GetProperties();
+                $prodsInfo[$fields["ID"]] = array_filter($properties, static function ($prop) use ($propNames) {
+                    return in_array($prop['CODE'], $propNames, true);
+                });
             }
         }
 
