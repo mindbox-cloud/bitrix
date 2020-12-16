@@ -1358,6 +1358,9 @@ class Event
         $customer = new CustomerRequestDTO();
         if ($USER->IsAuthorized()) {
             $mindboxId = Helper::getMindboxId($USER->GetID());
+            if(!$mindboxId) {
+                return new Main\EventResult(Main\EventResult::SUCCESS);
+            }
             $customer->setId('mindboxId', $mindboxId);
             $preorder->setCustomer($customer);
         }
