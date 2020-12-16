@@ -1358,10 +1358,8 @@ class Event
         $customer = new CustomerRequestDTO();
         if ($USER->IsAuthorized()) {
             $mindboxId = Helper::getMindboxId($USER->GetID());
-            if ($mindboxId) {
-                $customer->setId('mindboxId', $mindboxId);
-                $preorder->setCustomer($customer);
-            }
+            $customer->setId('mindboxId', $mindboxId);
+            $preorder->setCustomer($customer);
         }
 
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {

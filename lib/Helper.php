@@ -9,6 +9,8 @@ namespace Mindbox;
 use Bitrix\Main\UserTable;
 use CPHPCache;
 use Mindbox\DTO\DTO;
+use Mindbox\Options;
+use Psr\Log\LoggerInterface;
 
 class Helper
 {
@@ -38,6 +40,8 @@ class Helper
 
     public static function getMindboxId($id)
     {
+        $logger = new \Mindbox\Loggers\MindboxFileLogger(Options::getModuleOption('LOG_PATH'));
+
         $mindboxId = false;
         $rsUser = UserTable::getList(
             [
@@ -49,8 +53,47 @@ class Helper
             ]
         )->fetch();
 
-        if ($rsUser && isset($rsUser[ 'UF_MINDBOX_ID' ])) {
+        if ($rsUser && isset($rsUser[ 'UF_MINDBOX_ID' ]) && $rsUser['UF_MINDBOX_ID'] > 0) {
             $mindboxId = $rsUser[ 'UF_MINDBOX_ID' ];
+        }
+
+        if(!$mindboxId) {
+            $mindbox = Options::getConfig();
+            $request = $mindbox->getClientV3()->prepareRequest('POST',
+                Options::getOperationName('getCustomerInfo'),
+                new DTO([
+                    'customer' => [
+                        'ids' => [
+                            Options::getModuleOption('WEBSITE_ID') => $id
+                        ]
+                    ]
+                ]));
+
+            try {
+                $response = $request->sendRequest();
+            } catch (Exceptions\MindboxClientException $e) {
+                // mindbox not available
+                $message = date('d.m.Y H:i:s');
+                $logger->error($message, ['getCustomerInfo', [Options::getModuleOption('WEBSITE_ID') => $id], $e->getMessage()]);
+            }
+
+            if ($response && $response->getResult()->getCustomer()->getProcessingStatus() === 'Found') {
+                $mindboxId = $response->getResult()->getCustomer()->getId('mindboxId');
+                $fields = [
+                    'UF_EMAIL_CONFIRMED' => $response->getResult()->getCustomer()->getIsEmailConfirmed(),
+                    'UF_MINDBOX_ID'      => $mindboxId
+                ];
+
+                $user = new \CUser;
+                $user->Update(
+                    $id,
+                    $fields
+                );
+                unset($_SESSION[ 'NEW_USER_MB_ID' ]);
+            } else if ($response && $response->getResult()->getCustomer()->getProcessingStatus() === 'NotFound') {
+                $message = date('d.m.Y H:i:s');
+                $logger->error($message, ['getCustomerInfo', [Options::getModuleOption('WEBSITE_ID') => $id], $response->getResult()->getCustomer()->getProcessingStatus()]);
+            }
         }
 
         return $mindboxId;
