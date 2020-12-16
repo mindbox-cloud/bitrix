@@ -86,6 +86,9 @@ class BonusHistory extends CBitrixComponent implements Controllerable
         $page = intval($page);
         $history = [];
         $mindboxId = $this->getMindboxId();
+        if(!$mindboxId) {
+            throw new MindboxException(GetMessage('MB_BH_ERROR_MESSAGE'));
+        }
         $operation = Options::getOperationName('getBonusPointsHistory');
 
         $pageDTO = new PageRequestDTO();
