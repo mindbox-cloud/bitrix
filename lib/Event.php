@@ -899,7 +899,7 @@ class Event
             $arOrder = [
                 'ids'   => [
                     'websiteId' => $order->getId(),
-                    'mindboxId' =>  $_SESSION['MINDBOX_ORDER']
+                    //'mindboxId' =>  $_SESSION['MINDBOX_ORDER']
                 ],
                 'lines' => $lines,
             ];
