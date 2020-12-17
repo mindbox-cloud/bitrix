@@ -11,6 +11,7 @@ use CPHPCache;
 use Mindbox\DTO\DTO;
 use Mindbox\Options;
 use Psr\Log\LoggerInterface;
+use Mindbox\DTO\V3\Requests\CustomerRequestDTO;
 
 class Helper
 {
@@ -93,6 +94,7 @@ class Helper
             } else if ($response && $response->getResult()->getCustomer()->getProcessingStatus() === 'NotFound') {
                 $message = date('d.m.Y H:i:s');
                 $logger->error($message, ['getCustomerInfo', [Options::getModuleOption('WEBSITE_ID') => $id], $response->getResult()->getCustomer()->getProcessingStatus()]);
+                $mindboxId = self::registerCustomer($id);
             }
         }
 
@@ -120,6 +122,123 @@ class Helper
         } else {
             return self::convertDTO($dto, 'UTF-8', LANG_CHARSET);
         }
+    }
+
+    private function registerCustomer($websiteUserId)
+    {
+        global $APPLICATION, $USER;
+
+        $rsUser = \CUser::GetByID($websiteUserId);
+        $arFields = $rsUser->Fetch();
+
+        $logger = new \Mindbox\Loggers\MindboxFileLogger(Options::getModuleOption('LOG_PATH'));
+
+        $message = date('d.m.Y H:i:s');
+        $logger->debug($message, ['$websiteUserId' => $websiteUserId, '$arFields' => $arFields]);
+
+        $mindbox = Options::getConfig();
+
+        if (!isset($arFields[ 'PERSONAL_PHONE' ])) {
+            $arFields[ 'PERSONAL_PHONE' ] = $arFields[ 'PERSONAL_MOBILE' ];
+        }
+
+        if (isset($arFields[ 'PERSONAL_PHONE' ])) {
+            $arFields[ 'PERSONAL_PHONE' ] = Helper::formatPhone($arFields[ 'PERSONAL_PHONE' ]);
+        }
+
+        $sex = substr(ucfirst($arFields[ 'PERSONAL_GENDER' ]), 0, 1) ?: null;
+        $fields = [
+            'email'       => $arFields[ 'EMAIL' ],
+            'lastName'    => $arFields[ 'LAST_NAME' ],
+            'middleName'  => $arFields[ 'SECOND_NAME' ],
+            'firstName'   => $arFields[ 'NAME' ],
+            'mobilePhone' => self::normalizePhoneNumber($arFields[ 'PERSONAL_PHONE' ]),
+            'birthDate'   => Helper::formatDate($arFields[ 'PERSONAL_BIRTHDAY' ]),
+            'sex'         => $sex,
+        ];
+
+        $fields = array_filter($fields, function ($item) {
+            return isset($item);
+        });
+
+        $fields[ 'subscriptions' ] = [
+            [
+                'pointOfContact' => 'Email',
+                'isSubscribed'   => true,
+            ],
+            [
+                'pointOfContact' => 'Sms',
+                'isSubscribed'   => true,
+            ],
+        ];
+
+        $customer = Helper::iconvDTO(new CustomerRequestDTO($fields));
+
+        unset($fields);
+
+        try {
+            $registerResponse = $mindbox->customer()->register($customer,
+                Options::getOperationName('register'), true, Helper::isSync())->sendRequest()->getResult();
+        } catch (Exceptions\MindboxUnavailableException $e) {
+            $lastResponse = $mindbox->customer()->getLastResponse();
+            if ($lastResponse) {
+                $request = $lastResponse->getRequest();
+                QueueTable::push($request);
+            }
+        } catch (Exceptions\MindboxClientException $e) {
+            $request = $mindbox->customer()->getRequest();
+            if ($request) {
+                QueueTable::push($request);
+            }
+        }
+
+        if($registerResponse) {
+            $registerResponse = Helper::iconvDTO($registerResponse, false);
+            $status = $registerResponse->getStatus();
+
+
+            if ($status === 'ValidationError') {
+                $errors = $registerResponse->getValidationMessages();
+                $logger->error($message, ['ValidationError' => $errors]);
+                return false;
+            }
+
+            $customer = $registerResponse->getCustomer();
+
+
+            if (!$customer) {
+                return false;
+            }
+
+            $mindboxId = $customer->getId('mindboxId');
+
+            $logger->debug($message, ['$mindboxId' => $mindboxId]);
+
+            $fields = [
+                'UF_MINDBOX_ID'      => $mindboxId
+            ];
+
+            $user = new \CUser;
+            $user->Update(
+                $websiteUserId,
+                $fields
+            );
+
+            return $mindboxId;
+        }
+
+        return false;
+    }
+
+    private function normalizePhoneNumber($in)
+    {
+        $in = substr($in, 0, 11);
+        $out = preg_replace(
+            '/^(\d)(\d{3})(\d{3})(\d{2})(\d{2})$/',
+            '+\1 (\2) \3 \4 \5',
+            (string)$in
+        );
+        return $out;
     }
 
     public static function convertDTO(DTO $DTO, $in, $out)
