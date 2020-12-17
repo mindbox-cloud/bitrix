@@ -954,14 +954,9 @@ class Event
                 $customer->setMobilePhone($arOrderProperty[ 'PHONE' ]);
             }
 
-
-            if(!(\Mindbox\Helper::isUnAuthorizedOrder($arUser) || !$USER->IsAuthorized())) {
-                $customer->setId('mindboxId', $mindboxId);
-            }
-
+            $customer->setId('websiteId', $USER->GetID());
 
             $offlineOrderDTO->setCustomer($customer);
-
 
             try {
 
