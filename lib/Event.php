@@ -680,6 +680,8 @@ class Event
         if(!(\Mindbox\Helper::isUnAuthorizedOrder($arUser) || !$USER->IsAuthorized())) {
             $customer->setId('mindboxId', $mindboxId);
         }
+        
+        $customer->setId('websiteId', $USER->GetID());
 
 
         $orderDTO->setCustomer($customer);
