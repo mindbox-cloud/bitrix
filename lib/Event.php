@@ -1537,28 +1537,20 @@ class Event
             $registerResponse = $mindbox->customer()->register($customer,
                 Options::getOperationName('register'), true, Helper::isSync())->sendRequest()->getResult();
         } catch (Exceptions\MindboxUnavailableException $e) {
-
             if($logger) {
                 $logger->log('MindboxUnavailableException', $e->getMessage());
             }
-
-            $lastResponse = $mindbox->customer()->getLastResponse();
-            if ($lastResponse) {
-                $request = $lastResponse->getRequest();
-                QueueTable::push($request);
-            }
+            return $arFields;
         } catch (Exceptions\MindboxClientException $e) {
             if($logger) {
                 $logger->log('MindboxClientException', $e->getMessage());
             }
-            $request = $mindbox->customer()->getRequest();
-            if ($request) {
-                QueueTable::push($request);
-            }
+            return $arFields;
         } catch (\Exception $e ) {
             if($logger) {
                 $logger->log('Exception', $e->getMessage());
             }
+            return $arFields;
         }
 
         if($registerResponse) {
