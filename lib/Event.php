@@ -954,7 +954,7 @@ class Event
                 $customer->setMobilePhone($arOrderProperty[ 'PHONE' ]);
             }
 
-            $customer->setId('websiteId', $USER->GetID());
+            //$customer->setId('websiteId', $USER->GetID());
 
             $offlineOrderDTO->setCustomer($customer);
 
