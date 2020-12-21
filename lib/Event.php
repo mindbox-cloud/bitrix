@@ -698,7 +698,7 @@ class Event
                     Options::getOperationName('beginUnauthorizedOrderTransaction'))->sendRequest();
             } else {
                 $createOrderResult = $mindbox->order()->BeginAuthorizedOrderTransaction($orderDTO,
-                    Options::getOperationName('beginAuthorizedOrderTransaction'))->sendRequest();
+                    Options::getOperationNaCommitOrderTransactionme('beginAuthorizedOrderTransaction'))->sendRequest();
             }
 
 
@@ -901,7 +901,7 @@ class Event
 
             $arOrder = [
                 'ids'   => [
-                    'websiteId' => $order->getId(),
+                    Options::getModuleOption('TRANSACTION_ID') => $order->getId(),
                     //'mindboxId' =>  $_SESSION['MINDBOX_ORDER']
                 ],
                 'lines' => $lines,
@@ -966,7 +966,7 @@ class Event
                 $orderDTO = new OrderCreateRequestDTO();
                 $orderDTO->setField('order', [
                     'ids'   =>  [
-                        'websiteId'  =>  $order->getId(),
+                        Options::getModuleOption('TRANSACTION_ID')  =>  $order->getId(),
                         'mindboxId' =>  $_SESSION['MINDBOX_ORDER']
                     ],
                     'transaction' => [
@@ -1262,8 +1262,6 @@ class Event
                 continue;
             }
 
-
-
             $bitrixBasket[ $basketItem->getId() ] = $basketItem;
             $catalogPrice = $basketItem->getBasePrice();
             $discountName = $basketItem->getField('DISCOUNT_NAME');
@@ -1317,13 +1315,6 @@ class Event
         if($logger) {
             $logger->log('$lines', $lines);
         }
-
-        $arOrder = [
-            'ids'   => [
-                Options::getModuleOption('TRANSACTION_ID') => '',
-            ],
-            'lines' => $lines
-        ];
 
         $arCoupons = [];
         if ($_SESSION[ 'PROMO_CODE' ] && !empty($_SESSION['PROMO_CODE'])) {
