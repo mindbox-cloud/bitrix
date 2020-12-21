@@ -698,7 +698,7 @@ class Event
                     Options::getOperationName('beginUnauthorizedOrderTransaction'))->sendRequest();
             } else {
                 $createOrderResult = $mindbox->order()->BeginAuthorizedOrderTransaction($orderDTO,
-                    Options::getOperationNaCommitOrderTransactionme('beginAuthorizedOrderTransaction'))->sendRequest();
+                    Options::getOperationName('beginAuthorizedOrderTransaction'))->sendRequest();
             }
 
 
