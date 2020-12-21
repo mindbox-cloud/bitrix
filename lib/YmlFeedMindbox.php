@@ -94,6 +94,15 @@ class YmlFeedMindbox
                     }
                     $offerName = $dom->createElement("name", $name);
                     $offer->appendChild($offerName);
+                    if (!empty($ofr["PREVIEW_TEXT"])) {
+                        $description = htmlspecialchars($ofr["PREVIEW_TEXT"], ENT_XML1 | ENT_QUOTES);
+                    } else {
+                        $description = htmlspecialchars($prods[$prodId]["PREVIEW_TEXT"], ENT_XML1 | ENT_QUOTES);
+                    }
+                    if (!empty($description)) {
+                        $offerDescription = $dom->createElement("description", $description);
+                        $offer->appendChild($offerDescription);
+                    }
                     if ($prods[$prodId]["DETAIL_PAGE_URL"]) {
                         $offerUrl = $dom->createElement("url", htmlspecialchars(self::getProtocol() . $_SERVER["SERVER_NAME"] . $prods[$prodId]["DETAIL_PAGE_URL"], ENT_XML1 | ENT_QUOTES));
                         $offer->appendChild($offerUrl);
@@ -113,29 +122,31 @@ class YmlFeedMindbox
                         $offerPicture = $dom->createElement("picture", htmlspecialchars(self::getProtocol() . $url, ENT_XML1 | ENT_QUOTES));
                         $offer->appendChild($offerPicture);
                     }
+                    $ofr['props'] = array_merge($ofr['props'], $prods[$prodId]["props"]);
                     if (!empty ($ofr['props'])) {
                         foreach ($ofr['props'] as $prop) {
                             if (!empty($prop['VALUE'])) {
                                 if (is_array($prop['VALUE'])) {
                                     $prop['VALUE'] = implode('|', $prop['VALUE']);
                                 }
-                                if (empty($prop['XML_ID'])) {
-                                    $prop['XML_ID'] = $prop['CODE'];
+                                if (empty($prop['CODE'])) {
+                                    $prop['CODE'] = $prop['XML_ID'];
                                 }
                                 $param = $dom->createElement('param', htmlspecialchars($prop['VALUE'], ENT_XML1 | ENT_QUOTES));
-                                $param->setAttribute("name", $prop["XML_ID"]);
+                                $param->setAttribute("name", $prop["CODE"]);
 
                                 $offer->appendChild($param);
                             }
                         }
                     }
-
                 }
                 if (array_key_exists($prodId, $prods)) {
                     unset($prods[$prodId]);
                 }
             }
-        } else {
+        }
+
+        if (!empty($prods)) {
             foreach ($prods as $prod) {
                 $offer = $dom->createElement("offer");
                 $offer->setAttribute("id", $prod["XML_ID"]);
@@ -145,6 +156,10 @@ class YmlFeedMindbox
                 $offer = $offers->appendChild($offer);
                 $offerName = $dom->createElement("name", htmlspecialchars($prod["NAME"], ENT_XML1 | ENT_QUOTES));
                 $offer->appendChild($offerName);
+                if (!empty($prod["PREVIEW_TEXT"])) {
+                    $offerDescription = $dom->createElement("description", htmlspecialchars($prod["PREVIEW_TEXT"], ENT_XML1 | ENT_QUOTES));
+                    $offer->appendChild($offerDescription);
+                }
                 if($prod["DETAIL_PAGE_URL"]) {
                     $offerUrl = $dom->createElement("url", htmlspecialchars(self::getProtocol() . $_SERVER["SERVER_NAME"] . $prod["DETAIL_PAGE_URL"], ENT_XML1 | ENT_QUOTES));
                     $offer->appendChild($offerUrl);
@@ -166,11 +181,11 @@ class YmlFeedMindbox
                             if (is_array($prop['VALUE'])) {
                                 $prop['VALUE'] = implode('|', $prop['VALUE']);
                             }
-                            if (empty($prop['XML_ID'])) {
-                                $prop['XML_ID'] = $prop['CODE'];
+                            if (empty($prop['CODE'])) {
+                                $prop['CODE'] = $prop['XML_ID'];
                             }
                             $param = $dom->createElement('param', htmlspecialchars($prop['VALUE'], ENT_XML1 | ENT_QUOTES));
-                            $param->setAttribute("name", $prop["XML_ID"]);
+                            $param->setAttribute("name", $prop["CODE"]);
 
                             $offer->appendChild($param);
                         }
@@ -307,6 +322,7 @@ class YmlFeedMindbox
             "CATALOG_GROUP_" . $basePriceId,
             "NAME",
             "DETAIL_PICTURE",
+            "PREVIEW_TEXT",
             "XML_ID",
             "ACTIVE"
         );
