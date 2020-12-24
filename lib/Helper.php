@@ -281,11 +281,9 @@ class Helper
         if(!$id) {
             $id = $basketItem->getField('PRODUCT_ID');
         }
-        if(strpos($id, '#') !==false) {
-            $result = ltrim(stristr($id, '#'), '#');
-        } else {
-            $result = $id;
-        }
+
+        $result = $id;
+
         return $result;
     }
 
