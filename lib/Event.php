@@ -476,9 +476,8 @@ class Event
 
         /** @var \Bitrix\Sale\Basket $basket */
         $basket = $order->getBasket();
-        global $USER;
 
-        $rsUser = \CUser::GetByID($USER->GetID());
+        $rsUser = \CUser::GetByID($order->getUserId());
         $arUser = $rsUser->Fetch();
 
 
@@ -574,7 +573,7 @@ class Event
         try {
 
             if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
-                if (\Mindbox\Helper::isUnAuthorizedOrder($arUser) || !$USER->IsAuthorized()) {
+                if (\Mindbox\Helper::isUnAuthorizedOrder($arUser)) {
                     $createOrderResult = $mindbox->order()->CreateUnauthorizedOrder($orderDTO,
                         Options::getOperationName('createUnauthorizedOrder'))->sendRequest();
                 } else {
@@ -672,6 +671,11 @@ class Event
     public function OnSaleBasketBeforeSavedHadler($basket)
     {
         global $USER;
+
+        if(!$USER || is_string($USER)) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+
         $mindbox = static::mindbox();
         if (!$mindbox) {
             return new Main\EventResult(Main\EventResult::SUCCESS);

@@ -99,7 +99,7 @@ class Helper
     }
 
     /**
-     * ����� ���������� �� ������
+     * Get product id by basket item
      * @param \Bitrix\Sale\Basket $basketItem
      *
      * @return $result
@@ -128,7 +128,7 @@ class Helper
     }
 
     /**
-     * ����� ��������� ������ ����������
+     * Get all iblocks
      *
      * @return $arIblock
      */
@@ -150,7 +150,7 @@ class Helper
 
 
     /**
-     * ����� ���������� ����� �������� ������ (����������/�����������)
+     * Is operations sync?
      *
      * @return $isSync
      */
@@ -166,7 +166,7 @@ class Helper
 
 
     /**
-     * ����� ���������� ��� ����� �� ����������������� ������������
+     * Check if order is unauthorized
      *
      * @return boolean
      */
