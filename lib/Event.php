@@ -726,6 +726,8 @@ class Event
                     $createOrderResult = $mindbox->order()->rollbackOrderTransaction($orderDTO,
                         Options::getOperationName('rollbackOrderTransaction'))->sendRequest();
 
+                    unset($_SESSION['MINDBOX_TRANSACTION_ID']);
+
                     return new \Bitrix\Main\EventResult(
                         \Bitrix\Main\EventResult::ERROR,
                         new \Bitrix\Sale\ResultError($validationErrors, 'SALE_EVENT_WRONG_ORDER'),
@@ -978,6 +980,8 @@ class Event
                 );
                 $createOrderResult = $mindbox->order()->CommitOrderTransaction($orderDTO,
                     Options::getOperationName('commitOrderTransaction'))->sendRequest();
+
+                unset($_SESSION['MINDBOX_TRANSACTION_ID']);
 
             } catch (Exceptions\MindboxClientErrorException $e) {
 
