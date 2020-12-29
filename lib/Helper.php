@@ -261,7 +261,7 @@ class Helper
     }
 
     /**
-     * Метод возвращает ид товара
+     * Get product id by basket item
      * @param \Bitrix\Sale\Basket $basketItem
      *
      * @return $result
@@ -288,7 +288,7 @@ class Helper
     }
 
     /**
-     * Метод формирует массив инфоблоков
+     * Get all iblocks
      *
      * @return $arIblock
      */
@@ -310,7 +310,7 @@ class Helper
 
 
     /**
-     * Метод определяет режим передачи данных (синхронный/асинхронный)
+     * Is operations sync?
      *
      * @return $isSync
      */
@@ -326,7 +326,7 @@ class Helper
 
 
     /**
-     * Метод определяет что заказ от неавторизованного пользователя
+     * Check if order is unauthorized
      *
      * @return boolean
      */
@@ -343,5 +343,39 @@ class Helper
         } else {
             return $_SESSION['MINDBOX_TRANSACTION_ID'];
         }
+    }
+
+    /**
+     * @param array $basketItems
+     * @return array
+     */
+    public static function removeDuplicates($basketItems)
+    {
+        $uniqueItems = [];
+
+        /**
+         * @var \Bitrix\Sale\BasketItem $item
+         */
+        foreach ($basketItems as $item) {
+            $uniqueItems[$item->getField('PRODUCT_ID')][] = $item;
+        }
+
+        if (count($uniqueItems) === count($basketItems)) {
+            return $basketItems;
+        }
+
+        $uniqueBasketItems = [];
+
+        foreach ($uniqueItems as $id => $groupItems) {
+            $item = current($groupItems);
+            $quantity = 0;
+            foreach ($groupItems as $groupItem) {
+                $quantity += $groupItem->getField('QUANTITY');
+            }
+            $item->setField('QUANTITY', $quantity);
+            $uniqueBasketItems[] = $item;
+        }
+
+        return $uniqueBasketItems;
     }
 }

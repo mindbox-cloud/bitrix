@@ -1,12 +1,13 @@
 # Модуль Mindbox для Bitrix Framework
-Инструкция по установке и интеграции модуля на сайт
+Инструкция по установке и интеграции модуля на сайт.
+Внимание! Полная работоспособность модуля гарантирована на 1С-Битрикс старше 17.5.10
 
 ## Начало работы
 ### Установка модуля
 1. Устанавливаем файлы модуля через Bitrix Marketplace. Либо с помощью composer.
 ```
     cd [document_root]/bitrix/modules
-    composer create-project qsoft/mindbox qsoftm.mindbox 1.4.1
+    composer create-project mindbox/marketing mindbox.marketing 1.4.1
 ```
 2. Устанавливаем модуль в административном разделе в меню Marketplace->Установленные решения
 3. Заполняем поля настроек модуля в административном разделе.
