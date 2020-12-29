@@ -200,9 +200,19 @@ class Event
                 Options::getOperationName('register'), true, Helper::isSync())->sendRequest()->getResult();
         } catch (Exceptions\MindboxUnavailableException $e) {
             $APPLICATION->ThrowException(Loc::getMessage("MB_USER_REGISTER_LOYALTY_ERROR"));
+
+            if($logger) {
+                $logger->log('MindboxUnavailableException', $e->getMessage());
+            }
+
             return false;
         } catch (Exceptions\MindboxClientException $e) {
             $APPLICATION->ThrowException(Loc::getMessage("MB_USER_REGISTER_LOYALTY_ERROR"));
+
+            if($logger) {
+                $logger->log('MindboxClientException', $e->getMessage());
+            }
+
             return false;
         }
 
