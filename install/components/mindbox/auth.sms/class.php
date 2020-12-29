@@ -139,7 +139,7 @@ class AuthSms extends CBitrixComponent implements Controllerable
             $dbUser = Bitrix\Main\UserTable::getList(
                 [
                     'filter' => [
-                        'ID' => $user->getId(Options::getModuleOption('WEBSITE_ID'))
+                        'UF_MINDBOX_ID' => $user->getId('mindboxId')
                     ]
                 ]
             );
@@ -228,6 +228,11 @@ class AuthSms extends CBitrixComponent implements Controllerable
             $fields['captcha_word'],
             $fields['captcha_sid']
         );
+
+        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('fillupAction');
+            $logger->log('$reg', [$reg, $fields]);
+        }
 
         if ($reg['TYPE'] !== 'OK') {
             return Ajax::errorResponse($reg['MESSAGE']);

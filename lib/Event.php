@@ -101,11 +101,20 @@ class Event
             }
         }
 
-        $customer = new CustomerRequestDTO([
-            'ids' => [
-                Options::getModuleOption('WEBSITE_ID') => $mindboxId
-            ]
-        ]);
+        if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
+            $customer = new CustomerRequestDTO([
+                'ids' => [
+                    Options::getModuleOption('WEBSITE_ID') => $arUser['user_fields']['ID']
+                ]
+            ]);
+        } else {
+            $customer = new CustomerRequestDTO([
+                'ids' => [
+                    'mindboxId' => $mindboxId
+                ]
+            ]);
+        }
+
 
         try {
             $mindbox->customer()->authorize($customer,
@@ -372,7 +381,7 @@ class Event
 
                 $customer = new CustomerRequestDTO([
                     'ids' => [
-                        Options::getModuleOption('WEBSITE_ID') => $mindboxId
+                        Options::getModuleOption('WEBSITE_ID') => $arFields[ 'USER_ID' ]
                     ]
                 ]);
 
