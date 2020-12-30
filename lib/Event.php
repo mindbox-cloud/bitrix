@@ -149,11 +149,9 @@ class Event
             $arFields[ 'PERSONAL_PHONE' ] = Helper::formatPhone($arFields[ 'PERSONAL_PHONE' ]);
         }
 
-        /*
         if (isset($_SESSION[ 'OFFLINE_REGISTER' ]) && $_SESSION[ 'OFFLINE_REGISTER' ]) {
             return $arFields;
         }
-        */
 
         if (!$USER->CheckFields($arFields)) {
             $APPLICATION->ThrowException($USER->LAST_ERROR);
@@ -522,6 +520,7 @@ class Event
 
         /** @var \Bitrix\Sale\Basket $basket */
         $basket = $order->getBasket();
+        global $USER;
 
         $rsUser = \CUser::GetByID($order->getUserId());
         $arUser = $rsUser->Fetch();
@@ -1067,8 +1066,8 @@ class Event
 
             try {
 
-
-                if (\Mindbox\Helper::isUnAuthorizedOrder($arUser) || !$USER->IsAuthorized()) {
+            if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
+                if (\Mindbox\Helper::isUnAuthorizedOrder($arUser)) {
                     $createOrderResult = $mindbox->order()->CreateUnauthorizedOrder($orderDTO,
                         Options::getOperationName('createUnauthorizedOrder'))->sendRequest();
                 } else {
@@ -1183,7 +1182,6 @@ class Event
         $basketClone = $basket->createClone(null);
         $basketItems = $basketClone->getBasketItems();
         $basketItems = Helper::removeDuplicates($basketItems);
-
         self::setCartMindbox($basketItems);
         $lines = [];
         $bitrixBasket = [];
