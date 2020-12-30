@@ -144,7 +144,6 @@ class AuthSms extends CBitrixComponent implements Controllerable
                 ]
             );
             if ($bxUser = $dbUser->fetch()) {
-                $_SESSION['AUTH_BY_SMS'] = true;
                 $USER->Authorize($bxUser['ID']);
 
                 return [

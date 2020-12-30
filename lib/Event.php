@@ -59,11 +59,6 @@ class Event
 
             return true;
         }
-        if ($_SESSION[ 'AUTH_BY_SMS' ] === true) {
-            $_SESSION[ 'AUTH_BY_SMS' ] = false;
-
-            return true;
-        }
 
         $mindboxId = Helper::getMindboxId($arUser[ 'user_fields' ][ 'ID' ]);
 
@@ -335,12 +330,6 @@ class Event
 
             if (isset($_SESSION[ 'NEW_USER_MINDBOX' ]) && $_SESSION[ 'NEW_USER_MINDBOX' ] === true) {
                 unset($_SESSION[ 'NEW_USER_MINDBOX' ]);
-
-                return true;
-            }
-            if ($_SESSION[ 'AUTH_BY_SMS' ] === true) {
-                $_SESSION[ 'AUTH_BY_SMS' ] = false;
-
                 return true;
             }
 
