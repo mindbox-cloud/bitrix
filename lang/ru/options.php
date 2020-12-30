@@ -22,6 +22,9 @@ $MESS['IDENTIFIERS'] = 'Идентификаторы';
 $MESS['CONNECTION_SETTINGS'] = 'Настройки подключения';
 $MESS['CATALOG_SETTINGS'] = 'Настройки каталога';
 $MESS['BRAND'] = "Бренд";
+$MESS['SYSTEM_NAME'] = "Системное имя";
 $MESS['STANDARD'] = 'Стандартный';
+$MESS['LOYALTY'] = 'Лояльность';
 $MESS['SAVE'] = 'Сохранить';
 $MESS['MODULE_VERSION'] = 'Версия модуля ';
+

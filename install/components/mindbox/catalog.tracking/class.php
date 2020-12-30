@@ -69,10 +69,8 @@ class CatalogTracking extends CBitrixComponent implements Controllerable
                 ->prepareRequest('POST', Options::getOperationName('viewCategory'), $dto, '', [], false)
                 ->sendRequest();
         } catch (MindboxClientException $e) {
-            $lastResponse = $this->mindbox->getClientV3()->getLastResponse();
-
-            if ($lastResponse) {
-                $request = $lastResponse->getRequest();
+            $request = $this->mindbox->getClientV3()->getRequest();
+            if ($request) {
                 QueueTable::push($request);
             }
         }
@@ -104,10 +102,8 @@ class CatalogTracking extends CBitrixComponent implements Controllerable
                 ->prepareRequest('POST', Options::getOperationName('viewProduct'), $dto, '', [], false)
                 ->sendRequest();
         } catch (MindboxClientException $e) {
-            $lastResponse = $this->mindbox->getClientV3()->getLastResponse();
-
-            if ($lastResponse) {
-                $request = $lastResponse->getRequest();
+            $request = $this->mindbox->getClientV3()->getRequest();
+            if ($request) {
                 QueueTable::push($request);
             }
         }

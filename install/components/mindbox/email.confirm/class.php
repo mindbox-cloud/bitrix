@@ -13,6 +13,7 @@ use Mindbox\DTO\V3\Requests\SmsConfirmationRequestDTO;
 use Mindbox\Exceptions\MindboxClientException;
 use Mindbox\Exceptions\MindboxException;
 use Mindbox\Options;
+use Mindbox\Helper;
 use Mindbox\DTO\DTO;
 
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) {
@@ -39,7 +40,7 @@ class EmailConfirm extends CBitrixComponent implements Controllerable
                 return;
             }
         } catch (LoaderException $e) {
-            ShowError(GetMessage('MB_EC_MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));;
+            ShowError(GetMessage('MB_EC_MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));
             return;
         }
 
@@ -69,9 +70,14 @@ class EmailConfirm extends CBitrixComponent implements Controllerable
     public function checkEmailConfirm()
     {
         global $USER;
+
+        if(!$this->getMindboxId()) {
+            return;
+        }
+
             $request = $this->mindbox->getClientV3()->prepareRequest('POST',
                 Options::getOperationName('getCustomerInfo'),
-                new DTO(['customer' => ['ids' => [Options::getModuleOption('WEBSITE_ID') => $this->userInfo['ID']]]]));
+                new DTO(['customer' => ['ids' => ['mindboxId' => $this->getMindboxId()]]]));
 
             try {
                 $response = $request->sendRequest();
@@ -92,7 +98,7 @@ class EmailConfirm extends CBitrixComponent implements Controllerable
         if (!$this->mindbox) {
             return Ajax::errorResponse(GetMessage('MB_EC_BAD_MODULE_SETTING'));
         }
-        $customer = new CustomerRequestDTO(['ids' => [Options::getModuleOption('WEBSITE_ID') => $this->userInfo['ID']]]);
+        $customer = new CustomerRequestDTO(['ids' => ['mindboxId' => $this->getMindboxId()]]);
         try {
             $this->mindbox->customer()->resendConfirmationCode($customer,
                 Options::getOperationName('resendEmailConfirm'))->sendRequest();
@@ -113,5 +119,12 @@ class EmailConfirm extends CBitrixComponent implements Controllerable
         )->fetch();
 
         return $rsUser;
+    }
+
+    private function getMindboxId()
+    {
+        global $USER;
+
+        return Helper::getMindboxId($USER->GetID());
     }
 }
