@@ -130,17 +130,9 @@ class Event
 
     public function OnBeforeUserRegisterHandler(&$arFields)
     {
-
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('OnBeforeUserRegisterHandler');
-            $logger->log('start', ['1']);
-        }
-
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
             return $arFields;
         }
-
-        //return $arFields;
 
         global $APPLICATION, $USER;
 
@@ -204,19 +196,9 @@ class Event
                 Options::getOperationName('register'), true, Helper::isSync())->sendRequest()->getResult();
         } catch (Exceptions\MindboxUnavailableException $e) {
             $APPLICATION->ThrowException(Loc::getMessage("MB_USER_REGISTER_LOYALTY_ERROR"));
-
-            if ($logger) {
-                $logger->log('MindboxUnavailableException', $e->getMessage());
-            }
-
             return false;
         } catch (Exceptions\MindboxClientException $e) {
             $APPLICATION->ThrowException(Loc::getMessage("MB_USER_REGISTER_LOYALTY_ERROR"));
-
-            if ($logger) {
-                $logger->log('MindboxClientException', $e->getMessage());
-            }
-
             return false;
         }
 
@@ -248,12 +230,6 @@ class Event
 
     public function OnAfterUserRegisterHandler(&$arFields)
     {
-
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('OnAfterUserRegisterHandler');
-            $logger->log('start', ['1']);
-        }
-
         global $APPLICATION;
         $mindbox = static::mindbox();
         if (!$mindbox) {
@@ -390,11 +366,6 @@ class Event
                 }
             }
         } else {
-
-            if ($logger) {
-                $logger->log('loyalty mode', ['$arFields' => $arFields, '$_SESSION' => $_SESSION]);
-            }
-
             if ($arFields[ 'UF_MINDBOX_ID' ]) {
 
                 $request = $mindbox->getClientV3()->prepareRequest('POST',
@@ -439,11 +410,6 @@ class Event
     public function OnBeforeUserUpdateHandler(&$arFields)
     {
         global $APPLICATION;
-
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('OnBeforeUserUpdateHandler');
-        }
-
 
         $mindbox = static::mindbox();
 
@@ -543,10 +509,10 @@ class Event
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('OnSaleOrderBeforeSavedHandler');
-            $logger->log('start', '1');
-            $logger->log('order id', $order->getId());
+        global $USER;
+
+        if (!$USER || is_string($USER)) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
         $mindbox = static::mindbox();
@@ -642,7 +608,7 @@ class Event
         }
 
         $bonuses = $_SESSION[ 'PAY_BONUSES' ] ?: 0;
-        if ($bonuses && $USER->IsAuthorized()) {
+        if ($bonuses && is_object($USER) && $USER->IsAuthorized()) {
             $bonusPoints = [
                 'amount' => $bonuses
             ];
@@ -656,13 +622,9 @@ class Event
 
         $customer = new CustomerRequestV2DTO();
 
-        if ($USER->IsAuthorized()) {
+        if (is_object($USER) && $USER->IsAuthorized()) {
             $mindboxId = Helper::getMindboxId($USER->GetID());
-            //if(!$mindboxId) {
-            //  return new Main\EventResult(Main\EventResult::SUCCESS);
-            //}
         }
-
 
         $propertyCollection = $order->getPropertyCollection();
         $ar = $propertyCollection->getArray();
@@ -697,7 +659,6 @@ class Event
         $orderDTO->setCustomer($customer);
 
         try {
-
             if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
                 if (\Mindbox\Helper::isUnAuthorizedOrder($arUser)) {
                     $createOrderResult = $mindbox->order()->createUnauthorizedOrder($orderDTO,
@@ -707,7 +668,6 @@ class Event
                         Options::getOperationName('createAuthorizedOrder'))->sendRequest();
                 }
             } else {
-
                 if (\Mindbox\Helper::isUnAuthorizedOrder($arUser)) {
                     $createOrderResult = $mindbox->order()->beginUnauthorizedOrderTransaction($orderDTO,
                         Options::getOperationName('beginUnauthorizedOrderTransaction'))->sendRequest();
@@ -719,14 +679,7 @@ class Event
 
 
             if ($createOrderResult->getValidationErrors()) {
-
                 $validationErrors = $createOrderResult->getValidationErrors();
-
-                if ($logger) {
-                    $logger->log('Validation Errors', $validationErrors);
-                }
-
-
                 try {
 
                     $orderDTO = new OrderCreateRequestDTO();
@@ -797,17 +750,10 @@ class Event
 
     public function OnSaleOrderSavedHandler($order)
     {
-
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('OnSaleOrderSavedHandler');
-            $logger->log('order id', $order->getId());
-        }
-
         $mindbox = static::mindbox();
         if (!$mindbox) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
-
 
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'loyalty') {
 
@@ -815,7 +761,7 @@ class Event
             $basket = $order->getBasket();
             global $USER;
 
-            $rsUser = \CUser::GetByID($USER->GetID());
+            $rsUser = \CUser::GetByID($order->getUserId());
             $arUser = $rsUser->Fetch();
 
 
@@ -896,7 +842,7 @@ class Event
             }
 
             $bonuses = $_SESSION[ 'PAY_BONUSES' ] ?: 0;
-            if ($bonuses && $USER->IsAuthorized()) {
+            if ($bonuses && is_object($USER) && $USER->IsAuthorized()) {
                 $bonusPoints = [
                     'amount' => $bonuses
                 ];
@@ -910,13 +856,9 @@ class Event
 
             $customer = new CustomerRequestV2DTO();
 
-            if ($USER->IsAuthorized()) {
+            if (is_object($USER) && $USER->IsAuthorized()) {
                 $mindboxId = Helper::getMindboxId($USER->GetID());
-                //if(!$mindboxId) {
-                //  return new Main\EventResult(Main\EventResult::SUCCESS);
-                //}
             }
-
 
             $propertyCollection = $order->getPropertyCollection();
             $ar = $propertyCollection->getArray();
@@ -1021,7 +963,11 @@ class Event
             $basket = $order->getBasket();
             global $USER;
 
-            $rsUser = \CUser::GetByID($USER->GetID());
+            if (!$USER || is_string($USER)) {
+                return new Main\EventResult(Main\EventResult::SUCCESS);
+            }
+
+            $rsUser = \CUser::GetByID($order->getUserId());
             $arUser = $rsUser->Fetch();
 
 
@@ -1220,11 +1166,6 @@ class Event
 
     public function OnSaleBasketBeforeSavedHadler($basket)
     {
-
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('OnSaleBasketBeforeSavedHadler');
-        }
-
         global $USER;
 
         if (!$USER || is_string($USER)) {
@@ -1304,10 +1245,6 @@ class Event
 
         if (empty($lines)) {
             return false;
-        }
-
-        if($logger) {
-            $logger->log('$lines', $lines);
         }
 
         $arCoupons = [];
@@ -1435,20 +1372,15 @@ class Event
 
     public function OnBeforeUserAddHandler(&$arFields)
     {
-
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('OnBeforeUserAddHandler');
-            $logger->log('$arFields', $arFields);
-            $logger->log('$_REQUEST', $_REQUEST);
-            //$logger->log('$_SESSION', $_SESSION);
-        }
-
-
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
             return $arFields;
         }
 
         global $APPLICATION, $USER;
+
+        if (!$USER || is_string($USER)) {
+            return $arFields;
+        }
 
         if(
             isset($_REQUEST['REGISTER']) ||
@@ -1520,19 +1452,10 @@ class Event
             $registerResponse = $mindbox->customer()->register($customer,
                 Options::getOperationName('register'), true, Helper::isSync())->sendRequest()->getResult();
         } catch (Exceptions\MindboxUnavailableException $e) {
-            if($logger) {
-                $logger->log('MindboxUnavailableException', $e->getMessage());
-            }
             return $arFields;
         } catch (Exceptions\MindboxClientException $e) {
-            if($logger) {
-                $logger->log('MindboxClientException', $e->getMessage());
-            }
             return $arFields;
         } catch (\Exception $e ) {
-            if($logger) {
-                $logger->log('Exception', $e->getMessage());
-            }
             return $arFields;
         }
 
@@ -1559,16 +1482,6 @@ class Event
 
     public function OnAfterUserAddHandler(&$arFields)
     {
-
-
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('OnAfterUserAddHandler');
-            $logger->log('$arFields', $arFields);
-            $logger->log('$_SESSION', $_SESSION);
-        }
-
-        //return $arFields;
-
         $mindBoxId = $_SESSION[ 'NEW_USER_MB_ID' ];
         $mindbox = static::mindbox();
 
@@ -1669,11 +1582,6 @@ class Event
             $arLines[ $productId ]['basketItem'] = $basketItem;
             $arLines[ $productId ]['quantity'] += $basketItem->getQuantity();
             $arLines[ $productId ]['priceOfLine'] += $basketItem->getPrice()*$basketItem->getQuantity();
-        }
-
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('setCartMindbox');
-            $logger->log('$arLines', $arLines);
         }
 
         $lines = [];
