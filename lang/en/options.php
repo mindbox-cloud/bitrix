@@ -26,4 +26,5 @@ $MESS['BRAND'] = "Brand";
 $MESS['SYSTEM_NAME'] = "System name";
 $MESS['STANDARD'] = 'Standard';
 $MESS['LOYALTY'] = 'Loyality';
+$MESS['MODULE_VERSION'] = 'Module version ';
 $MESS['SAVE'] = 'Save';

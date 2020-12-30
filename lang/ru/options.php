@@ -26,3 +26,4 @@ $MESS['SYSTEM_NAME'] = "Системное имя";
 $MESS['STANDARD'] = 'Стандартный';
 $MESS['LOYALTY'] = 'Лояльность';
 $MESS['SAVE'] = 'Сохранить';
+$MESS['MODULE_VERSION'] = 'Версия модуля ';
