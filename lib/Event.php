@@ -1066,7 +1066,6 @@ class Event
 
             try {
 
-            if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
                 if (\Mindbox\Helper::isUnAuthorizedOrder($arUser)) {
                     $createOrderResult = $mindbox->order()->CreateUnauthorizedOrder($orderDTO,
                         Options::getOperationName('createUnauthorizedOrder'))->sendRequest();
