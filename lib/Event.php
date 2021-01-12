@@ -45,6 +45,10 @@ class Event
     public function OnAfterUserAuthorizeHandler($arUser)
     {
 
+        if(!isset($_REQUEST['AUTH_FORM']) && !isset($_REQUEST['TYPE'])) {
+            return true;
+        }
+
         if (empty($arUser[ 'user_fields' ][ 'LAST_LOGIN' ])) {
             return true;
         }
