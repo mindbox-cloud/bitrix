@@ -13,13 +13,13 @@ class YmlFeedMindbox
         $cond = empty(Options::getModuleOption("YML_NAME")) || empty(Options::getModuleOption("CATALOG_IBLOCK_ID"));
 
         if ($cond) {
-            return '\Mindbox\YmlFeedMindbox::start();';
+            return '\Mindbox\YmlFeedMindbox::start(1);';
         } elseif (!\CModule::IncludeModule("currency")) {
-            return '\Mindbox\YmlFeedMindbox::start();';
+            return '\Mindbox\YmlFeedMindbox::start(1);';
         } elseif (!\CModule::IncludeModule("iblock")) {
-            return '\Mindbox\YmlFeedMindbox::start();';
+            return '\Mindbox\YmlFeedMindbox::start(1);';
         } elseif (!\CModule::IncludeModule("catalog")) {
-            return '\Mindbox\YmlFeedMindbox::start();';
+            return '\Mindbox\YmlFeedMindbox::start(1);';
         }
 
         $prodsCount = self::getProdsCount();
@@ -48,7 +48,7 @@ class YmlFeedMindbox
             }
         }
 
-        if ($prodsCount / count($existingAgents) > 10) {
+        if ($prodsCount / count($existingAgents) > self::$stepSize) {
             foreach ($existingAgents as $num) {
                 \CAgent::RemoveAgent(
                     "\Mindbox\QueueTable::start($num);",
@@ -69,6 +69,8 @@ class YmlFeedMindbox
     {
         for ($i = 1; $i <= $max; $i++) {
             $now = new \Bitrix\Main\Type\DateTime();
+            $nextSeconds = $i * 120;
+            $next = \Bitrix\Main\Type\DateTime::createFromPhp(new \DateTime("now + ".$nextSeconds." sec"));
             \CAgent::AddAgent(
                 "\Mindbox\YmlFeedMindbox::start($i);",
                 "mindbox.marketing",
@@ -76,56 +78,63 @@ class YmlFeedMindbox
                 86400,
                 $now,
                 "Y",
-                $now,
-                30);
+                $next,
+                30
+            );
         }
     }
 
     protected static function generateYml($step)
     {
-        $dom = new domDocument("1.0", "utf-8");
+        if ($step === 1) {
+            $dom = new domDocument("1.0", "utf-8");
 
-        $root = $dom->createElement("yml_catalog");
-        $root->setAttribute("date", date('Y-m-d H:i'));
-        $dom->appendChild($root);
+            $root = $dom->createElement("yml_catalog");
+            $root->setAttribute("date", date('Y-m-d H:i'));
+            $dom->appendChild($root);
 
-        $shop = $dom->createElement("shop");
-        $shop = $root->appendChild($shop);
+            $shop = $dom->createElement("shop");
+            $shop = $root->appendChild($shop);
 
-        $name = htmlspecialchars(self::getSiteName(), ENT_XML1 | ENT_QUOTES);
-        $siteName = $dom->createElement("name", $name);
-        $shop->appendChild($siteName);
+            $name = htmlspecialchars(self::getSiteName(), ENT_XML1 | ENT_QUOTES);
+            $siteName = $dom->createElement("name", $name);
+            $shop->appendChild($siteName);
 
-        $companyName = $dom->createElement("company", $name);
-        $shop->appendChild($companyName);
+            $companyName = $dom->createElement("company", $name);
+            $shop->appendChild($companyName);
 
-        $siteUrl = $dom->createElement("url", htmlspecialchars(self::getProtocol() . $_SERVER["SERVER_NAME"], ENT_XML1 | ENT_QUOTES));
-        $shop->appendChild($siteUrl);
+            $siteUrl = $dom->createElement("url", htmlspecialchars(self::getProtocol() . $_SERVER["SERVER_NAME"], ENT_XML1 | ENT_QUOTES));
+            $shop->appendChild($siteUrl);
 
-        $currencies = $dom->createElement("currencies");
-        $currencies = $shop->appendChild($currencies);
-        $crncs = self::getCurrencies();
-        while ($crnc = $crncs->Fetch()) {
-            $currencie = $dom->createElement("currency");
-            $currencie->setAttribute("id", htmlspecialchars($crnc["CURRENCY"], ENT_XML1 | ENT_QUOTES));
-            $currencie->setAttribute("rate", htmlspecialchars((int)$crnc["AMOUNT"], ENT_XML1 | ENT_QUOTES));
-            $currencies->appendChild($currencie);
-        }
-
-        $categories = $dom->createElement("categories");
-        $categories = $shop->appendChild($categories);
-        $cats = self::getCategories();
-        while ($cat = $cats->GetNext()) {
-            $category = $dom->createElement("category", htmlspecialchars($cat["NAME"], ENT_XML1 | ENT_QUOTES));
-            $category->setAttribute("id", $cat["ID"]);
-            if (isset($cat["IBLOCK_SECTION_ID"]) && !empty($cat["IBLOCK_SECTION_ID"])) {
-                $category->setAttribute("parentId", $cat["IBLOCK_SECTION_ID"]);
+            $currencies = $dom->createElement("currencies");
+            $currencies = $shop->appendChild($currencies);
+            $crncs = self::getCurrencies();
+            while ($crnc = $crncs->Fetch()) {
+                $currencie = $dom->createElement("currency");
+                $currencie->setAttribute("id", htmlspecialchars($crnc["CURRENCY"], ENT_XML1 | ENT_QUOTES));
+                $currencie->setAttribute("rate", htmlspecialchars((int)$crnc["AMOUNT"], ENT_XML1 | ENT_QUOTES));
+                $currencies->appendChild($currencie);
             }
-            $categories->appendChild($category);
-        }
 
-        $offers = $dom->createElement("offers");
-        $offers = $shop->appendChild($offers);
+            $categories = $dom->createElement("categories");
+            $categories = $shop->appendChild($categories);
+            $cats = self::getCategories();
+            while ($cat = $cats->GetNext()) {
+                $category = $dom->createElement("category", htmlspecialchars($cat["NAME"], ENT_XML1 | ENT_QUOTES));
+                $category->setAttribute("id", $cat["ID"]);
+                if (isset($cat["IBLOCK_SECTION_ID"]) && !empty($cat["IBLOCK_SECTION_ID"])) {
+                    $category->setAttribute("parentId", $cat["IBLOCK_SECTION_ID"]);
+                }
+                $categories->appendChild($category);
+            }
+
+            $offers = $dom->createElement("offers");
+            $offers = $shop->appendChild($offers);
+        } else {
+            $dom = new domDocument();
+            $dom->load($_SERVER["DOCUMENT_ROOT"] . "/" . Options::getModuleOption("YML_NAME").'.raw');
+            $offers = $dom->getElementsByTagName("offers")->item(0);
+        }
 
         $basePriceId = self::getBasePriceId();
         $prods = self::getProds($basePriceId, $step);
@@ -270,7 +279,11 @@ class YmlFeedMindbox
             }
         }
 
-        $dom->save($_SERVER["DOCUMENT_ROOT"] . "/" . Options::getModuleOption("YML_NAME"));
+        if ($step === ceil(self::getProdsCount() / self::$stepSize)) {
+            $dom->save($_SERVER["DOCUMENT_ROOT"] . "/" . Options::getModuleOption("YML_NAME"));
+        } else {
+            $dom->save($_SERVER["DOCUMENT_ROOT"] . "/" . Options::getModuleOption("YML_NAME").'.raw');
+        }
     }
 
     /**
@@ -338,7 +351,7 @@ class YmlFeedMindbox
 
         $offersByProducts = \CCatalogSKU::getOffersList(
             $prodIds,
-            (int)Options::getModuleOption("CATALOG_IBLOCK_ID"),
+            (int) Options::getModuleOption("CATALOG_IBLOCK_ID"),
             array(),
             $arSelect,
             array()
@@ -421,7 +434,7 @@ class YmlFeedMindbox
             array("SORT" => "ASC"),
             array("IBLOCK_ID" => (int)Options::getModuleOption("CATALOG_IBLOCK_ID")),
             false,
-            ['nTopCount' => self::$stepSize, 'iNumPage' => $step],
+            ['nPageSize' => self::$stepSize, 'iNumPage' => $step],
             $arSelect
         );
 
@@ -436,7 +449,7 @@ class YmlFeedMindbox
         $addProps = Options::getModuleOption("CATALOG_PROPS");
         if (!empty($addProps)) {
             $addProps = explode(',', $addProps);
-            $props = self::getProps($addProps, Options::getModuleOption("CATALOG_IBLOCK_ID"));
+            $props = self::getProps($addProps, Options::getModuleOption("CATALOG_IBLOCK_ID"), self::getProdsIds($prodsInfo));
             foreach ($props as $elementId => $prop)
             {
                 $prodsInfo[$elementId]['props'] = $prop;
@@ -446,7 +459,7 @@ class YmlFeedMindbox
         return $prodsInfo;
     }
 
-    protected static function getProps($propSelect, $iblockId)
+    protected static function getProps($propSelect, $iblockId, $prodsId = [])
     {
         $propNames = array_map(static function ($prop) {
             return str_replace('PROPERTY_', '', $prop);
@@ -463,8 +476,8 @@ class YmlFeedMindbox
                 $select = array_merge($select, $minimalSelect);
 
                 $prods = \CIBlockElement::GetList(
-                    array("SORT" => "ASC"),
-                    array("IBLOCK_ID" => $iblockId),
+                    ['sort' => 'asc'],
+                    ["IBLOCK_ID" => $iblockId, 'ID' => $prodsId],
                     false,
                     false,
                     $select
@@ -482,7 +495,7 @@ class YmlFeedMindbox
             $propSelect = array_merge($propSelect, $minimalSelect);
             $prods = \CIBlockElement::GetList(
                 ['sort' => 'asc'],
-                array("IBLOCK_ID" => $iblockId),
+                ["IBLOCK_ID" => $iblockId, 'ID' => $prodsId],
                 false,
                 false,
                 $propSelect
