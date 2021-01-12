@@ -45,7 +45,7 @@ class Event
     public function OnAfterUserAuthorizeHandler($arUser)
     {
 
-        if(!isset($_REQUEST['AUTH_FORM']) && !isset($_REQUEST['TYPE'])) {
+        if(!isset($_REQUEST['AUTH_FORM']) && !isset($_REQUEST['TYPE']) || \Bitrix\Main\Request::isAdminSection()) {
             return true;
         }
 
