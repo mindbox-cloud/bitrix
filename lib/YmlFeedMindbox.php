@@ -6,7 +6,7 @@ use domDocument;
 class YmlFeedMindbox
 {
 
-    private static $stepSize = 10;
+    private static $stepSize = 1000;
 
     public static function start($step = 1)
     {
