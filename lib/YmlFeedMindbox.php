@@ -10,16 +10,18 @@ class YmlFeedMindbox
 
     public static function start($step = 1)
     {
+        $step = (int) $step;
+
         $cond = empty(Options::getModuleOption("YML_NAME")) || empty(Options::getModuleOption("CATALOG_IBLOCK_ID"));
 
         if ($cond) {
-            return '\Mindbox\YmlFeedMindbox::start(1);';
+            return "\Mindbox\YmlFeedMindbox::start($step);";
         } elseif (!\CModule::IncludeModule("currency")) {
-            return '\Mindbox\YmlFeedMindbox::start(1);';
+            return "\Mindbox\YmlFeedMindbox::start($step);";
         } elseif (!\CModule::IncludeModule("iblock")) {
-            return '\Mindbox\YmlFeedMindbox::start(1);';
+            return "\Mindbox\YmlFeedMindbox::start($step);";
         } elseif (!\CModule::IncludeModule("catalog")) {
-            return '\Mindbox\YmlFeedMindbox::start(1);';
+            return "\Mindbox\YmlFeedMindbox::start($step);";
         }
 
         $prodsCount = self::getProdsCount();
@@ -29,7 +31,7 @@ class YmlFeedMindbox
 
         self::generateYml($step);
 
-        return '\Mindbox\YmlFeedMindbox::start(1);';
+        return "\Mindbox\YmlFeedMindbox::start($step);";
     }
 
     protected static function checkAgents($prodsCount)
@@ -69,7 +71,7 @@ class YmlFeedMindbox
     {
         for ($i = 1; $i <= $max; $i++) {
             $now = new \Bitrix\Main\Type\DateTime();
-            $nextSeconds = $i * 120;
+            $nextSeconds = $i * 180;
             $next = \Bitrix\Main\Type\DateTime::createFromPhp(new \DateTime("now + ".$nextSeconds." sec"));
             \CAgent::AddAgent(
                 "\Mindbox\YmlFeedMindbox::start($i);",
@@ -175,13 +177,14 @@ class YmlFeedMindbox
                         $offerUrl = $dom->createElement("url", htmlspecialchars(self::getProtocol() . $_SERVER["SERVER_NAME"] . $prods[$prodId]["DETAIL_PAGE_URL"], ENT_XML1 | ENT_QUOTES));
                         $offer->appendChild($offerUrl);
                     }
-                    $offerPrice = $dom->createElement("price", $ofr["CATALOG_PRICE_" . $basePriceId]);
-                    $offer->appendChild($offerPrice);
-                    if (!empty($ofr['prices'])) {
-                        if ($ofr['prices']['RESULT_PRICE']['BASE_PRICE'] !== $ofr['prices']['RESULT_PRICE']['DISCOUNT_PRICE']) {
-                            $oldPrice = $dom->createElement("oldprice", $ofr['prices']['RESULT_PRICE']['DISCOUNT_PRICE']);
-                            $offer->appendChild($oldPrice);
-                        }
+                    if (!empty($ofr['prices']) && $ofr['prices']['RESULT_PRICE']['BASE_PRICE'] !== $ofr['prices']['RESULT_PRICE']['DISCOUNT_PRICE']) {
+                        $offerPrice = $dom->createElement("price", $ofr['prices']['RESULT_PRICE']['DISCOUNT_PRICE']);
+                        $offer->appendChild($offerPrice);
+                        $oldPrice = $dom->createElement("oldprice", $ofr["CATALOG_PRICE_" . $basePriceId]);
+                        $offer->appendChild($oldPrice);
+                    } else {
+                        $offerPrice = $dom->createElement("price", $ofr["CATALOG_PRICE_" . $basePriceId]);
+                        $offer->appendChild($offerPrice);
                     }
                     $offerCurrencyId = $dom->createElement("currencyId", htmlspecialchars($ofr["CATALOG_CURRENCY_" . $basePriceId], ENT_XML1 | ENT_QUOTES));
                     $offer->appendChild($offerCurrencyId);
@@ -241,13 +244,14 @@ class YmlFeedMindbox
                     $offerUrl = $dom->createElement("url", htmlspecialchars(self::getProtocol() . $_SERVER["SERVER_NAME"] . $prod["DETAIL_PAGE_URL"], ENT_XML1 | ENT_QUOTES));
                     $offer->appendChild($offerUrl);
                 }
-                $offerPrice = $dom->createElement("price", $prod["CATALOG_PRICE_" . $basePriceId]);
-                $offer->appendChild($offerPrice);
-                if (!empty($prod['prices'])) {
-                    if ($prod['prices']['RESULT_PRICE']['BASE_PRICE'] !== $prod['prices']['RESULT_PRICE']['DISCOUNT_PRICE']) {
-                        $oldPrice = $dom->createElement("oldprice", $prod['prices']['RESULT_PRICE']['DISCOUNT_PRICE']);
-                        $offer->appendChild($oldPrice);
-                    }
+                if (!empty($prod['prices']) && $prod['prices']['RESULT_PRICE']['BASE_PRICE'] !== $prod['prices']['RESULT_PRICE']['DISCOUNT_PRICE']) {
+                    $offerPrice = $dom->createElement("price", $prod['prices']['RESULT_PRICE']['DISCOUNT_PRICE']);
+                    $offer->appendChild($offerPrice);
+                    $oldPrice = $dom->createElement("oldprice", $prod["CATALOG_PRICE_" . $basePriceId]);
+                    $offer->appendChild($oldPrice);
+                } else {
+                    $offerPrice = $dom->createElement("price", $prod["CATALOG_PRICE_" . $basePriceId]);
+                    $offer->appendChild($offerPrice);
                 }
                 $offerCurrencyId = $dom->createElement("currencyId", htmlspecialchars($prod["CATALOG_CURRENCY_" . $basePriceId], ENT_XML1 | ENT_QUOTES));
                 $offer->appendChild($offerCurrencyId);
@@ -279,7 +283,9 @@ class YmlFeedMindbox
             }
         }
 
-        if ($step === ceil(self::getProdsCount() / self::$stepSize)) {
+        var_dump($step === (int) ceil(self::getProdsCount() / self::$stepSize));
+
+        if ($step === (int) ceil(self::getProdsCount() / self::$stepSize)) {
             $dom->save($_SERVER["DOCUMENT_ROOT"] . "/" . Options::getModuleOption("YML_NAME"));
         } else {
             $dom->save($_SERVER["DOCUMENT_ROOT"] . "/" . Options::getModuleOption("YML_NAME").'.raw');
@@ -337,6 +343,8 @@ class YmlFeedMindbox
      */
     protected static function getOffers($basePriceId, $prodIds)
     {
+        $offersCatalogId = \CCatalog::GetList([], ['IBLOCK_ID' => Options::getModuleOption("CATALOG_IBLOCK_ID")], false, [], ['ID', 'IBLOCK_ID', 'OFFERS_IBLOCK_ID'])->Fetch()['OFFERS_IBLOCK_ID'];
+
         $arSelect = array("ID",
             "IBLOCK_ID",
             "NAME",
@@ -360,7 +368,7 @@ class YmlFeedMindbox
         $addProps = Options::getModuleOption("CATALOG_OFFER_PROPS");
         if (!empty($addProps)) {
             $addProps = explode(',', $addProps);
-            $offersCatalogId = \CCatalog::GetList([], ['IBLOCK_ID' => Options::getModuleOption("CATALOG_IBLOCK_ID")], false, [], ['ID', 'IBLOCK_ID', 'OFFERS_IBLOCK_ID'])->Fetch()['OFFERS_IBLOCK_ID'];
+
             $props = self::getProps($addProps, $offersCatalogId);
 
             foreach ($offersByProducts as &$offers) {
