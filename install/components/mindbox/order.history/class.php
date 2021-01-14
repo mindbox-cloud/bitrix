@@ -90,8 +90,20 @@ class OrderHistory extends CBitrixComponent implements Controllerable
         $operation = 'DirectCrm.V21CustomerOrderListOperation';
         $transactionId = Options::getModuleOption('TRANSACTION_ID');
 
+
         try {
-            $response = $this->mindbox->order()->getOrders($range, $mindboxId, $start, $operation)->sendRequest();
+
+
+            $queryParams = [
+                'startingIndex' =>  $start,
+                'countToReturn' =>  $range,
+                'mindbox'   =>  $mindboxId,
+                'orderLineStatuses' =>  ''
+            ];
+            $response = $this->mindbox->getClientV2()
+                ->prepareRequest('GET', $operation, null, 'by-customer', $queryParams)
+                ->sendRequest();
+
             $ordersDTO = $response->getResult()->getOrders();
 
             foreach ($ordersDTO as $order) {
@@ -109,11 +121,12 @@ class OrderHistory extends CBitrixComponent implements Controllerable
                 $spentBonuses = 0;
                 $lines = $order->getLines();
                 foreach ($lines as $line) {
-                    $product = $this->getProductById($line->getProduct()->getField('productId'));
+                    $arSku = $line->getField('sku');
+                    $product = $this->getProductById($arSku['skuId']);
                     $orders[$id]['lines'][] = [
                         'name' => $product['NAME'],
                         'link' => $product['DETAIL_PAGE_URL'],
-                        'price' => $line->getDiscountedPrice()
+                        'price' => $arSku['basePricePerItem']
                     ];
                     foreach ($line->getAppliedDiscounts() as $discount) {
                         if ($discount->getType() === 'balance') {
@@ -122,7 +135,7 @@ class OrderHistory extends CBitrixComponent implements Controllerable
                     }
                 }
 
-                $acuiredBonuses += intval($order->getTotalAcquiredBalanceChange()) / 2;
+                $acuiredBonuses += intval($order->getTotalAcquiredBalanceChange());
 
                 $orders[$id]['spentBonuses'] = $spentBonuses;
                 $orders[$id]['acuiredBonuses'] = $acuiredBonuses;

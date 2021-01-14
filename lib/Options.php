@@ -13,6 +13,8 @@ class Options
         'addToCart' => 'AddToCart',
         'autoConfirmMobile' => 'AutoConfirmMobilePhone',
         'calculateCart' => 'CalculateCart',
+        'calculateAuthorizedCart' => 'CalculateAuthorizedCart',
+        'calculateUnauthorizedCart' =>  'CalculateUnauthorizedCart',
         'cancelOrder' => 'CancelOrder',
         'checkActive' => 'CheckCustomerIsInLoyalityProgram',
         'checkAuthorizationCode' => 'CheckMobilePhoneAuthorizationCode',
@@ -22,6 +24,8 @@ class Options
         'confirmOrder' => 'ConfirmOrder',
         'confirmMobile' => 'ConfirmMobilePhone',
         'createOrder' => 'CreateOrder',
+        'beginUnauthorizedOrderTransaction' =>  'BeginUnauthorizedOrderTransaction',
+        'beginAuthorizedOrderTransaction' =>  'BeginAuthorizedOrderTransaction',
         'createAuthorizedOrder' =>  'CreateAuthorizedOrder',
         'createUnauthorizedOrder'   =>  'CreateUnauthorizedOrder',
         'edit' => 'EditCustomer',
@@ -43,7 +47,10 @@ class Options
         'setProductList' => 'SetCart',
         'subscribe' => 'SubscribeCustomer',
         'viewProduct' => 'ViewProduct',
-        'viewCategory' => 'ViewCategory'
+        'viewCategory' => 'ViewCategory',
+        'commitOrderTransaction'    =>  'CommitOrderTransaction',
+        'rollbackOrderTransaction'  =>  'RollbackOrderTransaction',
+        'saveOfflineOrder'          =>  'SaveOfflineOrder'
     ];
 
     private static $sdkOptions = [
@@ -70,7 +77,7 @@ class Options
         }
 
         // for standard mode
-        $sdkOptions['domain'] = 'demo-services.mindbox.cloud';
+        $sdkOptions['domain'] = COption::GetOptionString('mindbox.marketing', 'SYSTEM_NAME') .  '-services.mindbox.ru';
 
         return $sdkOptions;
     }

@@ -72,6 +72,12 @@ class DiscountCard extends CBitrixComponent implements Controllerable
             $response = $this->mindbox->customer()->getDataByDiscountCard($customerDto,
                 Options::getOperationName('getDataByDiscountCard'))->sendRequest();
         } catch (MindboxClientException $e) {
+
+            if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+                $logger = new \Intensa\Logger\ILog('sendCardAction');
+                $logger->log('MindboxClientException', $e->getMessage());
+            }
+
             return Ajax::errorResponse(GetMessage('MB_DC_CARD_ERROR'));
         }
         $customer = $response->getResult()->getCustomer();
@@ -99,7 +105,7 @@ class DiscountCard extends CBitrixComponent implements Controllerable
         }
 
         try {
-            $this->mindbox->customer()->sendAuthorizationCode(new CustomerRequestDTO(['mobilePhone' => $phone]),
+            $this->mindbox->customer()->sendAuthorizationCode(new CustomerRequestDTO(['mobilePhone' => $phone, /*'ids' => ['mindboxId' => $this->getMindboxId()]*/]),
                 Options::getOperationName('sendAuthorizationCode'))->sendRequest();
         } catch (MindboxClientException $e) {
             return Ajax::errorResponse(GetMessage('MB_DC_CARD_ERROR'));
@@ -162,25 +168,33 @@ class DiscountCard extends CBitrixComponent implements Controllerable
             return Ajax::errorResponse(GetMessage('MB_DC_WRONG_CODE'));
         }
         if ($customer->getProcessingStatus() === 'Found') {
-            $customerDto = new CustomerRequestDTO();
-            $customerDto->setId('mindboxId', $customer->getId('mindboxId'));
-            $resultingCustomer = new CustomerRequestDTO(['ids' => ['mindboxId' => $this->getMindboxId()]]);
-            $customersToMerge = new CustomerIdentityRequestCollection([$customerDto]);
-            try {
-                $this->mindbox->customer()->merge(new MergeCustomersRequestDTO([
-                    'customersToMerge' => $customersToMerge,
-                    'resultingCustomer' => $resultingCustomer
-                ]), Options::getOperationName('merge'))->sendRequest();
-            } catch (MindboxUnavailableException $e) {
-                $lastResponse = $this->mindbox->customer()->getLastResponse();
 
-                if($lastResponse) {
-                    $request = $lastResponse->getRequest();
-                    QueueTable::push($request);
+            if(
+                $customer->getId('mindboxId') &&
+                $this->getMindboxId() &&
+                $this->getMindboxId() != $customer->getId('mindboxId')
+            ) {
+                $customerDto = new CustomerRequestDTO();
+                $customerDto->setId('mindboxId', $customer->getId('mindboxId'));
+                $resultingCustomer = new CustomerRequestDTO(['ids' => ['mindboxId' => $this->getMindboxId()]]);
+                $customersToMerge = new CustomerIdentityRequestCollection([$customerDto]);
+                try {
+                    $this->mindbox->customer()->merge(new MergeCustomersRequestDTO([
+                        'customersToMerge' => $customersToMerge,
+                        'resultingCustomer' => $resultingCustomer
+                    ]), Options::getOperationName('merge'))->sendRequest();
+                } catch (MindboxUnavailableException $e) {
+                    $lastResponse = $this->mindbox->customer()->getLastResponse();
+
+                    if($lastResponse) {
+                        $request = $lastResponse->getRequest();
+                        QueueTable::push($request);
+                    }
+                } catch (MindboxClientException $e) {
+                    return Ajax::errorResponse(GetMessage('MB_DC_CARD_ERROR'));
                 }
-            } catch (MindboxClientException $e) {
-                return Ajax::errorResponse(GetMessage('MB_DC_CARD_ERROR'));
             }
+
 
             $url = $this->arParams['PERSONAL_PAGE_URL'];
 

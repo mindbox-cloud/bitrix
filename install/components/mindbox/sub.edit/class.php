@@ -14,6 +14,7 @@ use Mindbox\DTO\V3\Requests\SubscriptionRequestDTO;
 use Mindbox\Exceptions\MindboxClientException;
 use Mindbox\Exceptions\MindboxUnavailableException;
 use Mindbox\Options;
+use Mindbox\Helper;
 use Mindbox\QueueTable;
 
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) {
@@ -59,7 +60,7 @@ class SubEdit extends CBitrixComponent implements Controllerable
             return Ajax::errorResponse(GetMessage('MB_SE_BAD_MODULE_SETTING'));
         }
         $customer = new CustomerRequestDTO([
-            'ids' => [Options::getModuleOption('WEBSITE_ID') => $this->userInfo['ID']],
+            'ids' => ['mindboxId' => $this->getMindboxId()],
         ]);
 
         $subscriptions = [
@@ -77,7 +78,7 @@ class SubEdit extends CBitrixComponent implements Controllerable
         $customer->setSubscriptions($subscriptions);
 
         try {
-            $this->mindbox->customer()->edit($customer, Options::getOperationName('edit'))->sendRequest();
+            $this->mindbox->customer()->edit($customer, Options::getOperationName('edit'), true, true)->sendRequest();
         } catch (MindboxUnavailableException $e) {
             $lastResponse = $this->mindbox->customer()->getLastResponse();
 
@@ -135,5 +136,12 @@ class SubEdit extends CBitrixComponent implements Controllerable
     {
         $this->getSubscriptions();
         $this->includeComponentTemplate();
+    }
+
+    private function getMindboxId()
+    {
+        global $USER;
+
+        return Helper::getMindboxId($USER->GetID());
     }
 }
