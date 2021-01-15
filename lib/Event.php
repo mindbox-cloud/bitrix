@@ -177,11 +177,11 @@ class Event
         $fields[ 'subscriptions' ] = [
             [
                 'pointOfContact' => 'Email',
-                'isSubscribed'   => true,
+                'isSubscribed'   => true
             ],
             [
                 'pointOfContact' => 'Sms',
-                'isSubscribed'   => true,
+                'isSubscribed'   => true
             ],
         ];
 
@@ -267,9 +267,15 @@ class Event
                     'ids'         => [Options::getModuleOption('WEBSITE_ID') => $arFields[ 'USER_ID' ]]
                 ];
 
-                $fields = array_filter($fields, function ($item) {
-                    return isset($item);
-                });
+            $isSubscribed = true;
+
+            if ($arFields['UF_IS_SUBSCRIBED'] === '0') {
+                $isSubscribed = false;
+            }
+
+            $fields = array_filter($fields, function ($item) {
+                return isset($item);
+            });
 
                 if (!isset($fields)) {
                     return true;
@@ -287,6 +293,14 @@ class Event
                     ]
                 ];
                 $customer->setSubscriptions($subscriptions);
+            $subscriptions = [
+                'subscription' => [
+                    'brand' =>  Options::getModuleOption('BRAND'),
+                    'pointOfContact' => 'Email',
+                    'isSubscribed'   => $isSubscribed
+                ]
+            ];
+            $customer->setSubscriptions($subscriptions);
 
 
                 try {
@@ -1025,15 +1039,14 @@ class Event
             $customer->setMobilePhone($arOrderProperty[ 'PHONE' ]);
             $customer->setId(Options::getModuleOption('WEBSITE_ID'), $order->getUserId());
 
-            $subscriptions = [
-                'subscription' => [
-                    'brand'          => Options::getModuleOption('BRAND'),
-                    'pointOfContact' => 'Email',
-                    'isSubscribed'   => true,
-                    'valueByDefault' => true
-                ]
-            ];
-            $customer->setSubscriptions($subscriptions);
+        $subscriptions = [
+            'subscription' => [
+                'brand' =>  Options::getModuleOption('BRAND'),
+                'pointOfContact' => 'Email',
+                'isSubscribed'   => true
+            ]
+        ];
+        $customer->setSubscriptions($subscriptions);
 
 
             $orderDTO->setCustomer($customer);
@@ -1431,11 +1444,11 @@ class Event
         $fields[ 'subscriptions' ] = [
             [
                 'pointOfContact' => 'Email',
-                'isSubscribed'   => true,
+                'isSubscribed'   => true
             ],
             [
                 'pointOfContact' => 'Sms',
-                'isSubscribed'   => true,
+                'isSubscribed'   => true
             ],
         ];
 
