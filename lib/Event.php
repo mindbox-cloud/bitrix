@@ -462,7 +462,7 @@ class Event
         $mindboxId = $dbUser[ 'UF_MINDBOX_ID' ];
 
 
-        if (!empty($userId) && !empty($mindboxId)) {
+        if (!empty($userId)) {
             $sex = substr(ucfirst($arFields[ 'PERSONAL_GENDER' ]), 0, 1) ?: null;
 
             $fields = [
@@ -484,18 +484,16 @@ class Event
             }
 
             $fields[ 'ids' ][ Options::getModuleOption('WEBSITE_ID') ] = $userId;
-            $fields[ 'ids' ][ 'mindboxId' ] = $mindboxId;
+            //$fields[ 'ids' ][ 'mindboxId' ] = $mindboxId;
             $customer = new CustomerRequestDTO($fields);
             $customer = Helper::iconvDTO($customer);
             unset($fields);
 
 
             try {
-                $updateResponse = $mindbox->customer()->edit($customer, Options::getOperationName('edit'), true,
-                    Helper::isSync())->sendRequest()->getResult();
+                $updateResponse = $mindbox->customer()->edit($customer, Options::getOperationName('edit'), true)->sendRequest()->getResult();
             } catch (Exceptions\MindboxClientException $e) {
                 $APPLICATION->ThrowException(Loc::getMessage('MB_USER_EDIT_ERROR'));
-
                 return false;
             }
 
