@@ -177,11 +177,11 @@ class Event
         $fields[ 'subscriptions' ] = [
             [
                 'pointOfContact' => 'Email',
-                'isSubscribed'   => true,
+                'isSubscribed'   => true
             ],
             [
                 'pointOfContact' => 'Sms',
-                'isSubscribed'   => true,
+                'isSubscribed'   => true
             ],
         ];
 
@@ -267,9 +267,15 @@ class Event
                     'ids'         => [Options::getModuleOption('WEBSITE_ID') => $arFields[ 'USER_ID' ]]
                 ];
 
-                $fields = array_filter($fields, function ($item) {
-                    return isset($item);
-                });
+            $isSubscribed = true;
+
+            if ($arFields['UF_IS_SUBSCRIBED'] === '0') {
+                $isSubscribed = false;
+            }
+
+            $fields = array_filter($fields, function ($item) {
+                return isset($item);
+            });
 
                 if (!isset($fields)) {
                     return true;
@@ -287,6 +293,14 @@ class Event
                     ]
                 ];
                 $customer->setSubscriptions($subscriptions);
+            $subscriptions = [
+                'subscription' => [
+                    'brand' =>  Options::getModuleOption('BRAND'),
+                    'pointOfContact' => 'Email',
+                    'isSubscribed'   => $isSubscribed
+                ]
+            ];
+            $customer->setSubscriptions($subscriptions);
 
 
                 try {
@@ -448,7 +462,7 @@ class Event
         $mindboxId = $dbUser[ 'UF_MINDBOX_ID' ];
 
 
-        if (!empty($userId) && !empty($mindboxId)) {
+        if (!empty($userId)) {
             $sex = substr(ucfirst($arFields[ 'PERSONAL_GENDER' ]), 0, 1) ?: null;
 
             $fields = [
@@ -470,18 +484,16 @@ class Event
             }
 
             $fields[ 'ids' ][ Options::getModuleOption('WEBSITE_ID') ] = $userId;
-            $fields[ 'ids' ][ 'mindboxId' ] = $mindboxId;
+            //$fields[ 'ids' ][ 'mindboxId' ] = $mindboxId;
             $customer = new CustomerRequestDTO($fields);
             $customer = Helper::iconvDTO($customer);
             unset($fields);
 
 
             try {
-                $updateResponse = $mindbox->customer()->edit($customer, Options::getOperationName('edit'), true,
-                    Helper::isSync())->sendRequest()->getResult();
+                $updateResponse = $mindbox->customer()->edit($customer, Options::getOperationName('edit'), true)->sendRequest()->getResult();
             } catch (Exceptions\MindboxClientException $e) {
                 $APPLICATION->ThrowException(Loc::getMessage('MB_USER_EDIT_ERROR'));
-
                 return false;
             }
 
@@ -1025,15 +1037,14 @@ class Event
             $customer->setMobilePhone($arOrderProperty[ 'PHONE' ]);
             $customer->setId(Options::getModuleOption('WEBSITE_ID'), $order->getUserId());
 
-            $subscriptions = [
-                'subscription' => [
-                    'brand'          => Options::getModuleOption('BRAND'),
-                    'pointOfContact' => 'Email',
-                    'isSubscribed'   => true,
-                    'valueByDefault' => true
-                ]
-            ];
-            $customer->setSubscriptions($subscriptions);
+        $subscriptions = [
+            'subscription' => [
+                'brand' =>  Options::getModuleOption('BRAND'),
+                'pointOfContact' => 'Email',
+                'isSubscribed'   => true
+            ]
+        ];
+        $customer->setSubscriptions($subscriptions);
 
 
             $orderDTO->setCustomer($customer);
@@ -1431,11 +1442,11 @@ class Event
         $fields[ 'subscriptions' ] = [
             [
                 'pointOfContact' => 'Email',
-                'isSubscribed'   => true,
+                'isSubscribed'   => true
             ],
             [
                 'pointOfContact' => 'Sms',
-                'isSubscribed'   => true,
+                'isSubscribed'   => true
             ],
         ];
 
