@@ -62,7 +62,7 @@ class Event
 
         $mindboxId = Helper::getMindboxId($arUser[ 'user_fields' ][ 'ID' ]);
 
-        if (empty($mindboxId)) {
+        if (empty($mindboxId) && \COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {
             $request = $mindbox->getClientV3()->prepareRequest('POST',
                 Options::getOperationName('getCustomerInfo'),
                 new DTO([
