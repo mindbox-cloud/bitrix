@@ -228,11 +228,6 @@ class AuthSms extends CBitrixComponent implements Controllerable
             $fields['captcha_sid']
         );
 
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('fillupAction');
-            $logger->log('$reg', [$reg, $fields]);
-        }
-
         if ($reg['TYPE'] !== 'OK') {
             return Ajax::errorResponse($reg['MESSAGE']);
         }
