@@ -6,6 +6,7 @@
 namespace Mindbox;
 
 
+use Bitrix\Main\Loader;
 use Bitrix\Main\UserTable;
 use CPHPCache;
 use Mindbox\DTO\DTO;
@@ -308,6 +309,46 @@ class Helper
         return $arIblock;
     }
 
+    public static function getProps()
+    {
+        $props = [];
+
+        $catalogId = \COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '0');
+        if (!empty($catalogId) && $catalogId !== '0') {
+            $iblockProperties = \CIBlock::GetProperties($catalogId);
+            while ($iblockProperty = $iblockProperties-> Fetch()) {
+                $props['PROPERTY_'.$iblockProperty['CODE']] = $iblockProperty['NAME'];
+            }
+        }
+
+        return $props;
+    }
+
+    public static function getOffersProps()
+    {
+        $offerProps = [];
+
+        if (!Loader::includeModule('sale')) {
+            return $offerProps;
+        }
+
+        $catalogId = \COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '0');
+
+        if (!empty($catalogId) && $catalogId !== '0') {
+            $select = ['ID', 'IBLOCK_ID', 'OFFERS_IBLOCK_ID'];
+            $filter = ['IBLOCK_ID' => $catalogId];
+            $offersCatalogId = \CCatalog::GetList([], $filter, false, [], $select)->Fetch()['OFFERS_IBLOCK_ID'];
+        }
+
+        if (!empty($offersCatalogId) && $offersCatalogId !== '0') {
+            $iblockProperties = \CIBlock::GetProperties($offersCatalogId);
+            while ($iblockProperty = $iblockProperties-> Fetch()) {
+                $offerProps['PROPERTY_'.$iblockProperty['CODE']] = $iblockProperty['NAME'];
+            }
+        }
+
+        return $offerProps;
+    }
 
     /**
      * Is operations sync?
