@@ -1,4 +1,7 @@
 <?php
+
+use Mindbox\Helper;
+
 defined('B_PROLOG_INCLUDED') and (B_PROLOG_INCLUDED === true) or die();
 defined('ADMIN_MODULE_NAME') or define('ADMIN_MODULE_NAME', 'mindbox.marketing');
 
@@ -6,6 +9,12 @@ global $APPLICATION;
 
 Cmodule::IncludeModule('mindbox.marketing');
 Cmodule::IncludeModule('iblock');
+
+if ($_GET['order_match_action'] === 'add') {
+    Helper::setOrderFieldsMatch($_GET['bitrix_code'], $_GET['mindbox_code']);
+} elseif ($_GET['order_match_action'] === 'delete') {
+    Helper::setOrderFieldsMatch($_GET['bitrix_code'], '');
+}
 
 if (!$USER->isAdmin()) {
     $APPLICATION->authForm('Nope');
@@ -155,7 +164,7 @@ $arAllOptions = array(
         COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', ''),
         [
             'selectbox',
-            \Mindbox\Helper::getIblocks()
+            Helper::getIblocks()
         ]
     ],
     [
@@ -163,7 +172,25 @@ $arAllOptions = array(
         getMessage('YML_NAME'),
         COption::GetOptionString(ADMIN_MODULE_NAME, 'YML_NAME', 'upload/mindbox.xml'),
         ['text']
-    ]
+    ],
+    getMessage('ORDER_SETTINGS'),
+    Helper::getOrderMatchesTable(),
+    [
+        'ORDER_BITRIX_FIELDS',
+        getMessage('BITRIX_FIELDS'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'ORDER_BITRIX_FIELDS', ''),
+        [
+            'selectbox',
+            Helper::getOrderFields()
+        ]
+    ],
+    [
+        'ORDER_MINDBOX_FIELDS',
+        getMessage('MINDBOX_FIELDS'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'ORDER_MINDBOX_FIELDS', ''),
+        ['text']
+    ],
+    Helper::getAddOrderMatchButton()
 );
 
 ?>

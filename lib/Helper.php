@@ -8,6 +8,7 @@ namespace Mindbox;
 
 use Bitrix\Main\UserTable;
 use CPHPCache;
+use CSaleOrderProps;
 use Mindbox\DTO\DTO;
 use Mindbox\Options;
 use Psr\Log\LoggerInterface;
@@ -308,6 +309,162 @@ class Helper
         return $arIblock;
     }
 
+    /**
+     * Get order fields
+     *
+     * @return array $orderFields
+     */
+    public static function getOrderFields()
+    {
+        \CModule::IncludeModule('sale');
+
+        $dbProps = CSaleOrderProps::GetList(
+            ['SORT' => 'ASC'],
+            [],
+            false,
+            false,
+            []
+        );
+        $orderProps = [];
+        while ($prop = $dbProps->Fetch()) {
+            $orderProps[$prop['CODE']] = $prop['NAME'];
+        }
+
+        return $orderProps;
+    }
+
+    /**
+     * @param string $bitrixFieldCode
+     * @param string $mindboxFieldCode
+     * @param bool $append
+     */
+    public static function setOrderFieldsMatch($bitrixFieldCode, $mindboxFieldCode, $append = true)
+    {
+        if (!$append) {
+            $matches = [$bitrixFieldCode => $mindboxFieldCode];
+        } else {
+            $matches = self::getOrderFieldsMatch();
+            $matches[$bitrixFieldCode] = $mindboxFieldCode;
+        }
+
+        \COption::SetOptionString(ADMIN_MODULE_NAME, 'ORDER_FIELDS_MATCH', json_encode($matches));
+    }
+
+    /**
+     * @return array
+     */
+    public static function getOrderFieldsMatch()
+    {
+        $fields = \COption::GetOptionString(ADMIN_MODULE_NAME, 'ORDER_FIELDS_MATCH', '{[]}');
+
+        return json_decode($fields, true);
+    }
+
+    /**
+     * @return string
+     */
+    public static function getOrderMatchesTable()
+    {
+        $matches = self::getOrderFieldsMatch();
+
+        $styles = <<<HTML
+    <style type="text/css">
+        .th {
+            background-color: #e0e8ea;
+            padding: 15px;
+            text-align: center;
+            min-width: 400px;
+        }
+        .th-empty {
+            background-color: #e0e8ea;
+            padding: 15px;
+            text-align: center;
+        }
+        .td {
+            border-top: 1px solid #87919c;
+            padding: 15px;
+            text-align: center;
+        }
+        .tr {}
+        .table {
+            margin: 0 auto !important;
+            border-collapse: collapse;
+        }
+        tr.heading:nth-last-child(-n+7) td {
+            display: none;
+        }
+    </style>
+HTML;
+        $escapeTable = '</td></tr><tr><td colspan="2"><table class="table">';
+        $tableHead = '<tr class="tr"><th class="th">'.getMessage("BITRIX_FIELDS").'</th><th class="th">'.getMessage("MINDBOX_FIELDS").'</th><th class="th-empty"></th></tr>';
+
+        $result = $styles.$escapeTable.$tableHead;
+
+        foreach ($matches as $bitrixCode => $mindboxCode) {
+            if (!empty($mindboxCode)) {
+                $result .= '<tr class="tr"><td class="td">' . $bitrixCode . '</td>';
+                $result .= '<td class="td">' . $mindboxCode . '</td>';
+                $result .= '<td class="td"><a class="module_button_delete" data-bitrix="'.$bitrixCode.'" href="javascript:void(0)">' . getMessage("BUTTON_DELETE") . '</a></td></tr>';
+            }
+        }
+
+        $bottomPadding = '</table></tr></td><tr><td>&nbsp;</td></tr>';
+        $result .= $bottomPadding;
+
+        $script = <<<HTML
+    <script>
+        document.querySelectorAll('.module_button_delete').forEach((element) => {
+            element.onclick = (e) => {
+                let url = new URL(window.location.href);
+                url.searchParams.delete('order_match_action');
+                url.searchParams.append('order_match_action', 'delete');
+                url.searchParams.append('bitrix_code', e.target.dataset.bitrix);
+                window.location.href = url;
+            };
+        });
+    </script>
+HTML;
+        $result .= $script;
+
+
+        return $result;
+    }
+
+    public static function getAddOrderMatchButton()
+    {
+        $escapeTable = '</td></tr><tr><td>';
+        $styles = <<<HTML
+    <style type="text/css">
+        .module_button {
+            border: 1px solid black;
+            border-radius: 5%;
+            padding: 8px 25px;
+            background-color: #e0e8ea;
+            color: black;
+            text-decoration: none;
+            float: right;
+        }
+    </style>
+HTML;
+
+        $button = '<a class="module_button module_button_add" href="javascript:void(0)">'.getMessage("BUTTON_ADD").'</a>';
+
+        $script = <<<HTML
+    <script>
+        document.querySelector('.module_button_add').onclick = () => {
+            let url = new URL(window.location.href);
+            url.searchParams.delete('order_match_action');
+            url.searchParams.append('order_match_action', 'add');
+            url.searchParams.append('bitrix_code', document.querySelector('[name="MINDBOX_ORDER_BITRIX_FIELDS"]').selectedOptions[0].value);
+            url.searchParams.append('mindbox_code', document.querySelector('[name="MINDBOX_ORDER_MINDBOX_FIELDS"]').value);
+            window.location.href = url;
+        };
+    </script>
+HTML;
+
+
+        return $styles.$escapeTable.$button.$script;
+    }
 
     /**
      * Is operations sync?
