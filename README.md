@@ -4,11 +4,7 @@
 
 ## Начало работы
 ### Установка модуля
-1. Устанавливаем файлы модуля через Bitrix Marketplace. Либо с помощью composer.
-```
-    cd [document_root]/bitrix/modules
-    composer create-project mindbox/marketing mindbox.marketing 1.4.1
-```
+1. Устанавливаем модуль через Bitrix Marketplace.(http://marketplace.1c-bitrix.ru/solutions/mindbox.marketing/)
 2. Устанавливаем модуль в административном разделе в меню Marketplace->Установленные решения
 3. Заполняем поля настроек модуля в административном разделе.
 

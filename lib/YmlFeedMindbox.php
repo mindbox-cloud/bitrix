@@ -153,7 +153,7 @@ class YmlFeedMindbox
                         $ofr['XML_ID'] = $ofr['ID'];
                     }
                     $offer->setAttribute("id", $ofr["XML_ID"]);
-                    $available = $ofr['ACTIVE'] == 'Y';
+                    $available = ($ofr['CATALOG_AVAILABLE'] === 'Y' && $ofr['ACTIVE'] === 'Y') ? 'true' : 'false';
                     $offer->setAttribute("available", $available);
                     unset($available);
                     $offer = $offers->appendChild($offer);
@@ -230,7 +230,7 @@ class YmlFeedMindbox
             foreach ($prods as $prod) {
                 $offer = $dom->createElement("offer");
                 $offer->setAttribute("id", $prod["XML_ID"]);
-                $available = $prod['ACTIVE'] == 'Y';
+                $available = ($prod['CATALOG_AVAILABLE'] === 'Y' && $prod['ACTIVE'] === 'Y') ? 'true' : 'false';
                 $offer->setAttribute("available", $available);
                 unset($available);
                 $offer = $offers->appendChild($offer);
