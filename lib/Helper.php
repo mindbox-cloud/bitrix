@@ -58,7 +58,7 @@ class Helper
             $mindboxId = $rsUser[ 'UF_MINDBOX_ID' ];
         }
 
-        if(!$mindboxId) {
+        if(!$mindboxId && \COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {
             $mindbox = Options::getConfig();
             $request = $mindbox->getClientV3()->prepareRequest('POST',
                 Options::getOperationName('getCustomerInfo'),

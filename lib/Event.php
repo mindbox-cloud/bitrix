@@ -321,42 +321,6 @@ class Event
                 return true;
             }
 
-            $mindboxId = $arFields[ 'UF_MINDBOX_ID' ];
-
-            if (empty($mindboxId)) {
-                $request = $mindbox->getClientV3()->prepareRequest('POST',
-                    Options::getOperationName('getCustomerInfo'),
-                    new DTO([
-                        'customer' => [
-                            'ids' => [
-                                Options::getModuleOption('WEBSITE_ID') => $arFields[ 'USER_ID' ]
-                            ]
-                        ]
-                    ]));
-
-                try {
-                    $response = $request->sendRequest();
-                } catch (Exceptions\MindboxClientException $e) {
-                    $APPLICATION->ThrowException($e->getMessage());
-
-                    return false;
-                }
-
-                if ($response->getResult()->getCustomer()->getProcessingStatus() === 'Found') {
-                    $fields = [
-                        'UF_EMAIL_CONFIRMED' => $response->getResult()->getCustomer()->getIsEmailConfirmed(),
-                        'UF_MINDBOX_ID'      => $response->getResult()->getCustomer()->getId('mindboxId')
-                    ];
-
-                    $user = new CUser;
-                    $user->Update(
-                        $arFields[ 'USER_ID' ],
-                        $fields
-                    );
-                } else {
-                    return true;
-                }
-
                 $customer = new CustomerRequestDTO([
                     'ids' => [
                         Options::getModuleOption('WEBSITE_ID') => $arFields[ 'USER_ID' ]
@@ -376,10 +340,10 @@ class Event
                 } catch (Exceptions\MindboxClientException $e) {
                     return false;
                 }
-            }
-        } else {
-            if ($arFields[ 'UF_MINDBOX_ID' ]) {
 
+        } else {
+
+            if ($arFields[ 'UF_MINDBOX_ID' ]) {
                 $request = $mindbox->getClientV3()->prepareRequest('POST',
                     Options::getOperationName('getCustomerInfo'),
                     new DTO([
