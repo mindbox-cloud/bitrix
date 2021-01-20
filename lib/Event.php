@@ -534,6 +534,8 @@ class Event
         $basket = $order->getBasket();
         global $USER;
 
+        $delivery = $order->getDeliverySystemId();
+
         $rsUser = \CUser::GetByID($order->getUserId());
         $arUser = $rsUser->Fetch();
 
@@ -560,6 +562,8 @@ class Event
             foreach ($propValues as $fieldKey => $fieldValue) {
                 $customFields[\Mindbox\Helper::sanitzeNamesForMindbox($fieldKey)] = $fieldValue['VALUE'];
             }
+
+            $customFields['deliveryType'] = $delivery;
 
             $requestedPromotions = [];
             if (!empty($discountName) && $discountPrice) {
@@ -636,7 +640,6 @@ class Event
             ];
         }
 
-        $orderDTO->setField('order', $arOrder);
 
 
         $customer = new CustomerRequestV2DTO();
@@ -647,12 +650,18 @@ class Event
 
         $propertyCollection = $order->getPropertyCollection();
         $ar = $propertyCollection->getArray();
+        $matches = \Mindbox\Helper::getOrderFieldsMatch();
         foreach ($ar[ 'properties' ] as $arProperty) {
-            $arOrderProperty[ $arProperty[ 'CODE' ] ] = array_pop($arProperty[ 'VALUE' ]);
+            if (!empty($matches[$arProperty[ 'CODE' ]])) {
+                $arProperty['CODE'] = $matches[$arProperty[ 'CODE' ]];
+            }
+            $arProperty['CODE'] = \Mindbox\Helper::sanitzeNamesForMindbox($arProperty['CODE']);
+            $arOrderProperty[$arProperty['CODE']] = array_pop($arProperty[ 'VALUE' ]);
         }
 
         if (!empty($arOrderProperty[ 'EMAIL' ])) {
             $customer->setEmail($arOrderProperty[ 'EMAIL' ]);
+            $arOrder['email'] = $arOrderProperty[ 'EMAIL' ];
         }
         /*
         if(!empty($arOrderProperty[ 'FIO' ])) {
@@ -664,8 +673,10 @@ class Event
         */
         if (!empty($arOrderProperty[ 'PHONE' ])) {
             $customer->setMobilePhone($arOrderProperty[ 'PHONE' ]);
+            $arOrder['mobilePhone'] = $arOrderProperty[ 'PHONE' ];
         }
 
+        $orderDTO->setField('order', $arOrder);
 
         if (!(\Mindbox\Helper::isUnAuthorizedOrder($arUser) || !$USER->IsAuthorized())) {
             $customer->setId('mindboxId', $mindboxId);
@@ -780,6 +791,8 @@ class Event
             $basket = $order->getBasket();
             global $USER;
 
+            $delivery = $order->getDeliverySystemId();
+
             $rsUser = \CUser::GetByID($order->getUserId());
             $arUser = $rsUser->Fetch();
 
@@ -818,6 +831,8 @@ class Event
                 foreach ($propValues as $fieldKey => $fieldValue) {
                     $customFields[\Mindbox\Helper::sanitzeNamesForMindbox($fieldKey)] = $fieldValue['VALUE'];
                 }
+
+                $customFields['deliveryType'] = $delivery;
 
                 $arLine = [
                     'lineNumber'       => $i++,
@@ -877,7 +892,6 @@ class Event
                 ];
             }
 
-            $offlineOrderDTO->setField('order', $arOrder);
 
 
             $customer = new CustomerRequestV2DTO();
@@ -888,12 +902,18 @@ class Event
 
             $propertyCollection = $order->getPropertyCollection();
             $ar = $propertyCollection->getArray();
+            $matches = \Mindbox\Helper::getOrderFieldsMatch();
             foreach ($ar[ 'properties' ] as $arProperty) {
-                $arOrderProperty[ $arProperty[ 'CODE' ] ] = array_pop($arProperty[ 'VALUE' ]);
+                if (!empty($matches[$arProperty[ 'CODE' ]])) {
+                    $arProperty['CODE'] = $matches[$arProperty[ 'CODE' ]];
+                }
+                $arProperty['CODE'] = \Mindbox\Helper::sanitzeNamesForMindbox($arProperty['CODE']);
+                $arOrderProperty[$arProperty['CODE']] = array_pop($arProperty[ 'VALUE' ]);
             }
 
             if (!empty($arOrderProperty[ 'EMAIL' ])) {
                 $customer->setEmail($arOrderProperty[ 'EMAIL' ]);
+                $arOrder['email'] = $arOrderProperty[ 'EMAIL' ];
             }
             /*
             if(!empty($arOrderProperty[ 'FIO' ])) {
@@ -905,8 +925,10 @@ class Event
             */
             if (!empty($arOrderProperty[ 'PHONE' ])) {
                 $customer->setMobilePhone($arOrderProperty[ 'PHONE' ]);
+                $arOrder['mobilePhone'] = $arOrderProperty[ 'PHONE' ];
             }
 
+            $offlineOrderDTO->setField('order', $arOrder);
             //$customer->setId('websiteId', $USER->GetID());
 
             $offlineOrderDTO->setCustomer($customer);
@@ -1026,25 +1048,30 @@ class Event
                 return new Main\EventResult(Main\EventResult::SUCCESS);
             }
 
-
-            $orderDTO->setField('order', [
-                    'ids'   => [
-                        Options::getModuleOption('TRANSACTION_ID') => $order->getId()
-                    ],
-                    'lines' => $lines
-                ]
-            );
-
-
             $customer = new CustomerRequestV2DTO();
 
             $mindboxId = Helper::getMindboxId($order->getUserId());
 
             $propertyCollection = $order->getPropertyCollection();
             $ar = $propertyCollection->getArray();
+            $matches = \Mindbox\Helper::getOrderFieldsMatch();
             foreach ($ar[ 'properties' ] as $arProperty) {
-                $arOrderProperty[ $arProperty[ 'CODE' ] ] = array_pop($arProperty[ 'VALUE' ]);
+                if (!empty($matches[$arProperty[ 'CODE' ]])) {
+                    $arProperty['CODE'] = $matches[$arProperty[ 'CODE' ]];
+                }
+                $arProperty['CODE'] = \Mindbox\Helper::sanitzeNamesForMindbox($arProperty['CODE']);
+                $arOrderProperty[$arProperty['CODE']] = array_pop($arProperty[ 'VALUE' ]);
             }
+
+            $orderDTO->setField('order', [
+                    'ids'   => [
+                        Options::getModuleOption('TRANSACTION_ID') => $order->getId()
+                    ],
+                    'lines' => $lines,
+                    'email' => $arOrderProperty[ 'EMAIL' ],
+                    'mobilePhone' => $arOrderProperty[ 'PHONE' ]
+                ]
+            );
 
             $customer->setEmail($arOrderProperty[ 'EMAIL' ]);
             $customer->setLastName($arOrderProperty[ 'FIO' ]);

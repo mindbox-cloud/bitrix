@@ -355,7 +355,7 @@ class Helper
      */
     public static function getOrderFieldsMatch()
     {
-        $fields = \COption::GetOptionString(ADMIN_MODULE_NAME, 'ORDER_FIELDS_MATCH', '{[]}');
+        $fields = \COption::GetOptionString('mindbox.marketing', 'ORDER_FIELDS_MATCH', '{[]}');
 
         return json_decode($fields, true);
     }
