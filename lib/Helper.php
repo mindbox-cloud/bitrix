@@ -312,6 +312,9 @@ class Helper
         return $arIblock;
     }
 
+    /**
+     * @return array
+     */
     public static function getProps()
     {
         $props = [];
@@ -327,6 +330,29 @@ class Helper
         return $props;
     }
 
+    /**
+     * @param string $catalogId
+     * @return string
+     */
+    public static function getOffersCatalogId($catalogId)
+    {
+        if (!Loader::includeModule('sale')) {
+            return '';
+        }
+
+        if (!empty($catalogId) && $catalogId !== '0') {
+            $select = ['ID', 'IBLOCK_ID', 'OFFERS_IBLOCK_ID'];
+            $filter = ['IBLOCK_ID' => $catalogId];
+            return CCatalog::GetList([], $filter, false, [], $select)->Fetch()['OFFERS_IBLOCK_ID'];
+        }
+
+        return '';
+    }
+
+    /**
+     * @return array
+     * @throws \Bitrix\Main\LoaderException
+     */
     public static function getOffersProps()
     {
         $offerProps = [];
