@@ -93,7 +93,7 @@ class mindbox_marketing extends CModule {
 	{
 		$now = new DateTime();
 		CAgent::AddAgent(
-			"\Mindbox\YmlFeedMindbox::start();",
+			"\Mindbox\YmlFeedMindbox::start(1);",
 			$this->MODULE_ID,
 			"N",
 			86400,
@@ -117,10 +117,17 @@ class mindbox_marketing extends CModule {
 
 	function UnInstallAgents()
 	{
-		CAgent::RemoveAgent(
-			"\Mindbox\YmlFeedMindbox::start();",
-			$this->MODULE_ID
-		);
+		$agents = \CAgent::GetList(['ID' => 'DESC'], ['NAME' => '\Mindbox\YmlFeedMindbox::start(%']);
+
+		$existingAgents = [];
+
+		while ($agent = $agents->Fetch()) {
+			$existingAgents[] = $agent['NAME'];
+		}
+
+		foreach ($existingAgents as $agent) {
+			CAgent::RemoveAgent($agent, $this->MODULE_ID);
+		}
 
 		CAgent::RemoveAgent(
 			"\Mindbox\QueueTable::start();",
