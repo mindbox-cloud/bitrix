@@ -173,7 +173,7 @@ $arAllOptions = array(
     ]
 );
 
-if (!empty(COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_PROPS', ''))) {
+if (!empty(COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', ''))) {
     if (YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['VERSION'] === '1') {
         $arAllOptions[] = ['note' => getMessage(
             'NEED_TABLE_UPGRADE',
@@ -193,7 +193,7 @@ if (!empty(COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_PROPS', ''))) {
     ];
 }
 
-if (!empty(COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_OFFER_PROPS', ''))) {
+if (!empty(\Mindbox\Helper::getOffersCatalogId(COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '')))) {
     if (YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['VERSION'] === '1') {
         $arAllOptions[] = ['note' => getMessage(
             'NEED_TABLE_UPGRADE',
