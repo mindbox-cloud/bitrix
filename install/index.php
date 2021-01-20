@@ -117,7 +117,7 @@ class mindbox_marketing extends CModule {
 
 	function UnInstallAgents()
 	{
-		$agents = \CAgent::GetList(['ID' => 'DESC'], ['NAME' => '\Mindbox\YmlFeedMindbox::start(%']);
+		$agents = CAgent::GetList(['ID' => 'DESC'], ['NAME' => '\Mindbox\YmlFeedMindbox::start(%']);
 
 		$existingAgents = [];
 
