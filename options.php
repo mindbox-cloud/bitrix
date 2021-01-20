@@ -170,16 +170,19 @@ $arAllOptions = array(
         getMessage('YML_NAME'),
         COption::GetOptionString(ADMIN_MODULE_NAME, 'YML_NAME', 'upload/mindbox.xml'),
         ['text']
-    ],
-    YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['VERSION'] === '1' ?
-        getMessage(
+    ]
+);
+
+if (!empty(COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_PROPS', ''))) {
+    if (YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['VERSION'] === '1') {
+        $arAllOptions[] = ['note' => getMessage(
             'NEED_TABLE_UPGRADE',
             [
                 '#LINK#' => '/bitrix/admin/iblock_edit.php?type=' . YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['IBLOCK_TYPE_ID'] . '&ID=' . YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['ID']
             ]
-        ) :
-        '',
-    [
+        )];
+    }
+    $arAllOptions[] = [
         'CATALOG_PROPS',
         getMessage('CATALOG_PROPS'),
         COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_PROPS', ''),
@@ -187,16 +190,19 @@ $arAllOptions = array(
             'multiselectbox',
             \Mindbox\Helper::getProps()
         ]
-    ],
-    YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['VERSION'] === '1' ?
-        getMessage(
+    ];
+}
+
+if (!empty(COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_OFFER_PROPS', ''))) {
+    if (YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['VERSION'] === '1') {
+        $arAllOptions[] = ['note' => getMessage(
             'NEED_TABLE_UPGRADE',
             [
                 '#LINK#' => '/bitrix/admin/iblock_edit.php?type=' . YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['IBLOCK_TYPE_ID'] . '&ID=' . YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['ID']
             ]
-        ) :
-        '',
-    [
+        )];
+    }
+    $arAllOptions[] = [
         'CATALOG_OFFER_PROPS',
         getMessage('CATALOG_OFFER_PROPS'),
         COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_OFFER_PROPS', ''),
@@ -204,8 +210,8 @@ $arAllOptions = array(
             'multiselectbox',
             \Mindbox\Helper::getOffersProps()
         ]
-    ]
-);
+    ];
+}
 
 ?>
 
