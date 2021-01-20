@@ -301,6 +301,39 @@ class mindbox_marketing extends CModule {
 
 		$aUserFields = [
 			"ENTITY_ID" => "USER",
+			"FIELD_NAME" => "UF_IS_SUBSCRIBED",
+			"USER_TYPE_ID" => "boolean",
+			"XML_ID" => "IS_SUBSCRIBED",
+			"SORT" => 500,
+			"MULTIPLE" => "N",
+			"MANDATORY" => "N",
+			"SHOW_FILTER" => "N",
+			"SHOW_IN_LIST" => "",
+			"EDIT_IN_LIST" => "",
+			"IS_SEARCHABLE" => "N",
+			"SETTINGS" => [
+				"DEFAULT_VALUE" => "N",
+			],
+			"EDIT_FORM_LABEL" => [
+				"ru" => "Получать сообщения об акциях, скидках и новостях",
+				"en" => "Receive messages about promotions, discounts and news",
+			],
+			"LIST_COLUMN_LABEL" => [
+				"ru" => "Получать сообщения об акциях, скидках и новостях",
+				"en" => "Receive messages about promotions, discounts and news",
+			],
+			"LIST_FILTER_LABEL" => [
+				"ru" => "Получать сообщения об акциях, скидках и новостях",
+				"en" => "Receive messages about promotions, discounts and news",
+			],
+		];
+
+		if (!$oUserTypeEntity->Add($aUserFields)) {
+			return false;
+		}
+
+		$aUserFields = [
+			"ENTITY_ID" => "USER",
 			"FIELD_NAME" => "UF_PHONE_CONFIRMED",
 			"USER_TYPE_ID" => "boolean",
 			"XML_ID" => "PHONE_CONFIRMED",

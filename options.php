@@ -69,6 +69,7 @@ $arAllOptions = array(
             'selectbox',
             [
                 'standard' => getMessage('STANDARD'),
+                'loyalty'   =>  getMessage('LOYALTY'),
             ]
         ]
     ],
@@ -88,33 +89,39 @@ $arAllOptions = array(
     [
         'WEBSITE_PREFIX',
         getMessage('WEBSITE_PREFIX'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'WEBSITE_PREFIX', 'Website'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'WEBSITE_PREFIX', ''),
         ['text']
     ],
     [
         'BRAND',
         getMessage('BRAND'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'BRAND', 'brand'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'BRAND', ''),
+        ['text']
+    ],
+    [
+        'SYSTEM_NAME',
+        getMessage('SYSTEM_NAME'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'SYSTEM_NAME', ''),
         ['text']
     ],
     getMessage('IDENTIFIERS'),
     [
         'EXTERNAL_SYSTEM',
         getMessage('EXTERNAL_SYSTEM'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'EXTERNAL_SYSTEM', 'sap'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'EXTERNAL_SYSTEM', ''),
         ['text']
     ],
     [
         'WEBSITE_ID',
         getMessage('WEBSITE_ID'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'WEBSITE_ID', 'websiteId'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'WEBSITE_ID', ''),
         ['text']
 
     ],
     [
         'TRANSACTION_ID',
         getMessage('TRANSACTION_ID'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'TRANSACTION_ID', 'websiteTransactionId'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'TRANSACTION_ID', ''),
         ['text']
     ],
     getMessage('CONNECTION_SETTINGS'),
@@ -127,7 +134,7 @@ $arAllOptions = array(
     [
         'HTTP_CLIENT',
         getMessage('HTTP_CLIENT'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'HTTP_CLIENT', 'stream'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'HTTP_CLIENT', 'curl'),
         [
             'selectbox',
             [
@@ -152,7 +159,7 @@ $arAllOptions = array(
     [
         'CATALOG_IBLOCK_ID',
         getMessage('CATALOG_IBLOCK_ID'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '0'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', ''),
         [
             'selectbox',
             \Mindbox\Helper::getIblocks()
@@ -161,7 +168,7 @@ $arAllOptions = array(
     [
         'YML_NAME',
         getMessage('YML_NAME'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'YML_NAME', 'test.xml'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'YML_NAME', 'upload/mindbox.xml'),
         ['text']
     ],
     YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['VERSION'] === '1' ?

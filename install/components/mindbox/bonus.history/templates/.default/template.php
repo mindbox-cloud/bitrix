@@ -43,7 +43,7 @@ Asset::getInstance()->addCss("/bitrix/css/mindbox/style.css");
     </tr>
     <?endforeach;?>
 </table>
-<?if(count($arResult['HISTORY']) === intval($arParams['PAGE_SIZE'])):?>
+<?if(count($arResult['HISTORY']) !== intval($arParams['PAGE_SIZE'])):?>
 <div class="more" id="mindbox-bonus-more" data-page="1">
     <div class="btn btn-primary" id="mindbox-bonus-history--load-more"><?=GetMessage('MB_BH_MORE')?></div>
 </div>

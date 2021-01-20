@@ -139,12 +139,11 @@ class AuthSms extends CBitrixComponent implements Controllerable
             $dbUser = Bitrix\Main\UserTable::getList(
                 [
                     'filter' => [
-                        'ID' => $user->getId(Options::getModuleOption('WEBSITE_ID'))
+                        'UF_MINDBOX_ID' => $user->getId('mindboxId')
                     ]
                 ]
             );
             if ($bxUser = $dbUser->fetch()) {
-                $_SESSION['AUTH_BY_SMS'] = true;
                 $USER->Authorize($bxUser['ID']);
 
                 return [

@@ -12,6 +12,7 @@ use Mindbox\DTO\V3\Requests\PageRequestDTO;
 use Mindbox\Exceptions\MindboxException;
 use Mindbox\Helper;
 use Mindbox\Options;
+use Mindbox\DTO\DTO;
 
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) {
     die();
@@ -85,6 +86,9 @@ class BonusHistory extends CBitrixComponent implements Controllerable
         $page = intval($page);
         $history = [];
         $mindboxId = $this->getMindboxId();
+        if(!$mindboxId) {
+            throw new MindboxException(GetMessage('MB_BH_ERROR_MESSAGE'));
+        }
         $operation = Options::getOperationName('getBonusPointsHistory');
 
         $pageDTO = new PageRequestDTO();
@@ -107,22 +111,35 @@ class BonusHistory extends CBitrixComponent implements Controllerable
             throw new MindboxException('Requested page is empty or doesn\'t exist');
         }
 
-        foreach ($result->getCustomerActions() as $action) {
-            $history[] = [
-                'start' => $this->formatTime($action->getDateTimeUtc()),
-                'size' => reset($action->getCustomerBalanceChanges())->getChangeAmount(),
-                'name' => $action->getActionTemplate()->getName(),
-                'end' => $this->formatTime(reset($action->getCustomerBalanceChanges())->getExpirationDateTimeUtc())
-            ];
-        }
 
-        foreach ($result->getBalances() as $balance) {
-            if($balance->getField('systemName') === 'Main') {
-                $this->arResult['BALANCE'] = [
-                    'available' => $balance->getField('available'),
-                    'blocked' => $balance->getField('blocked')
+        foreach ($result->getCustomerActions() as $action) {
+            foreach ($action->getCustomerBalanceChanges() as $customerBalanceChanges) {
+                $history[] = [
+                    'start' => $this->formatTime($action->getDateTimeUtc()),
+                    'size' => $customerBalanceChanges->getChangeAmount(),
+                    'name' => $action->getActionTemplate()->getName(),
+                    'end' => $this->formatTime($customerBalanceChanges->getExpirationDateTimeUtc())
                 ];
             }
+        }
+
+        if(!$this->getMindboxId()) {
+            return $history;
+        }
+
+        $request = $this->mindbox->getClientV3()->prepareRequest('POST',
+            Options::getOperationName('getCustomerInfo'),
+            new DTO(['customer' => ['ids' => ['mindboxId' => $this->getMindboxId()]]]));
+
+        try {
+            $response = $request->sendRequest()->getResult();
+            $arBalances = reset($response->getBalances()->getFieldsAsArray());
+            $this->arResult['BALANCE'] = [
+                'available' => $arBalances['available'],
+                'blocked' => $arBalances['blocked']
+            ];
+        } catch (MindboxClientException $e) {
+            throw new MindboxException($e->getMessage());
         }
 
         return $history;

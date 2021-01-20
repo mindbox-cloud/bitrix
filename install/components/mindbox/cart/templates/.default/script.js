@@ -19,7 +19,18 @@ $(document).ready(function() {
        var $targetForLoadder = $('#mindbox-cart');
        loader.show($targetForLoadder);
 
+
        var code = $('#mindbox-cart-promo').val();
+
+       /*
+       if(isEmpty($('#mindbox-cart-promo'))) {
+           console.log('is empty');
+           $error.text('Promo code is empty');
+           $error.show();
+           return;
+       }
+       */
+
        var request = BX.ajax.runComponentAction('mindbox:cart', 'applyCode', {
            mode:'class',
            data: {
@@ -50,6 +61,9 @@ $(document).ready(function() {
    });
 
    $('#mindbox-pay-bonuses').on('click', function () {
+
+       //if(isEmpty($bonus)) return;
+
        var bonuses = $bonus.val();
 
        if (bonuses === '') {
@@ -93,3 +107,7 @@ $(document).ready(function() {
     })
 
 });
+
+function isEmpty( el ){
+    return !$.trim(el.val())
+}
