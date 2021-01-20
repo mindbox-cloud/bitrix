@@ -283,8 +283,6 @@ class YmlFeedMindbox
             }
         }
 
-        var_dump($step === (int) ceil(self::getProdsCount() / self::$stepSize));
-
         if ($step === (int) ceil(self::getProdsCount() / self::$stepSize)) {
             $dom->save($_SERVER["DOCUMENT_ROOT"] . "/" . Options::getModuleOption("YML_NAME"));
         } else {

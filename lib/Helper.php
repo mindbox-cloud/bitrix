@@ -8,6 +8,9 @@ namespace Mindbox;
 
 use Bitrix\Main\Loader;
 use Bitrix\Main\UserTable;
+use CCatalog;
+use CIBlock;
+use COption;
 use CPHPCache;
 use Mindbox\DTO\DTO;
 use Mindbox\Options;
@@ -296,7 +299,7 @@ class Helper
     public static function getIblocks()
     {
         $arIblock = [];
-        $result = \CIBlock::GetList(
+        $result = CIBlock::GetList(
             [],
             [
                 'ACTIVE' => 'Y',
@@ -313,9 +316,9 @@ class Helper
     {
         $props = [];
 
-        $catalogId = \COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '0');
+        $catalogId = COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '0');
         if (!empty($catalogId) && $catalogId !== '0') {
-            $iblockProperties = \CIBlock::GetProperties($catalogId);
+            $iblockProperties = CIBlock::GetProperties($catalogId);
             while ($iblockProperty = $iblockProperties-> Fetch()) {
                 $props['PROPERTY_'.$iblockProperty['CODE']] = $iblockProperty['NAME'];
             }
@@ -332,16 +335,16 @@ class Helper
             return $offerProps;
         }
 
-        $catalogId = \COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '0');
+        $catalogId = COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '0');
 
         if (!empty($catalogId) && $catalogId !== '0') {
             $select = ['ID', 'IBLOCK_ID', 'OFFERS_IBLOCK_ID'];
             $filter = ['IBLOCK_ID' => $catalogId];
-            $offersCatalogId = \CCatalog::GetList([], $filter, false, [], $select)->Fetch()['OFFERS_IBLOCK_ID'];
+            $offersCatalogId = CCatalog::GetList([], $filter, false, [], $select)->Fetch()['OFFERS_IBLOCK_ID'];
         }
 
         if (!empty($offersCatalogId) && $offersCatalogId !== '0') {
-            $iblockProperties = \CIBlock::GetProperties($offersCatalogId);
+            $iblockProperties = CIBlock::GetProperties($offersCatalogId);
             while ($iblockProperty = $iblockProperties-> Fetch()) {
                 $offerProps['PROPERTY_'.$iblockProperty['CODE']] = $iblockProperty['NAME'];
             }
@@ -357,7 +360,7 @@ class Helper
      */
     public static function isSync()
     {
-        if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
+        if (COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
             $isSync = false;
         } else {
             $isSync = true;
