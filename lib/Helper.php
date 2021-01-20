@@ -390,7 +390,7 @@ class Helper
             margin: 0 auto !important;
             border-collapse: collapse;
         }
-        tr.heading:nth-last-child(-n+7) td {
+        tr.heading:nth-last-child(-n+8) td {
             display: none;
         }
     </style>
@@ -541,5 +541,22 @@ HTML;
         }
 
         return $uniqueBasketItems;
+    }
+
+    /**
+     * @param string $name
+     * @return string
+     */
+    public static function sanitzeNamesForMindbox($name)
+    {
+        $regexNotChars = '/[^a-zA-Z0-9]/m';
+        $regexFirstLetter = '/^[a-zA-Z]/m';
+
+        $name = preg_replace($regexNotChars, '', $name);
+        if (!empty($name) && preg_match($regexFirstLetter, $name) === 1) {
+            return $name;
+        }
+
+        return '';
     }
 }

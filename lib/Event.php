@@ -554,6 +554,13 @@ class Event
 
             $discountPrice = $basketItem->getDiscountPrice();
             $productBasePrice = $basketItem->getBasePrice();
+
+            $customFields = [];
+            $propValues = $basketItem->getPropertyCollection()->getPropertyValues();
+            foreach ($propValues as $fieldKey => $fieldValue) {
+                $customFields[\Mindbox\Helper::sanitzeNamesForMindbox($fieldKey)] = $fieldValue['VALUE'];
+            }
+
             $requestedPromotions = [];
             if (!empty($discountName) && $discountPrice) {
                 $requestedPromotions = [
@@ -581,7 +588,8 @@ class Event
                     'ids' => [
                         'externalId' => 'CheckedOut'
                     ]
-                ]
+                ],
+                'customFields' => $customFields
             ];
 
             if (!empty($requestedPromotions)) {
@@ -805,6 +813,12 @@ class Event
                     ];
                 }
 
+                $customFields = [];
+                $propValues = $basketItem->getPropertyCollection()->getPropertyValues();
+                foreach ($propValues as $fieldKey => $fieldValue) {
+                    $customFields[\Mindbox\Helper::sanitzeNamesForMindbox($fieldKey)] = $fieldValue['VALUE'];
+                }
+
                 $arLine = [
                     'lineNumber'       => $i++,
                     'basePricePerItem' => $productBasePrice,
@@ -819,7 +833,8 @@ class Event
                         'ids' => [
                             'externalId' => 'CheckedOut'
                         ]
-                    ]
+                    ],
+                    'customFields' => $customFields
                 ];
 
                 if (!empty($requestedPromotions)) {
