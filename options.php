@@ -166,6 +166,12 @@ $arAllOptions = array(
         ]
     ],
     [
+        'PROTOCOL',
+        getMessage('SITE_PROTOCOL'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'PROTOCOL', 'http://'),
+        ['text']
+    ],
+    [
         'YML_NAME',
         getMessage('YML_NAME'),
         COption::GetOptionString(ADMIN_MODULE_NAME, 'YML_NAME', 'upload/mindbox.xml'),

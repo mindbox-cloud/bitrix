@@ -21,6 +21,7 @@ $MESS['MODE'] = "Режим работы";
 $MESS['IDENTIFIERS'] = 'Идентификаторы';
 $MESS['CONNECTION_SETTINGS'] = 'Настройки подключения';
 $MESS['CATALOG_SETTINGS'] = 'Настройки каталога';
+$MESS['SITE_PROTOCOL'] = 'Протокол сайта';
 $MESS['CATALOG_PROPS'] = 'Свойства товаров, которые попадут в yml фид';
 $MESS['CATALOG_OFFER_PROPS'] = 'Свойства торговых предложений, которые попадут в yml фид';
 $MESS['BRAND'] = "Бренд";
