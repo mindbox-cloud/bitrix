@@ -153,10 +153,36 @@ class AuthSms extends CBitrixComponent implements Controllerable
 
             } else {
                 $_SESSION['NEW_USER_MB_ID'] = $user->getId('mindboxId');
-                return [
-                    'type' => 'fillup',
-                    'phone' => $phone
+                $firstName = $user->getField('firstName');
+                $lastName = $user->getField('lastName');
+                $email = $user->getField('email');
+                $context = \Bitrix\Main\Application::getInstance()->getContext();
+                $siteId = $context->getSite();
+                $password  = randString(10);
+
+
+                $arFields = [
+                    "NAME"              => $firstName,
+                    "LAST_NAME"         => $lastName,
+                    "EMAIL"             => $email,
+                    "LOGIN"             => $email,
+                    "LID"               => $siteId,
+                    "ACTIVE"            => "Y",
+                    "PASSWORD"          => $password,
+                    "CONFIRM_PASSWORD"  => $password,
+                    'UF_MINDBOX_ID'     =>  $user->getId('mindboxId')
                 ];
+
+                $ID = $USER->Add($arFields);
+                if (intval($ID) > 0) {
+                    $USER->Authorize($ID);
+                    return [
+                        'type' => 'success',
+                        'message' => GetMessage('MB_AUS_SUCCESS')
+                    ];
+                } else {
+                    return Ajax::errorResponse(GetMessage('MB_AUS_REG_UNAVAILABLE'));
+                }
             }
         } catch (MindboxClientException $e) {
             return Ajax::errorResponse(GetMessage('MB_AUS_REG_UNAVAILABLE'));

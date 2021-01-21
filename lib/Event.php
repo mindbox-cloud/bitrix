@@ -1348,6 +1348,10 @@ class Event
             return $arFields;
         }
 
+        if($_REQUEST['mode'] == 'class' && $_REQUEST['c'] == 'mindbox:auth.sms' && $_REQUEST['action'] == 'checkCode') {
+            return $arFields;
+        }
+
         global $APPLICATION, $USER;
 
         if (!$USER || is_string($USER)) {
