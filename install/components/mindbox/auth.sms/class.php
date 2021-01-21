@@ -163,11 +163,15 @@ class AuthSms extends CBitrixComponent implements Controllerable
                 $birthDate = $user->getField('birthDate');
                 $sex = $user->getField('sex');
 
+                if(empty($email)) {
+                    $email = $mobilePhone . '@no-reply.com';
+                }
+
                 $arFields = [
                     "NAME"              => $firstName,
                     "LAST_NAME"         => $lastName,
                     "EMAIL"             => $email,
-                    "LOGIN"             => $email,
+                    "LOGIN"             => $mobilePhone,
                     'PERSONAL_PHONE'    =>  $mobilePhone,
                     'PHONE_NUMBER'      =>  $mobilePhone,
                     'PERSONAL_BIRTHDAY' =>  date('d.m.Y', strtotime($birthDate)),
