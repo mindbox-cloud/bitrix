@@ -301,7 +301,7 @@ class YmlFeedMindbox
      */
     protected static function getProtocol()
     {
-        return Options::getModuleOption('SITE_PROTOCOL');
+        return Options::getModuleOption('PROTOCOL') === 'Y' ? 'https://' : 'http://';
     }
 
     /**

@@ -26,6 +26,10 @@ function ShowParamsHTMLByarray($arParams)
 
 
 if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
+    if (empty($_POST['MINDBOX_PROTOCOL']) || $_POST['MINDBOX_PROTOCOL'] !== 'Y') {
+        $_POST['MINDBOX_PROTOCOL'] = 'N';
+    }
+
     foreach ($_POST as $key => $option) {
         if (strpos($key, 'MINDBOX_') !== false) {
             if (is_array($option)) {
@@ -168,8 +172,8 @@ $arAllOptions = array(
     [
         'PROTOCOL',
         getMessage('SITE_PROTOCOL'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'PROTOCOL', 'http://'),
-        ['text']
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'PROTOCOL', 'N'),
+        ['checkbox']
     ],
     [
         'YML_NAME',
