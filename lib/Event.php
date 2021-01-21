@@ -206,6 +206,59 @@ class Event
 
 
             if ($status === 'ValidationError') {
+
+                try {
+                    $fields = [
+                        'email'       => $arFields[ 'EMAIL' ],
+                        'mobilePhone' => $arFields[ 'PERSONAL_PHONE' ],
+                    ];
+                    $customer = Helper::iconvDTO(new CustomerRequestDTO($fields));
+
+                    $checkCustomerResponse = $mindbox->customer()->CheckCustomer($customer,
+                        Options::getOperationName('check'), true, Helper::isSync())->sendRequest()->getResult();
+                } catch (\Exception $e) {
+                    $APPLICATION->ThrowException(Loc::getMessage("MB_USER_REGISTER_LOYALTY_ERROR"));
+                }
+
+                $user = $checkCustomerResponse->getCustomer();
+                $firstName = $user->getField('firstName');
+                $lastName = $user->getField('lastName');
+                $email = $user->getField('email');
+                $context = \Bitrix\Main\Application::getInstance()->getContext();
+                $siteId = $context->getSite();
+                $password  = randString(10);
+                $mobilePhone = $user->getField('mobilePhone');
+                $birthDate = $user->getField('birthDate');
+                $sex = $user->getField('sex');
+
+                if(empty($email)) {
+                    $email = $mobilePhone . '@no-reply.com';
+                }
+
+                $arFields = [
+                    "NAME"              => $firstName,
+                    "LAST_NAME"         => $lastName,
+                    "EMAIL"             => $email,
+                    "LOGIN"             => $email,
+                    'PERSONAL_PHONE'    =>  $mobilePhone,
+                    'PHONE_NUMBER'      =>  $mobilePhone,
+                    "LID"               => $siteId,
+                    "ACTIVE"            => "Y",
+                    "PASSWORD"          => $password,
+                    "CONFIRM_PASSWORD"  => $password,
+                    'UF_MINDBOX_ID'     =>  $user->getId('mindboxId')
+                ];
+
+                if(!empty($birthDate)) {
+                    $arFields['PERSONAL_BIRTHDAY'] =  date('d.m.Y', strtotime($birthDate));
+                }
+
+                if(!empty($sex)) {
+                    $arFields['PERSONAL_GENDER'] =  (($sex == 'female')? 'F':'M');
+                }
+
+                $USER->Add($arFields);
+
                 $errors = $registerResponse->getValidationMessages();
                 $APPLICATION->ThrowException(self::formatValidationMessages($errors));
 
