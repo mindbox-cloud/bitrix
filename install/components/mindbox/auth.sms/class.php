@@ -170,7 +170,7 @@ class AuthSms extends CBitrixComponent implements Controllerable
                     "LOGIN"             => $email,
                     'PERSONAL_PHONE'    =>  $mobilePhone,
                     'PHONE_NUMBER'      =>  $mobilePhone,
-                    'PERSONAL_BIRTHDAY' =>  $birthDate,
+                    'PERSONAL_BIRTHDAY' =>  date('d.m.Y', strtotime($birthDate)),
                     'PERSONAL_GENDER'   =>  (($sex == 'female')? 'F':'M'),
                     "LID"               => $siteId,
                     "ACTIVE"            => "Y",
