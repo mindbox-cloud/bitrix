@@ -159,13 +159,19 @@ class AuthSms extends CBitrixComponent implements Controllerable
                 $context = \Bitrix\Main\Application::getInstance()->getContext();
                 $siteId = $context->getSite();
                 $password  = randString(10);
-
+                $mobilePhone = $user->getField('mobilePhone');
+                $birthDate = $user->getField('birthDate');
+                $sex = $user->getField('sex');
 
                 $arFields = [
                     "NAME"              => $firstName,
                     "LAST_NAME"         => $lastName,
                     "EMAIL"             => $email,
                     "LOGIN"             => $email,
+                    'PERSONAL_PHONE'    =>  $mobilePhone,
+                    'PHONE_NUMBER'      =>  $mobilePhone,
+                    'PERSONAL_BIRTHDAY' =>  $birthDate,
+                    'PERSONAL_GENDER'   =>  (($sex == 'female')? 'F':'M'),
                     "LID"               => $siteId,
                     "ACTIVE"            => "Y",
                     "PASSWORD"          => $password,
