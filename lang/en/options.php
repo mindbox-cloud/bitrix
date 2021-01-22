@@ -22,6 +22,7 @@ $MESS['BRAND'] = "Brand";
 $MESS['IDENTIFIERS'] =  "Identifiers";
 $MESS['CONNECTION_SETTINGS'] = "Connection settings";
 $MESS['CATALOG_SETTINGS'] = "Catalog settings";
+$MESS['SITE_PROTOCOL'] = 'Use HTTPS when exporting';
 $MESS['CATALOG_PROPS'] = 'Product properties includes in yml';
 $MESS['CATALOG_OFFER_PROPS'] = 'Offer properties includes in yml';
 $MESS['MODULE_VERSION'] = 'Module version ';

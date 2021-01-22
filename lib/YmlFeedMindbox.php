@@ -12,6 +12,11 @@ class YmlFeedMindbox
     {
         $step = (int) $step;
 
+        if (!isset($_SERVER["SERVER_NAME"]) || empty($_SERVER["SERVER_NAME"]))
+        {
+            $_SERVER["SERVER_NAME"] = SITE_SERVER_NAME;
+        }
+
         $cond = empty(Options::getModuleOption("YML_NAME")) || empty(Options::getModuleOption("CATALOG_IBLOCK_ID"));
 
         if ($cond) {
@@ -296,7 +301,7 @@ class YmlFeedMindbox
      */
     protected static function getProtocol()
     {
-        return !empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] != 'off' ? 'https://' : 'http://';
+        return Options::getModuleOption('PROTOCOL') === 'Y' ? 'https://' : 'http://';
     }
 
     /**
