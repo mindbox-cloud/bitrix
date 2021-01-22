@@ -145,6 +145,7 @@ class mindbox_marketing extends CModule {
 			Base::getInstance("\Mindbox\QueueTable")->createDbTable();
 		}
 
+		COption::SetOptionString('mindbox.marketing', 'PROTOCOL', (!empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] != 'off') ? 'Y' : 'N');
 		COption::SetOptionString('main', 'new_user_email_uniq_check', 'Y');
 	}
 
