@@ -500,8 +500,8 @@ class Event
                 return true;
             }
 
-            $fields[ 'ids' ][ Options::getModuleOption('WEBSITE_ID') ] = $userId;
-            //$fields[ 'ids' ][ 'mindboxId' ] = $mindboxId;
+            //$fields[ 'ids' ][ Options::getModuleOption('WEBSITE_ID') ] = $userId;
+            $fields[ 'ids' ][ 'mindboxId' ] = $mindboxId;
             $customer = new CustomerRequestDTO($fields);
             $customer = Helper::iconvDTO($customer);
             unset($fields);
