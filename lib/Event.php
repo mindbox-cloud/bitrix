@@ -44,8 +44,21 @@ class Event
      */
     public function OnAfterUserAuthorizeHandler($arUser)
     {
+        $userMindboxId = false;
+        $rsUser = UserTable::getList(
+            [
+                'select' => [
+                    'UF_MINDBOX_ID'
+                ],
+                'filter' => ['ID' => $arUser[ 'user_fields' ][ 'ID' ]],
+                'limit'  => 1
+            ]
+        )->fetch();
+        if ($rsUser && isset($rsUser[ 'UF_MINDBOX_ID' ]) && $rsUser['UF_MINDBOX_ID'] > 0) {
+            $userMindboxId = $rsUser[ 'UF_MINDBOX_ID' ];
+        }
 
-        if (empty($arUser[ 'user_fields' ][ 'LAST_LOGIN' ])) {
+        if (empty($arUser[ 'user_fields' ][ 'LAST_LOGIN' ]) && !$userMindboxId) {
             return true;
         }
 
