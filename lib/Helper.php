@@ -350,6 +350,20 @@ class Helper
         \COption::SetOptionString(ADMIN_MODULE_NAME, 'ORDER_FIELDS_MATCH', json_encode($matches));
     }
 
+
+    public static function getMatchByCode($code)
+    {
+        $matches = self::getOrderFieldsMatch();
+        $matches =  array_change_key_case($matches, CASE_UPPER);
+        $code = mb_strtoupper($code);
+
+        if (!empty($matches[$code])) {
+            return $matches[$code];
+        }
+
+        return '';
+    }
+
     /**
      * @return array
      */
