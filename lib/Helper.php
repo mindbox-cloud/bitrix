@@ -336,7 +336,7 @@ class Helper
      */
     public static function getOffersCatalogId($catalogId)
     {
-        if (!Loader::includeModule('sale')) {
+        if (!Loader::includeModule('sale') || !Loader::includeModule('catalog')) {
             return '';
         }
 
