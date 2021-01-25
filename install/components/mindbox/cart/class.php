@@ -87,9 +87,6 @@ class Cart extends CBitrixComponent implements Controllerable
         $basket = $basket = Bitrix\Sale\Basket::loadItemsForFUser(Bitrix\Sale\Fuser::getId(),
             Bitrix\Main\Context::getCurrent()->getSite());
 
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('calculateCart.applyCodeAction');
-        }
 
         $preorder = new PreorderRequestDTO();
 
@@ -209,11 +206,6 @@ class Cart extends CBitrixComponent implements Controllerable
                     $discounts = $preorderInfo->getDiscountsInfo();
                     $couponsInfo = reset($preorderInfo->getField('couponsInfo'));
                     $totalBonusPointsInfo = $preorderInfo->getField('totalBonusPointsInfo');
-                    if($logger) {
-                        $logger->log('$preorderInfo', $preorderInfo);
-                        $logger->log('$discounts', $discounts);
-                        $logger->log('couponsInfo', $couponsInfo);
-                    }
 
                     if(!empty($couponsInfo)) {
                         if($couponsInfo['coupon']['status'] == 'NotFound') {
@@ -320,10 +312,6 @@ class Cart extends CBitrixComponent implements Controllerable
         $basketItems = $basket->getBasketItems();
         $lines = [];
         $bitrixBasket = [];
-
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('applyBonusesAction');
-        }
 
         foreach ($basketItems as $basketItem) {
 
@@ -437,9 +425,6 @@ class Cart extends CBitrixComponent implements Controllerable
 
                     $totalBonusPointsInfo = $preorderInfo->getField('totalBonusPointsInfo');
 
-                    if($logger) {
-                        $logger->log('$totalBonusPointsInfo', $totalBonusPointsInfo);
-                    }
 
                     if(!empty($totalBonusPointsInfo)) {
                         $_SESSION[ 'ORDER_AVAILABLE_BONUSES' ] = $totalBonusPointsInfo['availableAmountForCurrentOrder'];
@@ -536,17 +521,12 @@ class Cart extends CBitrixComponent implements Controllerable
         $lines = [];
         $bitrixBasket = [];
 
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('calculateCart');
-        }
 
         foreach ($basketItems as $basketItem) {
 
             if($basketItem->getField('CAN_BUY') == 'N') {
                 continue;
             }
-
-            $logger->log('$basketItem', $basketItem);
 
             $bitrixBasket[ $basketItem->getId() ] = $basketItem;
             $discountName = $basketItem->getField('DISCOUNT_NAME');
@@ -653,11 +633,6 @@ class Cart extends CBitrixComponent implements Controllerable
             $couponsInfo = reset($preorderInfo->getField('couponsInfo'));
             $totalBonusPointsInfo = $preorderInfo->getField('totalBonusPointsInfo');
 
-            if($logger) {
-                $logger->log('$preorderInfo', $preorderInfo);
-                $logger->log('$discounts', $discounts);
-                $logger->log('$totalBonusPointsInfo', $totalBonusPointsInfo);
-            }
 
             if(!empty($totalBonusPointsInfo)) {
                 $_SESSION[ 'ORDER_AVAILABLE_BONUSES' ] = $totalBonusPointsInfo['availableAmountForCurrentOrder'];

@@ -26,10 +26,13 @@ $MESS['BITRIX_FIELDS'] = 'Поле в Bitrix';
 $MESS['MINDBOX_FIELDS'] = 'Поле в Mindbox';
 $MESS['BUTTON_ADD'] = 'Добавить';
 $MESS['BUTTON_DELETE'] = 'Удалить';
+$MESS['SITE_PROTOCOL'] = 'Использовать в фиде протокол https';
+$MESS['CATALOG_PROPS'] = 'Свойства товаров, которые попадут в yml фид';
+$MESS['CATALOG_OFFER_PROPS'] = 'Свойства торговых предложений, которые попадут в yml фид';
 $MESS['BRAND'] = "Бренд";
 $MESS['SYSTEM_NAME'] = "Системное имя";
 $MESS['STANDARD'] = 'Стандартный';
 $MESS['LOYALTY'] = 'Лояльность';
 $MESS['SAVE'] = 'Сохранить';
 $MESS['MODULE_VERSION'] = 'Версия модуля ';
-
+$MESS['NEED_TABLE_UPGRADE'] = 'Чтобы ускорить генерацию фида, измените место хранения свойств в <a href="#LINK#" target="_blank">настройках</a>. Необходимо, чтобы свойства <a href="https://dev.1c-bitrix.ru/user_help/content/iblock/iblock_edit.php" target="_blank">хранились в отдельной таблице</a>.';

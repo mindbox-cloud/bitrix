@@ -44,8 +44,21 @@ class Event
      */
     public function OnAfterUserAuthorizeHandler($arUser)
     {
+        $userMindboxId = false;
+        $rsUser = UserTable::getList(
+            [
+                'select' => [
+                    'UF_MINDBOX_ID'
+                ],
+                'filter' => ['ID' => $arUser[ 'user_fields' ][ 'ID' ]],
+                'limit'  => 1
+            ]
+        )->fetch();
+        if ($rsUser && isset($rsUser[ 'UF_MINDBOX_ID' ]) && $rsUser['UF_MINDBOX_ID'] > 0) {
+            $userMindboxId = $rsUser[ 'UF_MINDBOX_ID' ];
+        }
 
-        if (empty($arUser[ 'user_fields' ][ 'LAST_LOGIN' ])) {
+        if (empty($arUser[ 'user_fields' ][ 'LAST_LOGIN' ]) && !$userMindboxId) {
             return true;
         }
 
@@ -206,6 +219,59 @@ class Event
 
 
             if ($status === 'ValidationError') {
+
+                try {
+                    $fields = [
+                        'email'       => $arFields[ 'EMAIL' ],
+                        'mobilePhone' => $arFields[ 'PERSONAL_PHONE' ],
+                    ];
+                    $customer = Helper::iconvDTO(new CustomerRequestDTO($fields));
+
+                    $checkCustomerResponse = $mindbox->customer()->CheckCustomer($customer,
+                        Options::getOperationName('check'), true, Helper::isSync())->sendRequest()->getResult();
+                } catch (\Exception $e) {
+                    $APPLICATION->ThrowException(Loc::getMessage("MB_USER_REGISTER_LOYALTY_ERROR"));
+                }
+
+                $user = $checkCustomerResponse->getCustomer();
+                $firstName = $user->getField('firstName');
+                $lastName = $user->getField('lastName');
+                $email = $user->getField('email');
+                $context = \Bitrix\Main\Application::getInstance()->getContext();
+                $siteId = $context->getSite();
+                $password  = randString(10);
+                $mobilePhone = $user->getField('mobilePhone');
+                $birthDate = $user->getField('birthDate');
+                $sex = $user->getField('sex');
+
+                if(empty($email)) {
+                    $email = $mobilePhone . '@no-reply.com';
+                }
+
+                $arFields = [
+                    "NAME"              => $firstName,
+                    "LAST_NAME"         => $lastName,
+                    "EMAIL"             => $email,
+                    "LOGIN"             => $email,
+                    'PERSONAL_PHONE'    =>  $mobilePhone,
+                    'PHONE_NUMBER'      =>  $mobilePhone,
+                    "LID"               => $siteId,
+                    "ACTIVE"            => "Y",
+                    "PASSWORD"          => $password,
+                    "CONFIRM_PASSWORD"  => $password,
+                    'UF_MINDBOX_ID'     =>  $user->getId('mindboxId')
+                ];
+
+                if(!empty($birthDate)) {
+                    $arFields['PERSONAL_BIRTHDAY'] =  date('d.m.Y', strtotime($birthDate));
+                }
+
+                if(!empty($sex)) {
+                    $arFields['PERSONAL_GENDER'] =  (($sex == 'female')? 'F':'M');
+                }
+
+                $USER->Add($arFields);
+
                 $errors = $registerResponse->getValidationMessages();
                 $APPLICATION->ThrowException(self::formatValidationMessages($errors));
 
@@ -321,42 +387,6 @@ class Event
                 return true;
             }
 
-            $mindboxId = $arFields[ 'UF_MINDBOX_ID' ];
-
-            if (empty($mindboxId)) {
-                $request = $mindbox->getClientV3()->prepareRequest('POST',
-                    Options::getOperationName('getCustomerInfo'),
-                    new DTO([
-                        'customer' => [
-                            'ids' => [
-                                Options::getModuleOption('WEBSITE_ID') => $arFields[ 'USER_ID' ]
-                            ]
-                        ]
-                    ]));
-
-                try {
-                    $response = $request->sendRequest();
-                } catch (Exceptions\MindboxClientException $e) {
-                    $APPLICATION->ThrowException($e->getMessage());
-
-                    return false;
-                }
-
-                if ($response->getResult()->getCustomer()->getProcessingStatus() === 'Found') {
-                    $fields = [
-                        'UF_EMAIL_CONFIRMED' => $response->getResult()->getCustomer()->getIsEmailConfirmed(),
-                        'UF_MINDBOX_ID'      => $response->getResult()->getCustomer()->getId('mindboxId')
-                    ];
-
-                    $user = new CUser;
-                    $user->Update(
-                        $arFields[ 'USER_ID' ],
-                        $fields
-                    );
-                } else {
-                    return true;
-                }
-
                 $customer = new CustomerRequestDTO([
                     'ids' => [
                         Options::getModuleOption('WEBSITE_ID') => $arFields[ 'USER_ID' ]
@@ -376,10 +406,10 @@ class Event
                 } catch (Exceptions\MindboxClientException $e) {
                     return false;
                 }
-            }
-        } else {
-            if ($arFields[ 'UF_MINDBOX_ID' ]) {
 
+        } else {
+
+            if ($arFields[ 'UF_MINDBOX_ID' ]) {
                 $request = $mindbox->getClientV3()->prepareRequest('POST',
                     Options::getOperationName('getCustomerInfo'),
                     new DTO([
@@ -483,8 +513,8 @@ class Event
                 return true;
             }
 
-            $fields[ 'ids' ][ Options::getModuleOption('WEBSITE_ID') ] = $userId;
-            //$fields[ 'ids' ][ 'mindboxId' ] = $mindboxId;
+            //$fields[ 'ids' ][ Options::getModuleOption('WEBSITE_ID') ] = $userId;
+            $fields[ 'ids' ][ 'mindboxId' ] = $mindboxId;
             $customer = new CustomerRequestDTO($fields);
             $customer = Helper::iconvDTO($customer);
             unset($fields);
@@ -1441,6 +1471,10 @@ class Event
     public function OnBeforeUserAddHandler(&$arFields)
     {
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
+            return $arFields;
+        }
+
+        if($_REQUEST['mode'] == 'class' && $_REQUEST['c'] == 'mindbox:auth.sms' && $_REQUEST['action'] == 'checkCode') {
             return $arFields;
         }
 

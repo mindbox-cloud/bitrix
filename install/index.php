@@ -93,7 +93,7 @@ class mindbox_marketing extends CModule {
 	{
 		$now = new DateTime();
 		CAgent::AddAgent(
-			"\Mindbox\YmlFeedMindbox::start();",
+			"\Mindbox\YmlFeedMindbox::start(1);",
 			$this->MODULE_ID,
 			"N",
 			86400,
@@ -117,10 +117,17 @@ class mindbox_marketing extends CModule {
 
 	function UnInstallAgents()
 	{
-		CAgent::RemoveAgent(
-			"\Mindbox\YmlFeedMindbox::start();",
-			$this->MODULE_ID
-		);
+		$agents = CAgent::GetList(['ID' => 'DESC'], ['NAME' => '\Mindbox\YmlFeedMindbox::start(%']);
+
+		$existingAgents = [];
+
+		while ($agent = $agents->Fetch()) {
+			$existingAgents[] = $agent['NAME'];
+		}
+
+		foreach ($existingAgents as $agent) {
+			CAgent::RemoveAgent($agent, $this->MODULE_ID);
+		}
 
 		CAgent::RemoveAgent(
 			"\Mindbox\QueueTable::start();",
@@ -138,6 +145,7 @@ class mindbox_marketing extends CModule {
 			Base::getInstance("\Mindbox\QueueTable")->createDbTable();
 		}
 
+		COption::SetOptionString('mindbox.marketing', 'PROTOCOL', (!empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] != 'off') ? 'Y' : 'N');
 		COption::SetOptionString('main', 'new_user_email_uniq_check', 'Y');
 	}
 
@@ -400,7 +408,8 @@ class mindbox_marketing extends CModule {
 		$userFields = [
 			"UF_MINDBOX_ID",
 			"UF_PHONE_CONFIRMED",
-			"UF_EMAIL_CONFIRMED"
+			"UF_EMAIL_CONFIRMED",
+			"UF_IS_SUBSCRIBED"
 		];
 		foreach ($userFields as $field) {
 			$bdField = $oUserTypeEntity->GetList([], ["ENTITY_ID" => "USER", "FIELD_NAME" => $field])->fetch();

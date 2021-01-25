@@ -6,7 +6,11 @@
 namespace Mindbox;
 
 
+use Bitrix\Main\Loader;
 use Bitrix\Main\UserTable;
+use CCatalog;
+use CIBlock;
+use COption;
 use CPHPCache;
 use CSaleOrderProps;
 use Mindbox\DTO\DTO;
@@ -59,7 +63,7 @@ class Helper
             $mindboxId = $rsUser[ 'UF_MINDBOX_ID' ];
         }
 
-        if(!$mindboxId) {
+        if(!$mindboxId && \COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {
             $mindbox = Options::getConfig();
             $request = $mindbox->getClientV3()->prepareRequest('POST',
                 Options::getOperationName('getCustomerInfo'),
@@ -296,7 +300,7 @@ class Helper
     public static function getIblocks()
     {
         $arIblock = [];
-        $result = \CIBlock::GetList(
+        $result = CIBlock::GetList(
             [],
             [
                 'ACTIVE' => 'Y',
@@ -307,6 +311,73 @@ class Helper
         }
 
         return $arIblock;
+    }
+
+    /**
+     * @return array
+     */
+    public static function getProps()
+    {
+        $props = [];
+
+        $catalogId = COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '0');
+        if (!empty($catalogId) && $catalogId !== '0') {
+            $iblockProperties = CIBlock::GetProperties($catalogId);
+            while ($iblockProperty = $iblockProperties-> Fetch()) {
+                $props['PROPERTY_'.$iblockProperty['CODE']] = $iblockProperty['NAME'];
+            }
+        }
+
+        return $props;
+    }
+
+    /**
+     * @param string $catalogId
+     * @return string
+     */
+    public static function getOffersCatalogId($catalogId)
+    {
+        if (!Loader::includeModule('sale') || !Loader::includeModule('catalog')) {
+            return '';
+        }
+
+        if (!empty($catalogId) && $catalogId !== '0') {
+            $select = ['ID', 'IBLOCK_ID', 'OFFERS_IBLOCK_ID'];
+            $filter = ['IBLOCK_ID' => $catalogId];
+            return CCatalog::GetList([], $filter, false, [], $select)->Fetch()['OFFERS_IBLOCK_ID'];
+        }
+
+        return '';
+    }
+
+    /**
+     * @return array
+     * @throws \Bitrix\Main\LoaderException
+     */
+    public static function getOffersProps()
+    {
+        $offerProps = [];
+
+        if (!Loader::includeModule('sale')) {
+            return $offerProps;
+        }
+
+        $catalogId = COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '0');
+
+        if (!empty($catalogId) && $catalogId !== '0') {
+            $select = ['ID', 'IBLOCK_ID', 'OFFERS_IBLOCK_ID'];
+            $filter = ['IBLOCK_ID' => $catalogId];
+            $offersCatalogId = CCatalog::GetList([], $filter, false, [], $select)->Fetch()['OFFERS_IBLOCK_ID'];
+        }
+
+        if (!empty($offersCatalogId) && $offersCatalogId !== '0') {
+            $iblockProperties = CIBlock::GetProperties($offersCatalogId);
+            while ($iblockProperty = $iblockProperties-> Fetch()) {
+                $offerProps['PROPERTY_'.$iblockProperty['CODE']] = $iblockProperty['NAME'];
+            }
+        }
+
+        return $offerProps;
     }
 
     /**
@@ -487,7 +558,7 @@ HTML;
      */
     public static function isSync()
     {
-        if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
+        if (COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
             $isSync = false;
         } else {
             $isSync = true;
