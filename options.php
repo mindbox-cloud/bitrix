@@ -110,19 +110,6 @@ $arAllOptions = array(
     ],
     getMessage('IDENTIFIERS'),
     [
-        'EXTERNAL_SYSTEM',
-        getMessage('EXTERNAL_SYSTEM'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'EXTERNAL_SYSTEM', ''),
-        ['text']
-    ],
-    [
-        'WEBSITE_ID',
-        getMessage('WEBSITE_ID'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'WEBSITE_ID', ''),
-        ['text']
-
-    ],
-    [
         'TRANSACTION_ID',
         getMessage('TRANSACTION_ID'),
         COption::GetOptionString(ADMIN_MODULE_NAME, 'TRANSACTION_ID', ''),
@@ -159,7 +146,21 @@ $arAllOptions = array(
         COption::GetOptionString(ADMIN_MODULE_NAME, 'TIMEOUT', '5'),
         ['text']
     ],
+    getMessage('CLIENTS'),
+    [
+        'WEBSITE_ID',
+        getMessage('WEBSITE_ID'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'WEBSITE_ID', ''),
+        ['text']
+
+    ],
     getMessage('CATALOG_SETTINGS'),
+    [
+        'EXTERNAL_SYSTEM',
+        getMessage('EXTERNAL_SYSTEM'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'EXTERNAL_SYSTEM', ''),
+        ['text']
+    ],
     [
         'CATALOG_IBLOCK_ID',
         getMessage('CATALOG_IBLOCK_ID'),
