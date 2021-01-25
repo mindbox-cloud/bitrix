@@ -408,7 +408,8 @@ class mindbox_marketing extends CModule {
 		$userFields = [
 			"UF_MINDBOX_ID",
 			"UF_PHONE_CONFIRMED",
-			"UF_EMAIL_CONFIRMED"
+			"UF_EMAIL_CONFIRMED",
+			"UF_IS_SUBSCRIBED"
 		];
 		foreach ($userFields as $field) {
 			$bdField = $oUserTypeEntity->GetList([], ["ENTITY_ID" => "USER", "FIELD_NAME" => $field])->fetch();
