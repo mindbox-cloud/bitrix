@@ -373,9 +373,8 @@ class Event
                     $mindbox->customer()->register($customer, Options::getOperationName('register'), true,
                         Helper::isSync())->sendRequest();
                 } catch (Exceptions\MindboxClientException $e) {
-                    $APPLICATION->ThrowException(Loc::getMessage('MB_USER_EDIT_ERROR'));
-
-                    return false;
+                    //$APPLICATION->ThrowException(Loc::getMessage('MB_USER_EDIT_ERROR'));
+                    //return false;
                 }
             }
 
@@ -513,8 +512,12 @@ class Event
                 return true;
             }
 
-            //$fields[ 'ids' ][ Options::getModuleOption('WEBSITE_ID') ] = $userId;
-            $fields[ 'ids' ][ 'mindboxId' ] = $mindboxId;
+            if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
+                $fields[ 'ids' ][ Options::getModuleOption('WEBSITE_ID') ] = $userId;
+            } else {
+                $fields[ 'ids' ][ 'mindboxId' ] = $mindboxId;
+            }
+
             $customer = new CustomerRequestDTO($fields);
             $customer = Helper::iconvDTO($customer);
             unset($fields);
