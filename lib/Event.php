@@ -190,10 +190,15 @@ class Event
 
         $customer = Helper::iconvDTO(new CustomerRequestDTO($fields));
 
+        $isSubscribed = true;
+        if ($arFields['UF_IS_SUBSCRIBED'] === '0') {
+            $isSubscribed = false;
+        }
+
         $subscriptions = [
             'subscription' => [
                 'brand'          => Options::getModuleOption('BRAND'),
-                'isSubscribed'   => true,
+                'isSubscribed'   => $isSubscribed,
             ]
         ];
         $customer->setSubscriptions($subscriptions);
@@ -303,10 +308,6 @@ class Event
             $mindBoxId = $_SESSION[ 'NEW_USER_MB_ID' ];
             unset($_SESSION[ 'NEW_USER_MB_ID' ]);
 
-            if (!$mindBoxId) {
-                //return false;
-            }
-
             $fields = [
                 'UF_EMAIL_CONFIRMED' => '0',
                 'UF_MINDBOX_ID'      => $mindBoxId
@@ -332,11 +333,7 @@ class Event
                     'ids'         => [Options::getModuleOption('WEBSITE_ID') => $arFields[ 'USER_ID' ]]
                 ];
 
-            $isSubscribed = true;
 
-            if ($arFields['UF_IS_SUBSCRIBED'] === '0') {
-                $isSubscribed = false;
-            }
 
             $fields = array_filter($fields, function ($item) {
                 return isset($item);
@@ -350,11 +347,15 @@ class Event
 
                 unset($fields);
 
+                $isSubscribed = true;
+                if ($arFields['UF_IS_SUBSCRIBED'] === '0') {
+                    $isSubscribed = false;
+                }
+
                 $subscriptions = [
                     'subscription' => [
                         'brand'          => Options::getModuleOption('BRAND'),
-                        'pointOfContact' => 'Email',
-                        'isSubscribed'   => true,
+                        'isSubscribed'   => $isSubscribed,
                     ]
                 ];
                 $customer->setSubscriptions($subscriptions);
@@ -1119,15 +1120,18 @@ class Event
             $customer->setMobilePhone($arOrderProperty['PHONE']);
             $customer->setId(Options::getModuleOption('WEBSITE_ID'), $order->getUserId());
 
+            $isSubscribed = true;
+            if ($arUser['UF_IS_SUBSCRIBED'] === '0') {
+                $isSubscribed = false;
+            }
+
             $subscriptions = [
                 'subscription' => [
-                    'brand' => Options::getModuleOption('BRAND'),
-                    'pointOfContact' => 'Email',
-                    'isSubscribed' => true
+                    'brand'          => Options::getModuleOption('BRAND'),
+                    'isSubscribed'   => $isSubscribed,
                 ]
             ];
             $customer->setSubscriptions($subscriptions);
-
 
             $orderDTO->setCustomer($customer);
 
@@ -1523,22 +1527,22 @@ class Event
             return isset($item);
         });
 
-        $fields[ 'subscriptions' ] = [
-            [
-                'pointOfContact' => 'Email',
-                'isSubscribed'   => true
-            ],
-            [
-                'pointOfContact' => 'Sms',
-                'isSubscribed'   => true
-            ],
-        ];
-
         $customer = Helper::iconvDTO(new CustomerRequestDTO($fields));
 
         unset($fields);
 
+        $isSubscribed = true;
+        if ($arFields['UF_IS_SUBSCRIBED'] === '0') {
+            $isSubscribed = false;
+        }
 
+        $subscriptions = [
+            'subscription' => [
+                'brand'          => Options::getModuleOption('BRAND'),
+                'isSubscribed'   => $isSubscribed,
+            ]
+        ];
+        $customer->setSubscriptions($subscriptions);
 
         try {
             $registerResponse = $mindbox->customer()->register($customer,
