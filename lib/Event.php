@@ -143,6 +143,7 @@ class Event
 
     public function OnBeforeUserRegisterHandler(&$arFields)
     {
+
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
             return $arFields;
         }
@@ -187,18 +188,15 @@ class Event
             return isset($item);
         });
 
-        $fields[ 'subscriptions' ] = [
-            [
-                'pointOfContact' => 'Email',
-                'isSubscribed'   => true
-            ],
-            [
-                'pointOfContact' => 'Sms',
-                'isSubscribed'   => true
-            ],
-        ];
-
         $customer = Helper::iconvDTO(new CustomerRequestDTO($fields));
+
+        $subscriptions = [
+            'subscription' => [
+                'brand'          => Options::getModuleOption('BRAND'),
+                'isSubscribed'   => true,
+            ]
+        ];
+        $customer->setSubscriptions($subscriptions);
 
         unset($fields);
 
@@ -231,6 +229,7 @@ class Event
                         Options::getOperationName('check'), true, Helper::isSync())->sendRequest()->getResult();
                 } catch (\Exception $e) {
                     $APPLICATION->ThrowException(Loc::getMessage("MB_USER_REGISTER_LOYALTY_ERROR"));
+                    return false;
                 }
 
                 $user = $checkCustomerResponse->getCustomer();
@@ -359,15 +358,6 @@ class Event
                     ]
                 ];
                 $customer->setSubscriptions($subscriptions);
-            $subscriptions = [
-                'subscription' => [
-                    'brand' =>  Options::getModuleOption('BRAND'),
-                    'pointOfContact' => 'Email',
-                    'isSubscribed'   => $isSubscribed
-                ]
-            ];
-            $customer->setSubscriptions($subscriptions);
-
 
                 try {
                     $mindbox->customer()->register($customer, Options::getOperationName('register'), true,
