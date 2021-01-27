@@ -608,7 +608,7 @@ class Event
                 }
             }
 
-            $customFields['customDeliveryType'] = $delivery;
+            $customFields['deliveryType'] = $delivery;
 
             $requestedPromotions = [];
             if (!empty($discountName) && $discountPrice) {
@@ -717,7 +717,7 @@ class Event
             }
         }
 
-        $customFields['customDeliveryType'] = $delivery;
+        $customFields['deliveryType'] = $delivery;
 
         if (!empty($arOrderProperty['EMAIL'])) {
             $customer->setEmail($arOrderProperty['EMAIL']);
@@ -1004,7 +1004,7 @@ class Event
                 }
             }
 
-            $customFields['customDeliveryType'] = $delivery;
+            $customFields['deliveryType'] = $delivery;
 
             if (!empty($arOrderProperty['EMAIL'])) {
                 $customer->setEmail($arOrderProperty['EMAIL']);
@@ -1172,7 +1172,7 @@ class Event
                 }
             }
 
-            $customFields['customDeliveryType'] = $delivery;
+            $customFields['deliveryType'] = $delivery;
 
             $orderDTO->setField('order', [
                     'ids' => [
