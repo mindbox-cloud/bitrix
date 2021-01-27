@@ -54,7 +54,7 @@ class mindbox_marketing extends CModule {
 
 		$this->InstallAgents();
 		$this->InstallDB();
-//		$this->InstallUserFields();
+		$this->InstallUserFields();
 
 		$GLOBALS["APPLICATION"]->IncludeAdminFile(GetMessage("MINDBOX_INSTALL_TITLE"), __DIR__ . "/step1.php");
 	}
