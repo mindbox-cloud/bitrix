@@ -568,13 +568,11 @@ class Event
         $rsUser = \CUser::GetByID($order->getUserId());
         $arUser = $rsUser->Fetch();
 
-
         $orderDTO = new \Mindbox\DTO\V3\Requests\OrderCreateRequestDTO();
         $basketItems = $basket->getBasketItems();
         $lines = [];
         $i = 1;
         foreach ($basketItems as $basketItem) {
-
             if ($basketItem->getField('CAN_BUY') == 'N') {
                 continue;
             }
@@ -593,7 +591,20 @@ class Event
                 $arProperty['CODE'] = Helper::sanitzeNamesForMindbox($arProperty['CODE']);
                 $arOrderProperty[$arProperty['CODE']] = current($arProperty['VALUE']);
                 if (!empty($customName = Helper::getMatchByCode($arProperty['CODE']))) {
-                    $customFields[$customName] = count($arProperty['VALUE']) > 1 ? $arProperty['VALUE'] : current($arProperty['VALUE']);
+                    $value = '';
+                    if (count($arProperty['VALUE']) > 1) {
+                        if (!empty($arProperty['VALUE'])) {
+                            $value = $arProperty['VALUE'];
+                        }
+                    } else {
+                        if (!empty(current($arProperty['VALUE']))) {
+                            $value = current($arProperty['VALUE']);
+                        }
+                    }
+
+                    if (!empty($value)) {
+                        $customFields[$customName] = $value;
+                    }
                 }
             }
 
@@ -689,7 +700,20 @@ class Event
             $arProperty['CODE'] = Helper::sanitzeNamesForMindbox($arProperty['CODE']);
             $arOrderProperty[$arProperty['CODE']] = array_pop($arProperty['VALUE']);
             if (!empty($customName = Helper::getMatchByCode($arProperty['CODE']))) {
-                $customFields[$customName] = count($arProperty['VALUE']) > 1 ? $arProperty['VALUE'] : current($arProperty['VALUE']);
+                $value = '';
+                if (count($arProperty['VALUE']) > 1) {
+                    if (!empty($arProperty['VALUE'])) {
+                        $value = $arProperty['VALUE'];
+                    }
+                } else {
+                    if (!empty(current($arProperty['VALUE']))) {
+                        $value = current($arProperty['VALUE']);
+                    }
+                }
+
+                if (!empty($value)) {
+                    $customFields[$customName] = $value;
+                }
             }
         }
 
@@ -871,7 +895,20 @@ class Event
                     $arProperty['CODE'] = Helper::sanitzeNamesForMindbox($arProperty['CODE']);
                     $arOrderProperty[$arProperty['CODE']] = current($arProperty['VALUE']);
                     if (!empty($customName = Helper::getMatchByCode($arProperty['CODE']))) {
-                        $customFields[$customName] = count($arProperty['VALUE']) > 1 ? $arProperty['VALUE'] : current($arProperty['VALUE']);
+                        $value = '';
+                        if (count($arProperty['VALUE']) > 1) {
+                            if (!empty($arProperty['VALUE'])) {
+                                $value = $arProperty['VALUE'];
+                            }
+                        } else {
+                            if (!empty(current($arProperty['VALUE']))) {
+                                $value = current($arProperty['VALUE']);
+                            }
+                        }
+
+                        if (!empty($value)) {
+                            $customFields[$customName] = $value;
+                        }
                     }
                 }
 
@@ -950,7 +987,20 @@ class Event
                 $arProperty['CODE'] = Helper::sanitzeNamesForMindbox($arProperty['CODE']);
                 $arOrderProperty[$arProperty['CODE']] = current($arProperty['VALUE']);
                 if (!empty($customName = Helper::getMatchByCode($arProperty['CODE']))) {
-                    $customFields[$customName] = count($arProperty['VALUE']) > 1 ? $arProperty['VALUE'] : current($arProperty['VALUE']);
+                    $value = '';
+                    if (count($arProperty['VALUE']) > 1) {
+                        if (!empty($arProperty['VALUE'])) {
+                            $value = $arProperty['VALUE'];
+                        }
+                    } else {
+                        if (!empty(current($arProperty['VALUE']))) {
+                            $value = current($arProperty['VALUE']);
+                        }
+                    }
+
+                    if (!empty($value)) {
+                        $customFields[$customName] = $value;
+                    }
                 }
             }
 
@@ -1052,7 +1102,6 @@ class Event
 
         } else {    //  standard mode
 
-
             /** @var \Bitrix\Sale\Basket $basket */
             $basket = $order->getBasket();
             $delivery = $order->getDeliverySystemId();
@@ -1106,7 +1155,20 @@ class Event
                 $arProperty['CODE'] = Helper::sanitzeNamesForMindbox($arProperty['CODE']);
                 $arOrderProperty[$arProperty['CODE']] = current($arProperty['VALUE']);
                 if (!empty($customName = Helper::getMatchByCode($arProperty['CODE']))) {
-                    $customFields[$customName] = count($arProperty['VALUE']) > 1 ? $arProperty['VALUE'] : current($arProperty['VALUE']);
+                    $value = '';
+                    if (count($arProperty['VALUE']) > 1) {
+                        if (!empty($arProperty['VALUE'])) {
+                            $value = $arProperty['VALUE'];
+                        }
+                    } else {
+                        if (!empty(current($arProperty['VALUE']))) {
+                            $value = current($arProperty['VALUE']);
+                        }
+                    }
+
+                    if (!empty($value)) {
+                        $customFields[$customName] = $value;
+                    }
                 }
             }
 
@@ -1259,7 +1321,7 @@ class Event
                 }
             }
         }
-        die('yeee');
+
         return new Main\EventResult(Main\EventResult::SUCCESS);
     }
 

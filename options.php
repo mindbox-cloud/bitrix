@@ -129,12 +129,6 @@ $arAllOptions = array(
         ['text']
 
     ],
-    [
-        'TRANSACTION_ID',
-        getMessage('TRANSACTION_ID'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'TRANSACTION_ID', ''),
-        ['text']
-    ],
     getMessage('CONNECTION_SETTINGS'),
     [
         'LOG_PATH',
@@ -166,6 +160,36 @@ $arAllOptions = array(
         COption::GetOptionString(ADMIN_MODULE_NAME, 'TIMEOUT', '5'),
         ['text']
     ],
+    getMessage('ORDER_SETTINGS'),
+    [
+        'TRANSACTION_ID',
+        getMessage('TRANSACTION_ID'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'TRANSACTION_ID', ''),
+        ['text']
+    ],
+    [
+        'ORDER_FIELDS_MATCH',
+        '',
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'ORDER_FIELDS_MATCH', ''),
+        ['text']
+    ],
+    ['', '', Helper::getOrderMatchesTable(), ['statichtml']],
+    [
+        'ORDER_BITRIX_FIELDS',
+        getMessage('BITRIX_FIELDS'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'ORDER_BITRIX_FIELDS', ''),
+        [
+            'selectbox',
+            Helper::getOrderFields()
+        ]
+    ],
+    [
+        'ORDER_MINDBOX_FIELDS',
+        getMessage('MINDBOX_FIELDS'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'ORDER_MINDBOX_FIELDS', ''),
+        ['text']
+    ],
+    ['', '', Helper::getAddOrderMatchButton(), ['statichtml']],
     getMessage('CATALOG_SETTINGS'),
     [
         'CATALOG_IBLOCK_ID',
@@ -187,25 +211,7 @@ $arAllOptions = array(
         getMessage('YML_NAME'),
         COption::GetOptionString(ADMIN_MODULE_NAME, 'YML_NAME', 'upload/mindbox.xml'),
         ['text']
-    ],
-    getMessage('ORDER_SETTINGS'),
-    Helper::getOrderMatchesTable(),
-    [
-        'ORDER_BITRIX_FIELDS',
-        getMessage('BITRIX_FIELDS'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'ORDER_BITRIX_FIELDS', ''),
-        [
-            'selectbox',
-            Helper::getOrderFields()
-        ]
-    ],
-    [
-        'ORDER_MINDBOX_FIELDS',
-        getMessage('MINDBOX_FIELDS'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'ORDER_MINDBOX_FIELDS', ''),
-        ['text']
-    ],
-    Helper::getAddOrderMatchButton()
+    ]
 );
 
 if (!empty(COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', ''))) {
