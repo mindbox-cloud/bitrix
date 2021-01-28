@@ -128,7 +128,7 @@ class YmlFeedMindbox
             $cats = self::getCategories();
             while ($cat = $cats->GetNext()) {
                 $category = $dom->createElement("category", htmlspecialchars($cat["NAME"], ENT_XML1 | ENT_QUOTES));
-                $category->setAttribute("id", $cat["ID"]);
+                $category->setAttribute("id", !empty($cat['XML_ID']) ? $cat['XML_ID'] : $cat['ID']);
                 if (isset($cat["IBLOCK_SECTION_ID"]) && !empty($cat["IBLOCK_SECTION_ID"])) {
                     $category->setAttribute("parentId", $cat["IBLOCK_SECTION_ID"]);
                 }
@@ -312,6 +312,7 @@ class YmlFeedMindbox
     {
         $arSelect = array(
             "ID",
+            "XML_ID",
             "IBLOCK_ID",
             "IBLOCK_SECTION_ID",
             "NAME"
