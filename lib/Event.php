@@ -554,6 +554,8 @@ class Event
 
         global $USER;
 
+
+
         if (!$USER || is_string($USER)) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
@@ -692,19 +694,22 @@ class Event
         }
 
 
-        if (!(\Mindbox\Helper::isUnAuthorizedOrder($arUser) || !$USER->IsAuthorized())) {
+        if (!(\Mindbox\Helper::isUnAuthorizedOrder($arUser) || (is_object($USER) && !$USER->IsAuthorized()))) {
             $customer->setId('mindboxId', $mindboxId);
         }
 
-        if ($USER->IsAuthorized() && \Mindbox\Helper::isUnAuthorizedOrder($arUser)) {
+        if (is_object($USER) && $USER->IsAuthorized() && \Mindbox\Helper::isUnAuthorizedOrder($arUser)) {
             $customer->setId(Options::getModuleOption('WEBSITE_ID'), $USER->GetID());
         }
 
         $orderDTO->setCustomer($customer);
 
+
+
+
         try {
             if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
-                if (\Mindbox\Helper::isUnAuthorizedOrder($arUser)) {
+                if (\Mindbox\Helper::isUnAuthorizedOrder($arUser) || (is_object($USER) && !$USER->IsAuthorized()) ) {
                     $createOrderResult = $mindbox->order()->createUnauthorizedOrder($orderDTO,
                         Options::getOperationName('createUnauthorizedOrder'))->sendRequest();
                 } else {
@@ -712,7 +717,7 @@ class Event
                         Options::getOperationName('createAuthorizedOrder'))->sendRequest();
                 }
             } else {
-                if (\Mindbox\Helper::isUnAuthorizedOrder($arUser)) {
+                if (\Mindbox\Helper::isUnAuthorizedOrder($arUser) || (is_object($USER) && !$USER->IsAuthorized())) {
                     $createOrderResult = $mindbox->order()->beginUnauthorizedOrderTransaction($orderDTO,
                         Options::getOperationName('beginUnauthorizedOrderTransaction'))->sendRequest();
                 } else {
@@ -1110,7 +1115,7 @@ class Event
 
             try {
 
-                if (\Mindbox\Helper::isUnAuthorizedOrder($arUser)) {
+                if (\Mindbox\Helper::isUnAuthorizedOrder($arUser) || (is_object($USER) && !$USER->IsAuthorized())) {
                     $createOrderResult = $mindbox->order()->CreateUnauthorizedOrder($orderDTO,
                         Options::getOperationName('createUnauthorizedOrder'))->sendRequest();
                 } else {
@@ -1149,14 +1154,17 @@ class Event
                     $customer->setId('mindbox', $mindboxId);
                 }
 
-                $customer->setEmail($USER->GetEmail());
+                if(is_object($USER)) {
+                    $customer->setEmail($USER->GetEmail());
+                }
+
                 $phone = $_SESSION[ 'ANONYM' ][ 'PHONE' ];
                 unset($_SESSION[ 'ANONYM' ][ 'PHONE' ]);
 
                 if ($phone) {
                     $customer->setMobilePhone(Helper::formatPhone($phone));
                 }
-                if ($USER->IsAuthorized()) {
+                if (is_object($USER) && $USER->IsAuthorized()) {
                     $customer->setField('isAuthorized', true);
                 } else {
                     $customer->setField('isAuthorized', false);
