@@ -24,6 +24,7 @@ function ShowParamsHTMLByarray($arParams)
     }
 }
 
+$mayEmptyProps = ['MINDBOX_CATALOG_PROPS', 'MINDBOX_CATALOG_OFFER_PROPS'];
 
 if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
     if (empty($_POST['MINDBOX_PROTOCOL']) || $_POST['MINDBOX_PROTOCOL'] !== 'Y') {
@@ -36,6 +37,12 @@ if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
                 $option = implode(',', $option);
             }
             COption::SetOptionString(ADMIN_MODULE_NAME, str_replace('MINDBOX_', '', $key), $option);
+        }
+    }
+
+    foreach ($mayEmptyProps as $mayEmptyProp) {
+        if (!isset($_POST[$mayEmptyProp])) {
+            COption::SetOptionString(ADMIN_MODULE_NAME, str_replace('MINDBOX_', '', $mayEmptyProp), '');
         }
     }
 }
