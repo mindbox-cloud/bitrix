@@ -117,12 +117,6 @@ $arAllOptions = array(
     ],
     getMessage('IDENTIFIERS'),
     [
-        'EXTERNAL_SYSTEM',
-        getMessage('EXTERNAL_SYSTEM'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'EXTERNAL_SYSTEM', ''),
-        ['text']
-    ],
-    [
         'WEBSITE_ID',
         getMessage('WEBSITE_ID'),
         COption::GetOptionString(ADMIN_MODULE_NAME, 'WEBSITE_ID', ''),
@@ -190,7 +184,13 @@ $arAllOptions = array(
         ['text']
     ],
     ['', '', Helper::getAddOrderMatchButton(), ['statichtml']],
-    getMessage('CATALOG_SETTINGS'),
+    getMessage('PRODUCT_SETTINGS'),
+    [
+        'EXTERNAL_SYSTEM',
+        getMessage('EXTERNAL_SYSTEM'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'EXTERNAL_SYSTEM', ''),
+        ['text']
+    ],
     [
         'CATALOG_IBLOCK_ID',
         getMessage('CATALOG_IBLOCK_ID'),
