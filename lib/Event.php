@@ -377,37 +377,7 @@ class Event
                     //return false;
                 }
             }
-
-            //  authorize
-            sleep(1);
-
-            if (isset($_SESSION[ 'NEW_USER_MINDBOX' ]) && $_SESSION[ 'NEW_USER_MINDBOX' ] === true) {
-                unset($_SESSION[ 'NEW_USER_MINDBOX' ]);
-                return true;
-            }
-
-                $customer = new CustomerRequestDTO([
-                    'ids' => [
-                        Options::getModuleOption('WEBSITE_ID') => $arFields[ 'USER_ID' ]
-                    ]
-                ]);
-
-                try {
-                    $mindbox->customer()->authorize($customer,
-                        Options::getOperationName('authorize'))->sendRequest();
-                } catch (Exceptions\MindboxUnavailableException $e) {
-                    $lastResponse = $mindbox->customer()->getLastResponse();
-
-                    if ($lastResponse) {
-                        $request = $lastResponse->getRequest();
-                        QueueTable::push($request);
-                    }
-                } catch (Exceptions\MindboxClientException $e) {
-                    return false;
-                }
-
         } else {
-
             if ($arFields[ 'UF_MINDBOX_ID' ]) {
                 $request = $mindbox->getClientV3()->prepareRequest('POST',
                     Options::getOperationName('getCustomerInfo'),
