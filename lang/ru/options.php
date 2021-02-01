@@ -20,7 +20,7 @@ $MESS['DOCS_LINK'] = 'Документация по <a href="https://github.com/
 $MESS['MODE'] = "Режим работы";
 $MESS['IDENTIFIERS'] = 'Идентификаторы';
 $MESS['CONNECTION_SETTINGS'] = 'Настройки подключения';
-$MESS['CATALOG_SETTINGS'] = 'Настройки каталога';
+$MESS['PRODUCT_SETTINGS'] = 'Настройки продуктов';
 $MESS['ORDER_SETTINGS'] = 'Настройки заказа';
 $MESS['BITRIX_FIELDS'] = 'Поле в Bitrix';
 $MESS['MINDBOX_FIELDS'] = 'Поле в Mindbox';
