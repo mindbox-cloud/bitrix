@@ -70,7 +70,6 @@ $arAllOptions = array(
         ['text'],
         'Y'
     ],
-    //'<span style="font-size: 13px; font-weight: normal; color: #000;">' . getMessage('MODULE_VERSION') .  . '</span>',
     getMessage('MAINOPTIONS'),
     [
         'MODE',
@@ -115,14 +114,7 @@ $arAllOptions = array(
         COption::GetOptionString(ADMIN_MODULE_NAME, 'SYSTEM_NAME', ''),
         ['text']
     ],
-    getMessage('IDENTIFIERS'),
     getMessage('CONNECTION_SETTINGS'),
-    [
-        'LOG_PATH',
-        getMessage('LOG_PATH'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'LOG_PATH', $_SERVER[ 'DOCUMENT_ROOT' ] . '/logs/'),
-        ['text']
-    ],
     [
         'HTTP_CLIENT',
         getMessage('HTTP_CLIENT'),
@@ -147,6 +139,12 @@ $arAllOptions = array(
         COption::GetOptionString(ADMIN_MODULE_NAME, 'TIMEOUT', '5'),
         ['text']
     ],
+    [
+        'LOG_PATH',
+        getMessage('LOG_PATH'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'LOG_PATH', $_SERVER[ 'DOCUMENT_ROOT' ] . '/logs/'),
+        ['text']
+    ],
     getMessage('CLIENTS'),
     [
         'WEBSITE_ID',
@@ -155,6 +153,7 @@ $arAllOptions = array(
         ['text']
 
     ],
+    ['', '', Helper::getOrderMatchesTable(), ['statichtml']],
     getMessage('ORDER_SETTINGS'),
     [
         'TRANSACTION_ID',
@@ -186,12 +185,6 @@ $arAllOptions = array(
     ],
     ['', '', Helper::getAddOrderMatchButton(), ['statichtml']],
     getMessage('PRODUCT_SETTINGS'),
-    [
-        'EXTERNAL_SYSTEM',
-        getMessage('EXTERNAL_SYSTEM'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'EXTERNAL_SYSTEM', ''),
-        ['text']
-    ],
     [
         'EXTERNAL_SYSTEM',
         getMessage('EXTERNAL_SYSTEM'),

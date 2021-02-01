@@ -37,4 +37,4 @@ $MESS['BRAND'] = "Brand";
 $MESS['SYSTEM_NAME'] = "System name";
 $MESS['LOYALTY'] = 'Loyality';
 $MESS['SAVE'] = 'Save';
-$MESS['CLIENTS'] = 'Clients';
+$MESS['CLIENTS'] = 'Clients settings';
