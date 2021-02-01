@@ -570,9 +570,8 @@ class Event
         foreach ($paymentCollection as $payment) {
             if ($payment->isPaid()) {
                 $payments[] = [
-                    'type' => $payment->getPaymentSystemName(),
-                    'amount' => $payment->getSum(),
-                    'id' => $payment->getId()
+                    'type' => $payment->getId(),
+                    'amount' => $payment->getSum()
                 ];
             }
         }
@@ -848,9 +847,8 @@ class Event
         foreach ($paymentCollection as $payment) {
             if ($payment->isPaid()) {
                 $payments[] = [
-                    'type' => $payment->getPaymentSystemName(),
-                    'amount' => $payment->getSum(),
-                    'id' => $payment->getId()
+                    'type' => $payment->getId(),
+                    'amount' => $payment->getSum()
                 ];
             }
         }
