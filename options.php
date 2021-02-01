@@ -2,6 +2,7 @@
 
 use Mindbox\Options;
 use Mindbox\YmlFeedMindbox;
+use Mindbox\Helper;
 
 defined('B_PROLOG_INCLUDED') and (B_PROLOG_INCLUDED === true) or die();
 defined('ADMIN_MODULE_NAME') or define('ADMIN_MODULE_NAME', 'mindbox.marketing');
@@ -10,6 +11,12 @@ global $APPLICATION;
 
 Cmodule::IncludeModule('mindbox.marketing');
 Cmodule::IncludeModule('iblock');
+
+if ($_GET['order_match_action'] === 'add') {
+    Helper::setOrderFieldsMatch($_GET['bitrix_code'], $_GET['mindbox_code']);
+} elseif ($_GET['order_match_action'] === 'delete') {
+    Helper::setOrderFieldsMatch($_GET['bitrix_code'], '');
+}
 
 if (!$USER->isAdmin()) {
     $APPLICATION->authForm('Nope');
@@ -110,19 +117,6 @@ $arAllOptions = array(
     ],
     getMessage('IDENTIFIERS'),
     [
-        'EXTERNAL_SYSTEM',
-        getMessage('EXTERNAL_SYSTEM'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'EXTERNAL_SYSTEM', ''),
-        ['text']
-    ],
-    [
-        'WEBSITE_ID',
-        getMessage('WEBSITE_ID'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'WEBSITE_ID', ''),
-        ['text']
-
-    ],
-    [
         'TRANSACTION_ID',
         getMessage('TRANSACTION_ID'),
         COption::GetOptionString(ADMIN_MODULE_NAME, 'TRANSACTION_ID', ''),
@@ -159,14 +153,28 @@ $arAllOptions = array(
         COption::GetOptionString(ADMIN_MODULE_NAME, 'TIMEOUT', '5'),
         ['text']
     ],
+    getMessage('CLIENTS'),
+    [
+        'WEBSITE_ID',
+        getMessage('WEBSITE_ID'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'WEBSITE_ID', ''),
+        ['text']
+
+    ],
     getMessage('CATALOG_SETTINGS'),
+    [
+        'EXTERNAL_SYSTEM',
+        getMessage('EXTERNAL_SYSTEM'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'EXTERNAL_SYSTEM', ''),
+        ['text']
+    ],
     [
         'CATALOG_IBLOCK_ID',
         getMessage('CATALOG_IBLOCK_ID'),
         COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', ''),
         [
             'selectbox',
-            \Mindbox\Helper::getIblocks()
+            Helper::getIblocks()
         ]
     ],
     [
@@ -180,7 +188,25 @@ $arAllOptions = array(
         getMessage('YML_NAME'),
         COption::GetOptionString(ADMIN_MODULE_NAME, 'YML_NAME', 'upload/mindbox.xml'),
         ['text']
-    ]
+    ],
+    getMessage('ORDER_SETTINGS'),
+    Helper::getOrderMatchesTable(),
+    [
+        'ORDER_BITRIX_FIELDS',
+        getMessage('BITRIX_FIELDS'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'ORDER_BITRIX_FIELDS', ''),
+        [
+            'selectbox',
+            Helper::getOrderFields()
+        ]
+    ],
+    [
+        'ORDER_MINDBOX_FIELDS',
+        getMessage('MINDBOX_FIELDS'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'ORDER_MINDBOX_FIELDS', ''),
+        ['text']
+    ],
+    Helper::getAddOrderMatchButton()
 );
 
 if (!empty(COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', ''))) {
