@@ -12,12 +12,6 @@ global $APPLICATION;
 Cmodule::IncludeModule('mindbox.marketing');
 Cmodule::IncludeModule('iblock');
 
-if ($_GET['order_match_action'] === 'add') {
-    Helper::setOrderFieldsMatch($_GET['bitrix_code'], $_GET['mindbox_code']);
-} elseif ($_GET['order_match_action'] === 'delete') {
-    Helper::setOrderFieldsMatch($_GET['bitrix_code'], '');
-}
-
 if (!$USER->isAdmin()) {
     $APPLICATION->authForm('Nope');
 }

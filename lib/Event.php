@@ -565,6 +565,18 @@ class Event
 
         $delivery = $order->getDeliverySystemId();
 
+        $payments = [];
+        $paymentCollection = $order->getPaymentCollection();
+        foreach ($paymentCollection as $payment) {
+            if ($payment->isPaid()) {
+                $payments[] = [
+                    'type' => $payment->getPaymentSystemName(),
+                    'amount' => $payment->getSum(),
+                    'id' => $payment->getId()
+                ];
+            }
+        }
+
         $rsUser = \CUser::GetByID($order->getUserId());
         $arUser = $rsUser->Fetch();
 
@@ -584,31 +596,12 @@ class Event
             $discountPrice = $basketItem->getDiscountPrice();
             $productBasePrice = $basketItem->getBasePrice();
 
-            $customFields = [];
             $propertyCollection = $order->getPropertyCollection();
             $ar = $propertyCollection->getArray();
             foreach ($ar['properties'] as $arProperty) {
                 $arProperty['CODE'] = Helper::sanitzeNamesForMindbox($arProperty['CODE']);
                 $arOrderProperty[$arProperty['CODE']] = current($arProperty['VALUE']);
-                if (!empty($customName = Helper::getMatchByCode($arProperty['CODE']))) {
-                    $value = '';
-                    if (count($arProperty['VALUE']) > 1) {
-                        if (!empty($arProperty['VALUE'])) {
-                            $value = $arProperty['VALUE'];
-                        }
-                    } else {
-                        if (!empty(current($arProperty['VALUE']))) {
-                            $value = current($arProperty['VALUE']);
-                        }
-                    }
-
-                    if (!empty($value)) {
-                        $customFields[$customName] = $value;
-                    }
-                }
             }
-
-            $customFields['deliveryType'] = $delivery;
 
             $requestedPromotions = [];
             if (!empty($discountName) && $discountPrice) {
@@ -637,8 +630,7 @@ class Event
                     'ids' => [
                         'externalId' => 'CheckedOut'
                     ]
-                ],
-                'customFields' => $customFields
+                ]
             ];
 
             if (!empty($requestedPromotions)) {
@@ -669,7 +661,7 @@ class Event
                     'externalId' => Helper::getTransactionId()
                 ]
             ],
-            'customFields' => $customFields
+            'payments' => $payments
         ];
 
         if (!empty($arCoupons)) {
@@ -718,6 +710,8 @@ class Event
         }
 
         $customFields['deliveryType'] = $delivery;
+
+        $arOrder['customFields'] = $customFields;
 
         if (!empty($arOrderProperty['EMAIL'])) {
             $customer->setEmail($arOrderProperty['EMAIL']);
@@ -779,6 +773,7 @@ class Event
                                     "externalId" => Helper::getTransactionId()
                                 ]
                             ],
+                            'payments' => $payments,
                             'customFields' => $customFields
                         ]
                     );
@@ -816,6 +811,7 @@ class Event
                             "externalId" => Helper::getTransactionId()
                         ]
                     ],
+                    'payments' => $payments,
                     'customFields' => $customFields
                 ]
             );
@@ -845,6 +841,18 @@ class Event
         $mindbox = static::mindbox();
         if (!$mindbox) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+
+        $payments = [];
+        $paymentCollection = $order->getPaymentCollection();
+        foreach ($paymentCollection as $payment) {
+            if ($payment->isPaid()) {
+                $payments[] = [
+                    'type' => $payment->getPaymentSystemName(),
+                    'amount' => $payment->getSum(),
+                    'id' => $payment->getId()
+                ];
+            }
         }
 
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'loyalty') {
@@ -888,31 +896,12 @@ class Event
                     ];
                 }
 
-                $customFields = [];
                 $propertyCollection = $order->getPropertyCollection();
                 $ar = $propertyCollection->getArray();
                 foreach ($ar['properties'] as $arProperty) {
                     $arProperty['CODE'] = Helper::sanitzeNamesForMindbox($arProperty['CODE']);
                     $arOrderProperty[$arProperty['CODE']] = current($arProperty['VALUE']);
-                    if (!empty($customName = Helper::getMatchByCode($arProperty['CODE']))) {
-                        $value = '';
-                        if (count($arProperty['VALUE']) > 1) {
-                            if (!empty($arProperty['VALUE'])) {
-                                $value = $arProperty['VALUE'];
-                            }
-                        } else {
-                            if (!empty(current($arProperty['VALUE']))) {
-                                $value = current($arProperty['VALUE']);
-                            }
-                        }
-
-                        if (!empty($value)) {
-                            $customFields[$customName] = $value;
-                        }
-                    }
                 }
-
-                $customFields['deliveryType'] = $delivery;
 
                 $arLine = [
                     'lineNumber' => $i++,
@@ -928,8 +917,7 @@ class Event
                         'ids' => [
                             'externalId' => 'CheckedOut'
                         ]
-                    ],
-                    'customFields' => $customFields
+                    ]
                 ];
 
                 if (!empty($requestedPromotions)) {
@@ -1043,6 +1031,7 @@ class Event
                                 "externalId" => Helper::getTransactionId()
                             ]
                         ],
+                        'payments' => $payments,
                         'customFields' => $customFields
                     ]
                 );
@@ -1181,6 +1170,7 @@ class Event
                     'lines' => $lines,
                     'email' => $arOrderProperty['EMAIL'],
                     'mobilePhone' => $arOrderProperty['PHONE'],
+                    'payments' => $payments,
                     'customFields' => $customFields
                 ]
             );
