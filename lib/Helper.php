@@ -384,6 +384,21 @@ class Helper
     }
 
     /**
+     * @return array
+     */
+    public static function getUserFields()
+    {
+        $dbFields = \CUserTypeEntity::GetList([], ['ENTITY_ID' => 'USER']);
+
+        $userFields = [];
+        while ($field = $dbFields->Fetch()) {
+            $userFields[$field['FIELD_NAME']] = $field['FIELD_NAME'];
+        }
+
+        return $userFields;
+    }
+
+    /**
      * Get order fields
      *
      * @return array $orderFields

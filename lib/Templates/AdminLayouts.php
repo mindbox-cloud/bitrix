@@ -7,27 +7,44 @@ trait AdminLayouts
     /**
      * @return string
      */
-    public static function getOrderMatchesTable()
+    public static function getUserMatchesTable()
     {
         $styles = self::adminTableStyles();
-        $escapeTable = '</td></tr><tr><td colspan="2"><table class="table">';
+        $escapeTable = '</td></tr><tr><td colspan="2"><table class="table user-table">';
         $tableHead = '<tr class="tr title"><th class="th">'.getMessage("BITRIX_FIELDS").'</th><th class="th">'.getMessage("MINDBOX_FIELDS").'</th><th class="th-empty"></th></tr>';
 
         $result = $styles.$escapeTable.$tableHead;
 
         $bottomPadding = '</table></td></tr><tr><td>&nbsp;</td></tr>';
         $result .= $bottomPadding;
-        $result .= self::adminTableScripts();
+        $result .= self::adminUserTableScripts();
         return $result;
     }
 
     /**
      * @return string
      */
-    public static function getAddOrderMatchButton()
+    public static function getOrderMatchesTable()
+    {
+        $styles = self::adminTableStyles();
+        $escapeTable = '</td></tr><tr><td colspan="2"><table class="table order-table">';
+        $tableHead = '<tr class="tr title"><th class="th">'.getMessage("BITRIX_FIELDS").'</th><th class="th">'.getMessage("MINDBOX_FIELDS").'</th><th class="th-empty"></th></tr>';
+
+        $result = $styles.$escapeTable.$tableHead;
+
+        $bottomPadding = '</table></td></tr><tr><td>&nbsp;</td></tr>';
+        $result .= $bottomPadding;
+        $result .= self::adminOrderTableScripts();
+        return $result;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getAddOrderMatchButton($buttonClass)
     {
         $escapeTable = '</td></tr><tr><td>';
-        $button = '<a class="module_button module_button_add" href="javascript:void(0)">'.getMessage("BUTTON_ADD").'</a>';
+        $button = '<a class="module_button module_button_add '.$buttonClass.'" href="javascript:void(0)">'.getMessage("BUTTON_ADD").'</a>';
 
         return $escapeTable.$button;
     }
@@ -75,85 +92,114 @@ HTML;
     /**
      * @return string
      */
-    public static function adminTableScripts()
+    public static function adminUserTableScripts()
     {
         return <<<HTML
             <script>
                 document.addEventListener('DOMContentLoaded', function(){
-                    createTable();
-                    hideInput('[name="MINDBOX_ORDER_FIELDS_MATCH"]');
-                        
-                    document.querySelector('.module_button_add').onclick = () => {addButtonHandler()};
+                    createTable('user-table', 'MINDBOX_USER_FIELDS_MATCH');
+                    hideInput('[name="MINDBOX_USER_FIELDS_MATCH"]');
+                    
+                    document.querySelector('.module_button_add.user_module_button_add').onclick = () => {addButtonHandler('MINDBOX_USER_MINDBOX_FIELDS', 'MINDBOX_USER_BITRIX_FIELDS', 'user-table', 'MINDBOX_USER_FIELDS_MATCH')};
                 });
-                
-                function addButtonHandler() {
-                    console.log('add');
-                    let mindboxKey = document.querySelector('[name="MINDBOX_ORDER_MINDBOX_FIELDS"]').value;
-                    let bitrixKey = document.querySelector('[name="MINDBOX_ORDER_BITRIX_FIELDS"]').value;
+            </script>
+HTML;
+    }
+
+    /**
+     * @return string
+     */
+    public static function adminOrderTableScripts()
+    {
+        return <<<HTML
+            <script>
+                document.addEventListener('DOMContentLoaded', function(){
+                    createTable('order-table', 'MINDBOX_ORDER_FIELDS_MATCH');
+                    hideInput('[name="MINDBOX_ORDER_FIELDS_MATCH"]');
+                    
+                    document.querySelector('.module_button_add.order_module_button_add').onclick = () => {addButtonHandler('MINDBOX_ORDER_MINDBOX_FIELDS', 'MINDBOX_ORDER_BITRIX_FIELDS', 'order-table', 'MINDBOX_ORDER_FIELDS_MATCH')};
+                });
+            </script>
+HTML;
+    }
+
+    /**
+     * @return string
+     */
+    public static function adminTableScripts()
+    {
+        return <<<HTML
+            <script>                
+                function addButtonHandler(mindboxName, bitrixName, tableClass, propName) {
+                    let mindboxKey = document.querySelector('[name="'+mindboxName+'"]').value;
+                    let bitrixKey = document.querySelector('[name="'+bitrixName+'"]').value;
                 
                     if (mindboxKey && bitrixKey) {
-                        setProps(bitrixKey, mindboxKey);
-                        reInitTable();
+                        setProps(bitrixKey, mindboxKey, propName);
+                        reInitTable(tableClass, propName);
                     }
                 }
                 
-                function removeButtonHandler(bitrixId) {
-                    console.log(bitrixId);
-                    removeProps(bitrixId);
-                    reInitTable();
+                function removeButtonHandler(bitrixId, tableClass, propName) {
+                    removeProps(bitrixId, propName);
+                    reInitTable(tableClass, propName);
                 }
                 
                 function hideInput(selector) {
                     document.querySelector(selector).style.display = 'none';
                 }
                 
-                function addRow(bitrixKey, mindboxKey) {
+                function addRow(bitrixKey, mindboxKey, tableClass, propName) {
                     if (mindboxKey && bitrixKey) {
-                        let row = document.querySelector('table.table tbody').insertRow();
+                        let row = document.querySelector('table.table.'+tableClass+' tbody').insertRow();
                         row.insertCell().appendChild(document.createTextNode(bitrixKey));
                         row.insertCell().appendChild(document.createTextNode(mindboxKey));
                         let link = document.createElement('a');
                         link.classList.add('module_button_delete');
                         link.href = 'javascript:void(0)';
-                        link.onclick = () => {removeButtonHandler(bitrixKey)};
+                        link.onclick = () => {removeButtonHandler(bitrixKey, tableClass, propName)};
                         link.text = 'X';
-                        // link.dataset.bitrix = bitrixKey;
                         row.insertCell().appendChild(link);
                     }
                 }
                 
-                function reInitTable() {
-                    removeTable();
-                    createTable();
+                function reInitTable(tableClass, propName) {
+                    removeTable(tableClass);
+                    createTable(tableClass, propName);
                 }
                 
-                function createTable() {
-                    let props = getProps();
+                function createTable(tableClass, propName) {
+                    let props = getProps(propName);
                 
                     Object.keys(props).map((objectKey, index) => {
                         let value = props[objectKey];
-                        addRow(objectKey, value);
+                        addRow(objectKey, value, tableClass, propName);
                     });
                 }
                 
-                function removeProps(key) {
-                    let currentProps = getProps();
+                function removeProps(key, propName) {
+                    let currentProps = getProps(propName);
                     delete currentProps[key];
-                    document.querySelector('[name="MINDBOX_ORDER_FIELDS_MATCH"]').value = JSON.stringify(currentProps);
+                    document.querySelector('[name="'+propName+'"]').value = JSON.stringify(currentProps);
                 }
                 
-                function setProps(key, value) {
-                    let currentProps = getProps();
+                function setProps(key, value, propName) {
+                    let currentProps = getProps(propName);
                     currentProps[key] = value;
-                    document.querySelector('[name="MINDBOX_ORDER_FIELDS_MATCH"]').value = JSON.stringify(currentProps);
+                    document.querySelector('[name="'+propName+'"]').value = JSON.stringify(currentProps);
                 }
                 
-                function getProps() {
-                    return JSON.parse(document.querySelector('[name="MINDBOX_ORDER_FIELDS_MATCH"]').value);
+                function getProps(propName) {
+                    let string = document.querySelector('[name="'+propName+'"]').value;
+                    if (string) {
+                        return JSON.parse(string);
+                    }
+                    
+                    return JSON.parse('{}');
                 }
                 
-                function removeTable() {
-                    document.querySelectorAll('.table tr:not(.title)').forEach((e) => {
+                function removeTable(tableClass) {
+                    document.querySelectorAll('.table.'+tableClass+' tr:not(.title)').forEach((e) => {
                         e.remove()
                     });
                 }

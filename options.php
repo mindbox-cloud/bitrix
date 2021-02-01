@@ -12,12 +12,6 @@ global $APPLICATION;
 Cmodule::IncludeModule('mindbox.marketing');
 Cmodule::IncludeModule('iblock');
 
-if ($_GET['order_match_action'] === 'add') {
-    Helper::setOrderFieldsMatch($_GET['bitrix_code'], $_GET['mindbox_code']);
-} elseif ($_GET['order_match_action'] === 'delete') {
-    Helper::setOrderFieldsMatch($_GET['bitrix_code'], '');
-}
-
 if (!$USER->isAdmin()) {
     $APPLICATION->authForm('Nope');
 }
@@ -62,6 +56,7 @@ $tabControl = new CAdminTabControl('tabControl', [
 
 
 $arAllOptions = array(
+    ['', '', Helper::adminTableScripts(), ['statichtml']],
     getMessage('DOCS_LINK'),
     [
         'MODULE_VERSION',
@@ -153,7 +148,29 @@ $arAllOptions = array(
         ['text']
 
     ],
-    ['', '', Helper::getOrderMatchesTable(), ['statichtml']],
+    [
+        'USER_FIELDS_MATCH',
+        '',
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'USER_FIELDS_MATCH', ''),
+        ['text']
+    ],
+    ['', '', Helper::getUserMatchesTable(), ['statichtml']],
+    [
+        'USER_BITRIX_FIELDS',
+        getMessage('BITRIX_FIELDS'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'USER_BITRIX_FIELDS', ''),
+        [
+            'selectbox',
+            Helper::getUserFields()
+        ]
+    ],
+    [
+        'USER_MINDBOX_FIELDS',
+        getMessage('MINDBOX_FIELDS'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'USER_MINDBOX_FIELDS', ''),
+        ['text']
+    ],
+    ['', '', Helper::getAddOrderMatchButton('user_module_button_add'), ['statichtml']],
     getMessage('ORDER_SETTINGS'),
     [
         'TRANSACTION_ID',
@@ -183,7 +200,7 @@ $arAllOptions = array(
         COption::GetOptionString(ADMIN_MODULE_NAME, 'ORDER_MINDBOX_FIELDS', ''),
         ['text']
     ],
-    ['', '', Helper::getAddOrderMatchButton(), ['statichtml']],
+    ['', '', Helper::getAddOrderMatchButton('order_module_button_add'), ['statichtml']],
     getMessage('PRODUCT_SETTINGS'),
     [
         'EXTERNAL_SYSTEM',
