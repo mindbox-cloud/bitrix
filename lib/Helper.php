@@ -422,24 +422,6 @@ class Helper
         return $orderProps;
     }
 
-    /**
-     * @param string $bitrixFieldCode
-     * @param string $mindboxFieldCode
-     * @param bool $append
-     */
-    public static function setOrderFieldsMatch($bitrixFieldCode, $mindboxFieldCode, $append = true)
-    {
-        if (!$append) {
-            $matches = [$bitrixFieldCode => $mindboxFieldCode];
-        } else {
-            $matches = self::getOrderFieldsMatch();
-            $matches[$bitrixFieldCode] = $mindboxFieldCode;
-        }
-
-        \COption::SetOptionString(ADMIN_MODULE_NAME, 'ORDER_FIELDS_MATCH', json_encode($matches));
-    }
-
-
     public static function getMatchByCode($code)
     {
         $matches = self::getOrderFieldsMatch();
@@ -459,6 +441,16 @@ class Helper
     public static function getOrderFieldsMatch()
     {
         $fields = \COption::GetOptionString('mindbox.marketing', 'ORDER_FIELDS_MATCH', '{[]}');
+
+        return json_decode($fields, true);
+    }
+
+    /**
+     * @return array
+     */
+    public static function getUserFieldsMatch()
+    {
+        $fields = \COption::GetOptionString('mindbox.marketing', 'USER_FIELDS_MATCH', '{[]}');
 
         return json_decode($fields, true);
     }
