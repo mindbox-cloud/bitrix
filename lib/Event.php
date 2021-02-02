@@ -708,15 +708,7 @@ class Event
 
 
         try {
-            if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
-                if (\Mindbox\Helper::isUnAuthorizedOrder($arUser) || (is_object($USER) && !$USER->IsAuthorized()) ) {
-                    $createOrderResult = $mindbox->order()->createUnauthorizedOrder($orderDTO,
-                        Options::getOperationName('createUnauthorizedOrder'))->sendRequest();
-                } else {
-                    $createOrderResult = $mindbox->order()->createAuthorizedOrder($orderDTO,
-                        Options::getOperationName('createAuthorizedOrder'))->sendRequest();
-                }
-            } else {
+
                 if (\Mindbox\Helper::isUnAuthorizedOrder($arUser) || (is_object($USER) && !$USER->IsAuthorized())) {
                     $createOrderResult = $mindbox->order()->beginUnauthorizedOrderTransaction($orderDTO,
                         Options::getOperationName('beginUnauthorizedOrderTransaction'))->sendRequest();
@@ -724,7 +716,7 @@ class Event
                     $createOrderResult = $mindbox->order()->beginAuthorizedOrderTransaction($orderDTO,
                         Options::getOperationName('beginAuthorizedOrderTransaction'))->sendRequest();
                 }
-            }
+
 
 
             if ($createOrderResult->getValidationErrors()) {
@@ -1073,7 +1065,13 @@ class Event
             $customer->setLastName($arOrderProperty[ 'FIO' ]);
             $customer->setFirstName($arOrderProperty[ 'NAME' ]);
             $customer->setMobilePhone($arOrderProperty[ 'PHONE' ]);
-            $customer->setId(Options::getModuleOption('WEBSITE_ID'), $order->getUserId());
+
+            if (\Mindbox\Helper::isUnAuthorizedOrder($arUser) || (is_object($USER) && !$USER->IsAuthorized())) {
+                //  unauthorized user
+            } else {
+                //  authorized user
+                $customer->setId(Options::getModuleOption('WEBSITE_ID'), $order->getUserId());
+            }
 
         $subscriptions = [
             'subscription' => [
