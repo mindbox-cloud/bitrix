@@ -544,7 +544,9 @@ class Event
 
     public function OnSaleOrderBeforeSavedHandler($order)
     {
-        if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
+        $standartMode = \COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard';
+
+        if ($standartMode) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
@@ -712,7 +714,7 @@ class Event
 
         $arOrder['customFields'] = $customFields;
 
-        if (!empty($arOrderProperty['EMAIL'])) {
+        if (!empty($arOrderProperty['EMAIL']) && $standartMode) {
             $customer->setEmail($arOrderProperty['EMAIL']);
             $arOrder['email'] = $arOrderProperty['EMAIL'];
         }
@@ -724,7 +726,7 @@ class Event
             $customer->setFirstName($arOrderProperty[ 'NAME' ]);
         }
         */
-        if (!empty($arOrderProperty['PHONE'])) {
+        if (!empty($arOrderProperty['PHONE']) && $standartMode) {
             $customer->setMobilePhone($arOrderProperty['PHONE']);
             $arOrder['mobilePhone'] = $arOrderProperty['PHONE'];
         }
@@ -742,7 +744,7 @@ class Event
         $orderDTO->setCustomer($customer);
 
         try {
-            if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
+            if ($standartMode) {
                 if (Helper::isUnAuthorizedOrder($arUser)) {
                     $createOrderResult = $mindbox->order()->createUnauthorizedOrder($orderDTO,
                         Options::getOperationName('createUnauthorizedOrder'))->sendRequest();
@@ -771,9 +773,7 @@ class Event
                                 "ids" => [
                                     "externalId" => Helper::getTransactionId()
                                 ]
-                            ],
-                            'payments' => $payments,
-                            'customFields' => $customFields
+                            ]
                         ]
                     );
                     $createOrderResult = $mindbox->order()->rollbackOrderTransaction($orderDTO,
@@ -809,9 +809,7 @@ class Event
                         "ids" => [
                             "externalId" => Helper::getTransactionId()
                         ]
-                    ],
-                    'payments' => $payments,
-                    'customFields' => $customFields
+                    ]
                 ]
             );
             $mindbox->order()->rollbackOrderTransaction($orderDTO,
@@ -1028,9 +1026,7 @@ class Event
                             "ids" => [
                                 "externalId" => Helper::getTransactionId()
                             ]
-                        ],
-                        'payments' => $payments,
-                        'customFields' => $customFields
+                        ]
                     ]
                 );
                 $createOrderResult = $mindbox->order()->commitOrderTransaction($orderDTO,
