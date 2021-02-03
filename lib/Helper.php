@@ -422,9 +422,11 @@ class Helper
         return $orderProps;
     }
 
-    public static function getMatchByCode($code)
+    public static function getMatchByCode($code, $matches = [])
     {
-        $matches = self::getOrderFieldsMatch();
+        if (empty($matches)) {
+            $matches = self::getOrderFieldsMatch();
+        }
         $matches =  array_change_key_case($matches, CASE_UPPER);
         $code = mb_strtoupper($code);
 
@@ -453,6 +455,28 @@ class Helper
         $fields = \COption::GetOptionString('mindbox.marketing', 'USER_FIELDS_MATCH', '{[]}');
 
         return json_decode($fields, true);
+    }
+
+    /**
+     * @return array
+     */
+    public static function getCustomFieldsForUser($userId)
+    {
+        $customFields = [];
+        $by = 'id';
+        $order = 'asc';
+        $user = \CUser::GetList($by, $order, ['ID' => $userId], ['SELECT' => ['UF_*']])->Fetch();
+        $fields = array_filter($user, function($value, $key) {
+            return strpos($key, 'UF_') !== false;
+        }, ARRAY_FILTER_USE_BOTH);
+
+        foreach ($fields as $code => $value) {
+            if (!empty($customName = self::getMatchByCode($code, self::getUserFieldsMatch()))) {
+                $customFields[self::sanitzeNamesForMindbox($customName)] = $value;
+            }
+        }
+
+        return $customFields;
     }
 
     /**

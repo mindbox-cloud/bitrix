@@ -188,6 +188,21 @@ class Event
             return isset($item);
         });
 
+        $customFields = [];
+        $ufFields = array_filter($arFields, function($value, $key) {
+            return strpos($key, 'UF_') !== false;
+        }, ARRAY_FILTER_USE_BOTH);
+
+        foreach ($ufFields as $code => $value) {
+            if (!empty($customName = Helper::getMatchByCode($code, Helper::getUserFieldsMatch()))) {
+                $customFields[Helper::sanitzeNamesForMindbox($customName)] = $value;
+            }
+        }
+
+        if (!empty($customFields)) {
+            $fields['customFields'] = $customFields;
+        }
+
         $customer = Helper::iconvDTO(new CustomerRequestDTO($fields));
 
         $isSubscribed = true;
@@ -343,6 +358,21 @@ class Event
                     return true;
                 }
 
+                $customFields = [];
+                $ufFields = array_filter($arFields, function($value, $key) {
+                    return strpos($key, 'UF_') !== false;
+                }, ARRAY_FILTER_USE_BOTH);
+
+                foreach ($ufFields as $code => $value) {
+                    if (!empty($customName = Helper::getMatchByCode($code, Helper::getUserFieldsMatch()))) {
+                        $customFields[Helper::sanitzeNamesForMindbox($customName)] = $value;
+                    }
+                }
+
+                if (!empty($customFields)) {
+                    $fields['customFields'] = $customFields;
+                }
+
                 $customer = new CustomerRequestDTO($fields);
 
                 unset($fields);
@@ -494,6 +524,11 @@ class Event
                 'email'       => $arFields[ 'EMAIL' ],
                 'sex'         => $sex
             ];
+
+            $customFields = Helper::getCustomFieldsForUser($userId);
+            if (!empty($customFields)) {
+                $fields['customFields'] = $customFields;
+            }
 
             $fields = array_filter($fields, function ($item) {
                 return isset($item);
@@ -1579,6 +1614,21 @@ class Event
         $fields = array_filter($fields, function ($item) {
             return isset($item);
         });
+
+        $customFields = [];
+        $ufFields = array_filter($arFields, function($value, $key) {
+            return strpos($key, 'UF_') !== false;
+        }, ARRAY_FILTER_USE_BOTH);
+
+        foreach ($ufFields as $code => $value) {
+            if (!empty($customName = Helper::getMatchByCode($code, Helper::getUserFieldsMatch()))) {
+                $customFields[Helper::sanitzeNamesForMindbox($customName)] = $value;
+            }
+        }
+
+        if (!empty($customFields)) {
+            $fields['customFields'] = $customFields;
+        }
 
         $customer = Helper::iconvDTO(new CustomerRequestDTO($fields));
 
