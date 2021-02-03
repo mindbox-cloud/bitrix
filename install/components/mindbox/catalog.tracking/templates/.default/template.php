@@ -1,25 +1,37 @@
 <?php
 /**
- * Created by @copyright QSOFT.
+ * Created by @copyright INTENSA.
  */
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) die();
 ?>
 
 <script>
     var mindboxViewCategory = function (id) {
-        BX.ajax.runComponentAction('mindbox:catalog.tracking', 'viewCategory', {
-            mode:'class',
+        mindbox("async", {
+            operation: "<?=Mindbox\Options::getModuleOption('WEBSITE_PREFIX')?>.ViewCategory",
             data: {
-                id: id,
+                viewProductCategory: {
+                    productCategory: {
+                        ids: {
+                            <?=Mindbox\Options::getModuleOption('EXTERNAL_SYSTEM')?>: id
+                        }
+                    }
+                }
             }
         });
     };
 
     var mindboxViewProduct = function (id) {
-        BX.ajax.runComponentAction('mindbox:catalog.tracking', 'viewProduct', {
-            mode:'class',
+        mindbox("async", {
+            operation: "<?=Mindbox\Options::getModuleOption('WEBSITE_PREFIX')?>.ViewProduct",
             data: {
-                id: id,
+                viewProduct: {
+                    product: {
+                        ids: {
+                            <?=Mindbox\Options::getModuleOption('EXTERNAL_SYSTEM')?>: id
+                        }
+                    }
+                }
             }
         });
     };
