@@ -141,7 +141,7 @@ __Примечание:__
 ```php
 <?php $APPLICATION->IncludeComponent('mindbox:catalog.tracking', '', []);?>
 <script>
-    mindboxViewCategory('<?=$arCurSection['ID']?>');
+    mindboxViewCategory('<?=!empty($arCurSection['XML_ID']) ? $arCurSection['XML_ID'] : $arCurSection['ID']?>');
 </script>
 ```
 **mindboxViewProduct**  
@@ -151,7 +151,7 @@ __Примечание:__
    $APPLICATION->IncludeComponent('mindbox:catalog.tracking', '', []);
 ?>
 <script>
-    mindboxViewProduct('<?=$arResult['OFFERS'][0]['XML_ID']?>');
+    mindboxViewProduct('<?=!empty($arResult['OFFERS'][0]['XML_ID']) ? $arResult['OFFERS'][0]['XML_ID'] : $arResult['OFFERS'][0]['ID']?>');
 </script>
 ```
 
