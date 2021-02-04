@@ -58,6 +58,10 @@ class Event
             $userMindboxId = $rsUser[ 'UF_MINDBOX_ID' ];
         }
 
+        if(!isset($_REQUEST['AUTH_FORM']) && !isset($_REQUEST['TYPE']) || \Bitrix\Main\Context::getCurrent()->getRequest()->isAdminSection()) {
+            return true;
+        }
+
         if (empty($arUser[ 'user_fields' ][ 'LAST_LOGIN' ]) && !$userMindboxId) {
             return true;
         }
