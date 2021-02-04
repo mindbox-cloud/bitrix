@@ -93,6 +93,8 @@ class Options
 
         try {
             $mindbox =  new Mindbox($config, new MindboxFileLogger($path, 'debug'));
+            $mindbox->getClientV2()->addHeaders(['Mindbox-Integration' => 'Bitrix']);
+            $mindbox->getClientV3()->addHeaders(['Mindbox-Integration' => 'Bitrix']);
 
             return $mindbox;
         } catch (MindboxConfigException $e) {

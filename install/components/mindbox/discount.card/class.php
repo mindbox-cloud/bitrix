@@ -72,12 +72,6 @@ class DiscountCard extends CBitrixComponent implements Controllerable
             $response = $this->mindbox->customer()->getDataByDiscountCard($customerDto,
                 Options::getOperationName('getDataByDiscountCard'))->sendRequest();
         } catch (MindboxClientException $e) {
-
-            if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-                $logger = new \Intensa\Logger\ILog('sendCardAction');
-                $logger->log('MindboxClientException', $e->getMessage());
-            }
-
             return Ajax::errorResponse(GetMessage('MB_DC_CARD_ERROR'));
         }
         $customer = $response->getResult()->getCustomer();

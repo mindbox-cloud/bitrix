@@ -1,4 +1,8 @@
 <?php
+
+use Mindbox\Options;
+use Mindbox\YmlFeedMindbox;
+
 defined('B_PROLOG_INCLUDED') and (B_PROLOG_INCLUDED === true) or die();
 defined('ADMIN_MODULE_NAME') or define('ADMIN_MODULE_NAME', 'mindbox.marketing');
 
@@ -22,8 +26,15 @@ function ShowParamsHTMLByarray($arParams)
 
 
 if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
+    if (empty($_POST['MINDBOX_PROTOCOL']) || $_POST['MINDBOX_PROTOCOL'] !== 'Y') {
+        $_POST['MINDBOX_PROTOCOL'] = 'N';
+    }
+
     foreach ($_POST as $key => $option) {
         if (strpos($key, 'MINDBOX_') !== false) {
+            if (is_array($option)) {
+                $option = implode(',', $option);
+            }
             COption::SetOptionString(ADMIN_MODULE_NAME, str_replace('MINDBOX_', '', $key), $option);
         }
     }
@@ -159,12 +170,58 @@ $arAllOptions = array(
         ]
     ],
     [
+        'PROTOCOL',
+        getMessage('SITE_PROTOCOL'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'PROTOCOL', 'N'),
+        ['checkbox']
+    ],
+    [
         'YML_NAME',
         getMessage('YML_NAME'),
         COption::GetOptionString(ADMIN_MODULE_NAME, 'YML_NAME', 'upload/mindbox.xml'),
         ['text']
     ]
 );
+
+if (!empty(COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', ''))) {
+    if (YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['VERSION'] === '1') {
+        $arAllOptions[] = ['note' => getMessage(
+            'NEED_TABLE_UPGRADE',
+            [
+                '#LINK#' => '/bitrix/admin/iblock_edit.php?type=' . YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['IBLOCK_TYPE_ID'] . '&ID=' . YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['ID']
+            ]
+        )];
+    }
+    $arAllOptions[] = [
+        'CATALOG_PROPS',
+        getMessage('CATALOG_PROPS'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_PROPS', ''),
+        [
+            'multiselectbox',
+            \Mindbox\Helper::getProps()
+        ]
+    ];
+}
+
+if (!empty(\Mindbox\Helper::getOffersCatalogId(COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '')))) {
+    if (YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['VERSION'] === '1') {
+        $arAllOptions[] = ['note' => getMessage(
+            'NEED_TABLE_UPGRADE',
+            [
+                '#LINK#' => '/bitrix/admin/iblock_edit.php?type=' . YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['IBLOCK_TYPE_ID'] . '&ID=' . YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['ID']
+            ]
+        )];
+    }
+    $arAllOptions[] = [
+        'CATALOG_OFFER_PROPS',
+        getMessage('CATALOG_OFFER_PROPS'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_OFFER_PROPS', ''),
+        [
+            'multiselectbox',
+            \Mindbox\Helper::getOffersProps()
+        ]
+    ];
+}
 
 ?>
 
