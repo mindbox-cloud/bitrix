@@ -19,6 +19,13 @@ class mindbox_marketing extends CModule {
 
 	var $PATH_INST = "/";
 
+	private $userFields = [
+		"UF_MINDBOX_ID",
+		"UF_PHONE_CONFIRMED",
+		"UF_EMAIL_CONFIRMED",
+		"UF_IS_SUBSCRIBED"
+	];
+
 	function mindbox_marketing()
 	{
 		$arModuleVersion = [];
@@ -261,6 +268,14 @@ class mindbox_marketing extends CModule {
 
 	function InstallUserFields()
 	{
+		$existFields = [];
+		$oUserTypeEntity = new CUserTypeEntity();
+		$dbUserFields = $oUserTypeEntity::GetList([], ["ENTITY_ID" => "USER", "FIELD_NAME" => $this->userFields]);
+
+		while ($userField = $dbUserFields->Fetch()) {
+			$existFields[$userField['FIELD_NAME']] = $userField['ID'];
+		}
+
 		$oUserTypeEntity = new CUserTypeEntity();
 		$aUserFields = [
 			"ENTITY_ID" => "USER",
@@ -296,7 +311,7 @@ class mindbox_marketing extends CModule {
 			],
 		];
 
-		if (!$oUserTypeEntity->Add($aUserFields)) {
+		if (empty($existFields[$aUserFields['FIELD_NAME']]) && !$oUserTypeEntity->Add($aUserFields)) {
 			return false;
 		}
 
@@ -329,7 +344,7 @@ class mindbox_marketing extends CModule {
 			],
 		];
 
-		if (!$oUserTypeEntity->Add($aUserFields)) {
+		if (empty($existFields[$aUserFields['FIELD_NAME']]) && !$oUserTypeEntity->Add($aUserFields)) {
 			return false;
 		}
 
@@ -362,7 +377,7 @@ class mindbox_marketing extends CModule {
 			],
 		];
 
-		if (!$oUserTypeEntity->Add($aUserFields)) {
+		if (empty($existFields[$aUserFields['FIELD_NAME']]) && !$oUserTypeEntity->Add($aUserFields)) {
 			return false;
 		}
 
@@ -395,7 +410,7 @@ class mindbox_marketing extends CModule {
 			],
 		];
 
-		if (!$oUserTypeEntity->Add($aUserFields)) {
+		if (empty($existFields[$aUserFields['FIELD_NAME']]) && !$oUserTypeEntity->Add($aUserFields)) {
 			return false;
 		}
 
@@ -405,13 +420,7 @@ class mindbox_marketing extends CModule {
 	function UnInstallUserFields()
 	{
 		$oUserTypeEntity = new CUserTypeEntity();
-		$userFields = [
-			"UF_MINDBOX_ID",
-			"UF_PHONE_CONFIRMED",
-			"UF_EMAIL_CONFIRMED",
-			"UF_IS_SUBSCRIBED"
-		];
-		foreach ($userFields as $field) {
+		foreach ($this->userFields as $field) {
 			$bdField = $oUserTypeEntity->GetList([], ["ENTITY_ID" => "USER", "FIELD_NAME" => $field])->fetch();
 
 			if (!$bdField) {
