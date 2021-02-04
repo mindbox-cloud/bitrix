@@ -108,6 +108,11 @@ class Options
         return  COption::GetOptionString('mindbox.marketing', 'WEBSITE_PREFIX', 'Website');
     }
 
+    public static function getExternalSystem()
+    {
+        return  COption::GetOptionString('mindbox.marketing', 'EXTERNAL_SYSTEM', 'system1c');
+    }
+
     public static function getModuleOption($option) {
         return COption::GetOptionString('mindbox.marketing', $option);
     }

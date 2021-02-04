@@ -4,18 +4,8 @@
  */
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) die();
 
-use Bitrix\Main\Engine\Contract\Controllerable;
 use Bitrix\Main\Loader;
 use Bitrix\Main\LoaderException;
-use Mindbox\DTO\DTO;
-use Mindbox\Exceptions\MindboxClientException;
-use Mindbox\Options;
-use Mindbox\Ajax;
-use Mindbox\QueueTable;
-
-if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) {
-    die();
-}
 
 class CatalogTracking extends CBitrixComponent
 {
@@ -36,13 +26,9 @@ class CatalogTracking extends CBitrixComponent
     private function loadModule()
     {
         try {
-            if (!Loader::includeModule('mindbox.marketing')) {
-                return false;
-            }
+            return Loader::includeModule('mindbox.marketing');
         } catch (LoaderException $e) {
             return false;
         }
-
-        return true;
     }
 }
