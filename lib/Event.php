@@ -44,6 +44,10 @@ class Event
      */
     public function OnAfterUserAuthorizeHandler($arUser)
     {
+        if(!$arUser[ 'user_fields' ][ 'ID' ]) {
+            return true;
+        }
+
         $userMindboxId = false;
         $rsUser = UserTable::getList(
             [
