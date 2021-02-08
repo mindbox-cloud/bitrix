@@ -140,6 +140,38 @@ $arAllOptions = array(
         COption::GetOptionString(ADMIN_MODULE_NAME, 'LOG_PATH', $_SERVER[ 'DOCUMENT_ROOT' ] . '/logs/'),
         ['text']
     ],
+    getMessage('PRODUCT_SETTINGS'),
+    [
+        'EXTERNAL_SYSTEM',
+        getMessage('EXTERNAL_SYSTEM'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'EXTERNAL_SYSTEM', ''),
+        ['text']
+    ],
+    [
+        'CATALOG_IBLOCK_ID',
+        getMessage('CATALOG_IBLOCK_ID'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', ''),
+        [
+            'selectbox',
+            Helper::getIblocks()
+        ]
+    ],
+    [
+        'PROTOCOL',
+        getMessage('SITE_PROTOCOL'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'PROTOCOL', 'N'),
+        ['checkbox']
+    ],
+    [
+        'YML_NAME',
+        getMessage('YML_NAME'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'YML_NAME', 'upload/mindbox.xml'),
+        ['text']
+    ],
+    'CATALOG_PROPS_UPGRADE' => '',
+    'CATALOG_PROPS' => '',
+    'CATALOG_OFFER_PROPS_UPGRADE' => '',
+    'CATALOG_OFFER_PROPS' => '',
     getMessage('CLIENTS'),
     [
         'WEBSITE_ID',
@@ -200,47 +232,21 @@ $arAllOptions = array(
         COption::GetOptionString(ADMIN_MODULE_NAME, 'ORDER_MINDBOX_FIELDS', ''),
         ['text']
     ],
-    ['', '', Helper::getAddOrderMatchButton('order_module_button_add'), ['statichtml']],
-    getMessage('PRODUCT_SETTINGS'),
-    [
-        'EXTERNAL_SYSTEM',
-        getMessage('EXTERNAL_SYSTEM'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'EXTERNAL_SYSTEM', ''),
-        ['text']
-    ],
-    [
-        'CATALOG_IBLOCK_ID',
-        getMessage('CATALOG_IBLOCK_ID'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', ''),
-        [
-            'selectbox',
-            Helper::getIblocks()
-        ]
-    ],
-    [
-        'PROTOCOL',
-        getMessage('SITE_PROTOCOL'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'PROTOCOL', 'N'),
-        ['checkbox']
-    ],
-    [
-        'YML_NAME',
-        getMessage('YML_NAME'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'YML_NAME', 'upload/mindbox.xml'),
-        ['text']
-    ]
+    ['', '', Helper::getAddOrderMatchButton('order_module_button_add'), ['statichtml']]
 );
 
 if (!empty(COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', ''))) {
     if (YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['VERSION'] === '1') {
-        $arAllOptions[] = ['note' => getMessage(
+        $arAllOptions['CATALOG_PROPS_UPGRADE'] = ['note' => getMessage(
             'NEED_TABLE_UPGRADE',
             [
                 '#LINK#' => '/bitrix/admin/iblock_edit.php?type=' . YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['IBLOCK_TYPE_ID'] . '&ID=' . YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['ID']
             ]
         )];
+    } else {
+        unset($arAllOptions['CATALOG_PROPS_UPGRADE']);
     }
-    $arAllOptions[] = [
+    $arAllOptions['CATALOG_PROPS'] = [
         'CATALOG_PROPS',
         getMessage('CATALOG_PROPS'),
         COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_PROPS', ''),
@@ -253,14 +259,16 @@ if (!empty(COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', ''))
 
 if (!empty(\Mindbox\Helper::getOffersCatalogId(COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '')))) {
     if (YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['VERSION'] === '1') {
-        $arAllOptions[] = ['note' => getMessage(
+        $arAllOptions['CATALOG_OFFER_PROPS_UPGRADE'] = ['note' => getMessage(
             'NEED_TABLE_UPGRADE',
             [
                 '#LINK#' => '/bitrix/admin/iblock_edit.php?type=' . YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['IBLOCK_TYPE_ID'] . '&ID=' . YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['ID']
             ]
         )];
+    } else {
+        unset($arAllOptions['CATALOG_OFFER_PROPS_UPGRADE']);
     }
-    $arAllOptions[] = [
+    $arAllOptions['CATALOG_OFFER_PROPS'] = [
         'CATALOG_OFFER_PROPS',
         getMessage('CATALOG_OFFER_PROPS'),
         COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_OFFER_PROPS', ''),
