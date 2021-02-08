@@ -158,7 +158,7 @@ $arAllOptions = array(
     [
         'ORDER_FIELDS_MATCH',
         '',
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'ORDER_FIELDS_MATCH', ''),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'ORDER_FIELDS_MATCH', '{}'),
         ['text']
     ],
     ['', '', Helper::getOrderMatchesTable(), ['statichtml']],

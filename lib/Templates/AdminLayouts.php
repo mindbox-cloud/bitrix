@@ -26,10 +26,7 @@ trait AdminLayouts
      */
     public static function getAddOrderMatchButton()
     {
-        $escapeTable = '</td></tr><tr><td>';
-        $button = '<a class="module_button module_button_add" href="javascript:void(0)">'.getMessage("BUTTON_ADD").'</a>';
-
-        return $escapeTable.$button;
+        return '<a class="module_button module_button_add" href="javascript:void(0)">'.getMessage("BUTTON_ADD").'</a>';
     }
 
     /**
@@ -40,13 +37,39 @@ trait AdminLayouts
         return <<<HTML
             <style type="text/css">
                 .module_button {
-                    border: 1px solid black;
-                    border-radius: 5%;
-                    padding: 8px 25px;
-                    background-color: #e0e8ea;
-                    color: black;
+                    padding: 6px 13px 6px;
+                    margin: 2px;
+                    border-radius: 4px;
+                    border: none;
+                    border-top: 1px solid #fff;
+                    -webkit-box-shadow: 0 0 1px rgba(0,0,0,.11), 0 1px 1px rgba(0,0,0,.3), inset 0 1px #fff, inset 0 0 1px rgba(255,255,255,.5);
+                    box-shadow: 0 0 1px rgba(0,0,0,.3), 0 1px 1px rgba(0,0,0,.3), inset 0 1px 0 #fff, inset 0 0 1px rgba(255,255,255,.5);
+                    background-color: #e0e9ec;
+                    background-image: -webkit-linear-gradient(bottom, #d7e3e7, #fff) !important;
+                    background-image: -moz-linear-gradient(bottom, #d7e3e7, #fff) !important;
+                    background-image: -ms-linear-gradient(bottom, #d7e3e7, #fff) !important;
+                    background-image: -o-linear-gradient(bottom, #d7e3e7, #fff) !important;
+                    background-image: linear-gradient(bottom, #d7e3e7, #fff) !important;
+                    color: #3f4b54;
+                    cursor: pointer;
+                    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+                    font-weight: bold;
+                    font-size: 13px;
+                    line-height: 18px;
+                    text-shadow: 0 1px rgba(255,255,255,0.7);
                     text-decoration: none;
-                    float: right;
+                    position: relative;
+                    vertical-align: middle;
+                    -webkit-font-smoothing: antialiased;
+                    margin-right: 10px;
+                    outline: none;
+                    border-spacing: 0;
+                    float: left;
+                }
+                .module_button_delete {
+                    height: 10px;
+                    display: inline-block;
+                    width: 10px;
                 }
                 .th {
                     background-color: #e0e8ea;
@@ -114,9 +137,9 @@ HTML;
                         row.insertCell().appendChild(document.createTextNode(mindboxKey));
                         let link = document.createElement('a');
                         link.classList.add('module_button_delete');
+                        link.innerHTML = '<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 96 96" enable-background="new 0 0 96 96" xml:space="preserve"><polygon fill="#AAAAAB" points="96,14 82,0 48,34 14,0 0,14 34,48 0,82 14,96 48,62 82,96 96,82 62,48 "></polygon></svg>';
                         link.href = 'javascript:void(0)';
                         link.onclick = () => {removeButtonHandler(bitrixKey)};
-                        link.text = 'X';
                         // link.dataset.bitrix = bitrixKey;
                         row.insertCell().appendChild(link);
                     }
