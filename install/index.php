@@ -188,6 +188,9 @@ class mindbox_marketing extends CModule {
 		$eventManager->registerEventHandlerCompatible("sale", "OnSaleBasketBeforeSaved", $this->MODULE_ID,
 			"\Mindbox\Event",
 			"OnSaleBasketBeforeSavedHadler", 1000);
+		$eventManager->registerEventHandlerCompatible("sale", "OnSaleBasketSaved", $this->MODULE_ID,
+			"\Mindbox\Event",
+			"OnSaleBasketSavedHadler", 1000);
 		$eventManager->registerEventHandlerCompatible("sale", "OnSaleOrderBeforeSaved", $this->MODULE_ID,
 			"\Mindbox\Event", "OnSaleOrderBeforeSavedHandler", 1000);
 		$eventManager->registerEventHandlerCompatible("sale", "OnSaleOrderSaved", $this->MODULE_ID,
@@ -209,6 +212,7 @@ class mindbox_marketing extends CModule {
 		$eventManager->unRegisterEventHandler("main", "OnBeforeUserUpdate", $this->MODULE_ID);
 		$eventManager->unRegisterEventHandler("main", "OnBeforeUserAdd", $this->MODULE_ID);
 		$eventManager->unRegisterEventHandler("main", "OnAfterUserAdd", $this->MODULE_ID);
+		$eventManager->unRegisterEventHandler("sale", "OnSaleBasketBeforeSaved", $this->MODULE_ID);
 		$eventManager->unRegisterEventHandler("sale", "OnSaleBasketSaved", $this->MODULE_ID);
 		$eventManager->unRegisterEventHandler("sale", "OnBasketAdd", $this->MODULE_ID);
 		$eventManager->unRegisterEventHandler("sale", "OnBasketDelete", $this->MODULE_ID);

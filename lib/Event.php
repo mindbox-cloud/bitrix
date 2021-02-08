@@ -1395,6 +1395,15 @@ class Event
         return new Main\EventResult(Main\EventResult::SUCCESS);
     }
 
+    public function OnSaleBasketSavedHandler($bakset)
+    {
+        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('OnSaleBasketSavedHandler');
+            $logger->log('$basket', $bakset);
+        }
+        return new Main\EventResult(Main\EventResult::SUCCESS);
+    }
+
     public function OnBeforeUserAddHandler(&$arFields)
     {
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
