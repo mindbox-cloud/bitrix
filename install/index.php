@@ -190,7 +190,7 @@ class mindbox_marketing extends CModule {
 			"OnSaleBasketBeforeSavedHadler", 1000);
 		$eventManager->registerEventHandlerCompatible("sale", "OnSaleBasketSaved", $this->MODULE_ID,
 			"\Mindbox\Event",
-			"OnSaleBasketSavedHadler", 1000);
+			"OnSaleBasketSavedHandler", 1000);
 		$eventManager->registerEventHandlerCompatible("sale", "OnSaleOrderBeforeSaved", $this->MODULE_ID,
 			"\Mindbox\Event", "OnSaleOrderBeforeSavedHandler", 1000);
 		$eventManager->registerEventHandlerCompatible("sale", "OnSaleOrderSaved", $this->MODULE_ID,

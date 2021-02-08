@@ -1395,12 +1395,30 @@ class Event
         return new Main\EventResult(Main\EventResult::SUCCESS);
     }
 
-    public function OnSaleBasketSavedHandler($bakset)
+    public function OnSaleBasketSavedHandler($basket)
     {
+        $basketItems = $basket->getBasketItems();
+
         if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
             $logger = new \Intensa\Logger\ILog('OnSaleBasketSavedHandler');
-            $logger->log('$basket', $bakset);
+            $logger->log('$basket', $basket);
         }
+
+        $notDelayedProductsCount = 0;
+        foreach ($basket as $basketItem) {
+            if($basketItem->getField('DELAY') == 'Y') {
+                self::setWishList($basketItems);
+                $_SESSION['SET_WISHLIST'] = 'Y';
+                break;
+            } else {
+                $notDelayedProductsCount++;
+            }
+        }
+
+        if($notDelayedProductsCount == count($basketItems) && $_SESSION['SET_WISHLIST'] == 'Y') {
+            self::clearWishList();
+        }
+
         return new Main\EventResult(Main\EventResult::SUCCESS);
     }
 
@@ -1642,6 +1660,90 @@ class Event
         } catch (Exceptions\MindboxClientErrorException $e) {
 
         } catch (Exceptions\MindboxClientException $e) {
+            $lastResponse = $mindbox->productList()->getLastResponse();
+            if ($lastResponse) {
+                $request = $lastResponse->getRequest();
+                QueueTable::push($request);
+            }
+        }
+    }
+
+    private static function setWishList($basketItems)
+    {
+        $mindbox = static::mindbox();
+        if (!$mindbox) {
+            return;
+        }
+
+        $arLines = [];
+        foreach ($basketItems as $basketItem) {
+            if($basketItem->getField('DELAY') == 'N') {
+                continue;
+            }
+            $productId = $basketItem->getProductId();
+            $arLines[ $productId ]['basketItem'] = $basketItem;
+            $arLines[ $productId ]['quantity'] += $basketItem->getQuantity();
+            $arLines[ $productId ]['priceOfLine'] += $basketItem->getPrice()*$basketItem->getQuantity();
+        }
+
+        $lines = [];
+        foreach ($arLines as $arLine) {
+            $product = new ProductRequestDTO();
+            $product->setId(Options::getModuleOption('EXTERNAL_SYSTEM'), Helper::getProductId($arLine['basketItem']));
+            $line = new ProductListItemRequestDTO();
+            $line->setProduct($product);
+            $line->setCount($arLine['quantity']);
+            $line->setPriceOfLine($arLine['priceOfLine']);
+            $lines[] = $line;
+        }
+
+
+        try {
+            $mindbox->productList()->setWishList(new ProductListItemRequestCollection($lines),
+                Options::getOperationName('setWishList'))->sendRequest();
+        } catch (Exceptions\MindboxClientErrorException $e) {
+
+        } catch (Exceptions\MindboxClientException $e) {
+            $lastResponse = $mindbox->productList()->getLastResponse();
+            if ($lastResponse) {
+                $request = $lastResponse->getRequest();
+                QueueTable::push($request);
+            }
+        }
+    }
+
+    private static function clearWishList()
+    {
+        $mindbox = static::mindbox();
+        if (!$mindbox) {
+            return;
+        }
+
+        unset($_SESSION['SET_WISHLIST']);
+
+        try {
+
+            if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+                $logger = new \Intensa\Logger\ILog('clearWishList');
+                $logger->log('try', [1]);
+            }
+
+            $mindbox->productList()->clearWishList(new DTO(), Options::getOperationName('clearWishList'))->sendRequest();
+        } catch (Exceptions\MindboxClientErrorException $e) {
+            if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+                $logger = new \Intensa\Logger\ILog('clearWishList');
+                $logger->log('$basket', $e->getMessage());
+            }
+            $lastResponse = $mindbox->productList()->getLastResponse();
+            if ($lastResponse) {
+                $request = $lastResponse->getRequest();
+                QueueTable::push($request);
+            }
+        } catch (Exceptions\MindboxClientException $e) {
+            if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+                $logger = new \Intensa\Logger\ILog('clearWishList');
+                $logger->log('$basket', $e->getMessage());
+            }
             $lastResponse = $mindbox->productList()->getLastResponse();
             if ($lastResponse) {
                 $request = $lastResponse->getRequest();

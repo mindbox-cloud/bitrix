@@ -50,7 +50,9 @@ class Options
         'viewCategory' => 'ViewCategory',
         'commitOrderTransaction'    =>  'CommitOrderTransaction',
         'rollbackOrderTransaction'  =>  'RollbackOrderTransaction',
-        'saveOfflineOrder'          =>  'SaveOfflineOrder'
+        'saveOfflineOrder'          =>  'SaveOfflineOrder',
+        'setWishList'   =>  'SetWishList',
+        'clearWishList' =>  'ClearWishList'
     ];
 
     private static $sdkOptions = [
