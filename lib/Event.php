@@ -188,17 +188,8 @@ class Event
             return isset($item);
         });
 
-        $customFields = [];
-        $ufFields = array_filter($arFields, function($value, $key) {
-            return strpos($key, 'UF_') !== false;
-        }, ARRAY_FILTER_USE_BOTH);
 
-        foreach ($ufFields as $code => $value) {
-            if (!empty($customName = Helper::getMatchByCode($code, Helper::getUserFieldsMatch()))) {
-                $customFields[Helper::sanitzeNamesForMindbox($customName)] = $value;
-            }
-        }
-
+        $customFields = Helper::getCustomFieldsForUser(0, $arFields);
         if (!empty($customFields)) {
             $fields['customFields'] = $customFields;
         }
@@ -358,17 +349,7 @@ class Event
                     return true;
                 }
 
-                $customFields = [];
-                $ufFields = array_filter($arFields, function($value, $key) {
-                    return strpos($key, 'UF_') !== false;
-                }, ARRAY_FILTER_USE_BOTH);
-
-                foreach ($ufFields as $code => $value) {
-                    if (!empty($customName = Helper::getMatchByCode($code, Helper::getUserFieldsMatch()))) {
-                        $customFields[Helper::sanitzeNamesForMindbox($customName)] = $value;
-                    }
-                }
-
+                $customFields = Helper::getCustomFieldsForUser(0, $arFields);
                 if (!empty($customFields)) {
                     $fields['customFields'] = $customFields;
                 }
@@ -525,7 +506,7 @@ class Event
                 'sex'         => $sex
             ];
 
-            $customFields = Helper::getCustomFieldsForUser($userId);
+            $customFields = Helper::getCustomFieldsForUser($userId, $arFields);
             if (!empty($customFields)) {
                 $fields['customFields'] = $customFields;
             }

@@ -460,18 +460,21 @@ class Helper
     /**
      * @return array
      */
-    public static function getCustomFieldsForUser($userId)
+    public static function getCustomFieldsForUser($userId, $userFields = [])
     {
-        $customFields = [];
-        $by = 'id';
-        $order = 'asc';
-        $user = \CUser::GetList($by, $order, ['ID' => $userId], ['SELECT' => ['UF_*']])->Fetch();
-        $fields = array_filter($user, function($value, $key) {
+        if (empty($userFields)) {
+            $customFields = [];
+            $by = 'id';
+            $order = 'asc';
+            $userFields = \CUser::GetList($by, $order, ['ID' => $userId], ['SELECT' => ['UF_*']])->Fetch();
+        }
+
+        $fields = array_filter($userFields, function($fields, $key) {
             return strpos($key, 'UF_') !== false;
         }, ARRAY_FILTER_USE_BOTH);
 
         foreach ($fields as $code => $value) {
-            if (!empty($customName = self::getMatchByCode($code, self::getUserFieldsMatch()))) {
+            if (!empty($value) && !empty($customName = self::getMatchByCode($code, self::getUserFieldsMatch()))) {
                 $customFields[self::sanitzeNamesForMindbox($customName)] = $value;
             }
         }
