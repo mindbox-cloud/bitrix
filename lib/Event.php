@@ -556,9 +556,9 @@ class Event
     {
         $standartMode = \COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard';
 
-        if ($standartMode) {
-            return new Main\EventResult(Main\EventResult::SUCCESS);
-        }
+//        if ($standartMode) {
+//            return new Main\EventResult(Main\EventResult::SUCCESS);
+//        }
 
         global $USER;
 
@@ -704,22 +704,13 @@ class Event
             $arProperty['CODE'] = Helper::sanitzeNamesForMindbox($arProperty['CODE']);
             $arOrderProperty[$arProperty['CODE']] = array_pop($arProperty['VALUE']);
             if (!empty($customName = Helper::getMatchByCode($arProperty['CODE']))) {
-                $value = '';
-                if (count($arProperty['VALUE']) > 1) {
-                    if (!empty($arProperty['VALUE'])) {
-                        $value = $arProperty['VALUE'];
-                    }
-                } else {
-                    if (!empty(current($arProperty['VALUE']))) {
-                        $value = current($arProperty['VALUE']);
-                    }
-                }
-
-                if (!empty($value)) {
-                    $customFields[$customName] = $value;
-                }
+                $customFields[$customName] = $arOrderProperty[$arProperty['CODE']];
             }
         }
+        echo '<pre>';
+        print_r($customFields);
+        echo '</pre>';
+        die();
 
         $customFields['deliveryType'] = $delivery;
 
@@ -983,20 +974,7 @@ class Event
                 $arProperty['CODE'] = Helper::sanitzeNamesForMindbox($arProperty['CODE']);
                 $arOrderProperty[$arProperty['CODE']] = current($arProperty['VALUE']);
                 if (!empty($customName = Helper::getMatchByCode($arProperty['CODE']))) {
-                    $value = '';
-                    if (count($arProperty['VALUE']) > 1) {
-                        if (!empty($arProperty['VALUE'])) {
-                            $value = $arProperty['VALUE'];
-                        }
-                    } else {
-                        if (!empty(current($arProperty['VALUE']))) {
-                            $value = current($arProperty['VALUE']);
-                        }
-                    }
-
-                    if (!empty($value)) {
-                        $customFields[$customName] = $value;
-                    }
+                    $customFields[$customName] = $arOrderProperty[$arProperty['CODE']];
                 }
             }
 
@@ -1151,20 +1129,7 @@ class Event
                 $arProperty['CODE'] = Helper::sanitzeNamesForMindbox($arProperty['CODE']);
                 $arOrderProperty[$arProperty['CODE']] = current($arProperty['VALUE']);
                 if (!empty($customName = Helper::getMatchByCode($arProperty['CODE']))) {
-                    $value = '';
-                    if (count($arProperty['VALUE']) > 1) {
-                        if (!empty($arProperty['VALUE'])) {
-                            $value = $arProperty['VALUE'];
-                        }
-                    } else {
-                        if (!empty(current($arProperty['VALUE']))) {
-                            $value = current($arProperty['VALUE']);
-                        }
-                    }
-
-                    if (!empty($value)) {
-                        $customFields[$customName] = $value;
-                    }
+                    $customFields[$customName] = $arOrderProperty[$arProperty['CODE']];
                 }
             }
 
