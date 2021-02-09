@@ -707,10 +707,6 @@ class Event
                 $customFields[$customName] = $arOrderProperty[$arProperty['CODE']];
             }
         }
-        echo '<pre>';
-        print_r($customFields);
-        echo '</pre>';
-        die();
 
         $customFields['deliveryType'] = $delivery;
 
