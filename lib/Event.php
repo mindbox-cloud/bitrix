@@ -556,9 +556,9 @@ class Event
     {
         $standartMode = \COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard';
 
-//        if ($standartMode) {
-//            return new Main\EventResult(Main\EventResult::SUCCESS);
-//        }
+        if ($standartMode) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
 
         global $USER;
 
