@@ -188,9 +188,9 @@ class mindbox_marketing extends CModule {
 		$eventManager->registerEventHandlerCompatible("sale", "OnSaleBasketBeforeSaved", $this->MODULE_ID,
 			"\Mindbox\Event",
 			"OnSaleBasketBeforeSavedHadler", 1000);
-		$eventManager->registerEventHandlerCompatible("sale", "OnSaleBasketSaved", $this->MODULE_ID,
+		$eventManager->registerEventHandlerCompatible("sale", "OnSaleBasketItemRefreshData", $this->MODULE_ID,
 			"\Mindbox\Event",
-			"OnSaleBasketSavedHandler", 1000);
+			"OnSaleBasketItemRefreshDataHandler", 1000);
 		$eventManager->registerEventHandlerCompatible("sale", "OnSaleOrderBeforeSaved", $this->MODULE_ID,
 			"\Mindbox\Event", "OnSaleOrderBeforeSavedHandler", 1000);
 		$eventManager->registerEventHandlerCompatible("sale", "OnSaleOrderSaved", $this->MODULE_ID,
