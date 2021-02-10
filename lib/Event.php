@@ -1400,11 +1400,6 @@ class Event
     {
         $basketItem = $event;
 
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('OnSaleBasketItemRefreshDataHandler');
-            //$logger->log('$basketItem', $basketItem);
-        }
-
         if($basketItem->getField('DELAY') == 'Y') {
             $_SESSION['WISHLIST'][$basketItem->getProductId()] = $basketItem;
         } else if ($basketItem->getField('DELAY') == 'N' && array_key_exists($basketItem->getProductId(), $_SESSION['WISHLIST']) ) {
@@ -1415,7 +1410,7 @@ class Event
             self::setWishList();
         }
 
-        if(empty($_SESSION['WISHLIST'])){
+        if(empty($_SESSION['WISHLIST']) && $_SESSION['WISHLIST_COUNT']){
             self::clearWishList();
         }
 
