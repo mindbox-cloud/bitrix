@@ -45,6 +45,11 @@ if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
             COption::SetOptionString(ADMIN_MODULE_NAME, str_replace('MINDBOX_', '', $mayEmptyProp), '');
         }
     }
+
+    $trackerJsFilename = $_SERVER["DOCUMENT_ROOT"] . "/bitrix/js/mindbox/tracker.js";
+    if(file_exists($trackerJsFilename)) {
+        file_put_contents($trackerJsFilename,str_replace('#endpointId#',COption::GetOptionString(ADMIN_MODULE_NAME, 'ENDPOINT', ''),file_get_contents($trackerJsFilename)));
+    }
 }
 
 IncludeModuleLangFile($_SERVER[ 'DOCUMENT_ROOT' ] . '/bitrix/modules/main/options.php');
