@@ -697,11 +697,6 @@ class Event
                         Options::getOperationName('beginAuthorizedOrderTransaction'))->sendRequest();
                 }
 
-            if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-                $logger = new \Intensa\Logger\ILog('OnSaleOrderBeforeSavedHandler');
-                $logger->debug('$createOrderResult', $createOrderResult->getResult()->getOrder()->getField('processingStatus'));
-            }
-
             if ($createOrderResult->getValidationErrors()) {
                 $validationErrors = $createOrderResult->getValidationErrors();
                 try {
