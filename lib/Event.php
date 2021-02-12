@@ -1695,7 +1695,6 @@ class Event
             $lines[] = $line;
         }
 
-
         try {
             $mindbox->productList()->setWishList(new ProductListItemRequestCollection($lines),
                 Options::getOperationName('setWishList'))->sendRequest();
