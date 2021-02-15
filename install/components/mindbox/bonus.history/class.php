@@ -114,10 +114,31 @@ class BonusHistory extends CBitrixComponent implements Controllerable
 
         foreach ($result->getCustomerActions() as $action) {
             foreach ($action->getCustomerBalanceChanges() as $customerBalanceChanges) {
+                $comment = $customerBalanceChanges->getField('comment');
+                if (empty($comment)) {
+                    $type = $customerBalanceChanges->getField('balanceChangeKind')->getField('systemName');
+                    $isPositive = (int)$customerBalanceChanges->getField('changeAmount') > 0;
+                    $orderId = array_pop($action->getOrder()->getField('ids'));
+                    $comment = '';
+                    if ($type === 'RetailOrderBonus') {
+                        if ($isPositive) {
+                            $comment = GetMessage('MB_EARN_POINTS') . $orderId;
+                        } else {
+                            $comment = GetMessage('MB_RETURN_POINTS') . $orderId;
+                        }
+                    } elseif ($type === 'RetailOrderPayment') {
+                        if ($isPositive) {
+                            $comment = GetMessage('MB_SPEND_POINTS') . $orderId;
+                        } else {
+                            $comment = GetMessage('MB_REFUND_POINTS') . $orderId;
+                        }
+                    }
+                }
+
                 $history[] = [
                     'start' => $this->formatTime($action->getDateTimeUtc()),
                     'size' => $customerBalanceChanges->getChangeAmount(),
-                    'name' => $action->getActionTemplate()->getName(),
+                    'name' => $comment,
                     'end' => $this->formatTime($customerBalanceChanges->getExpirationDateTimeUtc())
                 ];
             }

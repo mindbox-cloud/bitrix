@@ -11,7 +11,7 @@ $MESS['MB_OH_ORDER_HEADER'] = '<p>Order <b>№ #ID#</b> from #CREATED#.</p><p>';
 $MESS['MB_OH_ORDER_SPENT'] = 'To pay for the order was used #SPENT# point#END#.';
 $MESS['MB_OH_ORDER_ACUIRED'] = 'For the order accrued #ACUIRED# point#END#.';
 $MESS['MB_OH_ENDINGS_ARRAY'] = ['', 'а', 'ов'];
-$MESS['MB_OH_ORDER_LINE'] = '<tr><td><a href="#LINK#" target="_blank">#NAME#</a></td><td>#PRICE#</td></tr>';
+$MESS['MB_OH_ORDER_LINE'] = '<tr><td width="70%"><a href="#LINK#" target="_blank">#NAME#</a></td><td width="30%">#PRICE#</td></tr>';
 $MESS['MB_OH_ITEM_NAME'] = 'Product Name';
 $MESS['MB_OH_ITEM_PRICE'] = 'Price';
 $MESS['MB_OH_MORE'] = 'Still';
