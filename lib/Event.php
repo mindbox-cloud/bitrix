@@ -731,8 +731,7 @@ class Event
                         QueueTable::push($request);
                     }
                 }
-            } elseif ($createOrderResult->getResult()->getOrder()->getField('processingStatus') == 'PriceHasBeenChanged') {
-
+            } elseif ($createOrderResult->getResult()->getOrder()->getField('processingStatus') === 'PriceHasBeenChanged') {
                 $index = 0;
                 $priceHasBeenChanged = true;
                 while($index < self::PRICE_HAS_BEEN_CHANGED) {
@@ -743,21 +742,21 @@ class Event
                         $createOrderRes = $mindbox->order()->beginAuthorizedOrderTransaction($orderDTO,
                             Options::getOperationName('beginAuthorizedOrderTransaction'))->sendRequest();
                     }
-                    if($createOrderRes->getResult()->getOrder()->getField('processingStatus') != 'PriceHasBeenChanged') {
-                        break;
+                    if($createOrderRes->getResult()->getOrder()->getField('processingStatus') !== 'PriceHasBeenChanged') {
                         $priceHasBeenChanged = false;
+                        break;
                     }
                     $index++;
                 }
                 unset($index);
 
                 if($priceHasBeenChanged) {
+                    unset($priceHasBeenChanged);
                     return new \Bitrix\Main\EventResult(
                         \Bitrix\Main\EventResult::ERROR,
                         new \Bitrix\Sale\ResultError(Loc::getMessage("MB_ORDER_PROCESSING_STATUS_ERROR"), 'SALE_EVENT_WRONG_ORDER'),
                         'sale'
                     );
-                    unset($priceHasBeenChanged);
                 }
             } else {
                 $createOrderResult = $createOrderResult->getResult()->getField('order');
