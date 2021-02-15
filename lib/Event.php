@@ -9,6 +9,7 @@ use Bitrix\Main\Loader;
 use Bitrix\Main\UserTable;
 use Bitrix\Main;
 use Bitrix\Main\Localization\Loc;
+use Bitrix\Main\Page\Asset;
 use CUser;
 use DateTime;
 use DateTimeZone;
@@ -1573,6 +1574,12 @@ class Event
             }
         }
 
+    }
+
+    public function OnPrologHandler()
+    {
+        $defaultOptions = \Bitrix\Main\Config\Option::getDefaults("mindbox.marketing");
+        Asset::getInstance()->addJs($defaultOptions['TRACKER_JS_FILENAME']);
     }
 
     /**

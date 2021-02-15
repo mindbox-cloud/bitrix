@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function(){
+
     let s = document.createElement("script");
     s.type = "text/javascript";
     s.async = true;
@@ -10,4 +10,3 @@ document.addEventListener('DOMContentLoaded', function(){
     mindbox('create', {
         endpointId: '#endpointId#'
     });
-});
