@@ -70,6 +70,12 @@ $arAllOptions = array(
         ['text'],
         'Y'
     ],
+    [
+        'API_DOMAIN',
+        getMessage('API_DOMAIN'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'API_DOMAIN', 'ru'),
+        ['text']
+    ],
     //'<span style="font-size: 13px; font-weight: normal; color: #000;">' . getMessage('MODULE_VERSION') .  . '</span>',
     getMessage('MAINOPTIONS'),
     [
