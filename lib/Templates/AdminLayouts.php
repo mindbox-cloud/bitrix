@@ -208,7 +208,9 @@ HTML;
                 
                 function setProps(key, value, propName) {
                     let currentProps = getProps(propName);
-                    currentProps[key] = value;
+                    if (Object.values(currentProps).indexOf(value) === -1) {
+                        currentProps[key] = value;
+                    }
                     document.querySelector('[name="'+propName+'"]').value = JSON.stringify(currentProps);
                 }
                 

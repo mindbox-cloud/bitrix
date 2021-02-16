@@ -702,9 +702,14 @@ class Event
         $ar = $propertyCollection->getArray();
         foreach ($ar['properties'] as $arProperty) {
             $arProperty['CODE'] = Helper::sanitzeNamesForMindbox($arProperty['CODE']);
+            if (count($arProperty['VALUE']) === 1) {
+                $value = current($arProperty['VALUE']);
+            } else {
+                $value = $arProperty['VALUE'];
+            }
             $arOrderProperty[$arProperty['CODE']] = array_pop($arProperty['VALUE']);
             if (!empty($customName = Helper::getMatchByCode($arProperty['CODE']))) {
-                $customFields[$customName] = $arOrderProperty[$arProperty['CODE']];
+                $customFields[$customName] = $value;
             }
         }
 
@@ -712,7 +717,7 @@ class Event
 
         $arOrder['customFields'] = $customFields;
 
-        if (!empty($arOrderProperty['EMAIL']) && $standartMode) {
+        if (!empty($arOrderProperty['EMAIL'])) {
             $customer->setEmail($arOrderProperty['EMAIL']);
             $arOrder['email'] = $arOrderProperty['EMAIL'];
         }
@@ -724,7 +729,7 @@ class Event
             $customer->setFirstName($arOrderProperty[ 'NAME' ]);
         }
         */
-        if (!empty($arOrderProperty['PHONE']) && $standartMode) {
+        if (!empty($arOrderProperty['PHONE'])) {
             $customer->setMobilePhone($arOrderProperty['PHONE']);
             $arOrder['mobilePhone'] = $arOrderProperty['PHONE'];
         }
@@ -968,9 +973,14 @@ class Event
             $ar = $propertyCollection->getArray();
             foreach ($ar['properties'] as $arProperty) {
                 $arProperty['CODE'] = Helper::sanitzeNamesForMindbox($arProperty['CODE']);
+                if (count($arProperty['VALUE']) === 1) {
+                    $value = current($arProperty['VALUE']);
+                } else {
+                    $value = $arProperty['VALUE'];
+                }
                 $arOrderProperty[$arProperty['CODE']] = current($arProperty['VALUE']);
                 if (!empty($customName = Helper::getMatchByCode($arProperty['CODE']))) {
-                    $customFields[$customName] = $arOrderProperty[$arProperty['CODE']];
+                    $customFields[$customName] = $value;
                 }
             }
 
@@ -1123,9 +1133,14 @@ class Event
             $ar = $propertyCollection->getArray();
             foreach ($ar['properties'] as $arProperty) {
                 $arProperty['CODE'] = Helper::sanitzeNamesForMindbox($arProperty['CODE']);
+                if (count($arProperty['VALUE']) === 1) {
+                    $value = current($arProperty['VALUE']);
+                } else {
+                    $value = $arProperty['VALUE'];
+                }
                 $arOrderProperty[$arProperty['CODE']] = current($arProperty['VALUE']);
                 if (!empty($customName = Helper::getMatchByCode($arProperty['CODE']))) {
-                    $customFields[$customName] = $arOrderProperty[$arProperty['CODE']];
+                    $customFields[$customName] = $value;
                 }
             }
 
