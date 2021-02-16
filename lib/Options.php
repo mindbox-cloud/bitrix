@@ -81,6 +81,7 @@ class Options
 
         $domainZone = COption::GetOptionString('mindbox.marketing', 'API_DOMAIN', 'ru');
 
+        $sdkOptions['domainZone'] = $domainZone;
         $sdkOptions['domain'] = $domain.$domainZone;
 
         return $sdkOptions;

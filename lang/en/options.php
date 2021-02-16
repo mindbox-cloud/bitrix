@@ -31,5 +31,5 @@ $MESS['NEED_TABLE_UPGRADE'] = 'To speed up yml generation, change location of th
 $MESS['BRAND'] = "Brand";
 $MESS['SYSTEM_NAME'] = "System name";
 $MESS['LOYALTY'] = 'Loyality';
-$MESS['API_DOMAIN'] = 'API Domain - api.mindbox.';
+$MESS['API_DOMAIN'] = 'API Domain';
 $MESS['SAVE'] = 'Save';

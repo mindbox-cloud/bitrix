@@ -30,5 +30,5 @@ $MESS['STANDARD'] = 'Стандартный';
 $MESS['LOYALTY'] = 'Лояльность';
 $MESS['SAVE'] = 'Сохранить';
 $MESS['MODULE_VERSION'] = 'Версия модуля ';
-$MESS['API_DOMAIN'] = 'Домен API - api.mindbox.';
+$MESS['API_DOMAIN'] = 'Домен API';
 $MESS['NEED_TABLE_UPGRADE'] = 'Чтобы ускорить генерацию фида, измените место хранения свойств в <a href="#LINK#" target="_blank">настройках</a>. Необходимо, чтобы свойства <a href="https://dev.1c-bitrix.ru/user_help/content/iblock/iblock_edit.php" target="_blank">хранились в отдельной таблице</a>.';
