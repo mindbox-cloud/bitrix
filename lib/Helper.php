@@ -5,7 +5,6 @@
 
 namespace Mindbox;
 
-
 use Bitrix\Main\Loader;
 use Bitrix\Main\UserTable;
 use CCatalog;
@@ -62,9 +61,10 @@ class Helper
             $mindboxId = $rsUser[ 'UF_MINDBOX_ID' ];
         }
 
-        if(!$mindboxId && \COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {
+        if (!$mindboxId && \COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {
             $mindbox = Options::getConfig();
-            $request = $mindbox->getClientV3()->prepareRequest('POST',
+            $request = $mindbox->getClientV3()->prepareRequest(
+                'POST',
                 Options::getOperationName('getCustomerInfo'),
                 new DTO([
                     'customer' => [
@@ -72,7 +72,8 @@ class Helper
                             Options::getModuleOption('WEBSITE_ID') => $id
                         ]
                     ]
-                ]));
+                ])
+            );
 
             try {
                 $response = $request->sendRequest();
@@ -181,8 +182,12 @@ class Helper
         unset($fields);
 
         try {
-            $registerResponse = $mindbox->customer()->register($customer,
-                Options::getOperationName('register'), true, Helper::isSync())->sendRequest()->getResult();
+            $registerResponse = $mindbox->customer()->register(
+                $customer,
+                Options::getOperationName('register'),
+                true,
+                Helper::isSync()
+            )->sendRequest()->getResult();
         } catch (Exceptions\MindboxUnavailableException $e) {
             $lastResponse = $mindbox->customer()->getLastResponse();
             if ($lastResponse) {
@@ -196,7 +201,7 @@ class Helper
             }
         }
 
-        if($registerResponse) {
+        if ($registerResponse) {
             $registerResponse = Helper::iconvDTO($registerResponse, false);
             $status = $registerResponse->getStatus();
 
@@ -265,30 +270,35 @@ class Helper
     }
 
     /**
-     * Get product id by basket item
-     * @param \Bitrix\Sale\Basket $basketItem
+     * Get element code by id
+     * @param $elementId
      *
-     * @return $result
+     * @return $productId
      */
 
-    public static function getProductId($basketItem)
+    public static function getElementCode($elementId)
     {
-        $result = '';
-        $id = $basketItem->getField('PRODUCT_XML_ID');
-
-        if(!$id) {
-            $productId = $basketItem->getField('PRODUCT_ID');
-            $arProduct = \CIBlockElement::GetByID($productId)->GetNext();
-            $id = $arProduct['XML_ID'];
+        $arProduct = \CIBlockElement::GetByID($elementId)->GetNext();
+        if ($arProduct['XML_ID']) {
+            $elementId = $arProduct['XML_ID'];
         }
+        return $elementId;
+    }
 
-        if(!$id) {
-            $id = $basketItem->getField('PRODUCT_ID');
+    /**
+     * Get section code by id
+     * @param $sectionId
+     *
+     * @return $sectionId
+     */
+
+    public static function getSectionCode($sectionId)
+    {
+        $arSection = \CIBlockSection::GetByID($sectionId)->GetNext();
+        if ($arSection['XML_ID']) {
+            $sectionId = $arSection['XML_ID'];
         }
-
-        $result = $id;
-
-        return $result;
+        return $sectionId;
     }
 
     /**
@@ -400,7 +410,8 @@ class Helper
      *
      * @return boolean
      */
-    public static function isUnAuthorizedOrder($arUser) {
+    public static function isUnAuthorizedOrder($arUser)
+    {
         return date('dmYHi', time()) === date('dmYHi', strtotime($arUser['DATE_REGISTER']));
     }
 
