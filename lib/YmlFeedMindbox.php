@@ -130,14 +130,13 @@ class YmlFeedMindbox
             $catId = [];
             while ($cat = $dbCats->GetNext()) {
                 $cats[] = $cat;
-                $catId[$cat['ID']] = $cat['XML_ID'];
             }
             foreach ($cats as $cat) {
                 $category = $dom->createElement("category", htmlspecialchars($cat["NAME"], ENT_XML1 | ENT_QUOTES));
-                $category->setAttribute("id", Helper::getElementCode($cat['ID']));
+                $category->setAttribute("id", Helper::getSectionCode($cat['ID']));
                 if (isset($cat["IBLOCK_SECTION_ID"]) && !empty($cat["IBLOCK_SECTION_ID"])) {
                     $parentId = (!empty($catId[$cat['IBLOCK_SECTION_ID']]) ? $catId[$cat['IBLOCK_SECTION_ID']] : $cat["IBLOCK_SECTION_ID"]);
-                    $category->setAttribute("parentId", Helper::getElementCode($parentId));
+                    $category->setAttribute("parentId", Helper::getSectionCode($parentId));
                 }
                 $categories->appendChild($category);
             }
@@ -197,7 +196,7 @@ class YmlFeedMindbox
                     }
                     $offerCurrencyId = $dom->createElement("currencyId", htmlspecialchars($ofr["CATALOG_CURRENCY_" . $basePriceId], ENT_XML1 | ENT_QUOTES));
                     $offer->appendChild($offerCurrencyId);
-                    $offerCategoryId = $dom->createElement("categoryId", $prods[$prodId]["IBLOCK_SECTION_ID"]);
+                    $offerCategoryId = $dom->createElement("categoryId", Helper::getSectionCode($prods[$prodId]["IBLOCK_SECTION_ID"]));
                     $offer->appendChild($offerCategoryId);
                     $img = $ofr['DETAIL_PICTURE'] ?: $ofr['PREVIEW_PICTURE'];
                     if (!empty($img)) {
@@ -264,7 +263,7 @@ class YmlFeedMindbox
                 }
                 $offerCurrencyId = $dom->createElement("currencyId", htmlspecialchars($prod["CATALOG_CURRENCY_" . $basePriceId], ENT_XML1 | ENT_QUOTES));
                 $offer->appendChild($offerCurrencyId);
-                $offerCategoryId = $dom->createElement("categoryId", Helper::getElementCode($prod["IBLOCK_SECTION_ID"]));
+                $offerCategoryId = $dom->createElement("categoryId", Helper::getSectionCode($prod["IBLOCK_SECTION_ID"]));
                 $offer->appendChild($offerCategoryId);
                 $img = $prod['DETAIL_PICTURE'] ?: $prod['PREVIEW_PICTURE'];
                 $url = self::getPictureUrl($img);

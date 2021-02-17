@@ -271,18 +271,34 @@ class Helper
 
     /**
      * Get element code by id
-     * @param $productId
+     * @param $elementId
      *
      * @return $productId
      */
 
-    public static function getElementCode($productId)
+    public static function getElementCode($elementId)
     {
-        $arProduct = \CIBlockElement::GetByID($productId)->GetNext();
+        $arProduct = \CIBlockElement::GetByID($elementId)->GetNext();
         if ($arProduct['XML_ID']) {
-            $productId = $arProduct['XML_ID'];
+            $elementId = $arProduct['XML_ID'];
         }
-        return $productId;
+        return $elementId;
+    }
+
+    /**
+     * Get section code by id
+     * @param $sectionId
+     *
+     * @return $sectionId
+     */
+
+    public static function getSectionCode($sectionId)
+    {
+        $arSection = \CIBlockSection::GetByID($sectionId)->GetNext();
+        if ($arSection['XML_ID']) {
+            $sectionId = $arSection['XML_ID'];
+        }
+        return $sectionId;
     }
 
     /**
