@@ -1411,17 +1411,17 @@ class Event
     {
         $basketItem = $event;
 
-        if($basketItem->getField('DELAY') === 'Y') {
+        if ($basketItem->getField('DELAY') === 'Y') {
             $_SESSION['WISHLIST'][$basketItem->getProductId()] = $basketItem;
-        } else if ($basketItem->getField('DELAY') === 'N' && array_key_exists($basketItem->getProductId(), $_SESSION['WISHLIST']) ) {
+        } else if ($basketItem->getField('DELAY') === 'N' && array_key_exists($basketItem->getProductId(), $_SESSION['WISHLIST'])) {
             unset($_SESSION['WISHLIST'][$basketItem->getProductId()]);
         }
 
-        if(!empty($_SESSION['WISHLIST']) && count($_SESSION['WISHLIST']) !== $_SESSION['WISHLIST_COUNT']) {
+        if (!empty($_SESSION['WISHLIST']) && count($_SESSION['WISHLIST']) !== $_SESSION['WISHLIST_COUNT']) {
             self::setWishList();
         }
 
-        if(empty($_SESSION['WISHLIST']) && isset($_SESSION['WISHLIST_COUNT'])){
+        if (empty($_SESSION['WISHLIST']) && isset($_SESSION['WISHLIST_COUNT'])) {
             self::clearWishList();
         }
 
@@ -1690,7 +1690,7 @@ class Event
         $basketItems = $basket->getBasketItems();
         $arLines = [];
         foreach ($basketItems as $basketItem) {
-            if($basketItem->getField('DELAY') == 'N') {
+            if ($basketItem->getField('DELAY') == 'N') {
                 continue;
             }
             $productId = $basketItem->getProductId();
@@ -1711,11 +1711,18 @@ class Event
         }
 
         try {
-            $mindbox->productList()->setWishList(new ProductListItemRequestCollection($lines),
-                Options::getOperationName('setWishList'))->sendRequest();
+            $mindbox->productList()->setWishList(
+                new ProductListItemRequestCollection($lines),
+                Options::getOperationName('setWishList')
+            )->sendRequest();
             $_SESSION['WISHLIST_COUNT'] = count($_SESSION['WISHLIST']);
+            self::setCartMindbox($basketItems);
         } catch (Exceptions\MindboxClientErrorException $e) {
-
+            $lastResponse = $mindbox->productList()->getLastResponse();
+            if ($lastResponse) {
+                $request = $lastResponse->getRequest();
+                QueueTable::push($request);
+            }
         } catch (Exceptions\MindboxClientException $e) {
             $lastResponse = $mindbox->productList()->getLastResponse();
             if ($lastResponse) {
