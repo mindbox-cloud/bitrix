@@ -134,10 +134,10 @@ class YmlFeedMindbox
             }
             foreach ($cats as $cat) {
                 $category = $dom->createElement("category", htmlspecialchars($cat["NAME"], ENT_XML1 | ENT_QUOTES));
-                $category->setAttribute("id", Helper::getProductId($cat['ID']));
+                $category->setAttribute("id", Helper::getElementCode($cat['ID']));
                 if (isset($cat["IBLOCK_SECTION_ID"]) && !empty($cat["IBLOCK_SECTION_ID"])) {
                     $parentId = (!empty($catId[$cat['IBLOCK_SECTION_ID']]) ? $catId[$cat['IBLOCK_SECTION_ID']] : $cat["IBLOCK_SECTION_ID"]);
-                    $category->setAttribute("parentId", Helper::getProductId($parentId));
+                    $category->setAttribute("parentId", Helper::getElementCode($parentId));
                 }
                 $categories->appendChild($category);
             }
@@ -161,7 +161,7 @@ class YmlFeedMindbox
                 foreach ($ofrs as $ofr) {
                     $offer = $dom->createElement("offer");
                     $offer->setAttribute("group_id", $prods[$prodId]['XML_ID']);
-                    $offer->setAttribute("id", Helper::getProductId($ofr["ID"]));
+                    $offer->setAttribute("id", Helper::getElementCode($ofr["ID"]));
                     $available = ($ofr['CATALOG_AVAILABLE'] === 'Y' && $ofr['ACTIVE'] === 'Y') ? 'true' : 'false';
                     $offer->setAttribute("available", $available);
                     unset($available);
@@ -238,7 +238,7 @@ class YmlFeedMindbox
         if (!empty($prods)) {
             foreach ($prods as $prod) {
                 $offer = $dom->createElement("offer");
-                $offer->setAttribute("id", Helper::getProductId($prod["ID"]));
+                $offer->setAttribute("id", Helper::getElementCode($prod["ID"]));
                 $available = ($prod['CATALOG_AVAILABLE'] === 'Y' && $prod['ACTIVE'] === 'Y') ? 'true' : 'false';
                 $offer->setAttribute("available", $available);
                 unset($available);
@@ -264,7 +264,7 @@ class YmlFeedMindbox
                 }
                 $offerCurrencyId = $dom->createElement("currencyId", htmlspecialchars($prod["CATALOG_CURRENCY_" . $basePriceId], ENT_XML1 | ENT_QUOTES));
                 $offer->appendChild($offerCurrencyId);
-                $offerCategoryId = $dom->createElement("categoryId", Helper::getProductId($prod["IBLOCK_SECTION_ID"]));
+                $offerCategoryId = $dom->createElement("categoryId", Helper::getElementCode($prod["IBLOCK_SECTION_ID"]));
                 $offer->appendChild($offerCategoryId);
                 $img = $prod['DETAIL_PICTURE'] ?: $prod['PREVIEW_PICTURE'];
                 $url = self::getPictureUrl($img);

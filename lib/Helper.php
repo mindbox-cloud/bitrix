@@ -270,13 +270,13 @@ class Helper
     }
 
     /**
-     * Get product id by basket item
-     * @param \Bitrix\Sale\Basket $basketItem
+     * Get element code by id
+     * @param $productId
      *
-     * @return $result
+     * @return $productId
      */
 
-    public static function getProductId($productId)
+    public static function getElementCode($productId)
     {
         $arProduct = \CIBlockElement::GetByID($productId)->GetNext();
         if ($arProduct['XML_ID']) {

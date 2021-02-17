@@ -602,7 +602,7 @@ class Event
                 'lineId'           => $basketItem->getId(),
                 'product'          => [
                     'ids' => [
-                        Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getProductId($basketItem->getProductId())
+                        Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getElementCode($basketItem->getProductId())
                     ]
                 ],
                 'status'           => [
@@ -833,7 +833,7 @@ class Event
                     'lineId'           => $basketItem->getId(),
                     'product'          => [
                         'ids' => [
-                            Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getProductId($basketItem->getProductId())
+                            Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getElementCode($basketItem->getProductId())
                         ]
                     ],
                     'status'           => [
@@ -1018,7 +1018,7 @@ class Event
                     'lineId'           => $basketItem->getId(),
                     'product'          => [
                         'ids' => [
-                            Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getProductId($basketItem->getProductId())
+                            Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getElementCode($basketItem->getProductId())
                         ]
                     ]
                 ];
@@ -1173,7 +1173,7 @@ class Event
                     $line->setQuantity($basketItem->getQuantity());
                     $catalogPrice = \CPrice::GetBasePrice($basketItem->getProductId())[ 'PRICE' ];
                     $line->setProduct([
-                        'productId'        => Helper::getProductId($basketItem->getProductId()),
+                        'productId'        => Helper::getElementCode($basketItem->getProductId()),
                         'basePricePerItem' => $catalogPrice
                     ]);
 
@@ -1259,7 +1259,7 @@ class Event
                 'lineId'           => $basketItem->getId(),
                 'product'          => [
                     'ids' => [
-                        Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getProductId($basketItem->getProductId())
+                        Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getElementCode($basketItem->getProductId())
                     ]
                 ],
                 'status'           => [
@@ -1630,7 +1630,7 @@ class Event
         $lines = [];
         foreach ($arLines as $arLine) {
             $product = new ProductRequestDTO();
-            $product->setId(Options::getModuleOption('EXTERNAL_SYSTEM'), Helper::getProductId($arLine['basketItem']->getProductId()));
+            $product->setId(Options::getModuleOption('EXTERNAL_SYSTEM'), Helper::getElementCode($arLine['basketItem']->getProductId()));
 
 
             $line = new ProductListItemRequestDTO();
