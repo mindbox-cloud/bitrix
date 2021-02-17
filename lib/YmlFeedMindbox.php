@@ -1,7 +1,9 @@
 <?php
 
 namespace Mindbox;
+
 use domDocument;
+use Mindbox\Helper;
 
 class YmlFeedMindbox
 {
@@ -12,8 +14,7 @@ class YmlFeedMindbox
     {
         $step = (int) $step;
 
-        if (!isset($_SERVER["SERVER_NAME"]) || empty($_SERVER["SERVER_NAME"]))
-        {
+        if (!isset($_SERVER["SERVER_NAME"]) || empty($_SERVER["SERVER_NAME"])) {
             $_SERVER["SERVER_NAME"] = SITE_SERVER_NAME;
         }
 
@@ -133,7 +134,7 @@ class YmlFeedMindbox
             }
             foreach ($cats as $cat) {
                 $category = $dom->createElement("category", htmlspecialchars($cat["NAME"], ENT_XML1 | ENT_QUOTES));
-                $category->setAttribute("id", !empty($cat['XML_ID']) ? $cat['XML_ID'] : $cat['ID']);
+                $category->setAttribute("id", Helper::getProductId($cat['ID']));
                 if (isset($cat["IBLOCK_SECTION_ID"]) && !empty($cat["IBLOCK_SECTION_ID"])) {
                     $category->setAttribute("parentId", !empty($catId[$cat['IBLOCK_SECTION_ID']]) ? $catId[$cat['IBLOCK_SECTION_ID']] : $cat["IBLOCK_SECTION_ID"]);
                 }
@@ -159,10 +160,7 @@ class YmlFeedMindbox
                 foreach ($ofrs as $ofr) {
                     $offer = $dom->createElement("offer");
                     $offer->setAttribute("group_id", $prods[$prodId]['XML_ID']);
-                    if(!$ofr["XML_ID"]) {
-                        $ofr['XML_ID'] = $ofr['ID'];
-                    }
-                    $offer->setAttribute("id", $ofr["XML_ID"]);
+                    $offer->setAttribute("id", Helper::getProductId($ofr["ID"]));
                     $available = ($ofr['CATALOG_AVAILABLE'] === 'Y' && $ofr['ACTIVE'] === 'Y') ? 'true' : 'false';
                     $offer->setAttribute("available", $available);
                     unset($available);
@@ -207,12 +205,12 @@ class YmlFeedMindbox
                         $img = $prods[$prodId]['DETAIL_PICTURE'] ?: $prods[$prodId]['PREVIEW_PICTURE'];
                         $url = self::getPictureUrl($img);
                     }
-                    if($url) {
+                    if ($url) {
                         $offerPicture = $dom->createElement("picture", htmlspecialchars(self::getProtocol() . $url, ENT_XML1 | ENT_QUOTES));
                         $offer->appendChild($offerPicture);
                     }
                     $ofr['props'] = array_merge($ofr['props'], $prods[$prodId]["props"]);
-                    if (!empty ($ofr['props'])) {
+                    if (!empty($ofr['props'])) {
                         foreach ($ofr['props'] as $prop) {
                             if (!empty($prop['VALUE'])) {
                                 if (is_array($prop['VALUE'])) {
@@ -239,7 +237,7 @@ class YmlFeedMindbox
         if (!empty($prods)) {
             foreach ($prods as $prod) {
                 $offer = $dom->createElement("offer");
-                $offer->setAttribute("id", $prod["XML_ID"]);
+                $offer->setAttribute("id", Helper::getProductId($prod["ID"]));
                 $available = ($prod['CATALOG_AVAILABLE'] === 'Y' && $prod['ACTIVE'] === 'Y') ? 'true' : 'false';
                 $offer->setAttribute("available", $available);
                 unset($available);
@@ -250,7 +248,7 @@ class YmlFeedMindbox
                     $offerDescription = $dom->createElement("description", htmlspecialchars($prod["PREVIEW_TEXT"], ENT_XML1 | ENT_QUOTES));
                     $offer->appendChild($offerDescription);
                 }
-                if($prod["DETAIL_PAGE_URL"]) {
+                if ($prod["DETAIL_PAGE_URL"]) {
                     $offerUrl = $dom->createElement("url", htmlspecialchars(self::getProtocol() . $_SERVER["SERVER_NAME"] . $prod["DETAIL_PAGE_URL"], ENT_XML1 | ENT_QUOTES));
                     $offer->appendChild($offerUrl);
                 }
@@ -273,7 +271,7 @@ class YmlFeedMindbox
                     $offerPicture = $dom->createElement("picture", htmlspecialchars(self::getProtocol() . $url, ENT_XML1 | ENT_QUOTES));
                     $offer->appendChild($offerPicture);
                 }
-                if (!empty ($prod['props'])) {
+                if (!empty($prod['props'])) {
                     foreach ($prod['props'] as $prop) {
                         if (!empty($prop['VALUE'])) {
                             if (is_array($prop['VALUE'])) {
@@ -467,8 +465,7 @@ class YmlFeedMindbox
         if (!empty($addProps)) {
             $addProps = explode(',', $addProps);
             $props = self::getProps($addProps, Options::getModuleOption("CATALOG_IBLOCK_ID"), self::getProdsIds($prodsInfo));
-            foreach ($props as $elementId => $prop)
-            {
+            foreach ($props as $elementId => $prop) {
                 $prodsInfo[$elementId]['props'] = $prop;
             }
         }
@@ -545,9 +542,10 @@ class YmlFeedMindbox
      * @param string $id id изображения
      * @return string
      */
-    protected static function getPictureUrl($id) {
+    protected static function getPictureUrl($id)
+    {
         $url = \CFile::GetPath($id);
-        if(!$url) {
+        if (!$url) {
             return false;
         }
         return $_SERVER["SERVER_NAME"] . $url;
@@ -557,7 +555,8 @@ class YmlFeedMindbox
      * Возвращает название сайта
      * @return string
      */
-    protected static function getSiteName() {
+    protected static function getSiteName()
+    {
         $siteInfo = \CSite::GetList($by = "sort", $order = "asc", ["ACTIVE" => "Y"]);
         $siteInfo = $siteInfo->Fetch();
         $siteName = '';
@@ -567,6 +566,5 @@ class YmlFeedMindbox
             $siteName = $siteInfo['SITE_NAME'];
         }
         return !empty($siteName) ? $siteName : 'sitename';
-
     }
 }
