@@ -38,6 +38,8 @@ class Event
 {
     protected $mindbox;
 
+    const TRACKER_JS_FILENAME = "https://api.mindbox.ru/scripts/v1/tracker.js";
+
     /**
      * @param $arUser
      * @return bool
@@ -1594,7 +1596,7 @@ class Event
     {
         $defaultOptions = \Bitrix\Main\Config\Option::getDefaults("mindbox.marketing");
         $jsString = '<script data-skip-moving="true">' . file_get_contents($defaultOptions['TRACKER_JS_FILENAME']) . "</script>\r\n";
-        $jsString .= '<script data-skip-moving="true" src="https://api.mindbox.ru/scripts/v1/tracker.js" async></script>';
+        $jsString .= '<script data-skip-moving="true" src="' . self::TRACKER_JS_FILENAME . '" async></script>';
         Asset::getInstance()->addString($jsString);
     }
 
