@@ -1579,7 +1579,9 @@ class Event
     public function OnPrologHandler()
     {
         $defaultOptions = \Bitrix\Main\Config\Option::getDefaults("mindbox.marketing");
-        Asset::getInstance()->addJs($defaultOptions['TRACKER_JS_FILENAME']);
+        $jsString = '<script data-skip-moving="true">' . file_get_contents($defaultOptions['TRACKER_JS_FILENAME']) . "</script>\r\n";
+        $jsString .= '<script data-skip-moving="true" src="https://api.mindbox.ru/scripts/v1/tracker.js" async></script>';
+        Asset::getInstance()->addString($jsString);
     }
 
     /**
