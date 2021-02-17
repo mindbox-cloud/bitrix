@@ -125,12 +125,17 @@ class YmlFeedMindbox
 
             $categories = $dom->createElement("categories");
             $categories = $shop->appendChild($categories);
-            $cats = self::getCategories();
-            while ($cat = $cats->GetNext()) {
+            $dbCats = self::getCategories();
+            $catId = [];
+            while ($cat = $dbCats->GetNext()) {
+                $cats[] = $cat;
+                $catId[$cat['ID']] = $cat['XML_ID'];
+            }
+            foreach ($cats as $cat) {
                 $category = $dom->createElement("category", htmlspecialchars($cat["NAME"], ENT_XML1 | ENT_QUOTES));
-                $category->setAttribute("id", $cat["ID"]);
+                $category->setAttribute("id", !empty($cat['XML_ID']) ? $cat['XML_ID'] : $cat['ID']);
                 if (isset($cat["IBLOCK_SECTION_ID"]) && !empty($cat["IBLOCK_SECTION_ID"])) {
-                    $category->setAttribute("parentId", $cat["IBLOCK_SECTION_ID"]);
+                    $category->setAttribute("parentId", !empty($catId[$cat['IBLOCK_SECTION_ID']]) ? $catId[$cat['IBLOCK_SECTION_ID']] : $cat["IBLOCK_SECTION_ID"]);
                 }
                 $categories->appendChild($category);
             }
@@ -312,6 +317,7 @@ class YmlFeedMindbox
     {
         $arSelect = array(
             "ID",
+            "XML_ID",
             "IBLOCK_ID",
             "IBLOCK_SECTION_ID",
             "NAME"

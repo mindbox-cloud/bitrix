@@ -44,6 +44,10 @@ class Event
      */
     public function OnAfterUserAuthorizeHandler($arUser)
     {
+        if(!$arUser[ 'user_fields' ][ 'ID' ]) {
+            return true;
+        }
+
         $userMindboxId = false;
         $rsUser = UserTable::getList(
             [
@@ -56,6 +60,10 @@ class Event
         )->fetch();
         if ($rsUser && isset($rsUser[ 'UF_MINDBOX_ID' ]) && $rsUser['UF_MINDBOX_ID'] > 0) {
             $userMindboxId = $rsUser[ 'UF_MINDBOX_ID' ];
+        }
+
+        if(!isset($_REQUEST['AUTH_FORM']) && !isset($_REQUEST['TYPE']) || \Bitrix\Main\Context::getCurrent()->getRequest()->isAdminSection()) {
+            return true;
         }
 
         if (empty($arUser[ 'user_fields' ][ 'LAST_LOGIN' ]) && !$userMindboxId) {
@@ -379,37 +387,7 @@ class Event
                     //return false;
                 }
             }
-
-            //  authorize
-            sleep(1);
-
-            if (isset($_SESSION[ 'NEW_USER_MINDBOX' ]) && $_SESSION[ 'NEW_USER_MINDBOX' ] === true) {
-                unset($_SESSION[ 'NEW_USER_MINDBOX' ]);
-                return true;
-            }
-
-                $customer = new CustomerRequestDTO([
-                    'ids' => [
-                        Options::getModuleOption('WEBSITE_ID') => $arFields[ 'USER_ID' ]
-                    ]
-                ]);
-
-                try {
-                    $mindbox->customer()->authorize($customer,
-                        Options::getOperationName('authorize'))->sendRequest();
-                } catch (Exceptions\MindboxUnavailableException $e) {
-                    $lastResponse = $mindbox->customer()->getLastResponse();
-
-                    if ($lastResponse) {
-                        $request = $lastResponse->getRequest();
-                        QueueTable::push($request);
-                    }
-                } catch (Exceptions\MindboxClientException $e) {
-                    return false;
-                }
-
         } else {
-
             if ($arFields[ 'UF_MINDBOX_ID' ]) {
                 $request = $mindbox->getClientV3()->prepareRequest('POST',
                     Options::getOperationName('getCustomerInfo'),
@@ -561,6 +539,8 @@ class Event
         }
 
         global $USER;
+
+
 
         if (!$USER || is_string($USER)) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
@@ -736,34 +716,29 @@ class Event
 
         $orderDTO->setField('order', $arOrder);
 
-        if (!(Helper::isUnAuthorizedOrder($arUser) || !$USER->IsAuthorized())) {
+        if (!(\Mindbox\Helper::isUnAuthorizedOrder($arUser) || (is_object($USER) && !$USER->IsAuthorized()))) {
             $customer->setId('mindboxId', $mindboxId);
         }
 
-        if ($USER->IsAuthorized() && Helper::isUnAuthorizedOrder($arUser)) {
+        if (is_object($USER) && $USER->IsAuthorized() && \Mindbox\Helper::isUnAuthorizedOrder($arUser)) {
             $customer->setId(Options::getModuleOption('WEBSITE_ID'), $USER->GetID());
         }
 
         $orderDTO->setCustomer($customer);
 
+
+
+
         try {
-            if ($standartMode) {
-                if (Helper::isUnAuthorizedOrder($arUser)) {
-                    $createOrderResult = $mindbox->order()->createUnauthorizedOrder($orderDTO,
-                        Options::getOperationName('createUnauthorizedOrder'))->sendRequest();
-                } else {
-                    $createOrderResult = $mindbox->order()->createAuthorizedOrder($orderDTO,
-                        Options::getOperationName('createAuthorizedOrder'))->sendRequest();
-                }
-            } else {
-                if (Helper::isUnAuthorizedOrder($arUser)) {
+
+                if (\Mindbox\Helper::isUnAuthorizedOrder($arUser) || (is_object($USER) && !$USER->IsAuthorized())) {
                     $createOrderResult = $mindbox->order()->beginUnauthorizedOrderTransaction($orderDTO,
                         Options::getOperationName('beginUnauthorizedOrderTransaction'))->sendRequest();
                 } else {
                     $createOrderResult = $mindbox->order()->beginAuthorizedOrderTransaction($orderDTO,
                         Options::getOperationName('beginAuthorizedOrderTransaction'))->sendRequest();
                 }
-            }
+
 
 
             if ($createOrderResult->getValidationErrors()) {
@@ -1158,11 +1133,17 @@ class Event
                 ]
             );
 
-            $customer->setEmail($arOrderProperty['EMAIL']);
-            $customer->setLastName($arOrderProperty['FIO']);
-            $customer->setFirstName($arOrderProperty['NAME']);
-            $customer->setMobilePhone($arOrderProperty['PHONE']);
-            $customer->setId(Options::getModuleOption('WEBSITE_ID'), $order->getUserId());
+            $customer->setEmail($arOrderProperty[ 'EMAIL' ]);
+            $customer->setLastName($arOrderProperty[ 'FIO' ]);
+            $customer->setFirstName($arOrderProperty[ 'NAME' ]);
+            $customer->setMobilePhone($arOrderProperty[ 'PHONE' ]);
+
+            if (\Mindbox\Helper::isUnAuthorizedOrder($arUser) || (is_object($USER) && !$USER->IsAuthorized())) {
+                //  unauthorized user
+            } else {
+                //  authorized user
+                $customer->setId(Options::getModuleOption('WEBSITE_ID'), $order->getUserId());
+            }
 
             $isSubscribed = true;
             if ($arUser['UF_IS_SUBSCRIBED'] === '0') {
@@ -1207,7 +1188,7 @@ class Event
 
             try {
 
-                if (Helper::isUnAuthorizedOrder($arUser)) {
+                if (\Mindbox\Helper::isUnAuthorizedOrder($arUser) || (is_object($USER) && !$USER->IsAuthorized())) {
                     $createOrderResult = $mindbox->order()->CreateUnauthorizedOrder($orderDTO,
                         Options::getOperationName('createUnauthorizedOrder'))->sendRequest();
                 } else {
@@ -1245,14 +1226,17 @@ class Event
                     $customer->setId('mindbox', $mindboxId);
                 }
 
-                $customer->setEmail($USER->GetEmail());
-                $phone = $_SESSION['ANONYM']['PHONE'];
-                unset($_SESSION['ANONYM']['PHONE']);
+                if(is_object($USER)) {
+                    $customer->setEmail($USER->GetEmail());
+                }
+
+                $phone = $_SESSION[ 'ANONYM' ][ 'PHONE' ];
+                unset($_SESSION[ 'ANONYM' ][ 'PHONE' ]);
 
                 if ($phone) {
                     $customer->setMobilePhone(Helper::formatPhone($phone));
                 }
-                if ($USER->IsAuthorized()) {
+                if (is_object($USER) && $USER->IsAuthorized()) {
                     $customer->setField('isAuthorized', true);
                 } else {
                     $customer->setField('isAuthorized', false);
