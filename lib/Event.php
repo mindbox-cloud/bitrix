@@ -1670,10 +1670,16 @@ class Event
         }
 
         try {
-            $mindbox->productList()->setProductList(
-                new ProductListItemRequestCollection($lines),
-                Options::getOperationName('setProductList')
-            )->sendRequest();
+            if (!empty($lines)) {
+                $mindbox->productList()->setProductList(
+                    new ProductListItemRequestCollection($lines),
+                    Options::getOperationName('setProductList')
+                )->sendRequest();
+            } else {
+                $mindbox->productList()->ClearCart(
+                    Options::getOperationName('clearCart')
+                )->sendRequest();
+            }
         } catch (Exceptions\MindboxClientErrorException $e) {
         } catch (Exceptions\MindboxClientException $e) {
             $lastResponse = $mindbox->productList()->getLastResponse();

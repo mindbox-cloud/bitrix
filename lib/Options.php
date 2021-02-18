@@ -52,7 +52,8 @@ class Options
         'rollbackOrderTransaction'  =>  'RollbackOrderTransaction',
         'saveOfflineOrder'          =>  'SaveOfflineOrder',
         'setWishList'   =>  'SetWishList',
-        'clearWishList' =>  'ClearWishList'
+        'clearWishList' =>  'ClearWishList',
+        'clearCart' =>  'ClearCart'
     ];
 
     private static $sdkOptions = [
@@ -65,7 +66,7 @@ class Options
 
     public static function getOperationName($alias)
     {
-        if(empty(static::$operations[$alias])) {
+        if (empty(static::$operations[$alias])) {
             throw new MindboxConfigException('Unknow Operation Name');
         }
 
@@ -88,8 +89,8 @@ class Options
     {
         $config = static::getSDKOptions();
 
-        if($queue) {
-            $config['timeout'] = COption::GetOptionString('mindbox.marketing','QUEUE_TIMEOUT', 30);
+        if ($queue) {
+            $config['timeout'] = COption::GetOptionString('mindbox.marketing', 'QUEUE_TIMEOUT', 30);
         }
         $path = COption::GetOptionString('mindbox.marketing', 'LOG_PATH');
 
@@ -115,7 +116,8 @@ class Options
         return  COption::GetOptionString('mindbox.marketing', 'EXTERNAL_SYSTEM', 'system1c');
     }
 
-    public static function getModuleOption($option) {
+    public static function getModuleOption($option)
+    {
         return COption::GetOptionString('mindbox.marketing', $option);
     }
 }
