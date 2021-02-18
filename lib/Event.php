@@ -1641,9 +1641,13 @@ class Event
             return;
         }
 
-
         $arLines = [];
+        $arAllLines = [];
         foreach ($basketItems as $basketItem) {
+            $arAllLines[$basketItem->getProductId()] = $basketItem->getProductId();
+            if ($basketItem->getField('DELAY') === 'Y') {
+                continue;
+            }
             $productId = $basketItem->getProductId();
             $arLines[ $productId ]['basketItem'] = $basketItem;
             $arLines[ $productId ]['quantity'] += $basketItem->getQuantity();
@@ -1654,8 +1658,6 @@ class Event
         foreach ($arLines as $arLine) {
             $product = new ProductRequestDTO();
             $product->setId(Options::getModuleOption('EXTERNAL_SYSTEM'), Helper::getElementCode($arLine['basketItem']->getProductId()));
-
-
             $line = new ProductListItemRequestDTO();
             $line->setProduct($product);
             $line->setCount($arLine['quantity']);
@@ -1663,6 +1665,9 @@ class Event
             $lines[] = $line;
         }
 
+        if (empty($arAllLines)) {
+            self::clearWishList();
+        }
 
         try {
             $mindbox->productList()->setProductList(
@@ -1690,7 +1695,7 @@ class Event
         $basketItems = $basket->getBasketItems();
         $arLines = [];
         foreach ($basketItems as $basketItem) {
-            if ($basketItem->getField('DELAY') == 'N') {
+            if ($basketItem->getField('DELAY') === 'N') {
                 continue;
             }
             $productId = $basketItem->getProductId();
@@ -1702,12 +1707,16 @@ class Event
         $lines = [];
         foreach ($arLines as $arLine) {
             $product = new ProductRequestDTO();
-            $product->setId(Options::getModuleOption('EXTERNAL_SYSTEM'), Helper::getProductId($arLine['basketItem']));
+            $product->setId(Options::getModuleOption('EXTERNAL_SYSTEM'), Helper::getElementCode($arLine['basketItem']->getProductId()));
             $line = new ProductListItemRequestDTO();
             $line->setProduct($product);
             $line->setCount($arLine['quantity']);
             $line->setPriceOfLine($arLine['priceOfLine']);
             $lines[] = $line;
+        }
+
+        if (empty($lines)) {
+            return false;
         }
 
         try {
