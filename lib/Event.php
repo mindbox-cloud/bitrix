@@ -1676,7 +1676,7 @@ class Event
                     Options::getOperationName('setProductList')
                 )->sendRequest();
             } else {
-                $mindbox->productList()->ClearCart(
+                $mindbox->productList()->clearCart(
                     Options::getOperationName('clearCart')
                 )->sendRequest();
             }
