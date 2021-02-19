@@ -1052,7 +1052,7 @@ class Event
             }
 
             $isSubscribed = true;
-            if ($arOrderProperty['UF_MB_IS_SUBSCRIBED'] === '0') {
+            if ($arOrderProperty['UF_MB_IS_SUBSCRIBED'] === 'N') {
                 $isSubscribed = false;
             }
             $subscriptions = [
@@ -1466,15 +1466,20 @@ class Event
             return isset($item);
         });
 
-        $fields[ 'subscriptions' ] = [
-            [
+        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('beforeUserAdd');
+            $logger->log('$arFields', $arFields);
+        }
+
+        $isSubscribed = false;
+        if ($arFields['UF_MB_IS_SUBSCRIBED'] === '1') {
+            $isSubscribed = true;
+        }
+        $fields[ 'subscriptions' ] = [[
+                'brand' =>  Options::getModuleOption('BRAND'),
                 'pointOfContact' => 'Email',
-                'isSubscribed'   => true
-            ],
-            [
-                'pointOfContact' => 'Sms',
-                'isSubscribed'   => true
-            ],
+                'isSubscribed'   => $isSubscribed
+            ]
         ];
 
         $customer = Helper::iconvDTO(new CustomerRequestDTO($fields));
