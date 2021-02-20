@@ -168,7 +168,7 @@ class BonusHistory extends CBitrixComponent implements Controllerable
 
     public function formatTime($utc)
     {
-        return str_replace('T', ' ', substr($utc, 0, -1));
+        return (new DateTime($utc))->format('Y-m-d H:i:s');
     }
 
     public function executeComponent()
