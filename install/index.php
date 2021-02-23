@@ -173,25 +173,11 @@ class mindbox_marketing extends CModule {
 	function InstallEvents()
 	{
 		$eventManager = \Bitrix\Main\EventManager::getInstance();
-		$eventManager->registerEventHandlerCompatible("main", "OnAfterUserAuthorize", $this->MODULE_ID,
-			"\Mindbox\Event", "OnAfterUserAuthorizeHandler", 1000);
-		$eventManager->registerEventHandlerCompatible("main", "OnBeforeUserRegister", $this->MODULE_ID,
-			"\Mindbox\Event", "OnBeforeUserRegisterHandler", 1000);
-		$eventManager->registerEventHandlerCompatible("main", "OnAfterUserRegister", $this->MODULE_ID,
-			"\Mindbox\Event", "OnAfterUserRegisterHandler", 1000);
-		$eventManager->registerEventHandlerCompatible("main", "OnBeforeUserUpdate", $this->MODULE_ID,
-			"\Mindbox\Event", "OnBeforeUserUpdateHandler", 1000);
-		$eventManager->registerEventHandlerCompatible("main", "OnBeforeUserAdd", $this->MODULE_ID,
-		"\Mindbox\Event", "OnBeforeUserAddHandler", 1000);
-		$eventManager->registerEventHandlerCompatible("main", "OnAfterUserAdd", $this->MODULE_ID,
-			"\Mindbox\Event", "OnAfterUserAddHandler", 1000);
-		$eventManager->registerEventHandlerCompatible("sale", "OnSaleBasketBeforeSaved", $this->MODULE_ID,
-			"\Mindbox\Event",
-			"OnSaleBasketBeforeSavedHadler", 1000);
-		$eventManager->registerEventHandlerCompatible("sale", "OnSaleOrderBeforeSaved", $this->MODULE_ID,
-			"\Mindbox\Event", "OnSaleOrderBeforeSavedHandler", 1000);
-		$eventManager->registerEventHandlerCompatible("sale", "OnSaleOrderSaved", $this->MODULE_ID,
-			"\Mindbox\Event", "OnSaleOrderSavedHandler", 1000);
+		$eventManager->registerEventHandlerCompatible("main", "OnAfterSetOption_ENABLE_EVENT_LIST", $this->MODULE_ID,
+			"\Mindbox\EventController", "dev", 1000);
+
+		$moduleEventController = new \Mindbox\EventController();
+		$moduleEventController->installEvents();
 
 		return true;
 	}
