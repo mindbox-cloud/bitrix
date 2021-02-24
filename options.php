@@ -61,7 +61,7 @@ $tabControl = new CAdminTabControl('tabControl', [
 ]);
 
 
-$arAllOptions = array(
+$arAllOptions = [
     getMessage('DOCS_LINK'),
     [
         'MODULE_VERSION',
@@ -70,7 +70,6 @@ $arAllOptions = array(
         ['text'],
         'Y'
     ],
-    //'<span style="font-size: 13px; font-weight: normal; color: #000;">' . getMessage('MODULE_VERSION') .  . '</span>',
     getMessage('MAINOPTIONS'),
     [
         'MODE',
@@ -188,7 +187,7 @@ $arAllOptions = array(
         COption::GetOptionString(ADMIN_MODULE_NAME, 'YML_NAME', 'upload/mindbox.xml'),
         ['text']
     ]
-);
+];
 
 if (!empty(COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', ''))) {
     if (YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['VERSION'] === '1') {
@@ -239,7 +238,7 @@ $arAllOptions[] = [
     COption::GetOptionString(ADMIN_MODULE_NAME, 'ENABLE_EVENT_LIST', ''),
     [
         'multiselectbox',
-        $eventList
+        $eventList,
     ]
 ];
 ?>
@@ -262,3 +261,11 @@ $arAllOptions[] = [
 
     <? $tabControl->End(); ?>
 </form>
+<style>
+    form[name='minboxoptions'] select[name="MINDBOX_ENABLE_EVENT_LIST[]"],
+    form[name='minboxoptions'] select[name="MINDBOX_CATALOG_PROPS[]"],
+    form[name='minboxoptions'] select[name="MINDBOX_CATALOG_OFFER_PROPS[]"],
+    {
+        width: 300px;
+    }
+</style>
