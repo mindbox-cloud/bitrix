@@ -266,6 +266,6 @@ $arAllOptions[] = [
     form[name='minboxoptions'] select[name="MINDBOX_CATALOG_PROPS[]"],
     form[name='minboxoptions'] select[name="MINDBOX_CATALOG_OFFER_PROPS[]"],
     {
-        width: 300px;
+        min-width: 300px;
     }
 </style>
