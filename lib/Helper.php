@@ -475,7 +475,7 @@ class Helper
 
         foreach ($fields as $code => $value) {
             if (!empty($value) && !empty($customName = self::getMatchByCode($code, self::getUserFieldsMatch()))) {
-                $customFields[self::sanitzeNamesForMindbox($customName)] = $value;
+                $customFields[self::sanitizeNamesForMindbox($customName)] = $value;
             }
         }
 
@@ -563,7 +563,7 @@ class Helper
      * @param string $name
      * @return string
      */
-    public static function sanitzeNamesForMindbox($name)
+    public static function sanitizeNamesForMindbox($name)
     {
         $regexNotChars = '/[^a-zA-Z0-9]/m';
         $regexFirstLetter = '/^[a-zA-Z]/m';

@@ -591,7 +591,7 @@ class Event
             $propertyCollection = $order->getPropertyCollection();
             $ar = $propertyCollection->getArray();
             foreach ($ar['properties'] as $arProperty) {
-                $arProperty['CODE'] = Helper::sanitzeNamesForMindbox($arProperty['CODE']);
+                $arProperty['CODE'] = Helper::sanitizeNamesForMindbox($arProperty['CODE']);
                 $arOrderProperty[$arProperty['CODE']] = current($arProperty['VALUE']);
             }
 
@@ -681,7 +681,7 @@ class Event
         $propertyCollection = $order->getPropertyCollection();
         $ar = $propertyCollection->getArray();
         foreach ($ar['properties'] as $arProperty) {
-            $arProperty['CODE'] = Helper::sanitzeNamesForMindbox($arProperty['CODE']);
+            $arProperty['CODE'] = Helper::sanitizeNamesForMindbox($arProperty['CODE']);
             if (count($arProperty['VALUE']) === 1) {
                 $value = current($arProperty['VALUE']);
             } else {
@@ -874,7 +874,7 @@ class Event
                 $propertyCollection = $order->getPropertyCollection();
                 $ar = $propertyCollection->getArray();
                 foreach ($ar['properties'] as $arProperty) {
-                    $arProperty['CODE'] = Helper::sanitzeNamesForMindbox($arProperty['CODE']);
+                    $arProperty['CODE'] = Helper::sanitizeNamesForMindbox($arProperty['CODE']);
                     $arOrderProperty[$arProperty['CODE']] = current($arProperty['VALUE']);
                 }
 
@@ -947,7 +947,7 @@ class Event
             $propertyCollection = $order->getPropertyCollection();
             $ar = $propertyCollection->getArray();
             foreach ($ar['properties'] as $arProperty) {
-                $arProperty['CODE'] = Helper::sanitzeNamesForMindbox($arProperty['CODE']);
+                $arProperty['CODE'] = Helper::sanitizeNamesForMindbox($arProperty['CODE']);
                 if (count($arProperty['VALUE']) === 1) {
                     $value = current($arProperty['VALUE']);
                 } else {
@@ -1107,7 +1107,7 @@ class Event
             $propertyCollection = $order->getPropertyCollection();
             $ar = $propertyCollection->getArray();
             foreach ($ar['properties'] as $arProperty) {
-                $arProperty['CODE'] = Helper::sanitzeNamesForMindbox($arProperty['CODE']);
+                $arProperty['CODE'] = Helper::sanitizeNamesForMindbox($arProperty['CODE']);
                 if (count($arProperty['VALUE']) === 1) {
                     $value = current($arProperty['VALUE']);
                 } else {
@@ -1562,7 +1562,7 @@ class Event
 
         foreach ($ufFields as $code => $value) {
             if (!empty($customName = Helper::getMatchByCode($code, Helper::getUserFieldsMatch()))) {
-                $customFields[Helper::sanitzeNamesForMindbox($customName)] = $value;
+                $customFields[Helper::sanitizeNamesForMindbox($customName)] = $value;
             }
         }
 
