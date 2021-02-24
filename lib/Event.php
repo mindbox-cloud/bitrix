@@ -561,12 +561,10 @@ class Event
         $payments = [];
         $paymentCollection = $order->getPaymentCollection();
         foreach ($paymentCollection as $payment) {
-            if ($payment->isPaid()) {
-                $payments[] = [
-                    'type' => $payment->getId(),
-                    'amount' => $payment->getSum()
-                ];
-            }
+            $payments[] = [
+                'type' => $payment->getId(),
+                'amount' => $payment->getSum()
+            ];
         }
 
         $rsUser = \CUser::GetByID($order->getUserId());
@@ -821,12 +819,10 @@ class Event
         $payments = [];
         $paymentCollection = $order->getPaymentCollection();
         foreach ($paymentCollection as $payment) {
-            if ($payment->isPaid()) {
-                $payments[] = [
-                    'type' => $payment->getId(),
-                    'amount' => $payment->getSum()
-                ];
-            }
+            $payments[] = [
+                'type' => $payment->getId(),
+                'amount' => $payment->getSum()
+            ];
         }
 
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'loyalty') {
