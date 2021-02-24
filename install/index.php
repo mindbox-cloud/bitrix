@@ -1,4 +1,5 @@
 <?
+require  __DIR__ . '/../include.php';
 
 use Bitrix\Main\Application;
 use Bitrix\Main\Config\Option;
@@ -188,6 +189,9 @@ class mindbox_marketing extends CModule {
 	 */
 	function UnInstallEvents()
 	{
+		$eventManager = \Bitrix\Main\EventManager::getInstance();
+		$eventManager->unRegisterEventHandler("main", "OnAfterSetOption_ENABLE_EVENT_LIST", $this->MODULE_ID, "\Mindbox\EventController", "onAfterSetOption", 1000);
+
 		$moduleEventController = new \Mindbox\EventController();
 		$moduleEventController->unInstallEvents();
 		return true;
