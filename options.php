@@ -262,10 +262,11 @@ $arAllOptions[] = [
     <? $tabControl->End(); ?>
 </form>
 <style>
-    form[name='minboxoptions'] select[name="MINDBOX_ENABLE_EVENT_LIST[]"],
-    form[name='minboxoptions'] select[name="MINDBOX_CATALOG_PROPS[]"],
-    form[name='minboxoptions'] select[name="MINDBOX_CATALOG_OFFER_PROPS[]"],
+   select[name="MINDBOX_ENABLE_EVENT_LIST[]"],
+   select[name="MINDBOX_CATALOG_PROPS[]"],
+   select[name="MINDBOX_CATALOG_OFFER_PROPS[]"]
     {
         min-width: 300px;
+        width: 300px;
     }
 </style>
