@@ -4,19 +4,45 @@
 namespace Mindbox;
 
 
+/**
+ * Class EventController
+ * @package Mindbox
+ */
 class EventController
 {
+    /**
+     * @var string
+     */
     protected $bitrixEventCode = 'bitrixEventCode';
+    /**
+     * @var string
+     */
     protected $bitrixModuleCode = 'bitrixModuleId';
+    /**
+     * @var string
+     */
     protected $russianNameCode = 'optionNameRu';
+    /**
+     * @var string
+     */
     protected $englishNameCode = 'optionNameEn';
+    /**
+     * @var null
+     */
     protected $eventManager = null;
 
+    /**
+     * EventController constructor.
+     */
     public function __construct()
     {
         $this->eventManager = \Bitrix\Main\EventManager::getInstance();
     }
 
+    /**
+     * Метод получает все обработчики из класса Event
+     * @return array
+     */
     public function getModuleEvents()
     {
         $eventObject = new Event();
@@ -50,6 +76,11 @@ class EventController
         return $eventList;
     }
 
+    /**
+     * Возвращает список обработчиков для страницы настроек.
+     * @param string $lang
+     * @return array
+     */
     public static function getOptionEventList($lang = 'ru')
     {
         $return = [];
@@ -65,6 +96,10 @@ class EventController
         return $return;
     }
 
+    /**
+     * Поиск всех зарегистрированных обработчиков
+     * @return array
+     */
     public function findEventHandlersAll()
     {
         $eventList = $this->getModuleEvents();
@@ -78,6 +113,12 @@ class EventController
         return $findRegisteredEvents;
     }
 
+    /**
+     * Поиск зарегистрированного обработчика модуля
+     * @param $moduleId
+     * @param $eventId
+     * @return false|mixed
+     */
     public function findEventHandlers($moduleId, $eventId)
     {
         $return = false;
@@ -95,6 +136,11 @@ class EventController
         return $return;
     }
 
+    /**
+     * Обработка док-блока. Метод вытаскивает данные из параметров в комментарии.
+     * @param $stirng
+     * @return array
+     */
     protected function prepareDocsBlockParams($stirng)
     {
         $return = [];
@@ -112,6 +158,10 @@ class EventController
         return $return;
     }
 
+    /**
+     * Регистрация обработчика
+     * @param $params
+     */
     protected function registerEventHandler($params)
     {
         $this->eventManager->registerEventHandlerCompatible(
@@ -124,6 +174,10 @@ class EventController
         );
     }
 
+    /**
+     * Удаление обработчика
+     * @param $params
+     */
     protected function unRegisterEventHandler($params)
     {
         $this->eventManager->unRegisterEventHandler(
@@ -135,7 +189,11 @@ class EventController
         );
     }
 
-    public function handle($activeEventList = [])
+    /**
+     * Обработка статуса обработчика. Вызываеться при изменении списка на странице настроек.
+     * @param array $activeEventList
+     */
+    protected function handle($activeEventList = [])
     {
         $allRegisteredEvent = $this->findEventHandlersAll();
         $eventList = $this->getModuleEvents();
@@ -144,19 +202,18 @@ class EventController
             $moduleEventData = $eventList[$eventCode];
             if (!empty($moduleEventData)) {
                 if (!in_array($eventCode, $activeEventList) && $value !== false) {
-                    // деактивируем
-
                     $this->unRegisterEventHandler($moduleEventData);
                 }
                 elseif (in_array($eventCode, $activeEventList) && $value === false) {
-                    // активируем
-
                     $this->registerEventHandler($moduleEventData);
                 }
             }
         }
     }
 
+    /**
+     *  Регистрация всех обработчиков при установке модуля
+     */
     public function installEvents()
     {
         $eventList = $this->getModuleEvents();
@@ -165,6 +222,22 @@ class EventController
         }
     }
 
+    /**
+     *  Удаление всех обработчиков при удалении модуля
+     */
+    public function unInstallEvents()
+    {
+        $eventList = $this->getModuleEvents();
+        foreach ($eventList as $item) {
+            $this->unRegisterEventHandler($item);
+        }
+    }
+
+    /**
+     * Метод регистрируеться для события OnAfterSetOption_ENABLE_EVENT_LIST.
+     * Изменения списка обработчиков.
+     * @param $value
+     */
     public function onAfterSetOption($value)
     {
         $arEventOptions = explode(',', $value);
