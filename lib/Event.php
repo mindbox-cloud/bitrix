@@ -1466,11 +1466,6 @@ class Event
             return isset($item);
         });
 
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('beforeUserAdd');
-            $logger->log('$arFields', $arFields);
-        }
-
         $isSubscribed = false;
         if ($arFields['UF_MB_IS_SUBSCRIBED'] === '1') {
             $isSubscribed = true;
