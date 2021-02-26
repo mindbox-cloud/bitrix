@@ -781,17 +781,14 @@ class Event
         return new \Bitrix\Main\EventResult(\Bitrix\Main\EventResult::SUCCESS);
     }
 
-    public function OnSaleOrderSavedHandler(Bitrix\Main\Event $event)
+    public function OnSaleOrderSavedHandler($event)
     {
-
         $order = $event->getParameter("ENTITY");
         $oldValues = $event->getParameter("VALUES");
         $isNew = $event->getParameter("IS_NEW");
 
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('OnSaleOrderSavedHandler');
-            $logger->log('$isNew', $isNew);
-            $logger->log('$oldValues', $oldValues);
+        if (!$isNew) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
         $mindbox = static::mindbox();
@@ -1211,7 +1208,7 @@ class Event
     }
 
 
-    public function OnSaleBasketBeforeSavedHadler($basket)
+    public function OnSaleBasketBeforeSavedHandler($basket)
     {
         global $USER;
 
