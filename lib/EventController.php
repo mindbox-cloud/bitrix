@@ -31,6 +31,9 @@ class EventController
      */
     protected $eventManager = null;
 
+    /**
+     * @var string
+     */
     protected static $optionEventCode = 'ENABLE_EVENT_LIST';
 
     /**
@@ -41,6 +44,10 @@ class EventController
         $this->eventManager = \Bitrix\Main\EventManager::getInstance();
     }
 
+    /**
+     * Статический метод. Возвращает код настройки списка событий
+     * @return string
+     */
     public static function getOptionEventCode()
     {
         return self::$optionEventCode;
@@ -196,6 +203,9 @@ class EventController
         );
     }
 
+    /**
+     * @return string[]
+     */
     protected function getEventControllerHandlerData()
     {
         return [
@@ -206,11 +216,17 @@ class EventController
         ];
     }
 
+    /**
+     * Регистрация обработчика, ответствененного за изменения активности обработчиков
+     */
     public function installEventControllerHandler()
     {
         $this->registerEventHandler($this->getEventControllerHandlerData());
     }
 
+    /**
+     * Удаление обработчика, ответствененного за изменения активности обработчиков
+     */
     public function unInstallEventControllerHandler()
     {
         $this->unRegisterEventHandler($this->getEventControllerHandlerData());
@@ -277,6 +293,10 @@ class EventController
         $this->setOptionAfterRegisterHandlers('');
     }
 
+    /**
+     * Устанавливает значение настройке после регистрации основных обработчиков
+     * @param $stringValue
+     */
     public function setOptionAfterRegisterHandlers($stringValue)
     {
       \COption::SetOptionString(ADMIN_MODULE_NAME, self::getOptionEventCode(), $stringValue);
