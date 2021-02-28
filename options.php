@@ -230,12 +230,14 @@ if (!empty(\Mindbox\Helper::getOffersCatalogId(COption::GetOptionString(ADMIN_MO
 }
 
 $arAllOptions[] = getMessage('EVENT_LIST_GROUP');
+
 $eventList = \Mindbox\EventController::getOptionEventList();
+$optionEventCode = \Mindbox\EventController::getOptionEventCode();
 
 $arAllOptions[] = [
-    'ENABLE_EVENT_LIST',
-    getMessage('ENABLE_EVENT_LIST'),
-    COption::GetOptionString(ADMIN_MODULE_NAME, 'ENABLE_EVENT_LIST', ''),
+    $optionEventCode,
+    getMessage($optionEventCode),
+    COption::GetOptionString(ADMIN_MODULE_NAME, $optionEventCode, ''),
     [
         'multiselectbox',
         $eventList,

@@ -31,12 +31,19 @@ class EventController
      */
     protected $eventManager = null;
 
+    protected static $optionEventCode = 'ENABLE_EVENT_LIST';
+
     /**
      * EventController constructor.
      */
     public function __construct()
     {
         $this->eventManager = \Bitrix\Main\EventManager::getInstance();
+    }
+
+    public static function getOptionEventCode()
+    {
+        return self::$optionEventCode;
     }
 
     /**
@@ -126,7 +133,7 @@ class EventController
 
         if (!empty($eventHandlers) && is_array($eventHandlers)) {
             foreach ($eventHandlers as $handler) {
-                if ($handler['TO_MODULE_ID'] === 'mindbox.marketing') {
+                if ($handler['TO_MODULE_ID'] === ADMIN_MODULE_NAME) {
                     $return = $handler;
                     break;
                 }
@@ -167,7 +174,7 @@ class EventController
         $this->eventManager->registerEventHandlerCompatible(
             $params['bitrixModule'],
             $params['bitrixEvent'],
-            'mindbox.marketing',
+            ADMIN_MODULE_NAME,
             $params['class'],
             $params['method'],
             1000
@@ -183,14 +190,34 @@ class EventController
         $this->eventManager->unRegisterEventHandler(
             $params['bitrixModule'],
             $params['bitrixEvent'],
-            'mindbox.marketing',
+            ADMIN_MODULE_NAME,
             $params['class'],
             $params['method']
         );
     }
 
+    protected function getEventControllerHandlerData()
+    {
+        return [
+            'bitrixModule' => 'main',
+            'bitrixEvent' => 'OnAfterSetOption_' . self::getOptionEventCode(),
+            'class' => '\Mindbox\EventController',
+            'method' => 'onAfterSetOption'
+        ];
+    }
+
+    public function installEventControllerHandler()
+    {
+        $this->registerEventHandler($this->getEventControllerHandlerData());
+    }
+
+    public function unInstallEventControllerHandler()
+    {
+        $this->unRegisterEventHandler($this->getEventControllerHandlerData());
+    }
+
     /**
-     * Обработка статуса обработчика. Вызываеться при изменении списка на странице настроек.
+     * Обработка статуса обработчика. Вызывается при изменении списка на странице настроек.
      * @param array $activeEventList
      */
     protected function handle($activeEventList = [])
@@ -216,10 +243,23 @@ class EventController
      */
     public function installEvents()
     {
+
         $eventList = $this->getModuleEvents();
-        foreach ($eventList as $item) {
+
+        foreach ($eventList as $eventCode => $item) {
             $this->registerEventHandler($item);
         }
+
+        $bitrixEventList = array_keys($eventList);
+        var_dump($eventList);
+        var_dump($bitrixEventList);
+        if (!empty($bitrixEventList) && is_array($bitrixEventList)) {
+            $strValue = implode(',', $bitrixEventList);
+            var_dump($strValue);
+            $this->setOptionAfterRegisterHandlers($strValue);
+        }
+
+        $this->installEventControllerHandler();
     }
 
     /**
@@ -228,13 +268,22 @@ class EventController
     public function unInstallEvents()
     {
         $eventList = $this->getModuleEvents();
+
         foreach ($eventList as $item) {
             $this->unRegisterEventHandler($item);
         }
+
+        $this->unInstallEventControllerHandler();
+        $this->setOptionAfterRegisterHandlers('');
+    }
+
+    public function setOptionAfterRegisterHandlers($stringValue)
+    {
+      \COption::SetOptionString(ADMIN_MODULE_NAME, self::getOptionEventCode(), $stringValue);
     }
 
     /**
-     * Метод регистрируеться для события OnAfterSetOption_ENABLE_EVENT_LIST.
+     * Метод регистрируется для события OnAfterSetOption_ENABLE_EVENT_LIST.
      * Изменения списка обработчиков.
      * @param $value
      */

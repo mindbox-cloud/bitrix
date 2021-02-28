@@ -173,13 +173,8 @@ class mindbox_marketing extends CModule {
 	 */
 	function InstallEvents()
 	{
-		$eventManager = \Bitrix\Main\EventManager::getInstance();
-		$eventManager->registerEventHandlerCompatible("main", "OnAfterSetOption_ENABLE_EVENT_LIST", $this->MODULE_ID,
-			"\Mindbox\EventController", "onAfterSetOption", 1000);
-
 		$moduleEventController = new \Mindbox\EventController();
 		$moduleEventController->installEvents();
-
 		return true;
 	}
 
@@ -189,9 +184,6 @@ class mindbox_marketing extends CModule {
 	 */
 	function UnInstallEvents()
 	{
-		$eventManager = \Bitrix\Main\EventManager::getInstance();
-		$eventManager->unRegisterEventHandler("main", "OnAfterSetOption_ENABLE_EVENT_LIST", $this->MODULE_ID, "\Mindbox\EventController", "onAfterSetOption", 1000);
-
 		$moduleEventController = new \Mindbox\EventController();
 		$moduleEventController->unInstallEvents();
 		return true;
