@@ -5,7 +5,6 @@
 
 namespace Mindbox;
 
-
 use Bitrix\Main\Loader;
 use Bitrix\Main\UserTable;
 use CCatalog;
@@ -62,9 +61,10 @@ class Helper
             $mindboxId = $rsUser[ 'UF_MINDBOX_ID' ];
         }
 
-        if(!$mindboxId && \COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {
+        if (!$mindboxId && \COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {
             $mindbox = Options::getConfig();
-            $request = $mindbox->getClientV3()->prepareRequest('POST',
+            $request = $mindbox->getClientV3()->prepareRequest(
+                'POST',
                 Options::getOperationName('getCustomerInfo'),
                 new DTO([
                     'customer' => [
@@ -72,7 +72,8 @@ class Helper
                             Options::getModuleOption('WEBSITE_ID') => $id
                         ]
                     ]
-                ]));
+                ])
+            );
 
             try {
                 $response = $request->sendRequest();
@@ -181,8 +182,12 @@ class Helper
         unset($fields);
 
         try {
-            $registerResponse = $mindbox->customer()->register($customer,
-                Options::getOperationName('register'), true, Helper::isSync())->sendRequest()->getResult();
+            $registerResponse = $mindbox->customer()->register(
+                $customer,
+                Options::getOperationName('register'),
+                true,
+                Helper::isSync()
+            )->sendRequest()->getResult();
         } catch (Exceptions\MindboxUnavailableException $e) {
             $lastResponse = $mindbox->customer()->getLastResponse();
             if ($lastResponse) {
@@ -196,7 +201,7 @@ class Helper
             }
         }
 
-        if($registerResponse) {
+        if ($registerResponse) {
             $registerResponse = Helper::iconvDTO($registerResponse, false);
             $status = $registerResponse->getStatus();
 
@@ -276,13 +281,13 @@ class Helper
         $result = '';
         $id = $basketItem->getField('PRODUCT_XML_ID');
 
-        if(!$id) {
+        if (!$id) {
             $productId = $basketItem->getField('PRODUCT_ID');
             $arProduct = \CIBlockElement::GetByID($productId)->GetNext();
             $id = $arProduct['XML_ID'];
         }
 
-        if(!$id) {
+        if (!$id) {
             $id = $basketItem->getField('PRODUCT_ID');
         }
 
@@ -400,7 +405,8 @@ class Helper
      *
      * @return boolean
      */
-    public static function isUnAuthorizedOrder($arUser) {
+    public static function isUnAuthorizedOrder($arUser)
+    {
         return date('dmYHi', time()) === date('dmYHi', strtotime($arUser['DATE_REGISTER']));
     }
 
@@ -420,39 +426,5 @@ class Helper
         } else {
             return $_SESSION[ 'MINDBOX_TRANSACTION_ID' ];
         }
-    }
-
-    /**
-     * @param array $basketItems
-     * @return array
-     */
-    public static function removeDuplicates($basketItems)
-    {
-        $uniqueItems = [];
-
-        /**
-         * @var \Bitrix\Sale\BasketItem $item
-         */
-        foreach ($basketItems as $item) {
-            $uniqueItems[$item->getField('PRODUCT_ID')][] = $item;
-        }
-
-        if (count($uniqueItems) === count($basketItems)) {
-            return $basketItems;
-        }
-
-        $uniqueBasketItems = [];
-
-        foreach ($uniqueItems as $id => $groupItems) {
-            $item = current($groupItems);
-            $quantity = 0;
-            foreach ($groupItems as $groupItem) {
-                $quantity += $groupItem->getField('QUANTITY');
-            }
-            $item->setField('QUANTITY', $quantity);
-            $uniqueBasketItems[] = $item;
-        }
-
-        return $uniqueBasketItems;
     }
 }

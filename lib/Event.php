@@ -1216,9 +1216,7 @@ class Event
         $preorder = new PreorderRequestDTO();
 
         /** @var \Bitrix\Sale\Basket $basket */
-        $basketClone = $basket->createClone(null);
-        $basketItems = $basketClone->getBasketItems();
-        $basketItems = Helper::removeDuplicates($basketItems);
+        $basketItems = $basket->getBasketItems();
         self::setCartMindbox($basketItems);
         $lines = [];
         $bitrixBasket = [];
@@ -1625,7 +1623,6 @@ class Event
             return;
         }
 
-
         $arLines = [];
         foreach ($basketItems as $basketItem) {
             $productId = $basketItem->getProductId();
@@ -1638,7 +1635,6 @@ class Event
         foreach ($arLines as $arLine) {
             $product = new ProductRequestDTO();
             $product->setId(Options::getModuleOption('EXTERNAL_SYSTEM'), Helper::getProductId($arLine['basketItem']));
-
 
             $line = new ProductListItemRequestDTO();
             $line->setProduct($product);
