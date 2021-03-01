@@ -233,16 +233,6 @@ $arAllOptions[] = getMessage('EVENT_LIST_GROUP');
 
 $eventList = \Mindbox\EventController::getOptionEventList();
 $optionEventCode = \Mindbox\EventController::getOptionEventCode();
-
-if ( true || $_GET['_i_debug'] === 'Y') {
-    $obj = new \Mindbox\EventController();
-    $list = $obj->findEventHandlersAll();
-    $findOnBeforeUserAdd = $obj->findEventHandlers('main', 'OnBeforeUserAdd');
-    echo "list=<pre>"; print_r($list); echo "</pre>";
-    echo "OnBeforeUserAdd=<pre>"; print_r($findOnBeforeUserAdd); echo "</pre>";
-    echo "optionEventCode=<pre>"; print_r($optionEventCode); echo "</pre>";
-}
-
 $arAllOptions[] = [
     $optionEventCode,
     getMessage($optionEventCode),

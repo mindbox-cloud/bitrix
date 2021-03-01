@@ -140,11 +140,6 @@ class EventController
 
         if (!empty($eventHandlers) && is_array($eventHandlers)) {
 
-            //@todo debug test
-            if ( true || $_GET['_i_debug'] === 'Y') {
-                echo "eventHandlers=<pre>"; print_r($eventHandlers); echo "</pre>";
-            }
-
             foreach ($eventHandlers as $handler) {
                 if ($handler['TO_MODULE_ID'] === ADMIN_MODULE_NAME) {
                     $return = $handler;
