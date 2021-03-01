@@ -48,8 +48,9 @@ if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
 
     $defaultOptions = \Bitrix\Main\Config\Option::getDefaults("mindbox.marketing");
     $trackerJsFilename = $_SERVER["DOCUMENT_ROOT"] . $defaultOptions['TRACKER_JS_FILENAME'];
-    if(file_exists($trackerJsFilename)) {
-        file_put_contents($trackerJsFilename,str_replace('#endpointId#',COption::GetOptionString(ADMIN_MODULE_NAME, 'ENDPOINT', ''),file_get_contents($trackerJsFilename)));
+    $trackerJsFilenameOrig = $_SERVER["DOCUMENT_ROOT"] . $defaultOptions['TRACKER_JS_FILENAME_ORIGINAL'];
+    if(file_exists($trackerJsFilenameOrig)) {
+        file_put_contents($trackerJsFilename,str_replace('#endpointId#',COption::GetOptionString(ADMIN_MODULE_NAME, 'ENDPOINT', ''),file_get_contents($trackerJsFilenameOrig)));
     }
 }
 

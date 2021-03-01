@@ -16,5 +16,6 @@ $mindbox_marketing_default_option = [
     'WEBSITE_ID' => '',
     'CATALOG_PROPS' => '',
     'CATALOG_OFFER_PROPS' => '',
-    'TRACKER_JS_FILENAME' => '/bitrix/js/mindbox/tracker.js'
+    'TRACKER_JS_FILENAME' => '/bitrix/js/mindbox/tracker.js',
+    'TRACKER_JS_FILENAME_ORIGINAL' => '/bitrix/js/mindbox/tracker.js.orig'
 ];
