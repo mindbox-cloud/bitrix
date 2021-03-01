@@ -49,8 +49,8 @@ if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
     $defaultOptions = \Bitrix\Main\Config\Option::getDefaults("mindbox.marketing");
     $trackerJsFilename = $_SERVER["DOCUMENT_ROOT"] . $defaultOptions['TRACKER_JS_FILENAME'];
     $trackerJsFilenameOrig = $_SERVER["DOCUMENT_ROOT"] . $defaultOptions['TRACKER_JS_FILENAME_ORIGINAL'];
-    if(file_exists($trackerJsFilenameOrig)) {
-        file_put_contents($trackerJsFilename,str_replace('#endpointId#',COption::GetOptionString(ADMIN_MODULE_NAME, 'ENDPOINT', ''),file_get_contents($trackerJsFilenameOrig)));
+    if (file_exists($trackerJsFilenameOrig)) {
+        file_put_contents($trackerJsFilename, str_replace('#endpointId#', COption::GetOptionString(ADMIN_MODULE_NAME, 'ENDPOINT', ''), file_get_contents($trackerJsFilenameOrig)));
     }
 }
 
@@ -241,10 +241,10 @@ if (!empty(\Mindbox\Helper::getOffersCatalogId(COption::GetOptionString(ADMIN_MO
 
 ?>
 
-<form name='minboxoptions' method='POST' action='<? echo $APPLICATION->GetCurPage() ?>?mid=<?= htmlspecialcharsbx($mid)
-?>&amp;lang=<? echo LANG ?>'>
+<form name='minboxoptions' method='POST' action='<?php echo $APPLICATION->GetCurPage() ?>?mid=<?= htmlspecialcharsbx($mid)
+?>&amp;lang=<?php echo LANG ?>'>
     <?= bitrix_sessid_post() ?>
-    <?
+    <?php
     $tabControl->Begin();
     $tabControl->BeginNextTab();
 
@@ -255,7 +255,7 @@ if (!empty(\Mindbox\Helper::getOffersCatalogId(COption::GetOptionString(ADMIN_MO
     $tabControl->Buttons(); ?>
     <input type='submit' class='adm-btn-save' name='save' value='<?=getMessage('SAVE')?>'>
     <?= bitrix_sessid_post(); ?>
-    <? $tabControl->End(); ?>
+    <?php $tabControl->End(); ?>
 
-    <? $tabControl->End(); ?>
+    <?php $tabControl->End(); ?>
 </form>
