@@ -141,7 +141,7 @@ class EventController
         if (!empty($eventHandlers) && is_array($eventHandlers)) {
 
             //@todo debug test
-            if ( $_GET['_i_debug'] === 'Y') {
+            if ( true || $_GET['_i_debug'] === 'Y') {
                 echo "eventHandlers=<pre>"; print_r($eventHandlers); echo "</pre>";
             }
 

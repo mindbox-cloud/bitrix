@@ -234,7 +234,7 @@ $arAllOptions[] = getMessage('EVENT_LIST_GROUP');
 $eventList = \Mindbox\EventController::getOptionEventList();
 $optionEventCode = \Mindbox\EventController::getOptionEventCode();
 
-if ( $_GET['_i_debug'] === 'Y') {
+if ( true || $_GET['_i_debug'] === 'Y') {
     $obj = new \Mindbox\EventController();
     $list = $obj->findEventHandlersAll();
     $findOnBeforeUserAdd = $obj->findEventHandlers('main', 'OnBeforeUserAdd');
