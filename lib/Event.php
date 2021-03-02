@@ -1665,7 +1665,7 @@ class Event
             $lines[] = $line;
         }
 
-        if (empty($arAllLines)) {
+        if (empty($arAllLines) && isset($_SESSION['WISHLIST_COUNT'])) {
             self::clearWishList();
         }
 
@@ -1749,7 +1749,6 @@ class Event
 
     private static function clearWishList()
     {
-
         $mindbox = static::mindbox();
         if (!$mindbox) {
             return false;
