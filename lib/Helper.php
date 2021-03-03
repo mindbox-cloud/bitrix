@@ -5,7 +5,6 @@
 
 namespace Mindbox;
 
-
 use Bitrix\Main\Loader;
 use Bitrix\Main\UserTable;
 use CCatalog;
@@ -62,9 +61,10 @@ class Helper
             $mindboxId = $rsUser[ 'UF_MINDBOX_ID' ];
         }
 
-        if(!$mindboxId && \COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {
+        if (!$mindboxId && \COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {
             $mindbox = Options::getConfig();
-            $request = $mindbox->getClientV3()->prepareRequest('POST',
+            $request = $mindbox->getClientV3()->prepareRequest(
+                'POST',
                 Options::getOperationName('getCustomerInfo'),
                 new DTO([
                     'customer' => [
@@ -72,7 +72,8 @@ class Helper
                             Options::getModuleOption('WEBSITE_ID') => $id
                         ]
                     ]
-                ]));
+                ])
+            );
 
             try {
                 $response = $request->sendRequest();
@@ -181,8 +182,12 @@ class Helper
         unset($fields);
 
         try {
-            $registerResponse = $mindbox->customer()->register($customer,
-                Options::getOperationName('register'), true, Helper::isSync())->sendRequest()->getResult();
+            $registerResponse = $mindbox->customer()->register(
+                $customer,
+                Options::getOperationName('register'),
+                true,
+                Helper::isSync()
+            )->sendRequest()->getResult();
         } catch (Exceptions\MindboxUnavailableException $e) {
             $lastResponse = $mindbox->customer()->getLastResponse();
             if ($lastResponse) {
@@ -196,7 +201,7 @@ class Helper
             }
         }
 
-        if($registerResponse) {
+        if ($registerResponse) {
             $registerResponse = Helper::iconvDTO($registerResponse, false);
             $status = $registerResponse->getStatus();
 
@@ -276,13 +281,13 @@ class Helper
         $result = '';
         $id = $basketItem->getField('PRODUCT_XML_ID');
 
-        if(!$id) {
+        if (!$id) {
             $productId = $basketItem->getField('PRODUCT_ID');
             $arProduct = \CIBlockElement::GetByID($productId)->GetNext();
             $id = $arProduct['XML_ID'];
         }
 
-        if(!$id) {
+        if (!$id) {
             $id = $basketItem->getField('PRODUCT_ID');
         }
 
@@ -400,7 +405,8 @@ class Helper
      *
      * @return boolean
      */
-    public static function isUnAuthorizedOrder($arUser) {
+    public static function isUnAuthorizedOrder($arUser)
+    {
         return date('dmYHi', time()) === date('dmYHi', strtotime($arUser['DATE_REGISTER']));
     }
 
@@ -454,5 +460,67 @@ class Helper
         }
 
         return $uniqueBasketItems;
+    }
+
+    public static function processHlbBasketRule($lineId, $mindboxPrice)
+    {
+        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('processHlbBasketRule');
+        }
+
+        $hlbl = 4;
+        $hlblock = \Bitrix\Highloadblock\HighloadBlockTable::getById($hlbl)->fetch();
+        $entity = \Bitrix\Highloadblock\HighloadBlockTable::compileEntity($hlblock);
+        $entity_data_class = $entity->getDataClass();
+
+        if ($mindboxPrice) {
+            $data = [
+                "UF_DISCOUNTED_PRICE"       =>  $mindboxPrice
+            ];
+
+            $arFilter = [
+                "select" => ["*"],
+                "order" => ["ID" => "ASC"],
+                "filter" => [
+                    "UF_BASKET_ID"   =>  $lineId
+                ]
+            ];
+            $logger->log('$arFilter', $arFilter);
+            $rsData = $entity_data_class::getList($arFilter);
+
+            if ($arData = $rsData->Fetch()) {
+                $result = $entity_data_class::update($arData['ID'], $data);
+                $logger->log('$entity_data_class::update', [
+                    '$result' => $result,
+                    '$data' => $data
+                ]);
+            } else {
+                $data = [
+                    'UF_BASKET_ID'  =>  $lineId,
+                    "UF_DISCOUNTED_PRICE"       =>  $mindboxPrice
+                ];
+                $result = $entity_data_class::add($data);
+                $logger->log('$entity_data_class::add', [
+                    '$result' => $result,
+                    '$data' => $data
+                ]);
+            }
+        } else {
+            $arFilter = [
+                "select" => ["*"],
+                "order" => ["ID" => "ASC"],
+                "filter" => [
+                    "UF_BASKET_ID"   =>  $lineId
+                ]
+            ];
+            $rsData = $entity_data_class::getList($arFilter);
+            if ($arData = $rsData->Fetch()) {
+                $result = $entity_data_class::delete($arData['ID']);
+                $logger->log('$entity_data_class::delete', [
+                    '$result' => $result,
+                    '$arData' => $arData
+                ]);
+            }
+        }
     }
 }

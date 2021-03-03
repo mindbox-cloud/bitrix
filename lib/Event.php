@@ -1390,13 +1390,6 @@ class Event
                         ];
                     } else {
                         $mindboxPrice = floatval($line->getDiscountedPrice()) / floatval($line->getQuantity());
-                        //$bitrixProduct->setField('CUSTOM_PRICE', 'Y');
-                        //$bitrixProduct->setFieldNoDemand('PRICE', $mindboxPrice);
-                        //$bitrixProduct->setFieldNoDemand('QUANTITY', $line->getQuantity());
-                        //$bitrixProduct->save();
-
-
-
                         $mindboxBasket[ $lineId ] = $bitrixProduct;
 
                         if ($logger) {
@@ -1406,60 +1399,7 @@ class Event
                             ]);
                         }
 
-                        $hlbl = 6;
-                        $hlblock = \Bitrix\Highloadblock\HighloadBlockTable::getById($hlbl)->fetch();
-                        $entity = \Bitrix\Highloadblock\HighloadBlockTable::compileEntity($hlblock);
-                        $entity_data_class = $entity->getDataClass();
-
-                        if ($mindboxPrice) {
-                            $data = [
-                                "UF_DISCOUNTED_PRICE"       =>  $mindboxPrice
-                            ];
-
-                            $arFilter = [
-                                "select" => ["*"],
-                                "order" => ["ID" => "ASC"],
-                                "filter" => [
-                                    "UF_BASKET_ID"   =>  $lineId
-                                ]
-                            ];
-                            $logger->log('$arFilter', $arFilter);
-                            $rsData = $entity_data_class::getList($arFilter);
-
-                            if ($arData = $rsData->Fetch()) {
-                                $result = $entity_data_class::update($arData['ID'], $data);
-                                $logger->log('$entity_data_class::update', [
-                                    '$result' => $result,
-                                    '$data' => $data
-                                    ]);
-                            } else {
-                                $data = [
-                                    'UF_BASKET_ID'  =>  $lineId,
-                                    "UF_DISCOUNTED_PRICE"       =>  $mindboxPrice
-                                ];
-                                $result = $entity_data_class::add($data);
-                                $logger->log('$entity_data_class::add', [
-                                    '$result' => $result,
-                                    '$data' => $data
-                                ]);
-                            }
-                        } else {
-                            $arFilter = [
-                                "select" => ["*"],
-                                "order" => ["ID" => "ASC"],
-                                "filter" => [
-                                    "UF_BASKET_ID"   =>  $lineId
-                                ]
-                            ];
-                            $rsData = $entity_data_class::getList($arFilter);
-                            if ($arData = $rsData->Fetch()) {
-                                $result = $entity_data_class::delete($arData['ID']);
-                                $logger->log('$entity_data_class::delete', [
-                                        '$result' => $result,
-                                        '$arData' => $arData
-                                    ]);
-                            }
-                        }
+                        Helper::processHlbBasketRule($lineId, $mindboxPrice);
                     }
                 }
 
