@@ -35,19 +35,22 @@ class Cart extends CBitrixComponent implements Controllerable
 
         try {
             if (!Loader::includeModule('mindbox.marketing')) {
-                ShowError(GetMessage('MB_CART_MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));;
+                ShowError(GetMessage('MB_CART_MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));
+                ;
 
                 return;
             }
 
             if (!Loader::includeModule('sale')) {
-                ShowError(GetMessage('MB_CART_MODULE_NOT_INCLUDED', ['#MODULE#' => 'sale']));;
+                ShowError(GetMessage('MB_CART_MODULE_NOT_INCLUDED', ['#MODULE#' => 'sale']));
+                ;
 
                 return;
             }
 
             if (!Loader::includeModule('catalog')) {
-                ShowError(GetMessage('MB_CART_MODULE_NOT_INCLUDED', ['#MODULE#' => 'catalog']));;
+                ShowError(GetMessage('MB_CART_MODULE_NOT_INCLUDED', ['#MODULE#' => 'catalog']));
+                ;
 
                 return;
             }
@@ -84,15 +87,16 @@ class Cart extends CBitrixComponent implements Controllerable
         global $USER;
         $mindbox = $this->mindbox;
 
-        $basket = $basket = Bitrix\Sale\Basket::loadItemsForFUser(Bitrix\Sale\Fuser::getId(),
-            Bitrix\Main\Context::getCurrent()->getSite());
+        $basket = $basket = Bitrix\Sale\Basket::loadItemsForFUser(
+            Bitrix\Sale\Fuser::getId(),
+            Bitrix\Main\Context::getCurrent()->getSite()
+        );
 
 
         $preorder = new PreorderRequestDTO();
 
         foreach ($basket as $basketItem) {
-
-            if($basketItem->getField('CAN_BUY') == 'N') {
+            if ($basketItem->getField('CAN_BUY') == 'N') {
                 continue;
             }
 
@@ -131,7 +135,7 @@ class Cart extends CBitrixComponent implements Controllerable
                 ],
             ];
 
-            if(!empty($requestedPromotions)) {
+            if (!empty($requestedPromotions)) {
                 $arLine['requestedPromotions'] = [$requestedPromotions];
             }
 
@@ -164,7 +168,7 @@ class Cart extends CBitrixComponent implements Controllerable
         }
 
         $bonuses = $_SESSION[ 'PAY_BONUSES' ] ?: 0;
-        if($bonuses) {
+        if ($bonuses) {
             $bonusPoints = [
                 'amount'    =>  $bonuses
             ];
@@ -193,13 +197,16 @@ class Cart extends CBitrixComponent implements Controllerable
 
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {
             try {
-
                 if ($USER->IsAuthorized()) {
-                    $preorderInfo = $mindbox->order()->calculateAuthorizedCart($preorder,
-                        Options::getOperationName('calculateAuthorizedCart'))->sendRequest()->getResult()->getField('order');
+                    $preorderInfo = $mindbox->order()->calculateAuthorizedCart(
+                        $preorder,
+                        Options::getOperationName('calculateAuthorizedCart')
+                    )->sendRequest()->getResult()->getField('order');
                 } else {
-                    $preorderInfo = $mindbox->order()->calculateUnauthorizedCart($preorder,
-                        Options::getOperationName('calculateUnauthorizedCart'))->sendRequest()->getResult()->getField('order');
+                    $preorderInfo = $mindbox->order()->calculateUnauthorizedCart(
+                        $preorder,
+                        Options::getOperationName('calculateUnauthorizedCart')
+                    )->sendRequest()->getResult()->getField('order');
                 }
 
                 if ($preorderInfo) {
@@ -207,23 +214,23 @@ class Cart extends CBitrixComponent implements Controllerable
                     $couponsInfo = reset($preorderInfo->getField('couponsInfo'));
                     $totalBonusPointsInfo = $preorderInfo->getField('totalBonusPointsInfo');
 
-                    if(!empty($couponsInfo)) {
-                        if($couponsInfo['coupon']['status'] == 'NotFound') {
+                    if (!empty($couponsInfo)) {
+                        if ($couponsInfo['coupon']['status'] == 'NotFound') {
                             $response = Ajax::errorResponse(GetMessage('MB_CART_PROMOCODE_NOT_FOUND'));
                         }
-                        if($couponsInfo['coupon']['status'] == 'CanNotBeUsedForCurrentOrder') {
+                        if ($couponsInfo['coupon']['status'] == 'CanNotBeUsedForCurrentOrder') {
                             $response = Ajax::errorResponse(GetMessage('MB_CART_PROMOCODE_ERR'));
                         }
-                        if($couponsInfo['coupon']['status'] == 'Used') {
+                        if ($couponsInfo['coupon']['status'] == 'Used') {
                             $response = Ajax::errorResponse(GetMessage('MB_CART_PROMO_USED'));
                         }
-                        if($couponsInfo['coupon']['status'] == 'CanBeUsed') {
+                        if ($couponsInfo['coupon']['status'] == 'CanBeUsed') {
                             $_SESSION[ 'PROMO_CODE_AMOUNT' ] = $couponsInfo['discountAmountForCurrentOrder'];
                             $_SESSION[ 'PROMO_CODE' ] = $code;
                         }
                     }
 
-                    if(!empty($totalBonusPointsInfo)) {
+                    if (!empty($totalBonusPointsInfo)) {
                         $_SESSION[ 'ORDER_AVAILABLE_BONUSES' ] = $totalBonusPointsInfo['availableAmountForCurrentOrder'];
                         if ($_SESSION[ 'PAY_BONUSES' ] > $_SESSION[ 'ORDER_AVAILABLE_BONUSES' ]) {
                             $_SESSION[ 'PAY_BONUSES' ] = 0;
@@ -261,11 +268,7 @@ class Cart extends CBitrixComponent implements Controllerable
                             ];
                         } else {
                             $mindboxPrice = floatval($line->getDiscountedPrice()) / floatval($line->getQuantity());
-                            $bitrixProduct->setField('CUSTOM_PRICE', 'Y');
-                            $bitrixProduct->setFieldNoDemand('PRICE', $mindboxPrice);
-                            $bitrixProduct->setFieldNoDemand('QUANTITY', $line->getQuantity());
-                            $bitrixProduct->save();
-
+                            Helper::processHlbBasketRule($lineId, $mindboxPrice);
                             $mindboxBasket[ $lineId ] = $bitrixProduct;
                         }
                     }
@@ -276,7 +279,6 @@ class Cart extends CBitrixComponent implements Controllerable
                         $item->setFields($product);
                     }
                 }
-
             } catch (MindboxClientException $e) {
                 foreach ($basket as $basketItem) {
                     $basketItem->setField('CUSTOM_PRICE', 'N');
@@ -298,8 +300,10 @@ class Cart extends CBitrixComponent implements Controllerable
         }
         $bonuses = intval($bonuses);
 
-        $basket = $basket = Bitrix\Sale\Basket::loadItemsForFUser(Bitrix\Sale\Fuser::getId(),
-            Bitrix\Main\Context::getCurrent()->getSite());
+        $basket = $basket = Bitrix\Sale\Basket::loadItemsForFUser(
+            Bitrix\Sale\Fuser::getId(),
+            Bitrix\Main\Context::getCurrent()->getSite()
+        );
 
         global $USER;
         $mindbox = $this->mindbox;
@@ -314,8 +318,7 @@ class Cart extends CBitrixComponent implements Controllerable
         $bitrixBasket = [];
 
         foreach ($basketItems as $basketItem) {
-
-            if($basketItem->getField('CAN_BUY') == 'N') {
+            if ($basketItem->getField('CAN_BUY') == 'N') {
                 continue;
             }
 
@@ -354,7 +357,7 @@ class Cart extends CBitrixComponent implements Controllerable
                 ],
             ];
 
-            if(!empty($requestedPromotions)) {
+            if (!empty($requestedPromotions)) {
                 $arLine['requestedPromotions'] = [$requestedPromotions];
             }
 
@@ -380,11 +383,11 @@ class Cart extends CBitrixComponent implements Controllerable
             'lines' => $lines
         ];
 
-        if(!empty($arCoupons)) {
+        if (!empty($arCoupons)) {
             $arOrder['coupons'] = [$arCoupons];
         }
 
-        if($bonuses) {
+        if ($bonuses) {
             $bonusPoints = [
                 'amount'    =>  $bonuses
             ];
@@ -400,7 +403,7 @@ class Cart extends CBitrixComponent implements Controllerable
         $customer = new CustomerRequestDTO();
         if ($USER->IsAuthorized()) {
             $mindboxId = Helper::getMindboxId($USER->GetID());
-            if($mindboxId) {
+            if ($mindboxId) {
                 $customer->setId('mindboxId', intval($mindboxId));
                 $preorder->setCustomer($customer);
             }
@@ -411,22 +414,24 @@ class Cart extends CBitrixComponent implements Controllerable
 
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {
             try {
-
                 if ($USER->IsAuthorized()) {
-                    $preorderInfo = $mindbox->order()->calculateAuthorizedCart($preorder,
-                        Options::getOperationName('calculateAuthorizedCart'))->sendRequest()->getResult()->getField('order');
+                    $preorderInfo = $mindbox->order()->calculateAuthorizedCart(
+                        $preorder,
+                        Options::getOperationName('calculateAuthorizedCart')
+                    )->sendRequest()->getResult()->getField('order');
                 } else {
-                    $preorderInfo = $mindbox->order()->calculateUnauthorizedCart($preorder,
-                        Options::getOperationName('calculateUnauthorizedCart'))->sendRequest()->getResult()->getField('order');
+                    $preorderInfo = $mindbox->order()->calculateUnauthorizedCart(
+                        $preorder,
+                        Options::getOperationName('calculateUnauthorizedCart')
+                    )->sendRequest()->getResult()->getField('order');
                 }
 
 
                 if ($preorderInfo) {
-
                     $totalBonusPointsInfo = $preorderInfo->getField('totalBonusPointsInfo');
 
 
-                    if(!empty($totalBonusPointsInfo)) {
+                    if (!empty($totalBonusPointsInfo)) {
                         $_SESSION[ 'ORDER_AVAILABLE_BONUSES' ] = $totalBonusPointsInfo['availableAmountForCurrentOrder'];
                         $_SESSION[ 'PAY_BONUSES' ] = $totalBonusPointsInfo['spentAmountForCurrentOrder'];
                     }
@@ -457,11 +462,7 @@ class Cart extends CBitrixComponent implements Controllerable
                             ];
                         } else {
                             $mindboxPrice = floatval($line->getDiscountedPrice()) / floatval($line->getQuantity());
-                            $bitrixProduct->setField('CUSTOM_PRICE', 'Y');
-                            $bitrixProduct->setFieldNoDemand('PRICE', $mindboxPrice);
-                            $bitrixProduct->setFieldNoDemand('QUANTITY', $line->getQuantity());
-                            $bitrixProduct->save();
-
+                            Helper::processHlbBasketRule($lineId, $mindboxPrice);
                             $mindboxBasket[ $lineId ] = $bitrixProduct;
                         }
                     }
@@ -490,8 +491,10 @@ class Cart extends CBitrixComponent implements Controllerable
 
     public function executeComponent()
     {
-        $basket = Bitrix\Sale\Basket::loadItemsForFUser(Bitrix\Sale\Fuser::getId(),
-            Bitrix\Main\Context::getCurrent()->getSite());
+        $basket = Bitrix\Sale\Basket::loadItemsForFUser(
+            Bitrix\Sale\Fuser::getId(),
+            Bitrix\Main\Context::getCurrent()->getSite()
+        );
 
         if ($basket->isEmpty()) {
             return;
@@ -523,8 +526,7 @@ class Cart extends CBitrixComponent implements Controllerable
 
 
         foreach ($basketItems as $basketItem) {
-
-            if($basketItem->getField('CAN_BUY') == 'N') {
+            if ($basketItem->getField('CAN_BUY') == 'N') {
                 continue;
             }
 
@@ -563,7 +565,7 @@ class Cart extends CBitrixComponent implements Controllerable
                 ],
             ];
 
-            if(!empty($requestedPromotions)) {
+            if (!empty($requestedPromotions)) {
                 $arLine['requestedPromotions'] = [$requestedPromotions];
             }
 
@@ -587,13 +589,13 @@ class Cart extends CBitrixComponent implements Controllerable
             'lines' => $lines
         ];
 
-        if(!empty($arCoupons)) {
+        if (!empty($arCoupons)) {
             $arOrder['coupons'] = [$arCoupons];
         }
 
         $bonuses = $_SESSION[ 'PAY_BONUSES' ] ?: 0;
 
-        if($bonuses && $USER->IsAuthorized()) {
+        if ($bonuses && $USER->IsAuthorized()) {
             $bonusPoints = [
                 'amount'    =>  $bonuses
             ];
@@ -611,20 +613,23 @@ class Cart extends CBitrixComponent implements Controllerable
         $customer = new CustomerRequestDTO();
         if ($USER->IsAuthorized()) {
             $mindboxId = Helper::getMindboxId($USER->GetID());
-            if($mindboxId) {
+            if ($mindboxId) {
                 $customer->setId('mindboxId', intval($mindboxId));
                 $preorder->setCustomer($customer);
             }
         }
 
         try {
-
             if ($USER->IsAuthorized()) {
-                $preorderInfo = $mindbox->order()->calculateAuthorizedCart($preorder,
-                    Options::getOperationName('calculateAuthorizedCart'))->sendRequest()->getResult()->getField('order');
+                $preorderInfo = $mindbox->order()->calculateAuthorizedCart(
+                    $preorder,
+                    Options::getOperationName('calculateAuthorizedCart')
+                )->sendRequest()->getResult()->getField('order');
             } else {
-                $preorderInfo = $mindbox->order()->calculateUnauthorizedCart($preorder,
-                    Options::getOperationName('calculateUnauthorizedCart'))->sendRequest()->getResult()->getField('order');
+                $preorderInfo = $mindbox->order()->calculateUnauthorizedCart(
+                    $preorder,
+                    Options::getOperationName('calculateUnauthorizedCart')
+                )->sendRequest()->getResult()->getField('order');
             }
 
 
@@ -634,7 +639,7 @@ class Cart extends CBitrixComponent implements Controllerable
             $totalBonusPointsInfo = $preorderInfo->getField('totalBonusPointsInfo');
 
 
-            if(!empty($totalBonusPointsInfo)) {
+            if (!empty($totalBonusPointsInfo)) {
                 $_SESSION[ 'ORDER_AVAILABLE_BONUSES' ] = $totalBonusPointsInfo['availableAmountForCurrentOrder'];
             }
 
@@ -665,11 +670,7 @@ class Cart extends CBitrixComponent implements Controllerable
                     ];
                 } else {
                     $mindboxPrice = floatval($line->getDiscountedPrice()) / floatval($line->getQuantity());
-                    $bitrixProduct->setField('CUSTOM_PRICE', 'Y');
-                    $bitrixProduct->setFieldNoDemand('PRICE', $mindboxPrice);
-                    $bitrixProduct->setFieldNoDemand('QUANTITY', $line->getQuantity());
-                    $bitrixProduct->save();
-
+                    Helper::processHlbBasketRule($lineId, $mindboxPrice);
                     $mindboxBasket[ $lineId ] = $bitrixProduct;
                 }
             }
