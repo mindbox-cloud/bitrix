@@ -781,8 +781,16 @@ class Event
         return new \Bitrix\Main\EventResult(\Bitrix\Main\EventResult::SUCCESS);
     }
 
-    public function OnSaleOrderSavedHandler($order)
+    public function OnSaleOrderSavedHandler($event)
     {
+        $order = $event->getParameter("ENTITY");
+        $oldValues = $event->getParameter("VALUES");
+        $isNew = $event->getParameter("IS_NEW");
+
+        if (!$isNew) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+
         $mindbox = static::mindbox();
         if (!$mindbox) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
@@ -1200,7 +1208,7 @@ class Event
     }
 
 
-    public function OnSaleBasketBeforeSavedHadler($basket)
+    public function OnSaleBasketBeforeSavedHandler($basket)
     {
         global $USER;
 
