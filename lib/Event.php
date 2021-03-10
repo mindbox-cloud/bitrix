@@ -35,6 +35,8 @@ Loader::includeModule('main');
  */
 class Event
 {
+    const MINDBOX_DISCOUNT_ID = 1;
+
     protected $mindbox;
 
     /**
@@ -559,7 +561,6 @@ class Event
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
-        /** @var \Bitrix\Sale\Basket $basket */
         $basket = $order->getBasket();
         global $USER;
 
@@ -576,10 +577,6 @@ class Event
                 continue;
             }
 
-            $discountName = $basketItem->getField('DISCOUNT_NAME');
-            preg_match("#\[(.*)\]#", $discountName, $matches);
-            $discountId = $matches[ 1 ];
-
             $discountPrice = $basketItem->getDiscountPrice();
             $productBasePrice = $basketItem->getBasePrice();
             $requestedPromotions = [];
@@ -588,7 +585,7 @@ class Event
                     'type'      => 'discount',
                     'promotion' => [
                         'ids' => [
-                            'externalId' => $discountId
+                            'externalId' => self::MINDBOX_DISCOUNT_ID
                         ],
                     ],
                     'amount'    => $discountPrice * $basketItem->getQuantity()
@@ -628,7 +625,6 @@ class Event
         if ($_SESSION[ 'PROMO_CODE' ] && !empty($_SESSION[ 'PROMO_CODE' ])) {
             $arCoupons[ 'ids' ][ 'code' ] = $_SESSION[ 'PROMO_CODE' ];
         }
-
 
         $arOrder = [
             'ids'         => [
@@ -1200,8 +1196,11 @@ class Event
     }
 
 
-    public function OnSaleBasketSavedHandler($basket)
+    public function OnBeforeSaleOrderFinalActionHandler($event)
     {
+
+        $basket = $event->getParameter('BASKET');
+
         global $USER;
 
         if (!$USER || is_string($USER)) {
@@ -1215,7 +1214,6 @@ class Event
 
         $preorder = new PreorderRequestDTO();
 
-        /** @var \Bitrix\Sale\Basket $basket */
         $basketItems = $basket->getBasketItems();
         self::setCartMindbox($basketItems);
         $lines = [];
@@ -1224,11 +1222,14 @@ class Event
         $preorder = new \Mindbox\DTO\V3\Requests\PreorderRequestDTO();
 
         if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('OnSaleBasketSavedHandler');
+            $logger = new \Intensa\Logger\ILog('OnBeforeSaleOrderFinalActionHandler');
+            $logger->log('fire', [1]);
         }
 
         foreach ($basketItems as $basketItem) {
-            $logger->log('$basketItem->getId()', $basketItem->getId());
+            if (!$basketItem->getId()) {
+                continue;
+            }
 
             if ($basketItem->getField('CAN_BUY') == 'N') {
                 continue;
@@ -1237,19 +1238,54 @@ class Event
             $bitrixBasket[ $basketItem->getId() ] = $basketItem;
             $catalogPrice = $basketItem->getBasePrice();
             $discountName = $basketItem->getField('DISCOUNT_NAME');
-
-            preg_match("#\[(.*)\]#", $discountName, $matches);
-            $discountId = $matches[ 1 ];
-
             $discountPrice = $basketItem->getDiscountPrice();
-            $productBasePrice = $basketItem->getBasePrice();
+
+            $hlbl = 6;
+            $hlblock = \Bitrix\Highloadblock\HighloadBlockTable::getById($hlbl)->fetch();
+            $entity = \Bitrix\Highloadblock\HighloadBlockTable::compileEntity($hlblock);
+            $entity_data_class = $entity->getDataClass();
+            $arFilter = [
+                "select" => ["*"],
+                "order" => ["ID" => "ASC"],
+                "filter" => [
+                    "UF_BASKET_ID"   =>  $basketItem->getId()
+                ]
+            ];
+            $logger->log('$arFilter', $arFilter);
+            $rsData = $entity_data_class::getList($arFilter);
+
+            if ($arData = $rsData->Fetch()) {
+                $mindboxDiscountPrice = $arData['UF_DISCOUNTED_PRICE'];
+            }
+
+            $logger->log('discount', $mindboxDiscountPrice - $basketItem->getPrice());
+
+            $discountPrice = $mindboxDiscountPrice - $basketItem->getPrice();
+
+
+
+            $logger->log('$basketItem', [
+                '$basketItem->getId()'  =>  $basketItem->getId(),
+                '$basketItem->getProductId()'   =>  $basketItem->getProductId(),
+                '$basketItem->getPrice()'   =>  $basketItem->getPrice(),
+                '$basketItem->getQuantity()'    =>  $basketItem->getQuantity(),
+                '$basketItem->getFinalPrice()'  =>  $basketItem->getFinalPrice(),
+                '$basketItem->getWeight()'      =>  $basketItem->getWeight(),
+                '$basketItem->getField(\'NAME\')'   =>  $basketItem->getField('NAME'),
+                '$basketItem->canBuy()' =>  $basketItem->canBuy(),
+                '$basketItem->isDelay()'    =>  $basketItem->isDelay(),
+                '$basketItem->getDiscountPrice()'  =>  $basketItem->getDiscountPrice(),
+                '$basketItem->getBasePrice()'  =>  $basketItem->getBasePrice(),
+                '$discountName' =>  $discountName
+            ]);
+
             $requestedPromotions = [];
-            if (!empty($discountName) && $discountPrice) {
+            if ($discountPrice > 0) {
                 $requestedPromotions = [
                     'type'      => 'discount',
                     'promotion' => [
                         'ids'  => [
-                            'externalId' => $discountId
+                            'externalId' => self::MINDBOX_DISCOUNT_ID
                         ],
                     ],
                     'amount'    => $discountPrice*$basketItem->getQuantity()
@@ -1362,7 +1398,7 @@ class Event
 
 
                 if ($logger) {
-                    $logger->log('$lines', $lines);
+                    //$logger->log('$lines', $lines);
                 }
 
                 $mindboxBasket = [];
@@ -1390,13 +1426,6 @@ class Event
                         ];
                     } else {
                         $mindboxPrice = floatval($line->getDiscountedPrice()) / floatval($line->getQuantity());
-                        //$bitrixProduct->setField('CUSTOM_PRICE', 'Y');
-                        //$bitrixProduct->setFieldNoDemand('PRICE', $mindboxPrice);
-                        //$bitrixProduct->setFieldNoDemand('QUANTITY', $line->getQuantity());
-                        //$bitrixProduct->save();
-
-
-
                         $mindboxBasket[ $lineId ] = $bitrixProduct;
 
                         if ($logger) {
@@ -1428,10 +1457,12 @@ class Event
 
                             if ($arData = $rsData->Fetch()) {
                                 $result = $entity_data_class::update($arData['ID'], $data);
+                                /*
                                 $logger->log('$entity_data_class::update', [
                                     '$result' => $result,
                                     '$data' => $data
                                     ]);
+                                */
                             } else {
                                 $data = [
                                     'UF_BASKET_ID'  =>  $lineId,
