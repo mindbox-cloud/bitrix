@@ -201,18 +201,22 @@ class Event
             return isset($item);
         });
 
-        $fields[ 'subscriptions' ] = [
-            [
+        $isSubscribed = true;
+        if ($arFields['UF_MB_IS_SUBSCRIBED'] === '0') {
+            $isSubscribed = false;
+        }
+        $subscriptions = [
+            'subscription' => [
+                'brand' =>  Options::getModuleOption('BRAND'),
                 'pointOfContact' => 'Email',
-                'isSubscribed'   => true
-            ],
-            [
-                'pointOfContact' => 'Sms',
-                'isSubscribed'   => true
-            ],
+                'isSubscribed'   => $isSubscribed
+            ]
         ];
 
+
         $customer = Helper::iconvDTO(new CustomerRequestDTO($fields));
+
+        $customer->setSubscriptions($subscriptions);
 
         unset($fields);
 
@@ -355,8 +359,7 @@ class Event
                 ];
 
                 $isSubscribed = true;
-
-                if ($arFields['UF_IS_SUBSCRIBED'] === '0') {
+                if ($arFields['UF_MB_IS_SUBSCRIBED'] === '0') {
                     $isSubscribed = false;
                 }
 
@@ -372,14 +375,6 @@ class Event
 
                 unset($fields);
 
-                $subscriptions = [
-                    'subscription' => [
-                        'brand'          => Options::getModuleOption('BRAND'),
-                        'pointOfContact' => 'Email',
-                        'isSubscribed'   => true,
-                    ]
-                ];
-                $customer->setSubscriptions($subscriptions);
                 $subscriptions = [
                 'subscription' => [
                     'brand' =>  Options::getModuleOption('BRAND'),
@@ -699,9 +694,6 @@ class Event
         }
 
         $orderDTO->setCustomer($customer);
-
-
-
 
         try {
             if (\Mindbox\Helper::isUnAuthorizedOrder($arUser) || (is_object($USER) && !$USER->IsAuthorized())) {
@@ -1070,12 +1062,18 @@ class Event
                 $customer->setId(Options::getModuleOption('WEBSITE_ID'), $order->getUserId());
             }
 
+
+            $isSubscribed = true;
+            if ($arOrderProperty['UF_MB_IS_SUBSCRIBED'] === 'N') {
+                $isSubscribed = false;
+            }
             $subscriptions = [
-            'subscription' => [
-                'brand' =>  Options::getModuleOption('BRAND'),
-                'pointOfContact' => 'Email',
-                'isSubscribed'   => true
-            ]
+                'subscription' => [
+                    'brand' =>  Options::getModuleOption('BRAND'),
+                    'pointOfContact' => 'Email',
+                    'isSubscribed'   => $isSubscribed
+                ]
+
             ];
             $customer->setSubscriptions($subscriptions);
 
@@ -1486,22 +1484,20 @@ class Event
             return isset($item);
         });
 
-        $fields[ 'subscriptions' ] = [
-            [
+        $isSubscribed = false;
+        if ($arFields['UF_MB_IS_SUBSCRIBED'] === '1') {
+            $isSubscribed = true;
+        }
+        $fields[ 'subscriptions' ] = [[
+                'brand' =>  Options::getModuleOption('BRAND'),
                 'pointOfContact' => 'Email',
-                'isSubscribed'   => true
-            ],
-            [
-                'pointOfContact' => 'Sms',
-                'isSubscribed'   => true
-            ],
+                'isSubscribed'   => $isSubscribed
+            ]
         ];
 
         $customer = Helper::iconvDTO(new CustomerRequestDTO($fields));
 
         unset($fields);
-
-
 
         try {
             $registerResponse = $mindbox->customer()->register(
