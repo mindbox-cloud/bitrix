@@ -1288,7 +1288,7 @@ class Event
                             'externalId' => self::MINDBOX_DISCOUNT_ID
                         ],
                     ],
-                    'amount'    => $discountPrice*$basketItem->getQuantity()
+                    'amount'    => roundEx($discountPrice*$basketItem->getQuantity(), 2)
                 ];
             }
 
