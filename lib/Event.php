@@ -9,6 +9,7 @@ use Bitrix\Main\Loader;
 use Bitrix\Main\UserTable;
 use Bitrix\Main;
 use Bitrix\Main\Localization\Loc;
+use Bitrix\Main\Page\Asset;
 use CUser;
 use DateTime;
 use DateTimeZone;
@@ -36,6 +37,8 @@ Loader::includeModule('main');
 class Event
 {
     protected $mindbox;
+
+    const TRACKER_JS_FILENAME = "https://api.mindbox.ru/scripts/v1/tracker.js";
 
     /**
      * @param $arUser
@@ -1600,6 +1603,14 @@ class Event
                 unset($_SESSION[ 'NEW_USER_MB_ID' ]);
             }
         }
+    }
+
+    public function OnPrologHandler()
+    {
+        $defaultOptions = \Bitrix\Main\Config\Option::getDefaults("mindbox.marketing");
+        $jsString = "<script data-skip-moving=\"true\">\r\n" . file_get_contents($_SERVER['DOCUMENT_ROOT'] . $defaultOptions['TRACKER_JS_FILENAME']) . "</script>\r\n";
+        $jsString .= '<script data-skip-moving="true" src="' . self::TRACKER_JS_FILENAME . '" async></script>';
+        Asset::getInstance()->addString($jsString);
     }
 
     /**

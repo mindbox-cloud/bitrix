@@ -249,6 +249,14 @@ class mindbox_marketing extends CModule
             "OnSaleOrderSavedHandler",
             1000
         );
+        $eventManager->registerEventHandlerCompatible(
+            "main",
+            "OnProlog",
+            $this->MODULE_ID,
+            "\Mindbox\Event",
+            "OnPrologHandler",
+            1000
+        );
 
         return true;
     }
@@ -266,13 +274,10 @@ class mindbox_marketing extends CModule
         $eventManager->unRegisterEventHandler("main", "OnBeforeUserUpdate", $this->MODULE_ID, "\Mindbox\Event", "OnBeforeUserUpdateHandler");
         $eventManager->unRegisterEventHandler("main", "OnBeforeUserAdd", $this->MODULE_ID, "\Mindbox\Event", "OnBeforeUserAddHandler");
         $eventManager->unRegisterEventHandler("main", "OnAfterUserAdd", $this->MODULE_ID, "\Mindbox\Event", "OnAfterUserAddHandler");
-        $eventManager->unRegisterEventHandler("sale", "OnSaleBasketSaved", $this->MODULE_ID, "\Mindbox\Event", "OnSaleBasketSavedHandler");
-        $eventManager->unRegisterEventHandler("sale", "OnBasketAdd", $this->MODULE_ID, "\Mindbox\Event", "OnBasketAddHandler");
-        $eventManager->unRegisterEventHandler("sale", "OnBasketDelete", $this->MODULE_ID, "\Mindbox\Event", "OnBasketDeleteHandler");
-        $eventManager->unRegisterEventHandler("sale", "OnBasketUpdate", $this->MODULE_ID, "\Mindbox\Event", "OnBasketUpdateHandler");
         $eventManager->unRegisterEventHandler("sale", "OnSaleBasketBeforeSaved", $this->MODULE_ID, "\Mindbox\Event", "OnSaleBasketBeforeSavedHandler");
         $eventManager->unRegisterEventHandler("sale", "OnSaleOrderBeforeSaved", $this->MODULE_ID, "\Mindbox\Event", "OnSaleOrderBeforeSavedHandler");
         $eventManager->unRegisterEventHandler("sale", "OnSaleOrderSaved", $this->MODULE_ID, "\Mindbox\Event", "OnSaleOrderSavedHandler");
+        $eventManager->unRegisterEventHandler("sale", "OnProlog", $this->MODULE_ID, "\Mindbox\Event", "OnPrologHandler");
         return true;
     }
 
