@@ -14,11 +14,14 @@ use CPHPCache;
 use CSaleOrderProps;
 use Mindbox\DTO\DTO;
 use Mindbox\Options;
+use Mindbox\Templates\AdminLayouts;
 use Psr\Log\LoggerInterface;
 use Mindbox\DTO\V3\Requests\CustomerRequestDTO;
 
 class Helper
 {
+    use AdminLayouts;
+
     public static function getNumEnding($number, $endingArray)
     {
         $number = $number % 100;
@@ -386,6 +389,21 @@ class Helper
     }
 
     /**
+     * @return array
+     */
+    public static function getUserFields()
+    {
+        $dbFields = \CUserTypeEntity::GetList([], ['ENTITY_ID' => 'USER']);
+
+        $userFields = [];
+        while ($field = $dbFields->Fetch()) {
+            $userFields[$field['FIELD_NAME']] = $field['FIELD_NAME'];
+        }
+
+        return $userFields;
+    }
+
+    /**
      * Get order fields
      *
      * @return array $orderFields
@@ -409,27 +427,11 @@ class Helper
         return $orderProps;
     }
 
-    /**
-     * @param string $bitrixFieldCode
-     * @param string $mindboxFieldCode
-     * @param bool $append
-     */
-    public static function setOrderFieldsMatch($bitrixFieldCode, $mindboxFieldCode, $append = true)
+    public static function getMatchByCode($code, $matches = [])
     {
-        if (!$append) {
-            $matches = [$bitrixFieldCode => $mindboxFieldCode];
-        } else {
+        if (empty($matches)) {
             $matches = self::getOrderFieldsMatch();
-            $matches[$bitrixFieldCode] = $mindboxFieldCode;
         }
-
-        \COption::SetOptionString(ADMIN_MODULE_NAME, 'ORDER_FIELDS_MATCH', json_encode($matches));
-    }
-
-
-    public static function getMatchByCode($code)
-    {
-        $matches = self::getOrderFieldsMatch();
         $matches =  array_change_key_case($matches, CASE_UPPER);
         $code = mb_strtoupper($code);
 
@@ -451,109 +453,55 @@ class Helper
     }
 
     /**
-     * @return string
+     * @return array
      */
-    public static function getOrderMatchesTable()
+    public static function getUserFieldsMatch()
     {
-        $matches = self::getOrderFieldsMatch();
+        $fields = \COption::GetOptionString('mindbox.marketing', 'USER_FIELDS_MATCH', '{[]}');
 
-        $styles = <<<HTML
-    <style type="text/css">
-        .th {
-            background-color: #e0e8ea;
-            padding: 15px;
-            text-align: center;
-            min-width: 400px;
-        }
-        .th-empty {
-            background-color: #e0e8ea;
-            padding: 15px;
-            text-align: center;
-        }
-        .td {
-            border-top: 1px solid #87919c;
-            padding: 15px;
-            text-align: center;
-        }
-        .tr {}
-        .table {
-            margin: 0 auto !important;
-            border-collapse: collapse;
-        }
-        tr.heading:nth-last-child(-n+8) td {
-            display: none;
-        }
-    </style>
-HTML;
-        $escapeTable = '</td></tr><tr><td colspan="2"><table class="table">';
-        $tableHead = '<tr class="tr"><th class="th">'.getMessage("BITRIX_FIELDS").'</th><th class="th">'.getMessage("MINDBOX_FIELDS").'</th><th class="th-empty"></th></tr>';
+        return json_decode($fields, true);
+    }
 
-        $result = $styles.$escapeTable.$tableHead;
+    /**
+     * @return array
+     */
+    public static function getCustomFieldsForUser($userId, $userFields = [])
+    {
+        if (empty($userFields)) {
+            $customFields = [];
+            $by = 'id';
+            $order = 'asc';
+            $userFields = \CUser::GetList($by, $order, ['ID' => $userId], ['SELECT' => ['UF_*']])->Fetch();
+        }
 
-        foreach ($matches as $bitrixCode => $mindboxCode) {
-            if (!empty($mindboxCode)) {
-                $result .= '<tr class="tr"><td class="td">' . $bitrixCode . '</td>';
-                $result .= '<td class="td">' . $mindboxCode . '</td>';
-                $result .= '<td class="td"><a class="module_button_delete" data-bitrix="'.$bitrixCode.'" href="javascript:void(0)">' . getMessage("BUTTON_DELETE") . '</a></td></tr>';
+        $fields = array_filter($userFields, function ($fields, $key) {
+            return strpos($key, 'UF_') !== false;
+        }, ARRAY_FILTER_USE_BOTH);
+
+        foreach ($fields as $code => $value) {
+            if (!empty($value) && !empty($customName = self::getMatchByCode($code, self::getUserFieldsMatch()))) {
+                $customFields[self::sanitizeNamesForMindbox($customName)] = $value;
             }
         }
 
-        $bottomPadding = '</table></tr></td><tr><td>&nbsp;</td></tr>';
-        $result .= $bottomPadding;
-
-        $script = <<<HTML
-    <script>
-        document.querySelectorAll('.module_button_delete').forEach((element) => {
-            element.onclick = (e) => {
-                let url = new URL(window.location.href);
-                url.searchParams.delete('order_match_action');
-                url.searchParams.append('order_match_action', 'delete');
-                url.searchParams.append('bitrix_code', e.target.dataset.bitrix);
-                window.location.href = url;
-            };
-        });
-    </script>
-HTML;
-        $result .= $script;
-
-
-        return $result;
+        return $customFields;
     }
 
-    public static function getAddOrderMatchButton()
+    /**
+     * @param string $name
+     * @return string
+     */
+    public static function sanitizeNamesForMindbox($name)
     {
-        $escapeTable = '</td></tr><tr><td>';
-        $styles = <<<HTML
-    <style type="text/css">
-        .module_button {
-            border: 1px solid black;
-            border-radius: 5%;
-            padding: 8px 25px;
-            background-color: #e0e8ea;
-            color: black;
-            text-decoration: none;
-            float: right;
+        $regexNotChars = '/[^a-zA-Z0-9]/m';
+        $regexFirstLetter = '/^[a-zA-Z]/m';
+
+        $name = preg_replace($regexNotChars, '', $name);
+        if (!empty($name) && preg_match($regexFirstLetter, $name) === 1) {
+            return $name;
         }
-    </style>
-HTML;
 
-        $button = '<a class="module_button module_button_add" href="javascript:void(0)">'.getMessage("BUTTON_ADD").'</a>';
-
-        $script = <<<HTML
-    <script>
-        document.querySelector('.module_button_add').onclick = () => {
-            let url = new URL(window.location.href);
-            url.searchParams.delete('order_match_action');
-            url.searchParams.append('order_match_action', 'add');
-            url.searchParams.append('bitrix_code', document.querySelector('[name="MINDBOX_ORDER_BITRIX_FIELDS"]').selectedOptions[0].value);
-            url.searchParams.append('mindbox_code', document.querySelector('[name="MINDBOX_ORDER_MINDBOX_FIELDS"]').value);
-            window.location.href = url;
-        };
-    </script>
-HTML;
-
-
-        return $styles.$escapeTable.$button.$script;
+        return '';
     }
 
     /**

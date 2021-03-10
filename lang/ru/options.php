@@ -20,8 +20,8 @@ $MESS['DOCS_LINK'] = 'Документация по <a href="https://github.com/
 $MESS['MODE'] = "Режим работы";
 $MESS['IDENTIFIERS'] = 'Идентификаторы';
 $MESS['CONNECTION_SETTINGS'] = 'Настройки подключения';
-$MESS['CATALOG_SETTINGS'] = 'Настройки каталога';
-$MESS['ORDER_SETTINGS'] = 'Настройки заказа';
+$MESS['PRODUCT_SETTINGS'] = 'Настройки продуктов';
+$MESS['ORDER_SETTINGS'] = 'Настройки заказов';
 $MESS['BITRIX_FIELDS'] = 'Поле в Bitrix';
 $MESS['MINDBOX_FIELDS'] = 'Поле в Mindbox';
 $MESS['BUTTON_ADD'] = 'Добавить';
@@ -36,4 +36,4 @@ $MESS['LOYALTY'] = 'Лояльность';
 $MESS['SAVE'] = 'Сохранить';
 $MESS['MODULE_VERSION'] = 'Версия модуля ';
 $MESS['NEED_TABLE_UPGRADE'] = 'Чтобы ускорить генерацию фида, измените место хранения свойств в <a href="#LINK#" target="_blank">настройках</a>. Необходимо, чтобы свойства <a href="https://dev.1c-bitrix.ru/user_help/content/iblock/iblock_edit.php" target="_blank">хранились в отдельной таблице</a>.';
-$MESS['CLIENTS'] = 'Клиенты';
+$MESS['CLIENTS'] = 'Настройки клиентов';
