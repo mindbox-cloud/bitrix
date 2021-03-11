@@ -35,6 +35,8 @@ Loader::includeModule('main');
  */
 class Event
 {
+    const MINDBOX_DISCOUNT_ID = 1;
+
     protected $mindbox;
 
     /**
@@ -559,7 +561,6 @@ class Event
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
-        /** @var \Bitrix\Sale\Basket $basket */
         $basket = $order->getBasket();
         global $USER;
 
@@ -576,10 +577,6 @@ class Event
                 continue;
             }
 
-            $discountName = $basketItem->getField('DISCOUNT_NAME');
-            preg_match("#\[(.*)\]#", $discountName, $matches);
-            $discountId = $matches[ 1 ];
-
             $discountPrice = $basketItem->getDiscountPrice();
             $productBasePrice = $basketItem->getBasePrice();
             $requestedPromotions = [];
@@ -588,7 +585,7 @@ class Event
                     'type'      => 'discount',
                     'promotion' => [
                         'ids' => [
-                            'externalId' => $discountId
+                            'externalId' => self::MINDBOX_DISCOUNT_ID
                         ],
                     ],
                     'amount'    => $discountPrice * $basketItem->getQuantity()
@@ -628,7 +625,6 @@ class Event
         if ($_SESSION[ 'PROMO_CODE' ] && !empty($_SESSION[ 'PROMO_CODE' ])) {
             $arCoupons[ 'ids' ][ 'code' ] = $_SESSION[ 'PROMO_CODE' ];
         }
-
 
         $arOrder = [
             'ids'         => [
@@ -1200,8 +1196,16 @@ class Event
     }
 
 
-    public function OnSaleBasketSavedHandler($basket)
+    public function OnBeforeSaleOrderFinalActionHandler($event)
     {
+        $order = $event->getParameter("ENTITY");
+        $basket = $event->getParameter('BASKET');
+
+        $discounts = \Bitrix\Sale\Discount::buildFromOrder($order);
+        $discounts->calculate();
+        $result = $discounts->getApplyResult(true);
+        //$result = $discounts->getApplyDiscounts();
+
         global $USER;
 
         if (!$USER || is_string($USER)) {
@@ -1215,7 +1219,6 @@ class Event
 
         $preorder = new PreorderRequestDTO();
 
-        /** @var \Bitrix\Sale\Basket $basket */
         $basketItems = $basket->getBasketItems();
         self::setCartMindbox($basketItems);
         $lines = [];
@@ -1224,11 +1227,30 @@ class Event
         $preorder = new \Mindbox\DTO\V3\Requests\PreorderRequestDTO();
 
         if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('OnSaleBasketSavedHandler');
+            $logger = new \Intensa\Logger\ILog('OnBeforeSaleOrderFinalActionHandler');
+            $logger->log('fire', [1]);
+            //$logger->log('$result', $result);
+        }
+
+        $discountPercentValue = 0;
+        if (count($result['FULL_DISCOUNT_LIST']) > 1) {
+            foreach ($result['FULL_DISCOUNT_LIST'] as $arDiscount) {
+                // skip hlb basket rule
+                if (strpos($arDiscount['APPLICATION'], "SaleActionDiscountFromDirectory::applyProductDiscount") !== false) {
+                    continue;
+                }
+                if ($arDiscount['SHORT_DESCRIPTION_STRUCTURE']['TYPE'] === 'Discount' &&
+                    $arDiscount['SHORT_DESCRIPTION_STRUCTURE']['VALUE_TYPE'] === 'P'
+                ) {
+                    $discountPercentValue = $arDiscount['SHORT_DESCRIPTION_STRUCTURE']['VALUE'];
+                }
+            }
         }
 
         foreach ($basketItems as $basketItem) {
-            $logger->log('$basketItem->getId()', $basketItem->getId());
+            if (!$basketItem->getId()) {
+                continue;
+            }
 
             if ($basketItem->getField('CAN_BUY') == 'N') {
                 continue;
@@ -1237,22 +1259,40 @@ class Event
             $bitrixBasket[ $basketItem->getId() ] = $basketItem;
             $catalogPrice = $basketItem->getBasePrice();
             $discountName = $basketItem->getField('DISCOUNT_NAME');
+            //$discountPrice = $basketItem->getDiscountPrice();
 
-            preg_match("#\[(.*)\]#", $discountName, $matches);
-            $discountId = $matches[ 1 ];
+            $logger->log('$discountPercentValue', $discountPercentValue);
 
-            $discountPrice = $basketItem->getDiscountPrice();
-            $productBasePrice = $basketItem->getBasePrice();
+            if ($discountPercentValue) {
+                $discountPrice = roundEx($basketItem->getBasePrice()*($discountPercentValue/100), 2);
+                $arDiscount[$basketItem->getId()] = $discountPrice;
+            }
+
+            $logger->log('$basketItem', [
+                '$basketItem->getId()'  =>  $basketItem->getId(),
+                '$basketItem->getProductId()'   =>  $basketItem->getProductId(),
+                '$basketItem->getPrice()'   =>  $basketItem->getPrice(),
+                '$basketItem->getQuantity()'    =>  $basketItem->getQuantity(),
+                '$basketItem->getFinalPrice()'  =>  $basketItem->getFinalPrice(),
+                '$basketItem->getWeight()'      =>  $basketItem->getWeight(),
+                '$basketItem->getField(\'NAME\')'   =>  $basketItem->getField('NAME'),
+                '$basketItem->canBuy()' =>  $basketItem->canBuy(),
+                '$basketItem->isDelay()'    =>  $basketItem->isDelay(),
+                '$basketItem->getDiscountPrice()'  =>  $basketItem->getDiscountPrice(),
+                '$basketItem->getBasePrice()'  =>  $basketItem->getBasePrice(),
+                '$discountName' =>  $discountName
+            ]);
+
             $requestedPromotions = [];
-            if (!empty($discountName) && $discountPrice) {
+            if ($discountPrice > 0) {
                 $requestedPromotions = [
                     'type'      => 'discount',
                     'promotion' => [
                         'ids'  => [
-                            'externalId' => $discountId
+                            'externalId' => self::MINDBOX_DISCOUNT_ID
                         ],
                     ],
-                    'amount'    => $discountPrice*$basketItem->getQuantity()
+                    'amount'    => roundEx($discountPrice*$basketItem->getQuantity(), 2)
                 ];
             }
 
@@ -1284,7 +1324,10 @@ class Event
             return false;
         }
 
+
+
         $logger->log('$lines', $lines);
+        //$logger->log('$arDiscount', $arDiscount);
 
         $arCoupons = [];
         if ($_SESSION[ 'PROMO_CODE' ] && !empty($_SESSION['PROMO_CODE'])) {
@@ -1362,7 +1405,7 @@ class Event
 
 
                 if ($logger) {
-                    $logger->log('$lines', $lines);
+                    //$logger->log('$lines', $lines);
                 }
 
                 $mindboxBasket = [];
@@ -1395,7 +1438,7 @@ class Event
                         if ($logger) {
                             $logger->log('$mindboxBasket', [
                                 '$lineId' =>  $lineId,
-                                '$mindboxPrice'  =>  $mindboxPrice
+                                '$mindboxPrice'  =>  $mindboxPrice,
                             ]);
                         }
 
