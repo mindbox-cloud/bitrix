@@ -125,6 +125,18 @@ $arAllOptions = array(
         COption::GetOptionString(ADMIN_MODULE_NAME, 'SYSTEM_NAME', ''),
         ['text']
     ],
+    [
+        'API_DOMAIN',
+        getMessage('API_DOMAIN'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'API_DOMAIN', 'ru'),
+        [
+            'selectbox',
+            [
+                'ru' => 'api.mindbox.ru',
+                'cloud'   =>  'api.mindbox.cloud',
+            ]
+        ]
+    ],
     getMessage('CONNECTION_SETTINGS'),
     [
         'HTTP_CLIENT',
