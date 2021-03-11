@@ -1196,10 +1196,8 @@ class Event
     }
 
 
-    public function OnBeforeSaleOrderFinalActionHandler($event)
+    public function OnBeforeSaleOrderFinalActionHandler($order, $has, $basket)
     {
-        $order = $event->getParameter("ENTITY");
-        $basket = $event->getParameter('BASKET');
 
         $discounts = \Bitrix\Sale\Discount::buildFromOrder($order);
         $discounts->calculate();
