@@ -1453,10 +1453,6 @@ class Event
                         $mindboxPrice = floatval($line->getDiscountedPrice()) / floatval($line->getQuantity());
                         $mindboxBasket[ $lineId ] = $bitrixProduct;
 
-                        if (array_key_exists($lineId, $arDiscount)) {
-                            $mindboxPrice -= $arDiscount[$lineId];
-                        }
-
                         if ($logger) {
                             $logger->log('$mindboxBasket', [
                                 '$lineId' =>  $lineId,
