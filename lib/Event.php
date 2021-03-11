@@ -1229,23 +1229,41 @@ class Event
         if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
             $logger = new \Intensa\Logger\ILog('OnBeforeSaleOrderFinalActionHandler');
             $logger->log('fire', [1]);
-            //$logger->log('$result', $result);
+            $logger->log('$result', $result);
         }
 
-        $discountPercentValue = 0;
-        if (count($result['FULL_DISCOUNT_LIST']) > 1) {
-            foreach ($result['FULL_DISCOUNT_LIST'] as $arDiscount) {
-                // skip hlb basket rule
-                if (strpos($arDiscount['APPLICATION'], "SaleActionDiscountFromDirectory::applyProductDiscount") !== false) {
-                    continue;
-                }
-                if ($arDiscount['SHORT_DESCRIPTION_STRUCTURE']['TYPE'] === 'Discount' &&
-                    $arDiscount['SHORT_DESCRIPTION_STRUCTURE']['VALUE_TYPE'] === 'P'
-                ) {
-                    $discountPercentValue = $arDiscount['SHORT_DESCRIPTION_STRUCTURE']['VALUE'];
+        $arDiscountList = [];
+        $discountList = $result['DISCOUNT_LIST'];
+        foreach ($discountList as $discountId => $discountListItem) {
+            $actionsDescrData = reset($discountListItem['ACTIONS_DESCR_DATA']['BASKET']);
+            $arDiscountList[$discountId] = array_merge(['REAL_DISCOUNT_ID' => $discountListItem['REAL_DISCOUNT_ID']], $actionsDescrData);
+        }
+
+        $arActualAction = [];
+        foreach ($result['RESULT']['BASKET'] as $basketId => $arAction) {
+            foreach ($arAction as $arActionItem) {
+                if ($arActionItem['APPLY'] === 'Y') {
+                    $arActualAction[$basketId][] = $arActionItem['DISCOUNT_ID'];
                 }
             }
         }
+
+        foreach ($result['FULL_DISCOUNT_LIST'] as $discountId => $arFullDiscount) {
+            if (strpos($arFullDiscount['APPLICATION'], "SaleActionDiscountFromDirectory::applyProductDiscount") !== false) {
+                unset($result['FULL_DISCOUNT_LIST'][$discountId]);
+            }
+        }
+
+        $logger->log('FULL_DISCOUNT_LIST', $result['FULL_DISCOUNT_LIST']);
+
+        foreach ($arDiscountList as $discountId => $arDiscount) {
+            if (array_key_exists($arDiscount['REAL_DISCOUNT_ID'], $result['FULL_DISCOUNT_LIST'])) {
+                $arDiscountList[$discountId]['BASKET_RULE'] = $result['FULL_DISCOUNT_LIST'][$arDiscount['REAL_DISCOUNT_ID']];
+            }
+        }
+
+        $logger->log('$arDiscountList', $arDiscountList);
+        $logger->log('$arActualAction', $arActualAction);
 
         foreach ($basketItems as $basketItem) {
             if (!$basketItem->getId()) {
@@ -1256,35 +1274,44 @@ class Event
                 continue;
             }
 
+            $requestedPromotions = [];
+            if (array_key_exists($basketItem->getId(), $arActualAction)) {
+                foreach ($arActualAction[$basketItem->getId()] as $discountId) {
+                    $discountPrice = 0;
+                    $discountPercentValue = 0;
+                    if (array_key_exists($discountId, $arDiscountList)) {
+                        $arDiscount = $arDiscountList[$discountId];
+                        if (array_key_exists('BASKET_RULE', $arDiscount)) {
+                            if ($arDiscount['BASKET_RULE']['SHORT_DESCRIPTION_STRUCTURE']['TYPE'] === 'Discount' &&
+                                $arDiscount['BASKET_RULE']['SHORT_DESCRIPTION_STRUCTURE']['VALUE_TYPE'] === 'P'
+                            ) {
+                                $discountPercentValue = $arDiscount['BASKET_RULE']['SHORT_DESCRIPTION_STRUCTURE']['VALUE'];
+                            }
+                        } else {
+                            $discountPercentValue = $arDiscount['VALUE'];
+                        }
+                        if ($discountPercentValue) {
+                            $discountPrice = roundEx($basketItem->getBasePrice()*($discountPercentValue/100), 2);
+                        }
+
+                        if ($discountPrice > 0) {
+                            $requestedPromotions[] = [
+                                'type'      => 'discount',
+                                'promotion' => [
+                                    'ids'  => [
+                                        'externalId' => $arDiscount['REAL_DISCOUNT_ID']
+                                    ],
+                                ],
+                                'amount'    => roundEx($discountPrice*$basketItem->getQuantity(), 2)
+                            ];
+                        }
+                    }
+                }
+            }
+
             $bitrixBasket[ $basketItem->getId() ] = $basketItem;
             $catalogPrice = $basketItem->getBasePrice();
             $discountName = $basketItem->getField('DISCOUNT_NAME');
-            //$discountPrice = $basketItem->getDiscountPrice();
-
-            $hlbl = 6;
-            $hlblock = \Bitrix\Highloadblock\HighloadBlockTable::getById($hlbl)->fetch();
-            $entity = \Bitrix\Highloadblock\HighloadBlockTable::compileEntity($hlblock);
-            $entity_data_class = $entity->getDataClass();
-            $arFilter = [
-                "select" => ["*"],
-                "order" => ["ID" => "ASC"],
-                "filter" => [
-                    "UF_BASKET_ID"   =>  $basketItem->getId()
-                ]
-            ];
-            //$logger->log('$arFilter', $arFilter);
-            $rsData = $entity_data_class::getList($arFilter);
-
-            if ($arData = $rsData->Fetch()) {
-                $mindboxDiscountPrice = $arData['UF_DISCOUNTED_PRICE'];
-            }
-
-            $logger->log('$discountPercentValue', $discountPercentValue);
-
-            if ($discountPercentValue) {
-                $discountPrice = roundEx($basketItem->getBasePrice()*($discountPercentValue/100), 2);
-                $arDiscount[$basketItem->getId()] = $discountPrice;
-            }
 
             $logger->log('$basketItem', [
                 '$basketItem->getId()'  =>  $basketItem->getId(),
@@ -1301,18 +1328,7 @@ class Event
                 '$discountName' =>  $discountName
             ]);
 
-            $requestedPromotions = [];
-            if ($discountPrice > 0) {
-                $requestedPromotions = [
-                    'type'      => 'discount',
-                    'promotion' => [
-                        'ids'  => [
-                            'externalId' => self::MINDBOX_DISCOUNT_ID
-                        ],
-                    ],
-                    'amount'    => roundEx($discountPrice*$basketItem->getQuantity(), 2)
-                ];
-            }
+
 
             $arLine = [
                 'basePricePerItem' => $catalogPrice,
@@ -1331,7 +1347,7 @@ class Event
             ];
 
             if (!empty($requestedPromotions)) {
-                $arLine['requestedPromotions'] = [$requestedPromotions];
+                $arLine['requestedPromotions'] = $requestedPromotions;
             }
 
 
@@ -1345,7 +1361,6 @@ class Event
 
 
         $logger->log('$lines', $lines);
-        //$logger->log('$arDiscount', $arDiscount);
 
         $arCoupons = [];
         if ($_SESSION[ 'PROMO_CODE' ] && !empty($_SESSION['PROMO_CODE'])) {
