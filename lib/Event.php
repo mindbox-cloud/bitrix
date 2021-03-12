@@ -5,6 +5,7 @@
 
 namespace Mindbox;
 
+use Bitrix\Landing\Help;
 use Bitrix\Main\Loader;
 use Bitrix\Main\UserTable;
 use Bitrix\Main;
@@ -550,25 +551,6 @@ class Event
 
         global $USER;
 
-        $discounts = \Bitrix\Sale\Discount::buildFromOrder($order);
-        $discounts->calculate();
-        $result = $discounts->getApplyResult(true);
-        $discountPercentValue = 0;
-        if (count($result['FULL_DISCOUNT_LIST']) > 1) {
-            foreach ($result['FULL_DISCOUNT_LIST'] as $arDiscount) {
-                // skip hlb basket rule
-                if (strpos($arDiscount['APPLICATION'], "SaleActionDiscountFromDirectory::applyProductDiscount") !== false) {
-                    continue;
-                }
-                if ($arDiscount['SHORT_DESCRIPTION_STRUCTURE']['TYPE'] === 'Discount' &&
-                    $arDiscount['SHORT_DESCRIPTION_STRUCTURE']['VALUE_TYPE'] === 'P'
-                ) {
-                    $discountPercentValue = $arDiscount['SHORT_DESCRIPTION_STRUCTURE']['VALUE'];
-                }
-            }
-        }
-
-
         if (!$USER || is_string($USER)) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
@@ -594,24 +576,8 @@ class Event
                 continue;
             }
 
-
-            $discountPrice = 0;
-            if ($discountPercentValue) {
-                $discountPrice = roundEx($basketItem->getBasePrice()*($discountPercentValue/100), 2);
-            }
             $productBasePrice = $basketItem->getBasePrice();
-            $requestedPromotions = [];
-            if ($discountPrice > 0) {
-                $requestedPromotions = [
-                    'type'      => 'discount',
-                    'promotion' => [
-                        'ids'  => [
-                            'externalId' => self::MINDBOX_DISCOUNT_ID
-                        ],
-                    ],
-                    'amount'    => roundEx($discountPrice*$basketItem->getQuantity(), 2)
-                ];
-            }
+            $requestedPromotions = Helper::getRequestedPromotions($basketItem, $order);
 
             $arLine = [
                 'lineNumber'       => $i++,
@@ -631,9 +597,8 @@ class Event
             ];
 
             if (!empty($requestedPromotions)) {
-                $arLine[ 'requestedPromotions' ] = [$requestedPromotions];
+                $arLine[ 'requestedPromotions' ] = $requestedPromotions;
             }
-
 
             $lines[] = $arLine;
         }
@@ -825,18 +790,7 @@ class Event
 
                 $discountPrice = $basketItem->getDiscountPrice();
                 $productBasePrice = $basketItem->getBasePrice();
-                $requestedPromotions = [];
-                if (!empty($discountName) && $discountPrice) {
-                    $requestedPromotions = [
-                        'type'      => 'discount',
-                        'promotion' => [
-                            'ids' => [
-                                'externalId' => $discountId
-                            ],
-                        ],
-                        'amount'    => $discountPrice * $basketItem->getQuantity()
-                    ];
-                }
+                $requestedPromotions = Helper::getRequestedPromotions($basketItem, $order);
 
                 $arLine = [
                     'lineNumber'       => $i++,
@@ -856,7 +810,7 @@ class Event
                 ];
 
                 if (!empty($requestedPromotions)) {
-                    $arLine[ 'requestedPromotions' ] = [$requestedPromotions];
+                    $arLine[ 'requestedPromotions' ] = $requestedPromotions;
                 }
 
 
@@ -948,9 +902,10 @@ class Event
                     $orderDTO,
                     Options::getOperationName('commitOrderTransaction')
                 )->sendRequest();
-
                 unset($_SESSION[ 'MINDBOX_TRANSACTION_ID' ]);
+                unset($_SESSION['PAY_BONUSES']);
             } catch (Exceptions\MindboxClientErrorException $e) {
+                unset($_SESSION['PAY_BONUSES']);
                 return new Main\EventResult(Main\EventResult::ERROR);
             } catch (Exceptions\MindboxUnavailableException $e) {
                 try {
@@ -972,7 +927,7 @@ class Event
                         QueueTable::push($request);
                     }
                 }
-
+                unset($_SESSION['PAY_BONUSES']);
                 return new Main\EventResult(Main\EventResult::SUCCESS);
             } catch (Exceptions\MindboxClientException $e) {
                 try {
@@ -994,11 +949,10 @@ class Event
                         QueueTable::push($request);
                     }
                 }
-
+                unset($_SESSION['PAY_BONUSES']);
                 return new Main\EventResult(Main\EventResult::SUCCESS);
             }
         } else {    //  standard mode
-
 
             /** @var \Bitrix\Sale\Basket $basket */
             $basket = $order->getBasket();
@@ -1214,12 +1168,6 @@ class Event
 
     public function OnBeforeSaleOrderFinalActionHandler($order, $has, $basket)
     {
-
-        $discounts = \Bitrix\Sale\Discount::buildFromOrder($order);
-        $discounts->calculate();
-        $result = $discounts->getApplyResult(true);
-        //$result = $discounts->getApplyDiscounts();
-
         global $USER;
 
         if (!$USER || is_string($USER)) {
@@ -1243,22 +1191,6 @@ class Event
         if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
             $logger = new \Intensa\Logger\ILog('OnBeforeSaleOrderFinalActionHandler');
             $logger->log('fire', [1]);
-            //$logger->log('$result', $result);
-        }
-
-        $discountPercentValue = 0;
-        if (count($result['FULL_DISCOUNT_LIST']) > 1) {
-            foreach ($result['FULL_DISCOUNT_LIST'] as $arDiscount) {
-                // skip hlb basket rule
-                if (strpos($arDiscount['APPLICATION'], "SaleActionDiscountFromDirectory::applyProductDiscount") !== false) {
-                    continue;
-                }
-                if ($arDiscount['SHORT_DESCRIPTION_STRUCTURE']['TYPE'] === 'Discount' &&
-                    $arDiscount['SHORT_DESCRIPTION_STRUCTURE']['VALUE_TYPE'] === 'P'
-                ) {
-                    $discountPercentValue = $arDiscount['SHORT_DESCRIPTION_STRUCTURE']['VALUE'];
-                }
-            }
         }
 
         foreach ($basketItems as $basketItem) {
@@ -1270,16 +1202,13 @@ class Event
                 continue;
             }
 
+            $logger->startTimer('getRequestedPromotions');
+            $requestedPromotions = Helper::getRequestedPromotions($basketItem, $order);
+            $logger->stopTimer('getRequestedPromotions');
+
             $bitrixBasket[ $basketItem->getId() ] = $basketItem;
             $catalogPrice = $basketItem->getBasePrice();
             $discountName = $basketItem->getField('DISCOUNT_NAME');
-            //$discountPrice = $basketItem->getDiscountPrice();
-
-            $logger->log('$discountPercentValue', $discountPercentValue);
-
-            if ($discountPercentValue) {
-                $discountPrice = roundEx($basketItem->getBasePrice()*($discountPercentValue/100), 2);
-            }
 
             $logger->log('$basketItem', [
                 '$basketItem->getId()'  =>  $basketItem->getId(),
@@ -1295,19 +1224,6 @@ class Event
                 '$basketItem->getBasePrice()'  =>  $basketItem->getBasePrice(),
                 '$discountName' =>  $discountName
             ]);
-
-            $requestedPromotions = [];
-            if ($discountPrice > 0) {
-                $requestedPromotions = [
-                    'type'      => 'discount',
-                    'promotion' => [
-                        'ids'  => [
-                            'externalId' => self::MINDBOX_DISCOUNT_ID
-                        ],
-                    ],
-                    'amount'    => roundEx($discountPrice*$basketItem->getQuantity(), 2)
-                ];
-            }
 
             $arLine = [
                 'basePricePerItem' => $catalogPrice,
@@ -1326,7 +1242,7 @@ class Event
             ];
 
             if (!empty($requestedPromotions)) {
-                $arLine['requestedPromotions'] = [$requestedPromotions];
+                $arLine['requestedPromotions'] = $requestedPromotions;
             }
 
 
@@ -1340,7 +1256,6 @@ class Event
 
 
         $logger->log('$lines', $lines);
-        //$logger->log('$arDiscount', $arDiscount);
 
         $arCoupons = [];
         if ($_SESSION[ 'PROMO_CODE' ] && !empty($_SESSION['PROMO_CODE'])) {
@@ -1367,6 +1282,8 @@ class Event
                 $bonusPoints
             ];
         }
+
+        $logger->log('bonusPoints', $arOrder['bonusPoints']);
 
         $preorder->setField('order', $arOrder);
 

@@ -523,4 +523,96 @@ class Helper
             }
         }
     }
+
+
+    public static function getRequestedPromotions($basketItem, $object)
+    {
+        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('getRequestedPromotions');
+            $logger->log('get_class', get_class($object));
+        }
+
+        $requestedPromotions = [];
+        $arDiscountList = [];
+        $arActualAction = [];
+
+        $objectClass = get_class($object);
+        if ($objectClass == 'Bitrix\Sale\Basket') {
+            $discounts = \Bitrix\Sale\Discount::buildFromBasket($object, new \Bitrix\Sale\Discount\Context\Fuser($object->getFUserId(true)));
+        } else {
+            $discounts = \Bitrix\Sale\Discount::buildFromOrder($object);
+        }
+        $discounts->calculate();
+        $result = $discounts->getApplyResult(true);
+
+        $logger->log('$result', $result);
+
+
+        $discountList = $result['DISCOUNT_LIST'];
+        foreach ($discountList as $discountId => $discountListItem) {
+            $actionsDescrData = reset($discountListItem['ACTIONS_DESCR_DATA']['BASKET']);
+            $arDiscountList[$discountId] = array_merge(['REAL_DISCOUNT_ID' => $discountListItem['REAL_DISCOUNT_ID']], $actionsDescrData);
+        }
+
+
+        foreach ($result['RESULT']['BASKET'] as $basketId => $arAction) {
+            foreach ($arAction as $arActionItem) {
+                if ($arActionItem['APPLY'] === 'Y') {
+                    $arActualAction[$basketId][] = $arActionItem['DISCOUNT_ID'];
+                }
+            }
+        }
+
+        foreach ($result['FULL_DISCOUNT_LIST'] as $discountId => $arFullDiscount) {
+            if (strpos($arFullDiscount['APPLICATION'], "SaleActionDiscountFromDirectory::applyProductDiscount") !== false) {
+                unset($result['FULL_DISCOUNT_LIST'][$discountId]);
+            }
+        }
+
+        $logger->log('FULL_DISCOUNT_LIST', $result['FULL_DISCOUNT_LIST']);
+
+        foreach ($arDiscountList as $discountId => $arDiscount) {
+            if (array_key_exists($arDiscount['REAL_DISCOUNT_ID'], $result['FULL_DISCOUNT_LIST'])) {
+                $arDiscountList[$discountId]['BASKET_RULE'] = $result['FULL_DISCOUNT_LIST'][$arDiscount['REAL_DISCOUNT_ID']];
+            }
+        }
+
+        $logger->log('$arDiscountList', $arDiscountList);
+        $logger->log('$arActualAction', $arActualAction);
+
+        if (array_key_exists($basketItem->getId(), $arActualAction)) {
+            foreach ($arActualAction[$basketItem->getId()] as $discountId) {
+                $discountPrice = 0;
+                $discountPercentValue = 0;
+                if (array_key_exists($discountId, $arDiscountList)) {
+                    $arDiscount = $arDiscountList[$discountId];
+                    if (array_key_exists('BASKET_RULE', $arDiscount)) {
+                        if ($arDiscount['BASKET_RULE']['SHORT_DESCRIPTION_STRUCTURE']['TYPE'] === 'Discount' &&
+                            $arDiscount['BASKET_RULE']['SHORT_DESCRIPTION_STRUCTURE']['VALUE_TYPE'] === 'P'
+                        ) {
+                            $discountPercentValue = $arDiscount['BASKET_RULE']['SHORT_DESCRIPTION_STRUCTURE']['VALUE'];
+                        }
+                    } else {
+                        $discountPercentValue = $arDiscount['VALUE'];
+                    }
+                    if ($discountPercentValue) {
+                        $discountPrice = roundEx($basketItem->getBasePrice()*($discountPercentValue/100), 2);
+                    }
+
+                    if ($discountPrice > 0) {
+                        $requestedPromotions[] = [
+                            'type'      => 'discount',
+                            'promotion' => [
+                                'ids'  => [
+                                    'externalId' => $arDiscount['REAL_DISCOUNT_ID']
+                                ],
+                            ],
+                            'amount'    => roundEx($discountPrice*$basketItem->getQuantity(), 2)
+                        ];
+                    }
+                }
+            }
+        }
+        return $requestedPromotions;
+    }
 }
