@@ -621,7 +621,8 @@ class Event
                 'ids' => [
                     'externalId' => Helper::getTransactionId()
                 ]
-            ]
+            ],
+            'deliveryCost'  =>  $order->getDeliveryPrice()
         ];
 
         if (!empty($arCoupons)) {
@@ -783,12 +784,6 @@ class Event
                 if ($basketItem->getField('CAN_BUY') == 'N') {
                     continue;
                 }
-
-                $discountName = $basketItem->getField('DISCOUNT_NAME');
-                preg_match("#\[(.*)\]#", $discountName, $matches);
-                $discountId = $matches[ 1 ];
-
-                $discountPrice = $basketItem->getDiscountPrice();
                 $productBasePrice = $basketItem->getBasePrice();
                 $requestedPromotions = Helper::getRequestedPromotions($basketItem, $order);
 
@@ -833,6 +828,7 @@ class Event
                     //'mindboxId' =>  $_SESSION['MINDBOX_ORDER']
                 ],
                 'lines' => $lines,
+                'deliveryCost'  =>  $order->getDeliveryPrice()
             ];
 
             if (!empty($arCoupons)) {
@@ -999,7 +995,8 @@ class Event
                     'ids'   => [
                         Options::getModuleOption('TRANSACTION_ID') => $order->getId()
                     ],
-                    'lines' => $lines
+                    'lines' => $lines,
+                    'deliveryCost'  =>  $order->getDeliveryPrice()
                 ]);
 
 
