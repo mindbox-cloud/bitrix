@@ -365,7 +365,6 @@ class Event
                 if ($arFields['UF_MB_IS_SUBSCRIBED'] === '0') {
                     $isSubscribed = false;
                 }
-
                 $fields = array_filter($fields, function ($item) {
                     return isset($item);
                 });
@@ -638,7 +637,7 @@ class Event
                 'lineId' => $basketItem->getId(),
                 'product' => [
                     'ids' => [
-                        Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getProductId($basketItem)
+                        Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getElementCode($basketItem->getProductId())
                     ]
                 ],
                 'status' => [
@@ -909,7 +908,7 @@ class Event
                     'lineId' => $basketItem->getId(),
                     'product' => [
                         'ids' => [
-                            Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getProductId($basketItem)
+                            Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getElementCode($basketItem->getProductId())
                         ]
                     ],
                     'status' => [
@@ -1026,8 +1025,6 @@ class Event
                     $orderDTO,
                     Options::getOperationName('commitOrderTransaction')
                 )->sendRequest();
-
-
                 unset($_SESSION[ 'MINDBOX_TRANSACTION_ID' ]);
             } catch (Exceptions\MindboxClientErrorException $e) {
                 return new Main\EventResult(Main\EventResult::ERROR);
@@ -1110,7 +1107,7 @@ class Event
                     'lineId' => $basketItem->getId(),
                     'product' => [
                         'ids' => [
-                            Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getProductId($basketItem)
+                            Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getElementCode($basketItem->getProductId())
                         ]
                     ]
                 ];
@@ -1180,7 +1177,6 @@ class Event
                     'pointOfContact' => 'Email',
                     'isSubscribed'   => $isSubscribed
                 ]
-
             ];
             $customer->setSubscriptions($subscriptions);
 
@@ -1295,10 +1291,9 @@ class Event
                     $line->setQuantity($basketItem->getQuantity());
                     $catalogPrice = \CPrice::GetBasePrice($basketItem->getProductId())['PRICE'];
                     $line->setProduct([
-                        'productId' => Helper::getProductId($basketItem),
+                        'productId'        => Helper::getElementCode($basketItem->getProductId()),
                         'basePricePerItem' => $catalogPrice
                     ]);
-
                     $lines[] = $line;
                 }
 
@@ -1378,7 +1373,7 @@ class Event
                 'lineId'           => $basketItem->getId(),
                 'product'          => [
                     'ids' => [
-                        Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getProductId($basketItem)
+                        Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getElementCode($basketItem->getProductId())
                     ]
                 ],
                 'status'           => [
@@ -1761,7 +1756,7 @@ class Event
         $lines = [];
         foreach ($arLines as $arLine) {
             $product = new ProductRequestDTO();
-            $product->setId(Options::getModuleOption('EXTERNAL_SYSTEM'), Helper::getProductId($arLine['basketItem']));
+            $product->setId(Options::getModuleOption('EXTERNAL_SYSTEM'), Helper::getElementCode($arLine['basketItem']->getProductId()));
 
             $line = new ProductListItemRequestDTO();
             $line->setProduct($product);

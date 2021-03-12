@@ -274,30 +274,35 @@ class Helper
     }
 
     /**
-     * Get product id by basket item
-     * @param \Bitrix\Sale\Basket $basketItem
+     * Get element code by id
+     * @param $elementId
      *
-     * @return $result
+     * @return $productId
      */
 
-    public static function getProductId($basketItem)
+    public static function getElementCode($elementId)
     {
-        $result = '';
-        $id = $basketItem->getField('PRODUCT_XML_ID');
-
-        if (!$id) {
-            $productId = $basketItem->getField('PRODUCT_ID');
-            $arProduct = \CIBlockElement::GetByID($productId)->GetNext();
-            $id = $arProduct['XML_ID'];
+        $arProduct = \CIBlockElement::GetByID($elementId)->GetNext();
+        if ($arProduct['XML_ID']) {
+            $elementId = $arProduct['XML_ID'];
         }
+        return $elementId;
+    }
 
-        if (!$id) {
-            $id = $basketItem->getField('PRODUCT_ID');
+    /**
+     * Get section code by id
+     * @param $sectionId
+     *
+     * @return $sectionId
+     */
+
+    public static function getSectionCode($sectionId)
+    {
+        $arSection = \CIBlockSection::GetByID($sectionId)->GetNext();
+        if ($arSection['XML_ID']) {
+            $sectionId = $arSection['XML_ID'];
         }
-
-        $result = $id;
-
-        return $result;
+        return $sectionId;
     }
 
     /**
