@@ -127,7 +127,7 @@ class OrderHistory extends CBitrixComponent implements Controllerable
                     $orders[$id]['lines'][] = [
                         'name' => $product['NAME'],
                         'link' => $product['DETAIL_PAGE_URL'],
-                        'price' => $arSku['basePricePerItem']
+                        'price' => $line->getField('discountedPrice')
                     ];
                     foreach ($line->getAppliedDiscounts() as $discount) {
                         if ($discount->getType() === 'balance') {
