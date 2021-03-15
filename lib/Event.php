@@ -217,7 +217,6 @@ class Event
         $subscriptions = [
             'subscription' => [
                 'brand' =>  Options::getModuleOption('BRAND'),
-                'pointOfContact' => 'Email',
                 'isSubscribed'   => $isSubscribed
             ]
         ];
@@ -1616,7 +1615,6 @@ class Event
         }
         $fields[ 'subscriptions' ] = [[
                 'brand' =>  Options::getModuleOption('BRAND'),
-                'pointOfContact' => 'Email',
                 'isSubscribed'   => $isSubscribed
             ]
         ];
