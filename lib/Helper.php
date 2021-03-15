@@ -591,9 +591,11 @@ class Helper
                             $arDiscount['BASKET_RULE']['SHORT_DESCRIPTION_STRUCTURE']['VALUE_TYPE'] === 'P'
                         ) {
                             $discountPercentValue = $arDiscount['BASKET_RULE']['SHORT_DESCRIPTION_STRUCTURE']['VALUE'];
+                            $externalId = "SCR-" . $arDiscount['REAL_DISCOUNT_ID'];
                         }
                     } else {
                         $discountPercentValue = $arDiscount['VALUE'];
+                        $externalId = "PD-" . $arDiscount['REAL_DISCOUNT_ID'];
                     }
                     if ($discountPercentValue) {
                         $discountPrice = roundEx($basketItem->getBasePrice()*($discountPercentValue/100), 2);
@@ -604,7 +606,7 @@ class Helper
                             'type'      => 'discount',
                             'promotion' => [
                                 'ids'  => [
-                                    'externalId' => $arDiscount['REAL_DISCOUNT_ID']
+                                    'externalId' => $externalId
                                 ],
                             ],
                             'amount'    => roundEx($discountPrice*$basketItem->getQuantity(), 2)
