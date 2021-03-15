@@ -449,6 +449,14 @@ class Event
     {
         global $APPLICATION;
 
+        if (isset($_REQUEST['c']) &&
+            $_REQUEST['c'] === 'mindbox:auth.sms' &&
+            isset($_REQUEST['action']) &&
+            $_REQUEST['action'] === 'checkCode'
+        ) {
+            return $arFields;
+        }
+
         $mindbox = static::mindbox();
 
         if (!$mindbox) {
@@ -509,7 +517,33 @@ class Event
                 return true;
             }
 
-            if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
+            if (empty($mindboxId) && \COption::GetOptionString('mindbox.marketing', 'MODE') !== 'standard') {
+                $request = $mindbox->getClientV3()->prepareRequest(
+                    'POST',
+                    Options::getOperationName('getCustomerInfo'),
+                    new DTO([
+                        'customer' => [
+                            'ids' => [
+                                Options::getModuleOption('WEBSITE_ID') => $arFields[ 'ID' ]
+                            ]
+                        ]
+                    ])
+                );
+
+                try {
+                    $response = $request->sendRequest();
+                } catch (Exceptions\MindboxClientException $e) {
+                    $APPLICATION->ThrowException(Loc::getMessage('MB_USER_EDIT_ERROR'));
+                    return false;
+                }
+
+                if ($response->getResult()->getCustomer()->getProcessingStatus() === 'Found') {
+                    $mindboxId = $response->getResult()->getCustomer()->getId('mindboxId');
+                    $arFields['UF_MINDBOX_ID'] = $mindboxId;
+                }
+            }
+
+            if (\COption::GetOptionString('mindbox.marketing', 'MODE') === 'standard') {
                 $fields[ 'ids' ][ Options::getModuleOption('WEBSITE_ID') ] = $userId;
             } else {
                 $fields[ 'ids' ][ 'mindboxId' ] = $mindboxId;
@@ -532,9 +566,7 @@ class Event
 
             if ($status === 'ValidationError') {
                 $errors = $updateResponse->getValidationMessages();
-
                 $APPLICATION->ThrowException(self::formatValidationMessages($errors));
-
                 return false;
             }
         }
@@ -1511,26 +1543,6 @@ class Event
         if (!$mindbox) {
             return $arFields;
         }
-
-        /*
-        if ($mindBoxId) {
-
-            $customer = new CustomerRequestDTO();
-            $customer->setId('mindboxId', $mindBoxId);
-            $customer->setId(Options::getModuleOption('WEBSITE_ID'), $arFields[ "ID" ]);
-
-            try {
-                $mindbox->customer()->edit($customer, Options::getOperationName('edit'), true,
-                    Helper::isSync())->sendRequest();
-            } catch (Exceptions\MindboxClientException $e) {
-                $lastResponse = $mindbox->customer()->getLastResponse();
-                if ($lastResponse) {
-                    $request = $lastResponse->getRequest();
-                    QueueTable::push($request);
-                }
-            }
-        }
-        */
 
         global $APPLICATION;
 

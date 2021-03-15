@@ -167,6 +167,14 @@ class AuthSms extends CBitrixComponent implements Controllerable
                 ]
             );
             if ($bxUser = $dbUser->fetch()) {
+                $fields = [
+                    'UF_MINDBOX_ID'      => $user->getId('mindboxId')
+                ];
+                $user = new \CUser;
+                $user->Update(
+                    $bxUser['ID'],
+                    $fields
+                );
                 $USER->Authorize($bxUser['ID']);
                 return [
                     'type' => 'success',
