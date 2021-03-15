@@ -584,6 +584,7 @@ class Helper
             foreach ($arActualAction[$basketItem->getId()] as $discountId) {
                 $discountPrice = 0;
                 $discountPercentValue = 0;
+                $externalId = '';
                 if (array_key_exists($discountId, $arDiscountList)) {
                     $arDiscount = $arDiscountList[$discountId];
                     if (array_key_exists('BASKET_RULE', $arDiscount)) {
@@ -601,7 +602,7 @@ class Helper
                         $discountPrice = roundEx($basketItem->getBasePrice()*($discountPercentValue/100), 2);
                     }
 
-                    if ($discountPrice > 0) {
+                    if ($discountPrice > 0 && !empty($externalId)) {
                         $requestedPromotions[] = [
                             'type'      => 'discount',
                             'promotion' => [
