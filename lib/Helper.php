@@ -468,7 +468,7 @@ class Helper
             $logger = new \Intensa\Logger\ILog('processHlbBasketRule');
         }
 
-        $hlbl = 4;
+        $hlbl = 6;
         $hlblock = \Bitrix\Highloadblock\HighloadBlockTable::getById($hlbl)->fetch();
         $entity = \Bitrix\Highloadblock\HighloadBlockTable::compileEntity($hlblock);
         $entity_data_class = $entity->getDataClass();

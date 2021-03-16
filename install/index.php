@@ -260,17 +260,15 @@ class mindbox_marketing extends CModule
     function UnInstallEvents()
     {
         $eventManager = \Bitrix\Main\EventManager::getInstance();
-        $eventManager->unRegisterEventHandler("main", "OnAfterUserAuthorize", $this->MODULE_ID);
-        $eventManager->unRegisterEventHandler("main", "OnAfterUserRegister", $this->MODULE_ID);
-        $eventManager->unRegisterEventHandler("main", "OnBeforeUserRegister", $this->MODULE_ID);
-        $eventManager->unRegisterEventHandler("main", "OnBeforeUserUpdate", $this->MODULE_ID);
-        $eventManager->unRegisterEventHandler("main", "OnBeforeUserAdd", $this->MODULE_ID);
-        $eventManager->unRegisterEventHandler("main", "OnAfterUserAdd", $this->MODULE_ID);
-        $eventManager->unRegisterEventHandler("sale", "OnSaleBasketSaved", $this->MODULE_ID);
-        $eventManager->unRegisterEventHandler("sale", "OnBasketAdd", $this->MODULE_ID);
-        $eventManager->unRegisterEventHandler("sale", "OnBasketDelete", $this->MODULE_ID);
-        $eventManager->unRegisterEventHandler("sale", "OnBasketUpdate", $this->MODULE_ID);
-
+        $eventManager->unRegisterEventHandler("main", "OnAfterUserAuthorize", $this->MODULE_ID, "\Mindbox\Event", "OnAfterUserAuthorizeHandler");
+        $eventManager->unRegisterEventHandler("main", "OnAfterUserRegister", $this->MODULE_ID, "\Mindbox\Event", "OnAfterUserRegisterHandler");
+        $eventManager->unRegisterEventHandler("main", "OnBeforeUserRegister", $this->MODULE_ID, "\Mindbox\Event", "OnBeforeUserRegisterHandler");
+        $eventManager->unRegisterEventHandler("main", "OnBeforeUserUpdate", $this->MODULE_ID, "\Mindbox\Event", "OnBeforeUserUpdateHandler");
+        $eventManager->unRegisterEventHandler("main", "OnBeforeUserAdd", $this->MODULE_ID, "\Mindbox\Event", "OnBeforeUserAddHandler");
+        $eventManager->unRegisterEventHandler("main", "OnAfterUserAdd", $this->MODULE_ID, "\Mindbox\Event", "OnAfterUserAddHandler");
+        $eventManager->unRegisterEventHandler("sail", "OnBeforeSaleOrderFinalAction", $this->MODULE_ID, "\Mindbox\Event", "OnBeforeSaleOrderFinalActionHandler");
+        $eventManager->unRegisterEventHandler("sale", "OnSaleOrderBeforeSaved", $this->MODULE_ID, "\Mindbox\Event", "OnSaleOrderBeforeSavedHandler");
+        $eventManager->unRegisterEventHandler("sale", "OnSaleOrderSaved", $this->MODULE_ID, "\Mindbox\Event", "OnSaleOrderSavedHandler");
         return true;
     }
 
