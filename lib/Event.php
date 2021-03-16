@@ -579,7 +579,7 @@ class Event
         global $USER;
 
         $delivery = $order->getDeliverySystemId();
-        $delivery = array_unique($delivery);
+        $delivery = [current($delivery)];
 
         $payments = [];
         $paymentCollection = $order->getPaymentCollection();
@@ -859,7 +859,7 @@ class Event
             global $USER;
 
             $delivery = $order->getDeliverySystemId();
-            $delivery = array_unique($delivery);
+            $delivery = [current($delivery)];
 
             $rsUser = \CUser::GetByID($order->getUserId());
             $arUser = $rsUser->Fetch();
@@ -1077,7 +1077,7 @@ class Event
             /** @var \Bitrix\Sale\Basket $basket */
             $basket = $order->getBasket();
             $delivery = $order->getDeliverySystemId();
-            $delivery = array_unique($delivery);
+            $delivery = [current($delivery)];
             global $USER;
 
             if (!$USER || is_string($USER)) {
