@@ -548,12 +548,14 @@ class Helper
         $logger->log('$result', $result);
 
 
-        $discountList = $result['DISCOUNT_LIST'];
+        $arDiscountList = $result['DISCOUNT_LIST'];
+
+        /*
         foreach ($discountList as $discountId => $discountListItem) {
-            $actionsDescrData = reset($discountListItem['ACTIONS_DESCR_DATA']['BASKET']);
+            //$actionsDescrData = reset($discountListItem['ACTIONS_DESCR_DATA']['BASKET']);
             $arDiscountList[$discountId] = array_merge(['REAL_DISCOUNT_ID' => $discountListItem['REAL_DISCOUNT_ID']], $actionsDescrData);
         }
-
+        */
 
         foreach ($result['RESULT']['BASKET'] as $basketId => $arAction) {
             foreach ($arAction as $arActionItem) {
@@ -563,23 +565,12 @@ class Helper
             }
         }
 
-        foreach ($result['FULL_DISCOUNT_LIST'] as $discountId => $arFullDiscount) {
-            if (strpos($arFullDiscount['APPLICATION'], "SaleActionDiscountFromDirectory::applyProductDiscount") !== false) {
-                unset($result['FULL_DISCOUNT_LIST'][$discountId]);
-            }
-        }
-
-        $logger->log('FULL_DISCOUNT_LIST', $result['FULL_DISCOUNT_LIST']);
-
-        foreach ($arDiscountList as $discountId => $arDiscount) {
-            if (array_key_exists($arDiscount['REAL_DISCOUNT_ID'], $result['FULL_DISCOUNT_LIST'])) {
-                $arDiscountList[$discountId]['BASKET_RULE'] = $result['FULL_DISCOUNT_LIST'][$arDiscount['REAL_DISCOUNT_ID']];
-            }
-        }
-
         $logger->log('$arDiscountList', $arDiscountList);
+
+        //$logger->log('$arDiscountList', $arDiscountList);
         $logger->log('$arActualAction', $arActualAction);
 
+        $requestedPromotions = [];
         if (array_key_exists($basketItem->getId(), $arActualAction)) {
             foreach ($arActualAction[$basketItem->getId()] as $discountId) {
                 $discountPrice = 0;
@@ -587,21 +578,26 @@ class Helper
                 $externalId = '';
                 if (array_key_exists($discountId, $arDiscountList)) {
                     $arDiscount = $arDiscountList[$discountId];
-                    if (array_key_exists('BASKET_RULE', $arDiscount)) {
-                        if ($arDiscount['BASKET_RULE']['SHORT_DESCRIPTION_STRUCTURE']['TYPE'] === 'Discount' &&
-                            $arDiscount['BASKET_RULE']['SHORT_DESCRIPTION_STRUCTURE']['VALUE_TYPE'] === 'P'
+                    $arActionDescrData = $arDiscount['ACTIONS_DESCR_DATA']['BASKET'][0];
+                    if (!isset($arActionDescrData['VALUE'])) {
+                        continue;
+                    }
+                    $logger->log('$arActionDescrData', $arActionDescrData);
+                    if ($arDiscount['MODULE_ID'] === 'sale') {
+                        if ($arActionDescrData['VALUE_ACTION'] === 'D' &&
+                            $arActionDescrData['VALUE_TYPE'] === 'P'
                         ) {
-                            $discountPercentValue = $arDiscount['BASKET_RULE']['SHORT_DESCRIPTION_STRUCTURE']['VALUE'];
+                            $discountPercentValue = $arActionDescrData['VALUE'];
                             $externalId = "SCR-" . $arDiscount['REAL_DISCOUNT_ID'];
                         }
                     } else {
-                        $discountPercentValue = $arDiscount['VALUE'];
+                        $discountPercentValue = $arActionDescrData['VALUE'];
                         $externalId = "PD-" . $arDiscount['REAL_DISCOUNT_ID'];
                     }
                     if ($discountPercentValue) {
                         $discountPrice = roundEx($basketItem->getBasePrice()*($discountPercentValue/100), 2);
                     }
-
+                    $logger->log('$discountPrice', $discountPrice);
                     if ($discountPrice > 0 && !empty($externalId)) {
                         $requestedPromotions[] = [
                             'type'      => 'discount',

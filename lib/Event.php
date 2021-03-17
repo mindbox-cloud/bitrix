@@ -1201,6 +1201,7 @@ class Event
 
             $logger->startTimer('getRequestedPromotions');
             $requestedPromotions = Helper::getRequestedPromotions($basketItem, $order);
+            $logger->log('$requestedPromotions', $requestedPromotions);
             $logger->stopTimer('getRequestedPromotions');
 
             $bitrixBasket[ $basketItem->getId() ] = $basketItem;
