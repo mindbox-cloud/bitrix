@@ -550,13 +550,6 @@ class Helper
 
         $arDiscountList = $result['DISCOUNT_LIST'];
 
-        /*
-        foreach ($discountList as $discountId => $discountListItem) {
-            //$actionsDescrData = reset($discountListItem['ACTIONS_DESCR_DATA']['BASKET']);
-            $arDiscountList[$discountId] = array_merge(['REAL_DISCOUNT_ID' => $discountListItem['REAL_DISCOUNT_ID']], $actionsDescrData);
-        }
-        */
-
         foreach ($result['RESULT']['BASKET'] as $basketId => $arAction) {
             foreach ($arAction as $arActionItem) {
                 if ($arActionItem['APPLY'] === 'Y') {
@@ -566,8 +559,6 @@ class Helper
         }
 
         $logger->log('$arDiscountList', $arDiscountList);
-
-        //$logger->log('$arDiscountList', $arDiscountList);
         $logger->log('$arActualAction', $arActualAction);
 
         $requestedPromotions = [];
