@@ -654,7 +654,8 @@ class Event
                     'externalId' => Helper::getTransactionId()
                 ]
             ],
-            'deliveryCost'  =>  $order->getDeliveryPrice()
+            'deliveryCost'  =>  $order->getDeliveryPrice(),
+            'totalPrice'    =>  $_SESSION['TOTAL_PRICE']
         ];
 
         if (!empty($arCoupons)) {
@@ -742,6 +743,7 @@ class Event
                     )->sendRequest();
 
                     unset($_SESSION[ 'MINDBOX_TRANSACTION_ID' ]);
+                    unset($_SESSION['TOTAL_PRICE']);
 
                     return new \Bitrix\Main\EventResult(
                         \Bitrix\Main\EventResult::ERROR,
@@ -776,6 +778,7 @@ class Event
                 Options::getOperationName('rollbackOrderTransaction')
             )->sendRequest();
 
+            unset($_SESSION['TOTAL_PRICE']);
 
             return new \Bitrix\Main\EventResult(
                 \Bitrix\Main\EventResult::SUCCESS,
@@ -932,8 +935,10 @@ class Event
                 )->sendRequest();
                 unset($_SESSION[ 'MINDBOX_TRANSACTION_ID' ]);
                 unset($_SESSION['PAY_BONUSES']);
+                unset($_SESSION['TOTAL_PRICE']);
             } catch (Exceptions\MindboxClientErrorException $e) {
                 unset($_SESSION['PAY_BONUSES']);
+                unset($_SESSION['TOTAL_PRICE']);
                 return new Main\EventResult(Main\EventResult::ERROR);
             } catch (Exceptions\MindboxUnavailableException $e) {
                 try {
@@ -956,6 +961,7 @@ class Event
                     }
                 }
                 unset($_SESSION['PAY_BONUSES']);
+                unset($_SESSION['TOTAL_PRICE']);
                 return new Main\EventResult(Main\EventResult::SUCCESS);
             } catch (Exceptions\MindboxClientException $e) {
                 try {
@@ -978,6 +984,7 @@ class Event
                     }
                 }
                 unset($_SESSION['PAY_BONUSES']);
+                unset($_SESSION['TOTAL_PRICE']);
                 return new Main\EventResult(Main\EventResult::SUCCESS);
             }
         } else {    //  standard mode
@@ -1120,6 +1127,7 @@ class Event
                 $_SESSION[ 'PAY_BONUSES' ] = 0;
                 unset($_SESSION[ 'PROMO_CODE' ]);
                 unset($_SESSION[ 'PROMO_CODE_AMOUNT' ]);
+                unset($_SESSION['TOTAL_PRICE']);
 
                 if ($_SESSION[ 'MINDBOX_ORDER' ]) {
                     $orderDTO->setId('mindbox', $_SESSION[ 'MINDBOX_ORDER' ]);
@@ -1346,6 +1354,10 @@ class Event
                     return new Main\EventResult(Main\EventResult::SUCCESS);
                 }
 
+                $logger->log('$preorderInfo totalPrice', $preorderInfo->getField('totalPrice'));
+
+                $_SESSION['TOTAL_PRICE'] = $preorderInfo->getField('totalPrice');
+
                 $discounts = $preorderInfo->getDiscountsInfo();
                 foreach ($discounts as $discount) {
                     if ($discount->getType() === 'balance') {
@@ -1362,12 +1374,6 @@ class Event
 
 
                 $lines = $preorderInfo->getLines();
-
-
-                if ($logger) {
-                    //$logger->log('$lines', $lines);
-                }
-
                 $mindboxBasket = [];
                 $mindboxAdditional = [];
                 $context = $basket->getContext();
