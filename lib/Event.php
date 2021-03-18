@@ -655,7 +655,7 @@ class Event
                 ]
             ],
             'deliveryCost'  =>  $order->getDeliveryPrice(),
-            'totalPrice'    =>  $_SESSION['TOTAL_PRICE']
+            'totalPrice'    =>  $_SESSION['TOTAL_PRICE'] + $order->getDeliveryPrice()
         ];
 
         if (!empty($arCoupons)) {
