@@ -551,11 +551,11 @@ class Helper
         $arDiscountList = $result['DISCOUNT_LIST'];
 
         $arPriceTypeDiscount = self::getDiscountByPriceType($basketItem);
-        if(!empty($arPriceTypeDiscount['BASKET'])) {
+        if (!empty($arPriceTypeDiscount['BASKET'])) {
             array_push($result['RESULT']['BASKET'][$basketItem->getId()], $arPriceTypeDiscount['BASKET']);
         }
 
-        if(!empty($arPriceTypeDiscount['DISCOUNT'])) {
+        if (!empty($arPriceTypeDiscount['DISCOUNT'])) {
             $arDiscountList[$arPriceTypeDiscount['DISCOUNT']['REAL_DISCOUNT_ID']] = $arPriceTypeDiscount['DISCOUNT'];
         }
 
@@ -594,7 +594,7 @@ class Helper
                             $discountPrice = $basketItem->getBasePrice()*($discountPercentValue/100);
                         }
                     } elseif ($arDiscount['MODULE_ID'] === 'catalog') {
-                        if(array_key_exists('VALUE_EXACT', $arActionDescrData)) {
+                        if (array_key_exists('VALUE_EXACT', $arActionDescrData)) {
                             $discountPrice = $arActionDescrData['VALUE_EXACT'];
                         } else {
                             $discountPercentValue = $arActionDescrData['VALUE'];
@@ -628,8 +628,8 @@ class Helper
         $arDiscount = [];
         $basePriceGroupId = 1;
         $rsGroup = \Bitrix\Catalog\GroupTable::getList();
-        while($arGroup=$rsGroup->fetch()) {
-            if($arGroup['BASE'] === 'Y') {
+        while ($arGroup=$rsGroup->fetch()) {
+            if ($arGroup['BASE'] === 'Y') {
                 $basePriceGroupId = $arGroup['ID'];
                 break;
             }
@@ -643,10 +643,9 @@ class Helper
             "order" => ["CATALOG_GROUP_ID" => "ASC"]
         ])->fetchAll();
 
-        if(!empty($allProductPrices)) {
-            foreach ($allProductPrices as  $allProductPricesItem) {
-                if(
-                    $allProductPricesItem['CATALOG_GROUP_ID'] === $basePriceGroupId &&
+        if (!empty($allProductPrices)) {
+            foreach ($allProductPrices as $allProductPricesItem) {
+                if ($allProductPricesItem['CATALOG_GROUP_ID'] === $basePriceGroupId &&
                     $allProductPricesItem['PRICE'] > $basketItem->getBasePrice()
                 ) {
                     $realDiscountId = $allProductPricesItem['ID'];
