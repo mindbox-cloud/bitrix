@@ -11,13 +11,17 @@ use CCatalog;
 use CIBlock;
 use COption;
 use CPHPCache;
+use CSaleOrderProps;
 use Mindbox\DTO\DTO;
 use Mindbox\Options;
+use Mindbox\Templates\AdminLayouts;
 use Psr\Log\LoggerInterface;
 use Mindbox\DTO\V3\Requests\CustomerRequestDTO;
 
 class Helper
 {
+    use AdminLayouts;
+
     public static function getNumEnding($number, $endingArray)
     {
         $number = $number % 100;
@@ -270,30 +274,35 @@ class Helper
     }
 
     /**
-     * Get product id by basket item
-     * @param \Bitrix\Sale\Basket $basketItem
+     * Get element code by id
+     * @param $elementId
      *
-     * @return $result
+     * @return $productId
      */
 
-    public static function getProductId($basketItem)
+    public static function getElementCode($elementId)
     {
-        $result = '';
-        $id = $basketItem->getField('PRODUCT_XML_ID');
-
-        if (!$id) {
-            $productId = $basketItem->getField('PRODUCT_ID');
-            $arProduct = \CIBlockElement::GetByID($productId)->GetNext();
-            $id = $arProduct['XML_ID'];
+        $arProduct = \CIBlockElement::GetByID($elementId)->GetNext();
+        if ($arProduct['XML_ID']) {
+            $elementId = $arProduct['XML_ID'];
         }
+        return $elementId;
+    }
 
-        if (!$id) {
-            $id = $basketItem->getField('PRODUCT_ID');
+    /**
+     * Get section code by id
+     * @param $sectionId
+     *
+     * @return $sectionId
+     */
+
+    public static function getSectionCode($sectionId)
+    {
+        $arSection = \CIBlockSection::GetByID($sectionId)->GetNext();
+        if ($arSection['XML_ID']) {
+            $sectionId = $arSection['XML_ID'];
         }
-
-        $result = $id;
-
-        return $result;
+        return $sectionId;
     }
 
     /**
@@ -385,6 +394,122 @@ class Helper
     }
 
     /**
+     * @return array
+     */
+    public static function getUserFields()
+    {
+        $dbFields = \CUserTypeEntity::GetList([], ['ENTITY_ID' => 'USER']);
+
+        $userFields = [];
+        while ($field = $dbFields->Fetch()) {
+            $userFields[$field['FIELD_NAME']] = $field['FIELD_NAME'];
+        }
+
+        return $userFields;
+    }
+
+    /**
+     * Get order fields
+     *
+     * @return array $orderFields
+     */
+    public static function getOrderFields()
+    {
+        \CModule::IncludeModule('sale');
+
+        $dbProps = CSaleOrderProps::GetList(
+            ['SORT' => 'ASC'],
+            [],
+            false,
+            false,
+            []
+        );
+        $orderProps = [];
+        while ($prop = $dbProps->Fetch()) {
+            $orderProps[$prop['CODE']] = $prop['NAME'];
+        }
+
+        return $orderProps;
+    }
+
+    public static function getMatchByCode($code, $matches = [])
+    {
+        if (empty($matches)) {
+            $matches = self::getOrderFieldsMatch();
+        }
+        $matches =  array_change_key_case($matches, CASE_UPPER);
+        $code = mb_strtoupper($code);
+
+        if (!empty($matches[$code])) {
+            return $matches[$code];
+        }
+
+        return '';
+    }
+
+    /**
+     * @return array
+     */
+    public static function getOrderFieldsMatch()
+    {
+        $fields = \COption::GetOptionString('mindbox.marketing', 'ORDER_FIELDS_MATCH', '{[]}');
+
+        return json_decode($fields, true);
+    }
+
+    /**
+     * @return array
+     */
+    public static function getUserFieldsMatch()
+    {
+        $fields = \COption::GetOptionString('mindbox.marketing', 'USER_FIELDS_MATCH', '{[]}');
+
+        return json_decode($fields, true);
+    }
+
+    /**
+     * @return array
+     */
+    public static function getCustomFieldsForUser($userId, $userFields = [])
+    {
+        if (empty($userFields)) {
+            $customFields = [];
+            $by = 'id';
+            $order = 'asc';
+            $userFields = \CUser::GetList($by, $order, ['ID' => $userId], ['SELECT' => ['UF_*']])->Fetch();
+        }
+
+        $fields = array_filter($userFields, function ($fields, $key) {
+            return strpos($key, 'UF_') !== false;
+        }, ARRAY_FILTER_USE_BOTH);
+
+        foreach ($fields as $code => $value) {
+            if (!empty($value) && !empty($customName = self::getMatchByCode($code, self::getUserFieldsMatch()))) {
+                $customFields[self::sanitizeNamesForMindbox($customName)] = $value;
+            }
+        }
+
+        return $customFields;
+    }
+
+    /**
+     * @param string $name
+     * @return string
+     */
+    public static function sanitizeNamesForMindbox($name)
+    {
+        $regexNotChars = '/[^a-zA-Z0-9]/m';
+        $regexFirstLetter = '/^[a-zA-Z]/m';
+
+        $name = preg_replace($regexNotChars, '', $name);
+        if (!empty($name) && preg_match($regexFirstLetter, $name) === 1) {
+            return $name;
+        }
+
+        return '';
+    }
+
+    /**
      * Is operations sync?
      *
      * @return $isSync
@@ -426,40 +551,6 @@ class Helper
         } else {
             return $_SESSION[ 'MINDBOX_TRANSACTION_ID' ];
         }
-    }
-
-    /**
-     * @param array $basketItems
-     * @return array
-     */
-    public static function removeDuplicates($basketItems)
-    {
-        $uniqueItems = [];
-
-        /**
-         * @var \Bitrix\Sale\BasketItem $item
-         */
-        foreach ($basketItems as $item) {
-            $uniqueItems[$item->getField('PRODUCT_ID')][] = $item;
-        }
-
-        if (count($uniqueItems) === count($basketItems)) {
-            return $basketItems;
-        }
-
-        $uniqueBasketItems = [];
-
-        foreach ($uniqueItems as $id => $groupItems) {
-            $item = current($groupItems);
-            $quantity = 0;
-            foreach ($groupItems as $groupItem) {
-                $quantity += $groupItem->getField('QUANTITY');
-            }
-            $item->setField('QUANTITY', $quantity);
-            $uniqueBasketItems[] = $item;
-        }
-
-        return $uniqueBasketItems;
     }
 
     public static function processHlbBasketRule($lineId, $mindboxPrice)

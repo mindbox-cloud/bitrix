@@ -1,6 +1,6 @@
 <?php
 
-$mindbox_default_option = [
+$mindbox_marketing_default_option = [
     'ENDPOINT' => '',
     'DOMAIN' => '',
     'SECRET_KEY' => '',
@@ -15,5 +15,7 @@ $mindbox_default_option = [
     'EXTERNAL_SYSTEM' => '',
     'WEBSITE_ID' => '',
     'CATALOG_PROPS' => '',
-    'CATALOG_OFFER_PROPS' => ''
+    'CATALOG_OFFER_PROPS' => '',
+    'TRACKER_JS_FILENAME' => '/bitrix/js/mindbox/tracker.js',
+    'TRACKER_JS_FILENAME_ORIGINAL' => '/bitrix/js/mindbox/tracker.js.orig'
 ];

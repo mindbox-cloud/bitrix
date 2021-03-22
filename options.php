@@ -2,6 +2,7 @@
 
 use Mindbox\Options;
 use Mindbox\YmlFeedMindbox;
+use Mindbox\Helper;
 
 defined('B_PROLOG_INCLUDED') and (B_PROLOG_INCLUDED === true) or die();
 defined('ADMIN_MODULE_NAME') or define('ADMIN_MODULE_NAME', 'mindbox.marketing');
@@ -45,12 +46,21 @@ if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
             COption::SetOptionString(ADMIN_MODULE_NAME, str_replace('MINDBOX_', '', $mayEmptyProp), '');
         }
     }
+
+    $defaultOptions = \Bitrix\Main\Config\Option::getDefaults("mindbox.marketing");
+    $trackerJsFilename = $_SERVER["DOCUMENT_ROOT"] . $defaultOptions['TRACKER_JS_FILENAME'];
+    $trackerJsFilenameOrig = $_SERVER["DOCUMENT_ROOT"] . $defaultOptions['TRACKER_JS_FILENAME_ORIGINAL'];
+    if (file_exists($trackerJsFilenameOrig)) {
+        file_put_contents($trackerJsFilename, str_replace('#endpointId#', COption::GetOptionString(ADMIN_MODULE_NAME, 'ENDPOINT', ''), file_get_contents($trackerJsFilenameOrig)));
+    }
 }
 
 IncludeModuleLangFile($_SERVER[ 'DOCUMENT_ROOT' ] . '/bitrix/modules/main/options.php');
 IncludeModuleLangFile(__FILE__);
 
 include("install/version.php");
+
+
 
 $tabControl = new CAdminTabControl('tabControl', [
     [
@@ -62,6 +72,7 @@ $tabControl = new CAdminTabControl('tabControl', [
 
 
 $arAllOptions = array(
+    ['', '', Helper::adminTableScripts(), ['statichtml']],
     getMessage('DOCS_LINK'),
     [
         'MODULE_VERSION',
@@ -70,7 +81,6 @@ $arAllOptions = array(
         ['text'],
         'Y'
     ],
-    //'<span style="font-size: 13px; font-weight: normal; color: #000;">' . getMessage('MODULE_VERSION') .  . '</span>',
     getMessage('MAINOPTIONS'),
     [
         'MODE',
@@ -115,33 +125,19 @@ $arAllOptions = array(
         COption::GetOptionString(ADMIN_MODULE_NAME, 'SYSTEM_NAME', ''),
         ['text']
     ],
-    getMessage('IDENTIFIERS'),
     [
-        'EXTERNAL_SYSTEM',
-        getMessage('EXTERNAL_SYSTEM'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'EXTERNAL_SYSTEM', ''),
-        ['text']
-    ],
-    [
-        'WEBSITE_ID',
-        getMessage('WEBSITE_ID'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'WEBSITE_ID', ''),
-        ['text']
-
-    ],
-    [
-        'TRANSACTION_ID',
-        getMessage('TRANSACTION_ID'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'TRANSACTION_ID', ''),
-        ['text']
+        'API_DOMAIN',
+        getMessage('API_DOMAIN'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'API_DOMAIN', 'ru'),
+        [
+            'selectbox',
+            [
+                'ru' => 'api.mindbox.ru',
+                'cloud'   =>  'api.mindbox.cloud',
+            ]
+        ]
     ],
     getMessage('CONNECTION_SETTINGS'),
-    [
-        'LOG_PATH',
-        getMessage('LOG_PATH'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'LOG_PATH', $_SERVER[ 'DOCUMENT_ROOT' ] . '/logs/'),
-        ['text']
-    ],
     [
         'HTTP_CLIENT',
         getMessage('HTTP_CLIENT'),
@@ -166,14 +162,26 @@ $arAllOptions = array(
         COption::GetOptionString(ADMIN_MODULE_NAME, 'TIMEOUT', '5'),
         ['text']
     ],
-    getMessage('CATALOG_SETTINGS'),
+    [
+        'LOG_PATH',
+        getMessage('LOG_PATH'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'LOG_PATH', $_SERVER[ 'DOCUMENT_ROOT' ] . '/logs/'),
+        ['text']
+    ],
+    getMessage('PRODUCT_SETTINGS'),
+    [
+        'EXTERNAL_SYSTEM',
+        getMessage('EXTERNAL_SYSTEM'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'EXTERNAL_SYSTEM', ''),
+        ['text']
+    ],
     [
         'CATALOG_IBLOCK_ID',
         getMessage('CATALOG_IBLOCK_ID'),
         COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', ''),
         [
             'selectbox',
-            \Mindbox\Helper::getIblocks()
+            Helper::getIblocks()
         ]
     ],
     [
@@ -187,19 +195,86 @@ $arAllOptions = array(
         getMessage('YML_NAME'),
         COption::GetOptionString(ADMIN_MODULE_NAME, 'YML_NAME', 'upload/mindbox.xml'),
         ['text']
-    ]
+    ],
+    'CATALOG_PROPS_UPGRADE' => '',
+    'CATALOG_PROPS' => '',
+    'CATALOG_OFFER_PROPS_UPGRADE' => '',
+    'CATALOG_OFFER_PROPS' => '',
+    getMessage('CLIENTS'),
+    [
+        'WEBSITE_ID',
+        getMessage('WEBSITE_ID'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'WEBSITE_ID', ''),
+        ['text']
+
+    ],
+    [
+        'USER_FIELDS_MATCH',
+        '',
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'USER_FIELDS_MATCH', ''),
+        ['text']
+    ],
+    ['', '', Helper::getUserMatchesTable(), ['statichtml']],
+    [
+        'USER_BITRIX_FIELDS',
+        getMessage('BITRIX_FIELDS'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'USER_BITRIX_FIELDS', ''),
+        [
+            'selectbox',
+            Helper::getUserFields()
+        ]
+    ],
+    [
+        'USER_MINDBOX_FIELDS',
+        getMessage('MINDBOX_FIELDS'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'USER_MINDBOX_FIELDS', ''),
+        ['text']
+    ],
+    ['', '', Helper::getAddOrderMatchButton('user_module_button_add'), ['statichtml']],
+    getMessage('ORDER_SETTINGS'),
+    [
+        'TRANSACTION_ID',
+        getMessage('TRANSACTION_ID'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'TRANSACTION_ID', ''),
+        ['text']
+    ],
+    [
+        'ORDER_FIELDS_MATCH',
+        '',
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'ORDER_FIELDS_MATCH', '{}'),
+        ['text']
+    ],
+    ['', '', Helper::getOrderMatchesTable(), ['statichtml']],
+    [
+        'ORDER_BITRIX_FIELDS',
+        getMessage('BITRIX_FIELDS'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'ORDER_BITRIX_FIELDS', ''),
+        [
+            'selectbox',
+            Helper::getOrderFields()
+        ]
+    ],
+    [
+        'ORDER_MINDBOX_FIELDS',
+        getMessage('MINDBOX_FIELDS'),
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'ORDER_MINDBOX_FIELDS', ''),
+        ['text']
+    ],
+    ['', '', Helper::getAddOrderMatchButton('order_module_button_add'), ['statichtml']]
 );
 
 if (!empty(COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', ''))) {
     if (YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['VERSION'] === '1') {
-        $arAllOptions[] = ['note' => getMessage(
+        $arAllOptions['CATALOG_PROPS_UPGRADE'] = ['note' => getMessage(
             'NEED_TABLE_UPGRADE',
             [
                 '#LINK#' => '/bitrix/admin/iblock_edit.php?type=' . YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['IBLOCK_TYPE_ID'] . '&ID=' . YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['ID']
             ]
         )];
+    } else {
+        unset($arAllOptions['CATALOG_PROPS_UPGRADE']);
     }
-    $arAllOptions[] = [
+    $arAllOptions['CATALOG_PROPS'] = [
         'CATALOG_PROPS',
         getMessage('CATALOG_PROPS'),
         COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_PROPS', ''),
@@ -212,14 +287,16 @@ if (!empty(COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', ''))
 
 if (!empty(\Mindbox\Helper::getOffersCatalogId(COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '')))) {
     if (YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['VERSION'] === '1') {
-        $arAllOptions[] = ['note' => getMessage(
+        $arAllOptions['CATALOG_OFFER_PROPS_UPGRADE'] = ['note' => getMessage(
             'NEED_TABLE_UPGRADE',
             [
                 '#LINK#' => '/bitrix/admin/iblock_edit.php?type=' . YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['IBLOCK_TYPE_ID'] . '&ID=' . YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['ID']
             ]
         )];
+    } else {
+        unset($arAllOptions['CATALOG_OFFER_PROPS_UPGRADE']);
     }
-    $arAllOptions[] = [
+    $arAllOptions['CATALOG_OFFER_PROPS'] = [
         'CATALOG_OFFER_PROPS',
         getMessage('CATALOG_OFFER_PROPS'),
         COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_OFFER_PROPS', ''),
@@ -232,10 +309,10 @@ if (!empty(\Mindbox\Helper::getOffersCatalogId(COption::GetOptionString(ADMIN_MO
 
 ?>
 
-<form name='minboxoptions' method='POST' action='<? echo $APPLICATION->GetCurPage() ?>?mid=<?= htmlspecialcharsbx($mid)
-?>&amp;lang=<? echo LANG ?>'>
+<form name='minboxoptions' method='POST' action='<?php echo $APPLICATION->GetCurPage() ?>?mid=<?= htmlspecialcharsbx($mid)
+?>&amp;lang=<?php echo LANG ?>'>
     <?= bitrix_sessid_post() ?>
-    <?
+    <?php
     $tabControl->Begin();
     $tabControl->BeginNextTab();
 
@@ -246,7 +323,7 @@ if (!empty(\Mindbox\Helper::getOffersCatalogId(COption::GetOptionString(ADMIN_MO
     $tabControl->Buttons(); ?>
     <input type='submit' class='adm-btn-save' name='save' value='<?=getMessage('SAVE')?>'>
     <?= bitrix_sessid_post(); ?>
-    <? $tabControl->End(); ?>
+    <?php $tabControl->End(); ?>
 
-    <? $tabControl->End(); ?>
+    <?php $tabControl->End(); ?>
 </form>

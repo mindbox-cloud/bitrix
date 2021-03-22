@@ -36,22 +36,16 @@ class Cart extends CBitrixComponent implements Controllerable
         try {
             if (!Loader::includeModule('mindbox.marketing')) {
                 ShowError(GetMessage('MB_CART_MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));
-                ;
-
                 return;
             }
 
             if (!Loader::includeModule('sale')) {
                 ShowError(GetMessage('MB_CART_MODULE_NOT_INCLUDED', ['#MODULE#' => 'sale']));
-                ;
-
                 return;
             }
 
             if (!Loader::includeModule('catalog')) {
                 ShowError(GetMessage('MB_CART_MODULE_NOT_INCLUDED', ['#MODULE#' => 'catalog']));
-                ;
-
                 return;
             }
         } catch (LoaderException $e) {
@@ -110,7 +104,7 @@ class Cart extends CBitrixComponent implements Controllerable
                 'lineId'           => $basketItem->getId(),
                 'product'          => [
                     'ids' => [
-                        Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getProductId($basketItem)
+                        Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getElementCode($basketItem->getProductId())
                     ]
                 ],
                 'status'           => [
@@ -318,7 +312,7 @@ class Cart extends CBitrixComponent implements Controllerable
                 'lineId'           => $basketItem->getId(),
                 'product'          => [
                     'ids' => [
-                        Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getProductId($basketItem)
+                        Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getElementCode($basketItem->getProductId())
                     ]
                 ],
                 'status'           => [
@@ -510,7 +504,7 @@ class Cart extends CBitrixComponent implements Controllerable
                 'lineId'           => $basketItem->getId(),
                 'product'          => [
                     'ids' => [
-                        Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getProductId($basketItem)
+                        Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getElementCode($basketItem->getProductId())
                     ]
                 ],
                 'status'           => [

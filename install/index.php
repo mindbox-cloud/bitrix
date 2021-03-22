@@ -23,8 +23,7 @@ class mindbox_marketing extends CModule
     private $userFields = [
         "UF_MINDBOX_ID",
         "UF_PHONE_CONFIRMED",
-        "UF_EMAIL_CONFIRMED",
-        "UF_IS_SUBSCRIBED"
+        "UF_EMAIL_CONFIRMED"
     ];
 
     function mindbox_marketing()
@@ -249,6 +248,14 @@ class mindbox_marketing extends CModule
             "OnSaleOrderSavedHandler",
             1000
         );
+        $eventManager->registerEventHandlerCompatible(
+            "main",
+            "OnProlog",
+            $this->MODULE_ID,
+            "\Mindbox\Event",
+            "OnPrologHandler",
+            1000
+        );
 
         return true;
     }
@@ -269,9 +276,9 @@ class mindbox_marketing extends CModule
         $eventManager->unRegisterEventHandler("sail", "OnBeforeSaleOrderFinalAction", $this->MODULE_ID, "\Mindbox\Event", "OnBeforeSaleOrderFinalActionHandler");
         $eventManager->unRegisterEventHandler("sale", "OnSaleOrderBeforeSaved", $this->MODULE_ID, "\Mindbox\Event", "OnSaleOrderBeforeSavedHandler");
         $eventManager->unRegisterEventHandler("sale", "OnSaleOrderSaved", $this->MODULE_ID, "\Mindbox\Event", "OnSaleOrderSavedHandler");
+        $eventManager->unRegisterEventHandler("main", "OnProlog", $this->MODULE_ID, "\Mindbox\Event", "OnPrologHandler");
         return true;
     }
-
 
     function InstallFiles()
     {
@@ -374,39 +381,6 @@ class mindbox_marketing extends CModule
             "LIST_FILTER_LABEL" => [
                 "ru" => "Mindbox ID",
                 "en" => "Mindbox ID",
-            ],
-        ];
-
-        if (empty($existFields[$aUserFields['FIELD_NAME']]) && !$oUserTypeEntity->Add($aUserFields)) {
-            return false;
-        }
-
-        $aUserFields = [
-            "ENTITY_ID" => "USER",
-            "FIELD_NAME" => "UF_IS_SUBSCRIBED",
-            "USER_TYPE_ID" => "boolean",
-            "XML_ID" => "IS_SUBSCRIBED",
-            "SORT" => 500,
-            "MULTIPLE" => "N",
-            "MANDATORY" => "N",
-            "SHOW_FILTER" => "N",
-            "SHOW_IN_LIST" => "",
-            "EDIT_IN_LIST" => "",
-            "IS_SEARCHABLE" => "N",
-            "SETTINGS" => [
-                "DEFAULT_VALUE" => "N",
-            ],
-            "EDIT_FORM_LABEL" => [
-                "ru" => "Получать сообщения об акциях, скидках и новостях",
-                "en" => "Receive messages about promotions, discounts and news",
-            ],
-            "LIST_COLUMN_LABEL" => [
-                "ru" => "Получать сообщения об акциях, скидках и новостях",
-                "en" => "Receive messages about promotions, discounts and news",
-            ],
-            "LIST_FILTER_LABEL" => [
-                "ru" => "Получать сообщения об акциях, скидках и новостях",
-                "en" => "Receive messages about promotions, discounts and news",
             ],
         ];
 
