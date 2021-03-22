@@ -771,10 +771,13 @@ class Event
                 )->sendRequest();
             }
 
-
-
             if ($createOrderResult->getValidationErrors()) {
+                $strValidationError = '';
                 $validationErrors = $createOrderResult->getValidationErrors();
+                $arValidationError = $validationErrors->getFieldsAsArray();
+                foreach ($arValidationError as $validationError) {
+                    $strValidationError .= $validationError['message'];
+                }
                 try {
                     $orderDTO = new OrderCreateRequestDTO();
                     $orderDTO->setField('order', [
@@ -794,7 +797,7 @@ class Event
 
                     return new \Bitrix\Main\EventResult(
                         \Bitrix\Main\EventResult::ERROR,
-                        new \Bitrix\Sale\ResultError($validationErrors, 'SALE_EVENT_WRONG_ORDER'),
+                        new \Bitrix\Sale\ResultError($strValidationError, 'SALE_EVENT_WRONG_ORDER'),
                         'sale'
                     );
                 } catch (Exceptions\MindboxClientErrorException $e) {
@@ -828,7 +831,7 @@ class Event
             unset($_SESSION['TOTAL_PRICE']);
 
             return new \Bitrix\Main\EventResult(
-                \Bitrix\Main\EventResult::SUCCESS,
+                \Bitrix\Main\EventResult::ERROR,
                 new \Bitrix\Sale\ResultError($e->getMessage(), 'SALE_EVENT_WRONG_ORDER'),
                 'sale'
             );
