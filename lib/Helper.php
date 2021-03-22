@@ -559,7 +559,7 @@ class Helper
             $logger = new \Intensa\Logger\ILog('processHlbBasketRule');
         }
 
-        $hlbl = 6;
+        $hlbl = 4;
         $hlblock = \Bitrix\Highloadblock\HighloadBlockTable::getById($hlbl)->fetch();
         $entity = \Bitrix\Highloadblock\HighloadBlockTable::compileEntity($hlblock);
         $entity_data_class = $entity->getDataClass();
@@ -641,6 +641,17 @@ class Helper
 
         $arDiscountList = $result['DISCOUNT_LIST'];
 
+        $arPriceTypeDiscount = self::getDiscountByPriceType($basketItem);
+        if (!empty($arPriceTypeDiscount['BASKET'])) {
+            array_push($result['RESULT']['BASKET'][$basketItem->getId()], $arPriceTypeDiscount['BASKET']);
+        }
+
+        if (!empty($arPriceTypeDiscount['DISCOUNT'])) {
+            $arDiscountList[$arPriceTypeDiscount['DISCOUNT']['REAL_DISCOUNT_ID']] = $arPriceTypeDiscount['DISCOUNT'];
+        }
+
+        //$logger->log('$result RESULT BASKET', $result['RESULT']['BASKET']);
+
         foreach ($result['RESULT']['BASKET'] as $basketId => $arAction) {
             foreach ($arAction as $arActionItem) {
                 if ($arActionItem['APPLY'] === 'Y') {
@@ -671,14 +682,18 @@ class Helper
                         ) {
                             $discountPercentValue = $arActionDescrData['VALUE'];
                             $externalId = "SCR-" . $arDiscount['REAL_DISCOUNT_ID'];
+                            $discountPrice = $basketItem->getBasePrice()*($discountPercentValue/100);
                         }
-                    } else {
-                        $discountPercentValue = $arActionDescrData['VALUE'];
+                    } elseif ($arDiscount['MODULE_ID'] === 'catalog') {
+                        if (array_key_exists('VALUE_EXACT', $arActionDescrData)) {
+                            $discountPrice = $arActionDescrData['VALUE_EXACT'];
+                        } else {
+                            $discountPercentValue = $arActionDescrData['VALUE'];
+                            $discountPrice = $basketItem->getBasePrice()*($discountPercentValue/100);
+                        }
                         $externalId = "PD-" . $arDiscount['REAL_DISCOUNT_ID'];
                     }
-                    if ($discountPercentValue) {
-                        $discountPrice = roundEx($basketItem->getBasePrice()*($discountPercentValue/100), 2);
-                    }
+
                     $logger->log('$discountPrice', $discountPrice);
                     if ($discountPrice > 0 && !empty($externalId)) {
                         $requestedPromotions[] = [
@@ -695,5 +710,60 @@ class Helper
             }
         }
         return $requestedPromotions;
+    }
+
+    private static function getDiscountByPriceType($basketItem)
+    {
+        \Bitrix\Main\Loader::includeModule("catalog");
+
+        $arDiscount = [];
+        $basePriceGroupId = 1;
+        $rsGroup = \Bitrix\Catalog\GroupTable::getList();
+        while ($arGroup=$rsGroup->fetch()) {
+            if ($arGroup['BASE'] === 'Y') {
+                $basePriceGroupId = $arGroup['ID'];
+                break;
+            }
+        }
+
+        $allProductPrices = \Bitrix\Catalog\PriceTable::getList([
+            "select" => ["*"],
+            "filter" => [
+                "=PRODUCT_ID" => $basketItem->getProductId(),
+            ],
+            "order" => ["CATALOG_GROUP_ID" => "ASC"]
+        ])->fetchAll();
+
+        if (!empty($allProductPrices)) {
+            foreach ($allProductPrices as $allProductPricesItem) {
+                if ($allProductPricesItem['CATALOG_GROUP_ID'] === $basePriceGroupId &&
+                    $allProductPricesItem['PRICE'] > $basketItem->getBasePrice()
+                ) {
+                    $realDiscountId = $allProductPricesItem['ID'];
+                    $arDiscount['BASKET'] = [
+                        'DISCOUNT_ID'   =>  $realDiscountId,
+                        'APPLY'         =>  'Y',
+                        'DESCR'         =>  'Discount by price type'
+                    ];
+                    $arDiscount['DISCOUNT'] = [
+                        'MODULE_ID' =>  'catalog',
+                        'REAL_DISCOUNT_ID'  =>  $realDiscountId,
+                    ];
+                    $arDiscount['DISCOUNT']['ACTIONS_DESCR_DATA']['BASKET'][] = [
+                        'VALUE' =>  100 - (($basketItem->getBasePrice()/$allProductPricesItem['PRICE'])*100),
+                        'VALUE_EXACT'   =>  $allProductPricesItem['PRICE'] - $basketItem->getBasePrice(),
+                        'VALUE_TYPE'    =>  'P',
+                        'VALUE_ACTION'  =>  'D'
+                    ];
+                }
+            }
+        }
+
+        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('getDiscountByPriceType');
+            $logger->log('$arDiscount', $arDiscount);
+        }
+
+        return $arDiscount;
     }
 }
