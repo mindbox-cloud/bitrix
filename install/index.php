@@ -273,7 +273,7 @@ class mindbox_marketing extends CModule
         $eventManager->unRegisterEventHandler("main", "OnBeforeUserUpdate", $this->MODULE_ID, "\Mindbox\Event", "OnBeforeUserUpdateHandler");
         $eventManager->unRegisterEventHandler("main", "OnBeforeUserAdd", $this->MODULE_ID, "\Mindbox\Event", "OnBeforeUserAddHandler");
         $eventManager->unRegisterEventHandler("main", "OnAfterUserAdd", $this->MODULE_ID, "\Mindbox\Event", "OnAfterUserAddHandler");
-        $eventManager->unRegisterEventHandler("sail", "OnBeforeSaleOrderFinalAction", $this->MODULE_ID, "\Mindbox\Event", "OnBeforeSaleOrderFinalActionHandler");
+        $eventManager->unRegisterEventHandler("sale", "OnBeforeSaleOrderFinalAction", $this->MODULE_ID, "\Mindbox\Event", "OnBeforeSaleOrderFinalActionHandler");
         $eventManager->unRegisterEventHandler("sale", "OnSaleOrderBeforeSaved", $this->MODULE_ID, "\Mindbox\Event", "OnSaleOrderBeforeSavedHandler");
         $eventManager->unRegisterEventHandler("sale", "OnSaleOrderSaved", $this->MODULE_ID, "\Mindbox\Event", "OnSaleOrderSavedHandler");
         $eventManager->unRegisterEventHandler("main", "OnProlog", $this->MODULE_ID, "\Mindbox\Event", "OnPrologHandler");
