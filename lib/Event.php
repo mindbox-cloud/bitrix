@@ -548,6 +548,11 @@ class Event
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
+        if (\CModule::IncludeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('OnSaleOrderBeforeSavedHandler');
+            $logger->log('fired', [1]);
+        }
+
         global $USER;
 
 
@@ -631,6 +636,7 @@ class Event
             $arCoupons[ 'ids' ][ 'code' ] = $_SESSION[ 'PROMO_CODE' ];
         }
 
+        unset($_SESSION[ 'MINDBOX_TRANSACTION_ID' ]);
 
         $arOrder = [
             'ids'         => [
@@ -641,7 +647,9 @@ class Event
                 'ids' => [
                     'externalId' => Helper::getTransactionId()
                 ]
-            ]
+            ],
+            'totalPrice'    =>  $_SESSION['TOTAL_PRICE'] + $order->getDeliveryPrice(),
+            'deliveryCost'  =>  $order->getDeliveryPrice()
         ];
 
         if (!empty($arCoupons)) {
@@ -699,9 +707,6 @@ class Event
 
         $orderDTO->setCustomer($customer);
 
-
-
-
         try {
             if (\Mindbox\Helper::isUnAuthorizedOrder($arUser) || (is_object($USER) && !$USER->IsAuthorized())) {
                 $createOrderResult = $mindbox->order()->beginUnauthorizedOrderTransaction(
@@ -714,6 +719,17 @@ class Event
                     Options::getOperationName('beginAuthorizedOrderTransaction')
                 )->sendRequest();
             }
+
+            if ($logger) {
+                $logger->log('$createOrderResult', $createOrderResult);
+            }
+
+
+            return new \Bitrix\Main\EventResult(
+                \Bitrix\Main\EventResult::ERROR,
+                new \Bitrix\Sale\ResultError('test', 'SALE_EVENT_WRONG_ORDER'),
+                'sale'
+            );
 
             if ($createOrderResult->getValidationErrors()) {
                 $validationErrors = $createOrderResult->getValidationErrors();
@@ -749,17 +765,25 @@ class Event
                     }
                 }
             } elseif ($createOrderResult->getResult()->getOrder()->getField('processingStatus') === 'PriceHasBeenChanged') {
+                if ($logger) {
+                    $logger->log('PriceHasBeenChanged', [1]);
+                }
+
                 $index = 0;
                 $priceHasBeenChanged = true;
-                while($index < self::PRICE_HAS_BEEN_CHANGED) {
+                while ($index < self::PRICE_HAS_BEEN_CHANGED) {
                     if (\Mindbox\Helper::isUnAuthorizedOrder($arUser) || (is_object($USER) && !$USER->IsAuthorized())) {
-                        $createOrderRes = $mindbox->order()->beginUnauthorizedOrderTransaction($orderDTO,
-                            Options::getOperationName('beginUnauthorizedOrderTransaction'))->sendRequest();
+                        $createOrderRes = $mindbox->order()->beginUnauthorizedOrderTransaction(
+                            $orderDTO,
+                            Options::getOperationName('beginUnauthorizedOrderTransaction')
+                        )->sendRequest();
                     } else {
-                        $createOrderRes = $mindbox->order()->beginAuthorizedOrderTransaction($orderDTO,
-                            Options::getOperationName('beginAuthorizedOrderTransaction'))->sendRequest();
+                        $createOrderRes = $mindbox->order()->beginAuthorizedOrderTransaction(
+                            $orderDTO,
+                            Options::getOperationName('beginAuthorizedOrderTransaction')
+                        )->sendRequest();
                     }
-                    if($createOrderRes->getResult()->getOrder()->getField('processingStatus') !== 'PriceHasBeenChanged') {
+                    if ($createOrderRes->getResult()->getOrder()->getField('processingStatus') !== 'PriceHasBeenChanged') {
                         $priceHasBeenChanged = false;
                         break;
                     }
@@ -767,7 +791,7 @@ class Event
                 }
                 unset($index);
 
-                if($priceHasBeenChanged) {
+                if ($priceHasBeenChanged) {
                     unset($priceHasBeenChanged);
                     return new \Bitrix\Main\EventResult(
                         \Bitrix\Main\EventResult::ERROR,
@@ -780,7 +804,6 @@ class Event
                 $_SESSION[ 'MINDBOX_ORDER' ] = $createOrderResult ? $createOrderResult->getId('mindboxId') : false;
                 return new Main\EventResult(Main\EventResult::SUCCESS);
             }
-
         } catch (Exceptions\MindboxClientErrorException $e) {
             $orderDTO = new OrderCreateRequestDTO();
             $orderDTO->setField('order', [
@@ -795,6 +818,11 @@ class Event
                 Options::getOperationName('rollbackOrderTransaction')
             )->sendRequest();
 
+            if ($logger) {
+                $logger->log('MindboxClientErrorException', $e->getMessage());
+            }
+
+            unset($_SESSION[ 'MINDBOX_TRANSACTION_ID' ]);
 
             return new \Bitrix\Main\EventResult(
                 \Bitrix\Main\EventResult::ERROR,
@@ -806,6 +834,8 @@ class Event
         } catch (Exceptions\MindboxClientException $e) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
+
+
 
         return new \Bitrix\Main\EventResult(\Bitrix\Main\EventResult::SUCCESS);
     }
@@ -1360,6 +1390,7 @@ class Event
                     )->sendRequest()->getResult()->getField('order');
                 }
 
+                $_SESSION['TOTAL_PRICE'] = $preorderInfo->getField('totalPrice');
 
                 if (!$preorderInfo) {
                     return new Main\EventResult(Main\EventResult::SUCCESS);
