@@ -545,15 +545,21 @@ class Helper
         $discounts->calculate();
         $result = $discounts->getApplyResult(true);
 
-        $logger->log('$result', $result);
+        //$logger->log('$result', $result);
+
 
 
         $arDiscountList = $result['DISCOUNT_LIST'];
 
         $arPriceTypeDiscount = self::getDiscountByPriceType($basketItem);
+
+        $logger->log('$arPriceTypeDiscount', $arPriceTypeDiscount);
+
         if (!empty($arPriceTypeDiscount['BASKET'])) {
-            array_push($result['RESULT']['BASKET'][$basketItem->getId()], $arPriceTypeDiscount['BASKET']);
+            $result['RESULT']['BASKET'][$basketItem->getId()][] = $arPriceTypeDiscount['BASKET'];
         }
+
+        $logger->log('$result[\'RESULT\'][\'BASKET\']', $result['RESULT']['BASKET']);
 
         if (!empty($arPriceTypeDiscount['DISCOUNT'])) {
             $arDiscountList[$arPriceTypeDiscount['DISCOUNT']['REAL_DISCOUNT_ID']] = $arPriceTypeDiscount['DISCOUNT'];
@@ -644,11 +650,23 @@ class Helper
         ])->fetchAll();
 
         if (!empty($allProductPrices)) {
+
+            if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+                $logger = new \Intensa\Logger\ILog('getDiscountByPriceType');
+            }
+            $catalogGroupId = 0;
+            foreach ($allProductPrices as $allProductPricesItem) {
+                if(roundEx($allProductPricesItem['PRICE'], 2) === roundEx($basketItem->getBasePrice(), 2)) {
+                    $catalogGroupId = $allProductPricesItem['CATALOG_GROUP_ID'];
+                }
+            }
+
             foreach ($allProductPrices as $allProductPricesItem) {
                 if ($allProductPricesItem['CATALOG_GROUP_ID'] === $basePriceGroupId &&
-                    $allProductPricesItem['PRICE'] > $basketItem->getBasePrice()
+                    $allProductPricesItem['PRICE'] > $basketItem->getBasePrice() &&
+                    $catalogGroupId > 0
                 ) {
-                    $realDiscountId = $allProductPricesItem['ID'];
+                    $realDiscountId = 'CATALOG-GROUP-' . $catalogGroupId;
                     $arDiscount['BASKET'] = [
                         'DISCOUNT_ID'   =>  $realDiscountId,
                         'APPLY'         =>  'Y',
@@ -668,9 +686,10 @@ class Helper
             }
         }
 
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('getDiscountByPriceType');
+        if ($logger) {
             $logger->log('$arDiscount', $arDiscount);
+            $logger->log('$allProductPrices', $allProductPrices);
+            $logger->log('$basePriceGroupId', $basePriceGroupId);
         }
 
         return $arDiscount;
