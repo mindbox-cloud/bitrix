@@ -257,9 +257,6 @@ class YmlFeedMindbox
                     $offer->appendChild($offerUrl);
                 }
 
-                print_r($prod);
-                exit;
-
                 if (!empty($prod['prices']) && $prod['prices']['RESULT_PRICE']['BASE_PRICE'] !== $prod['prices']['RESULT_PRICE']['DISCOUNT_PRICE']) {
                     $offerPrice = $dom->createElement("price", $prod['prices']['RESULT_PRICE']['DISCOUNT_PRICE']);
                     $offer->appendChild($offerPrice);
