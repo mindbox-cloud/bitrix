@@ -144,29 +144,14 @@ if (Loader::includeModule('sale')) {
 
                 //Применяем скидку
                 foreach ($arOrder['BASKET_ITEMS'] as &$product) {
-                    if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-                        $logger = new \Intensa\Logger\ILog('applyProductDiscount');
-                        $logger->log('$product', $product);
-                    }
-
                     $basketId = $product['ID'];
                     if ($discounts[$basketId]) {
                         if ($discounts[$basketId]['UF_DISCOUNTED_PRICE']) {
                             $discountPrice = $product['PRICE'] - $discounts[$basketId]['UF_DISCOUNTED_PRICE'];
                         }
 
-                        $logger->log('before', [
-                            '$product[\'DISCOUNT_PRICE\']'    =>  $product['DISCOUNT_PRICE'],
-                            '$discountPrice'    =>  $discountPrice
-                        ]);
-
                         $product['DISCOUNT_PRICE'] = $product['DISCOUNT_PRICE'] + $discountPrice;
                         $product['PRICE'] = $discounts[$basketId]['UF_DISCOUNTED_PRICE'];
-
-                        $logger->log('result', [
-                            '$product[\'DISCOUNT_PRICE\']'  =>  $product['DISCOUNT_PRICE'],
-                            '$product[\'PRICE\']'           =>  $product['PRICE']
-                        ]);
                     }
                 }
                 unset($product);
