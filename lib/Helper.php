@@ -555,9 +555,6 @@ class Helper
 
     public static function processHlbBasketRule($lineId, $mindboxPrice)
     {
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('processHlbBasketRule');
-        }
 
         $result = \Bitrix\Highloadblock\HighloadBlockTable::getList(['filter'=>['=NAME'=>"Mindbox"]]);
         if ($row = $result->fetch()) {
@@ -579,25 +576,16 @@ class Helper
                     "UF_BASKET_ID"   =>  $lineId
                 ]
             ];
-            $logger->log('$arFilter', $arFilter);
             $rsData = $entity_data_class::getList($arFilter);
 
             if ($arData = $rsData->Fetch()) {
                 $result = $entity_data_class::update($arData['ID'], $data);
-                $logger->log('$entity_data_class::update', [
-                    '$result' => $result,
-                    '$data' => $data
-                ]);
             } else {
                 $data = [
                     'UF_BASKET_ID'  =>  $lineId,
                     "UF_DISCOUNTED_PRICE"       =>  $mindboxPrice
                 ];
                 $result = $entity_data_class::add($data);
-                $logger->log('$entity_data_class::add', [
-                    '$result' => $result,
-                    '$data' => $data
-                ]);
             }
         } else {
             $arFilter = [
@@ -610,10 +598,6 @@ class Helper
             $rsData = $entity_data_class::getList($arFilter);
             if ($arData = $rsData->Fetch()) {
                 $result = $entity_data_class::delete($arData['ID']);
-                $logger->log('$entity_data_class::delete', [
-                    '$result' => $result,
-                    '$arData' => $arData
-                ]);
             }
         }
     }
@@ -621,10 +605,6 @@ class Helper
 
     public static function getRequestedPromotions($basketItem, $object)
     {
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('getRequestedPromotions');
-            $logger->log('get_class', get_class($object));
-        }
 
         $requestedPromotions = [];
         $arDiscountList = [];
@@ -639,27 +619,17 @@ class Helper
         $discounts->calculate();
         $result = $discounts->getApplyResult(true);
 
-        //$logger->log('$result', $result);
-
-
-
         $arDiscountList = $result['DISCOUNT_LIST'];
 
         $arPriceTypeDiscount = self::getDiscountByPriceType($basketItem);
-
-        $logger->log('$arPriceTypeDiscount', $arPriceTypeDiscount);
 
         if (!empty($arPriceTypeDiscount['BASKET'])) {
             $result['RESULT']['BASKET'][$basketItem->getId()][] = $arPriceTypeDiscount['BASKET'];
         }
 
-        $logger->log('$result[\'RESULT\'][\'BASKET\']', $result['RESULT']['BASKET']);
-
         if (!empty($arPriceTypeDiscount['DISCOUNT'])) {
             $arDiscountList[$arPriceTypeDiscount['DISCOUNT']['REAL_DISCOUNT_ID']] = $arPriceTypeDiscount['DISCOUNT'];
         }
-
-        //$logger->log('$result RESULT BASKET', $result['RESULT']['BASKET']);
 
         foreach ($result['RESULT']['BASKET'] as $basketId => $arAction) {
             foreach ($arAction as $arActionItem) {
@@ -668,9 +638,6 @@ class Helper
                 }
             }
         }
-
-        $logger->log('$arDiscountList', $arDiscountList);
-        $logger->log('$arActualAction', $arActualAction);
 
         $requestedPromotions = [];
         if (array_key_exists($basketItem->getId(), $arActualAction)) {
@@ -684,7 +651,6 @@ class Helper
                     if (!isset($arActionDescrData['VALUE'])) {
                         continue;
                     }
-                    $logger->log('$arActionDescrData', $arActionDescrData);
                     if ($arDiscount['MODULE_ID'] === 'sale') {
                         if ($arActionDescrData['VALUE_ACTION'] === 'D' &&
                             $arActionDescrData['VALUE_TYPE'] === 'P'
@@ -703,7 +669,6 @@ class Helper
                         $externalId = "PD-" . $arDiscount['REAL_DISCOUNT_ID'];
                     }
 
-                    $logger->log('$discountPrice', $discountPrice);
                     if ($discountPrice > 0 && !empty($externalId)) {
                         $requestedPromotions[] = [
                             'type'      => 'discount',
@@ -731,9 +696,6 @@ class Helper
         $basePriceGroupId = $arProductPrices['BASE_PRICE_CATALOG_GROUP_ID'];
 
         if (!empty($allProductPrices)) {
-            if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-                $logger = new \Intensa\Logger\ILog('getDiscountByPriceType');
-            }
             $catalogGroupId = 0;
             foreach ($allProductPrices as $allProductPricesItem) {
                 if (roundEx($allProductPricesItem['PRICE'], 2) === roundEx($basketItem->getBasePrice(), 2)) {
@@ -766,27 +728,14 @@ class Helper
             }
         }
 
-        if ($logger) {
-            $logger->log('$arDiscount', $arDiscount);
-            $logger->log('$allProductPrices', $allProductPrices);
-            $logger->log('$basePriceGroupId', $basePriceGroupId);
-        }
-
         return $arDiscount;
     }
 
     public static function getBasePrice($basketItem)
     {
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('getBasePrice');
-        }
         $arProductPrices = self::getProductPrices($basketItem->getProductId());
-
-        $logger->log('$arProductPrices', $arProductPrices);
-
         if (!empty($arProductPrices['PRICES'])) {
             foreach ($arProductPrices['PRICES'] as $arProductPrice) {
-                $logger->log('catalog group id', $arProductPrice['CATALOG_GROUP_ID']);
                 if ($arProductPrice['CATALOG_GROUP_ID'] === $arProductPrices['BASE_PRICE_CATALOG_GROUP_ID']) {
                     return $arProductPrice['PRICE'];
                 }

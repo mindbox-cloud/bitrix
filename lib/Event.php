@@ -1338,11 +1338,6 @@ class Event
 
         $preorder = new \Mindbox\DTO\V3\Requests\PreorderRequestDTO();
 
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('OnBeforeSaleOrderFinalActionHandler');
-            $logger->log('fire', [1]);
-        }
-
         foreach ($basketItems as $basketItem) {
             if (!$basketItem->getId()) {
                 continue;
@@ -1352,14 +1347,9 @@ class Event
                 continue;
             }
 
-            $logger->startTimer('getRequestedPromotions');
             $requestedPromotions = Helper::getRequestedPromotions($basketItem, $order);
-            $logger->log('$requestedPromotions', $requestedPromotions);
-            $logger->stopTimer('getRequestedPromotions');
-
             $bitrixBasket[ $basketItem->getId() ] = $basketItem;
             $catalogPrice = Helper::getBasePrice($basketItem);
-            //$logger->log('$catalogPrice', $catalogPrice);
 
             $arLine = [
                 'basePricePerItem' => $catalogPrice,
@@ -1389,10 +1379,6 @@ class Event
             return false;
         }
 
-
-
-        //$logger->log('$lines', $lines);
-
         $arCoupons = [];
         if ($_SESSION[ 'PROMO_CODE' ] && !empty($_SESSION['PROMO_CODE'])) {
             $arCoupons['ids']['code'] = $_SESSION[ 'PROMO_CODE' ];
@@ -1418,8 +1404,6 @@ class Event
                 $bonusPoints
             ];
         }
-
-        //$logger->log('bonusPoints', $arOrder['bonusPoints']);
 
         $preorder->setField('order', $arOrder);
 
@@ -1451,8 +1435,6 @@ class Event
                 if (!$preorderInfo) {
                     return new Main\EventResult(Main\EventResult::SUCCESS);
                 }
-
-                //$logger->log('$preorderInfo totalPrice', $preorderInfo->getField('totalPrice'));
 
                 $_SESSION['TOTAL_PRICE'] = $preorderInfo->getField('totalPrice');
 
@@ -1498,22 +1480,8 @@ class Event
                     } else {
                         $mindboxPrice = floatval($line->getDiscountedPrice()) / floatval($line->getQuantity());
                         $mindboxBasket[ $lineId ] = $bitrixProduct;
-
-                        /*
-                        if ($logger) {
-                            $logger->log('$mindboxBasket', [
-                                '$lineId' =>  $lineId,
-                                '$mindboxPrice'  =>  $mindboxPrice,
-                            ]);
-                        }
-                        */
-
                         Helper::processHlbBasketRule($lineId, $mindboxPrice);
                     }
-                }
-
-                if ($logger) {
-                    $logger->log('$mindboxAdditional', $mindboxAdditional);
                 }
 
                 foreach ($mindboxAdditional as $product) {
