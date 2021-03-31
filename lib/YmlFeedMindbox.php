@@ -380,7 +380,7 @@ class YmlFeedMindbox
             foreach ($offers as $offerId => &$offer) {
                 $offer['prices'] = \CCatalogProduct::GetOptimalPrice($offer['ID']);
                 if ($offer['prices']['RESULT_PRICE']['PRICE_TYPE_ID'] !== $basePriceId) {
-                    $offer['prices']['RESULT_PRICE'] = Helper::setPriceByType($offer);
+                    $offer['prices']['RESULT_PRICE'] = Helper::getPriceByType($offer);
                 }
             }
         }
@@ -468,7 +468,7 @@ class YmlFeedMindbox
             }
             $prod['prices'] = \CCatalogProduct::GetOptimalPrice($prod['ID']);
             if ($prod['prices']['RESULT_PRICE']['PRICE_TYPE_ID'] !== $basePriceId) {
-                $prod['prices']['RESULT_PRICE'] = Helper::setPriceByType($prod);
+                $prod['prices']['RESULT_PRICE'] = Helper::getPriceByType($prod);
             }
             $prodsInfo[$prod["ID"]] = $prod;
         }

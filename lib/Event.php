@@ -31,6 +31,9 @@ Loader::includeModule('catalog');
 Loader::includeModule('sale');
 Loader::includeModule('main');
 
+include __DIR__ . "/../SaleActionDiscountFromDirectory.php";
+
+
 /**
  * Class Event
  * @package Mindbox

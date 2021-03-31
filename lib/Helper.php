@@ -691,7 +691,7 @@ class Helper
         \Bitrix\Main\Loader::includeModule("catalog");
 
         $arDiscount = [];
-        $arProductPrices = self::getProductPrices($basketItem);
+        $arProductPrices = self::getProductPrices($basketItem->getProductId());
         $allProductPrices = $arProductPrices['PRICES'];
         $basePriceGroupId = $arProductPrices['BASE_PRICE_CATALOG_GROUP_ID'];
 
@@ -769,7 +769,7 @@ class Helper
         ];
     }
 
-    public static function setPriceByType($element)
+    public static function getPriceByType($element)
     {
         $productId = $element['ID'];
         $arResultPrices = $element['prices']['RESULT_PRICE'];
