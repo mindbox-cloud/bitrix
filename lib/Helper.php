@@ -560,7 +560,7 @@ class Helper
         }
 
         $result = \Bitrix\Highloadblock\HighloadBlockTable::getList(['filter'=>['=NAME'=>"Mindbox"]]);
-        if($row = $result->fetch()) {
+        if ($row = $result->fetch()) {
             $hlbl = $row["ID"];
         }
         $hlblock = \Bitrix\Highloadblock\HighloadBlockTable::getById($hlbl)->fetch();
