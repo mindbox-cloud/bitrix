@@ -727,8 +727,10 @@ class Helper
         ];
     }
 
-    public static function setPriceByType($productId, $arResultPrices)
+    public static function setPriceByType($element)
     {
+        $productId = $element['ID'];
+        $arResultPrices = $element['prices']['RESULT_PRICE'];
         $arProductPrices = self::getProductPrices($productId);
         foreach ($arProductPrices['PRICES'] as $arProductPrice) {
             if ($arProductPrice['CATALOG_GROUP_ID'] === $arProductPrices['BASE_PRICE_CATALOG_GROUP_ID']) {
