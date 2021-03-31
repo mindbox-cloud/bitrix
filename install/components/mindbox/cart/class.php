@@ -95,7 +95,7 @@ class Cart extends CBitrixComponent implements Controllerable
             }
 
             $bitrixBasket[ $basketItem->getId() ] = $basketItem;
-            $productBasePrice = $basketItem->getBasePrice();
+            $productBasePrice = Helper::getBasePrice($basketItem);
             $requestedPromotions = Helper::getRequestedPromotions($basketItem, $basket);
 
             $arLine = [
@@ -125,8 +125,6 @@ class Cart extends CBitrixComponent implements Controllerable
         if (empty($lines)) {
             return false;
         }
-
-
 
         $arOrder = [
             'ids'   => [
@@ -166,8 +164,6 @@ class Cart extends CBitrixComponent implements Controllerable
                 $preorder->setCustomer($customer);
             }
         }
-
-
 
         $response = [
             'type'    => 'success',
@@ -302,8 +298,7 @@ class Cart extends CBitrixComponent implements Controllerable
             }
 
             $bitrixBasket[ $basketItem->getId() ] = $basketItem;
-            $productBasePrice = $basketItem->getBasePrice();
-
+            $productBasePrice = Helper::getBasePrice($basketItem);
             $requestedPromotions = Helper::getRequestedPromotions($basketItem, $basket);
 
             $arLine = [
@@ -494,8 +489,7 @@ class Cart extends CBitrixComponent implements Controllerable
             }
 
             $bitrixBasket[ $basketItem->getId() ] = $basketItem;
-            $productBasePrice = $basketItem->getBasePrice();
-
+            $productBasePrice = Helper::getBasePrice($basketItem);
             $requestedPromotions = Helper::getRequestedPromotions($basketItem, $basket);
 
             $arLine = [

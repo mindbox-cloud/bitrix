@@ -632,26 +632,26 @@ class Event
                 continue;
             }
 
-            $productBasePrice = $basketItem->getBasePrice();
             $propertyCollection = $order->getPropertyCollection();
             $ar = $propertyCollection->getArray();
             foreach ($ar['properties'] as $arProperty) {
                 $arProperty['CODE'] = Helper::sanitizeNamesForMindbox($arProperty['CODE']);
                 $arOrderProperty[$arProperty['CODE']] = current($arProperty['VALUE']);
             }
+            $productBasePrice = Helper::getBasePrice($basketItem);
             $requestedPromotions = Helper::getRequestedPromotions($basketItem, $order);
 
             $arLine = [
-                'lineNumber' => $i++,
+                'lineNumber'       => $i++,
                 'basePricePerItem' => $productBasePrice,
-                'quantity' => $basketItem->getQuantity(),
-                'lineId' => $basketItem->getId(),
-                'product' => [
+                'quantity'         => $basketItem->getQuantity(),
+                'lineId'           => $basketItem->getId(),
+                'product'          => [
                     'ids' => [
                         Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getElementCode($basketItem->getProductId())
                     ]
                 ],
-                'status' => [
+                'status'           => [
                     'ids' => [
                         'externalId' => 'CheckedOut'
                     ]
@@ -675,10 +675,10 @@ class Event
         }
 
         $arOrder = [
-            'ids' => [
+            'ids'         => [
                 Options::getModuleOption('TRANSACTION_ID') => ''
             ],
-            'lines' => $lines,
+            'lines'       => $lines,
             'transaction' => [
                 'ids' => [
                     'externalId' => Helper::getTransactionId()
@@ -900,16 +900,16 @@ class Event
                 }
 
                 $arLine = [
-                    'lineNumber' => $i++,
+                    'lineNumber'       => $i++,
                     'basePricePerItem' => $productBasePrice,
-                    'quantity' => $basketItem->getQuantity(),
-                    'lineId' => $basketItem->getId(),
-                    'product' => [
+                    'quantity'         => $basketItem->getQuantity(),
+                    'lineId'           => $basketItem->getId(),
+                    'product'          => [
                         'ids' => [
                             Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getElementCode($basketItem->getProductId())
                         ]
                     ],
-                    'status' => [
+                    'status'           => [
                         'ids' => [
                             'externalId' => 'CheckedOut'
                         ]
@@ -935,7 +935,7 @@ class Event
 
 
             $arOrder = [
-                'ids' => [
+                'ids'   => [
                     Options::getModuleOption('TRANSACTION_ID') => $order->getId(),
                     //'mindboxId' =>  $_SESSION['MINDBOX_ORDER']
                 ],
@@ -944,15 +944,15 @@ class Event
             ];
 
             if (!empty($arCoupons)) {
-                $arOrder['coupons'] = [$arCoupons];
+                $arOrder[ 'coupons' ] = [$arCoupons];
             }
 
-            $bonuses = $_SESSION['PAY_BONUSES'] ?: 0;
+            $bonuses = $_SESSION[ 'PAY_BONUSES' ] ?: 0;
             if ($bonuses && is_object($USER) && $USER->IsAuthorized()) {
                 $bonusPoints = [
                     'amount' => $bonuses
                 ];
-                $arOrder['bonusPoints'] = [
+                $arOrder[ 'bonusPoints' ] = [
                     $bonusPoints
                 ];
             }
@@ -1010,7 +1010,7 @@ class Event
 
                 $orderDTO = new OrderCreateRequestDTO();
                 $orderDTO->setField('order', [
-                        'ids' => [
+                        'ids'         => [
                             Options::getModuleOption('TRANSACTION_ID') => $order->getId(),
                             'mindboxId' => $_SESSION['MINDBOX_ORDER']
                         ],
@@ -1105,12 +1105,12 @@ class Event
 
                 $line = new LineRequestDTO();
                 $catalogPrice = \CPrice::GetBasePrice($basketItem->getProductId());
-                $catalogPrice = $catalogPrice['PRICE'] ?: 0;
+                $catalogPrice = $catalogPrice[ 'PRICE' ] ?: 0;
                 $lines[] = [
                     'basePricePerItem' => $catalogPrice,
-                    'quantity' => $basketItem->getQuantity(),
-                    'lineId' => $basketItem->getId(),
-                    'product' => [
+                    'quantity'         => $basketItem->getQuantity(),
+                    'lineId'           => $basketItem->getId(),
+                    'product'          => [
                         'ids' => [
                             Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getElementCode($basketItem->getProductId())
                         ]
@@ -1190,23 +1190,23 @@ class Event
 
 
             $discounts = [];
-            $bonuses = $_SESSION['PAY_BONUSES'];
+            $bonuses = $_SESSION[ 'PAY_BONUSES' ];
             if (!empty($bonuses)) {
                 $discounts[] = new DiscountRequestDTO([
-                    'type' => 'balance',
-                    'amount' => $bonuses,
+                    'type'        => 'balance',
+                    'amount'      => $bonuses,
                     'balanceType' => [
                         'ids' => ['systemName' => 'Main']
                     ]
                 ]);
             }
 
-            $code = $_SESSION['PROMO_CODE'];
+            $code = $_SESSION[ 'PROMO_CODE' ];
             if ($code) {
                 $discounts[] = new DiscountRequestDTO([
-                    'type' => 'promoCode',
-                    'id' => $code,
-                    'amount' => $_SESSION['PROMO_CODE_AMOUNT'] ?: 0
+                    'type'   => 'promoCode',
+                    'id'     => $code,
+                    'amount' => $_SESSION[ 'PROMO_CODE_AMOUNT' ] ?: 0
                 ]);
             }
 
@@ -1243,8 +1243,8 @@ class Event
                 unset($_SESSION[ 'PROMO_CODE_AMOUNT' ]);
                 unset($_SESSION['TOTAL_PRICE']);
 
-                if ($_SESSION['MINDBOX_ORDER']) {
-                    $orderDTO->setId('mindbox', $_SESSION['MINDBOX_ORDER']);
+                if ($_SESSION[ 'MINDBOX_ORDER' ]) {
+                    $orderDTO->setId('mindbox', $_SESSION[ 'MINDBOX_ORDER' ]);
                 }
 
                 $now = new DateTime();
@@ -1288,7 +1288,7 @@ class Event
                     $line = new LineRequestDTO();
                     $line->setField('lineId', $basketItem->getId());
                     $line->setQuantity($basketItem->getQuantity());
-                    $catalogPrice = \CPrice::GetBasePrice($basketItem->getProductId())['PRICE'];
+                    $catalogPrice = \CPrice::GetBasePrice($basketItem->getProductId())[ 'PRICE' ];
                     $line->setProduct([
                         'productId'        => Helper::getElementCode($basketItem->getProductId()),
                         'basePricePerItem' => $catalogPrice
@@ -1299,7 +1299,7 @@ class Event
                 $orderDTO->setLines($lines);
                 $orderDTO->setField('totalPrice', $basket->getPrice());
 
-                $_SESSION['OFFLINE_ORDER'] = [
+                $_SESSION[ 'OFFLINE_ORDER' ] = [
                     'DTO' => $orderDTO,
                 ];
 
@@ -1358,23 +1358,8 @@ class Event
             $logger->stopTimer('getRequestedPromotions');
 
             $bitrixBasket[ $basketItem->getId() ] = $basketItem;
-            $catalogPrice = $basketItem->getBasePrice();
-            $discountName = $basketItem->getField('DISCOUNT_NAME');
-
-            $logger->log('$basketItem', [
-                '$basketItem->getId()'  =>  $basketItem->getId(),
-                '$basketItem->getProductId()'   =>  $basketItem->getProductId(),
-                '$basketItem->getPrice()'   =>  $basketItem->getPrice(),
-                '$basketItem->getQuantity()'    =>  $basketItem->getQuantity(),
-                '$basketItem->getFinalPrice()'  =>  $basketItem->getFinalPrice(),
-                '$basketItem->getWeight()'      =>  $basketItem->getWeight(),
-                '$basketItem->getField(\'NAME\')'   =>  $basketItem->getField('NAME'),
-                '$basketItem->canBuy()' =>  $basketItem->canBuy(),
-                '$basketItem->isDelay()'    =>  $basketItem->isDelay(),
-                '$basketItem->getDiscountPrice()'  =>  $basketItem->getDiscountPrice(),
-                '$basketItem->getBasePrice()'  =>  $basketItem->getBasePrice(),
-                '$discountName' =>  $discountName
-            ]);
+            $catalogPrice = Helper::getBasePrice($basketItem);
+            //$logger->log('$catalogPrice', $catalogPrice);
 
             $arLine = [
                 'basePricePerItem' => $catalogPrice,
@@ -1404,7 +1389,9 @@ class Event
             return false;
         }
 
-        $logger->log('$lines', $lines);
+
+
+        //$logger->log('$lines', $lines);
 
         $arCoupons = [];
         if ($_SESSION[ 'PROMO_CODE' ] && !empty($_SESSION['PROMO_CODE'])) {
@@ -1432,7 +1419,7 @@ class Event
             ];
         }
 
-        $logger->log('bonusPoints', $arOrder['bonusPoints']);
+        //$logger->log('bonusPoints', $arOrder['bonusPoints']);
 
         $preorder->setField('order', $arOrder);
 
@@ -1465,7 +1452,7 @@ class Event
                     return new Main\EventResult(Main\EventResult::SUCCESS);
                 }
 
-                $logger->log('$preorderInfo totalPrice', $preorderInfo->getField('totalPrice'));
+                //$logger->log('$preorderInfo totalPrice', $preorderInfo->getField('totalPrice'));
 
                 $_SESSION['TOTAL_PRICE'] = $preorderInfo->getField('totalPrice');
 
@@ -1512,12 +1499,14 @@ class Event
                         $mindboxPrice = floatval($line->getDiscountedPrice()) / floatval($line->getQuantity());
                         $mindboxBasket[ $lineId ] = $bitrixProduct;
 
+                        /*
                         if ($logger) {
                             $logger->log('$mindboxBasket', [
                                 '$lineId' =>  $lineId,
                                 '$mindboxPrice'  =>  $mindboxPrice,
                             ]);
                         }
+                        */
 
                         Helper::processHlbBasketRule($lineId, $mindboxPrice);
                     }

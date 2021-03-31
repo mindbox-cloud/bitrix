@@ -639,15 +639,21 @@ class Helper
         $discounts->calculate();
         $result = $discounts->getApplyResult(true);
 
-        $logger->log('$result', $result);
+        //$logger->log('$result', $result);
+
 
 
         $arDiscountList = $result['DISCOUNT_LIST'];
 
         $arPriceTypeDiscount = self::getDiscountByPriceType($basketItem);
+
+        $logger->log('$arPriceTypeDiscount', $arPriceTypeDiscount);
+
         if (!empty($arPriceTypeDiscount['BASKET'])) {
             $result['RESULT']['BASKET'][$basketItem->getId()][] = $arPriceTypeDiscount['BASKET'];
         }
+
+        $logger->log('$result[\'RESULT\'][\'BASKET\']', $result['RESULT']['BASKET']);
 
         if (!empty($arPriceTypeDiscount['DISCOUNT'])) {
             $arDiscountList[$arPriceTypeDiscount['DISCOUNT']['REAL_DISCOUNT_ID']] = $arPriceTypeDiscount['DISCOUNT'];
@@ -720,29 +726,27 @@ class Helper
         \Bitrix\Main\Loader::includeModule("catalog");
 
         $arDiscount = [];
-        $basePriceGroupId = 1;
-        $rsGroup = \Bitrix\Catalog\GroupTable::getList();
-        while ($arGroup=$rsGroup->fetch()) {
-            if ($arGroup['BASE'] === 'Y') {
-                $basePriceGroupId = $arGroup['ID'];
-                break;
-            }
-        }
-
-        $allProductPrices = \Bitrix\Catalog\PriceTable::getList([
-            "select" => ["*"],
-            "filter" => [
-                "=PRODUCT_ID" => $basketItem->getProductId(),
-            ],
-            "order" => ["CATALOG_GROUP_ID" => "ASC"]
-        ])->fetchAll();
+        $arProductPrices = self::getProductPrices($basketItem);
+        $allProductPrices = $arProductPrices['PRICES'];
+        $basePriceGroupId = $arProductPrices['BASE_PRICE_CATALOG_GROUP_ID'];
 
         if (!empty($allProductPrices)) {
+            if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+                $logger = new \Intensa\Logger\ILog('getDiscountByPriceType');
+            }
+            $catalogGroupId = 0;
+            foreach ($allProductPrices as $allProductPricesItem) {
+                if (roundEx($allProductPricesItem['PRICE'], 2) === roundEx($basketItem->getBasePrice(), 2)) {
+                    $catalogGroupId = $allProductPricesItem['CATALOG_GROUP_ID'];
+                }
+            }
+
             foreach ($allProductPrices as $allProductPricesItem) {
                 if ($allProductPricesItem['CATALOG_GROUP_ID'] === $basePriceGroupId &&
-                    $allProductPricesItem['PRICE'] > $basketItem->getBasePrice()
+                    $allProductPricesItem['PRICE'] > $basketItem->getBasePrice() &&
+                    $catalogGroupId > 0
                 ) {
-                    $realDiscountId = $allProductPricesItem['ID'];
+                    $realDiscountId = 'CATALOG-GROUP-' . $catalogGroupId;
                     $arDiscount['BASKET'] = [
                         'DISCOUNT_ID'   =>  $realDiscountId,
                         'APPLY'         =>  'Y',
@@ -762,11 +766,71 @@ class Helper
             }
         }
 
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('getDiscountByPriceType');
+        if ($logger) {
             $logger->log('$arDiscount', $arDiscount);
+            $logger->log('$allProductPrices', $allProductPrices);
+            $logger->log('$basePriceGroupId', $basePriceGroupId);
         }
 
         return $arDiscount;
+    }
+
+    public static function getBasePrice($basketItem)
+    {
+        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('getBasePrice');
+        }
+        $arProductPrices = self::getProductPrices($basketItem->getProductId());
+
+        $logger->log('$arProductPrices', $arProductPrices);
+
+        if (!empty($arProductPrices['PRICES'])) {
+            foreach ($arProductPrices['PRICES'] as $arProductPrice) {
+                $logger->log('catalog group id', $arProductPrice['CATALOG_GROUP_ID']);
+                if ($arProductPrice['CATALOG_GROUP_ID'] === $arProductPrices['BASE_PRICE_CATALOG_GROUP_ID']) {
+                    return $arProductPrice['PRICE'];
+                }
+            }
+        }
+        return $basketItem->getBasePrice();
+    }
+
+    private static function getProductPrices($productId)
+    {
+        $basePriceGroupId = 1;
+        $rsGroup = \Bitrix\Catalog\GroupTable::getList();
+        while ($arGroup=$rsGroup->fetch()) {
+            if ($arGroup['BASE'] === 'Y') {
+                $basePriceGroupId = $arGroup['ID'];
+                break;
+            }
+        }
+
+        $allProductPrices = \Bitrix\Catalog\PriceTable::getList([
+            "select" => ["*"],
+            "filter" => [
+                "=PRODUCT_ID" => $productId,
+            ],
+            "order" => ["CATALOG_GROUP_ID" => "ASC"]
+        ])->fetchAll();
+
+        return [
+            'PRICES' => $allProductPrices,
+            'BASE_PRICE_CATALOG_GROUP_ID' => $basePriceGroupId
+        ];
+    }
+
+    public static function setPriceByType($element)
+    {
+        $productId = $element['ID'];
+        $arResultPrices = $element['prices']['RESULT_PRICE'];
+        $arProductPrices = self::getProductPrices($productId);
+        foreach ($arProductPrices['PRICES'] as $arProductPrice) {
+            if ($arProductPrice['CATALOG_GROUP_ID'] === $arProductPrices['BASE_PRICE_CATALOG_GROUP_ID']) {
+                $arResultPrices['BASE_PRICE'] = roundEx($arProductPrice['PRICE'], 2);
+                $arResultPrices['UNROUND_BASE_PRICE'] = $arProductPrice['PRICE'];
+            }
+        }
+        return $arResultPrices;
     }
 }
