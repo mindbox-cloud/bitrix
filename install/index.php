@@ -256,6 +256,13 @@ class mindbox_marketing extends CModule
             "OnPrologHandler",
             1000
         );
+        $eventManager->registerEventHandlerCompatible(
+            "sale",
+            "OnCondSaleActionsControlBuildList",
+            $this->MODULE_ID,
+            "\Mindbox\SaleActionDiscountFromDirectory",
+            "GetControlDescr"
+        );
 
         return true;
     }
@@ -277,6 +284,7 @@ class mindbox_marketing extends CModule
         $eventManager->unRegisterEventHandler("sale", "OnSaleOrderBeforeSaved", $this->MODULE_ID, "\Mindbox\Event", "OnSaleOrderBeforeSavedHandler");
         $eventManager->unRegisterEventHandler("sale", "OnSaleOrderSaved", $this->MODULE_ID, "\Mindbox\Event", "OnSaleOrderSavedHandler");
         $eventManager->unRegisterEventHandler("main", "OnProlog", $this->MODULE_ID, "\Mindbox\Event", "OnPrologHandler");
+        $eventManager->unRegisterEventHandler("sale", "OnCondSaleActionsControlBuildList", $this->MODULE_ID, "\Mindbox\SaleActionDiscountFromDirectory", "GetControlDescr");
         return true;
     }
 

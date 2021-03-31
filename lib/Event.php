@@ -1177,17 +1177,7 @@ class Event
                 ]
             ];
             $customer->setSubscriptions($subscriptions);
-
-            $subscriptions = [
-                'subscription' => [
-                    'brand'          => Options::getModuleOption('BRAND'),
-                    'isSubscribed'   => $isSubscribed,
-                ]
-            ];
-            $customer->setSubscriptions($subscriptions);
-
             $orderDTO->setCustomer($customer);
-
 
             $discounts = [];
             $bonuses = $_SESSION[ 'PAY_BONUSES' ];
