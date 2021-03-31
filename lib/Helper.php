@@ -559,7 +559,10 @@ class Helper
             $logger = new \Intensa\Logger\ILog('processHlbBasketRule');
         }
 
-        $hlbl = 4;
+        $result = \Bitrix\Highloadblock\HighloadBlockTable::getList(['filter'=>['=NAME'=>"Mindbox"]]);
+        if($row = $result->fetch()) {
+            $hlbl = $row["ID"];
+        }
         $hlblock = \Bitrix\Highloadblock\HighloadBlockTable::getById($hlbl)->fetch();
         $entity = \Bitrix\Highloadblock\HighloadBlockTable::compileEntity($hlblock);
         $entity_data_class = $entity->getDataClass();
@@ -643,7 +646,7 @@ class Helper
 
         $arPriceTypeDiscount = self::getDiscountByPriceType($basketItem);
         if (!empty($arPriceTypeDiscount['BASKET'])) {
-            array_push($result['RESULT']['BASKET'][$basketItem->getId()], $arPriceTypeDiscount['BASKET']);
+            $result['RESULT']['BASKET'][$basketItem->getId()][] = $arPriceTypeDiscount['BASKET'];
         }
 
         if (!empty($arPriceTypeDiscount['DISCOUNT'])) {
