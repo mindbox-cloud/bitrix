@@ -16,6 +16,10 @@ class EventController
     /**
      * @var string
      */
+    protected $notCompatibleCode = 'notCompatible';
+    /**
+     * @var string
+     */
     protected $bitrixModuleCode = 'bitrixModuleId';
     /**
      * @var string
@@ -75,6 +79,7 @@ class EventController
                       $eventList[$methodDocsParams[$this->bitrixEventCode]] = [
                           'bitrixModule' => $methodDocsParams[$this->bitrixModuleCode],
                           'bitrixEvent' => $methodDocsParams[$this->bitrixEventCode],
+                          'notCompatible' => $methodDocsParams[$this->notCompatibleCode],
                           'method' => $method->getName(),
                           'class' => $fullClassName,
                           'name_ru' => $methodDocsParams[$this->russianNameCode],
@@ -175,7 +180,13 @@ class EventController
      */
     protected function registerEventHandler($params)
     {
-        $this->eventManager->registerEventHandlerCompatible(
+        $method = 'registerEventHandlerCompatible';
+
+        if ($params['notCompatible']) {
+            $method = 'registerEventHandler';
+        }
+
+        $this->eventManager->{$method}(
             $params['bitrixModule'],
             $params['bitrixEvent'],
             ADMIN_MODULE_NAME,

@@ -890,6 +890,7 @@ class Event
      * @bitrixModuleId sale
      * @bitrixEventCode OnSaleOrderSaved
      * @optionNameRu После сохранения заказа
+     * @notCompatible true
      * @param $order
      * @return Main\EventResult
      */
