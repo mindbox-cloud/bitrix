@@ -1742,6 +1742,13 @@ class Event
         }
     }
 
+    /**
+     * @bitrixModuleId main
+     * @bitrixEventCode OnProlog
+     * @optionNameRu Подключение трекера
+     * @param $arFields
+     * @return false
+     */
     public function OnPrologHandler()
     {
         $defaultOptions = \Bitrix\Main\Config\Option::getDefaults("mindbox.marketing");
