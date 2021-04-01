@@ -54,7 +54,7 @@ if (Loader::includeModule('sale')) {
 
         public static function GetAtomsEx($strControlID = false, $boolEx = false)
         {
-            $boolEx = (true === $boolEx ? true : false);
+            $boolEx = true === $boolEx;
             $hlbList = [];
             if (\Bitrix\Main\Loader::includeModule('highloadblock')) {
                 $dbRes = HLB::GetList([]);

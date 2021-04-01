@@ -36,16 +36,19 @@ class Cart extends CBitrixComponent implements Controllerable
         try {
             if (!Loader::includeModule('mindbox.marketing')) {
                 ShowError(GetMessage('MB_CART_MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));
+
                 return;
             }
 
             if (!Loader::includeModule('sale')) {
                 ShowError(GetMessage('MB_CART_MODULE_NOT_INCLUDED', ['#MODULE#' => 'sale']));
+
                 return;
             }
 
             if (!Loader::includeModule('catalog')) {
                 ShowError(GetMessage('MB_CART_MODULE_NOT_INCLUDED', ['#MODULE#' => 'catalog']));
+
                 return;
             }
         } catch (LoaderException $e) {
@@ -115,7 +118,7 @@ class Cart extends CBitrixComponent implements Controllerable
             ];
 
             if (!empty($requestedPromotions)) {
-                $arLine['requestedPromotions'] = $requestedPromotions;
+                $arLine[ 'requestedPromotions' ] = $requestedPromotions;
             }
 
 
@@ -134,11 +137,13 @@ class Cart extends CBitrixComponent implements Controllerable
         ];
 
         if ($code) {
-            $arOrder['coupons'] = [[
-                                       'ids'   => [
-                                           "code"  => $code
-                                       ]
-                                   ]];
+            $arOrder[ 'coupons' ] = [
+                [
+                    'ids' => [
+                        "code" => $code
+                    ]
+                ]
+            ];
         } else {
             unset($_SESSION[ 'PROMO_CODE' ]);
             unset($_SESSION[ 'PROMO_CODE_AMOUNT' ]);
@@ -147,9 +152,9 @@ class Cart extends CBitrixComponent implements Controllerable
         $bonuses = $_SESSION[ 'PAY_BONUSES' ] ?: 0;
         if ($bonuses) {
             $bonusPoints = [
-                'amount'    =>  $bonuses
+                'amount' => $bonuses
             ];
-            $arOrder['bonusPoints'] = [
+            $arOrder[ 'bonusPoints' ] = [
                 $bonusPoints
             ];
         }
@@ -190,28 +195,28 @@ class Cart extends CBitrixComponent implements Controllerable
                     $totalBonusPointsInfo = $preorderInfo->getField('totalBonusPointsInfo');
 
                     if (!empty($couponsInfo)) {
-                        if ($couponsInfo['coupon']['status'] == 'NotFound') {
+                        if ($couponsInfo[ 'coupon' ][ 'status' ] == 'NotFound') {
                             $response = Ajax::errorResponse(GetMessage('MB_CART_PROMOCODE_NOT_FOUND'));
                         }
-                        if ($couponsInfo['coupon']['status'] == 'CanNotBeUsedForCurrentOrder') {
+                        if ($couponsInfo[ 'coupon' ][ 'status' ] == 'CanNotBeUsedForCurrentOrder') {
                             $response = Ajax::errorResponse(GetMessage('MB_CART_PROMOCODE_ERR'));
                         }
-                        if ($couponsInfo['coupon']['status'] == 'Used') {
+                        if ($couponsInfo[ 'coupon' ][ 'status' ] == 'Used') {
                             $response = Ajax::errorResponse(GetMessage('MB_CART_PROMO_USED'));
                         }
-                        if ($couponsInfo['coupon']['status'] == 'CanBeUsed') {
-                            $_SESSION[ 'PROMO_CODE_AMOUNT' ] = $couponsInfo['discountAmountForCurrentOrder'];
+                        if ($couponsInfo[ 'coupon' ][ 'status' ] == 'CanBeUsed') {
+                            $_SESSION[ 'PROMO_CODE_AMOUNT' ] = $couponsInfo[ 'discountAmountForCurrentOrder' ];
                             $_SESSION[ 'PROMO_CODE' ] = $code;
                         }
                     }
 
                     if (!empty($totalBonusPointsInfo)) {
-                        $_SESSION[ 'ORDER_AVAILABLE_BONUSES' ] = $totalBonusPointsInfo['availableAmountForCurrentOrder'];
+                        $_SESSION[ 'ORDER_AVAILABLE_BONUSES' ] = $totalBonusPointsInfo[ 'availableAmountForCurrentOrder' ];
                         if ($_SESSION[ 'PAY_BONUSES' ] > $_SESSION[ 'ORDER_AVAILABLE_BONUSES' ]) {
                             $_SESSION[ 'PAY_BONUSES' ] = 0;
                         }
 
-                        $balance = $totalBonusPointsInfo['balance'];
+                        $balance = $totalBonusPointsInfo[ 'balance' ];
                         if ($balance) {
                             setcookie('USER_AVAILABLE_BONUSES', $balance[ 'available' ], 0, '/');
                             setcookie('USER_BLOCKED_BONUSES', $balance[ 'blocked' ], 0, '/');
@@ -263,7 +268,6 @@ class Cart extends CBitrixComponent implements Controllerable
                 return Ajax::errorResponse(GetMessage('MB_CART_PROMO_UNAVAILABLE'));
             }
         }
-
 
         return isset($response) ? $response : Ajax::errorResponse(GetMessage('MB_CART_PROMO_UNAVAILABLE'));
     }
@@ -318,7 +322,7 @@ class Cart extends CBitrixComponent implements Controllerable
             ];
 
             if (!empty($requestedPromotions)) {
-                $arLine['requestedPromotions'] = [$requestedPromotions];
+                $arLine[ 'requestedPromotions' ] = [$requestedPromotions];
             }
 
             $lines[] = $arLine;
@@ -329,10 +333,9 @@ class Cart extends CBitrixComponent implements Controllerable
         }
 
         $arCoupons = [];
-        if ($_SESSION[ 'PROMO_CODE' ] && !empty($_SESSION['PROMO_CODE'])) {
-            $arCoupons['ids']['code'] = $_SESSION[ 'PROMO_CODE' ];
+        if ($_SESSION[ 'PROMO_CODE' ] && !empty($_SESSION[ 'PROMO_CODE' ])) {
+            $arCoupons[ 'ids' ][ 'code' ] = $_SESSION[ 'PROMO_CODE' ];
         }
-
 
 
         $arOrder = [
@@ -343,14 +346,14 @@ class Cart extends CBitrixComponent implements Controllerable
         ];
 
         if (!empty($arCoupons)) {
-            $arOrder['coupons'] = [$arCoupons];
+            $arOrder[ 'coupons' ] = [$arCoupons];
         }
 
         if ($bonuses) {
             $bonusPoints = [
-                'amount'    =>  $bonuses
+                'amount' => $bonuses
             ];
-            $arOrder['bonusPoints'] = [
+            $arOrder[ 'bonusPoints' ] = [
                 $bonusPoints
             ];
         }
@@ -391,8 +394,8 @@ class Cart extends CBitrixComponent implements Controllerable
 
 
                     if (!empty($totalBonusPointsInfo)) {
-                        $_SESSION[ 'ORDER_AVAILABLE_BONUSES' ] = $totalBonusPointsInfo['availableAmountForCurrentOrder'];
-                        $_SESSION[ 'PAY_BONUSES' ] = $totalBonusPointsInfo['spentAmountForCurrentOrder'];
+                        $_SESSION[ 'ORDER_AVAILABLE_BONUSES' ] = $totalBonusPointsInfo[ 'availableAmountForCurrentOrder' ];
+                        $_SESSION[ 'PAY_BONUSES' ] = $totalBonusPointsInfo[ 'spentAmountForCurrentOrder' ];
                     }
 
 
@@ -509,7 +512,7 @@ class Cart extends CBitrixComponent implements Controllerable
             ];
 
             if (!empty($requestedPromotions)) {
-                $arLine['requestedPromotions'] = $requestedPromotions;
+                $arLine[ 'requestedPromotions' ] = $requestedPromotions;
             }
 
 
@@ -521,8 +524,8 @@ class Cart extends CBitrixComponent implements Controllerable
         }
 
         $arCoupons = [];
-        if ($_SESSION[ 'PROMO_CODE' ] && !empty($_SESSION['PROMO_CODE'])) {
-            $arCoupons['ids']['code'] = $_SESSION[ 'PROMO_CODE' ];
+        if ($_SESSION[ 'PROMO_CODE' ] && !empty($_SESSION[ 'PROMO_CODE' ])) {
+            $arCoupons[ 'ids' ][ 'code' ] = $_SESSION[ 'PROMO_CODE' ];
         }
 
         $arOrder = [
@@ -533,20 +536,20 @@ class Cart extends CBitrixComponent implements Controllerable
         ];
 
         if (!empty($arCoupons)) {
-            $arOrder['coupons'] = [$arCoupons];
+            $arOrder[ 'coupons' ] = [$arCoupons];
         }
 
         $bonuses = $_SESSION[ 'PAY_BONUSES' ] ?: 0;
 
         if ($bonuses && $USER->IsAuthorized()) {
             $bonusPoints = [
-                'amount'    =>  $bonuses
+                'amount' => $bonuses
             ];
-            $arOrder['bonusPoints'] = [
+            $arOrder[ 'bonusPoints' ] = [
                 $bonusPoints
             ];
         } else {
-            unset($_SESSION['ORDER_AVAILABLE_BONUSES'], $_SESSION['PAY_BONUSES']);
+            unset($_SESSION[ 'ORDER_AVAILABLE_BONUSES' ], $_SESSION[ 'PAY_BONUSES' ]);
         }
 
         $preorder->setField('order', $arOrder);
@@ -583,7 +586,7 @@ class Cart extends CBitrixComponent implements Controllerable
 
 
             if (!empty($totalBonusPointsInfo)) {
-                $_SESSION[ 'ORDER_AVAILABLE_BONUSES' ] = $totalBonusPointsInfo['availableAmountForCurrentOrder'];
+                $_SESSION[ 'ORDER_AVAILABLE_BONUSES' ] = $totalBonusPointsInfo[ 'availableAmountForCurrentOrder' ];
             }
 
             $lines = $preorderInfo->getLines();
@@ -622,6 +625,7 @@ class Cart extends CBitrixComponent implements Controllerable
                 $basketItem->setField('CUSTOM_PRICE', 'N');
                 $basketItem->save();
             }
+
             //die($e->getMessage());
 
             return;
