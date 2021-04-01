@@ -1,4 +1,6 @@
 <?php
+require  __DIR__ . '/../include.php';
+
 use Bitrix\Main\Application;
 use Bitrix\Main\Config\Option;
 use \Bitrix\Main\Loader;
@@ -176,88 +178,8 @@ class mindbox_marketing extends CModule
      */
     function InstallEvents()
     {
-        $eventManager = \Bitrix\Main\EventManager::getInstance();
-        $eventManager->registerEventHandlerCompatible(
-            "main",
-            "OnAfterUserAuthorize",
-            $this->MODULE_ID,
-            "\Mindbox\Event",
-            "OnAfterUserAuthorizeHandler",
-            1000
-        );
-        $eventManager->registerEventHandlerCompatible(
-            "main",
-            "OnBeforeUserRegister",
-            $this->MODULE_ID,
-            "\Mindbox\Event",
-            "OnBeforeUserRegisterHandler",
-            1000
-        );
-        $eventManager->registerEventHandlerCompatible(
-            "main",
-            "OnAfterUserRegister",
-            $this->MODULE_ID,
-            "\Mindbox\Event",
-            "OnAfterUserRegisterHandler",
-            1000
-        );
-        $eventManager->registerEventHandlerCompatible(
-            "main",
-            "OnBeforeUserUpdate",
-            $this->MODULE_ID,
-            "\Mindbox\Event",
-            "OnBeforeUserUpdateHandler",
-            1000
-        );
-        $eventManager->registerEventHandlerCompatible(
-            "main",
-            "OnBeforeUserAdd",
-            $this->MODULE_ID,
-            "\Mindbox\Event",
-            "OnBeforeUserAddHandler",
-            1000
-        );
-        $eventManager->registerEventHandlerCompatible(
-            "main",
-            "OnAfterUserAdd",
-            $this->MODULE_ID,
-            "\Mindbox\Event",
-            "OnAfterUserAddHandler",
-            1000
-        );
-        $eventManager->registerEventHandlerCompatible(
-            "sale",
-            "OnBeforeSaleOrderFinalAction",
-            $this->MODULE_ID,
-            "\Mindbox\Event",
-            "OnBeforeSaleOrderFinalActionHandler",
-            1000
-        );
-        $eventManager->registerEventHandlerCompatible(
-            "sale",
-            "OnSaleOrderBeforeSaved",
-            $this->MODULE_ID,
-            "\Mindbox\Event",
-            "OnSaleOrderBeforeSavedHandler",
-            1000
-        );
-        $eventManager->registerEventHandler(
-            "sale",
-            "OnSaleOrderSaved",
-            $this->MODULE_ID,
-            "\Mindbox\Event",
-            "OnSaleOrderSavedHandler",
-            1000
-        );
-        $eventManager->registerEventHandlerCompatible(
-            "main",
-            "OnProlog",
-            $this->MODULE_ID,
-            "\Mindbox\Event",
-            "OnPrologHandler",
-            1000
-        );
-
+        $moduleEventController = new \Mindbox\EventController();
+        $moduleEventController->installEvents();
         return true;
     }
 
@@ -267,17 +189,8 @@ class mindbox_marketing extends CModule
      */
     function UnInstallEvents()
     {
-        $eventManager = \Bitrix\Main\EventManager::getInstance();
-        $eventManager->unRegisterEventHandler("main", "OnAfterUserAuthorize", $this->MODULE_ID, "\Mindbox\Event", "OnAfterUserAuthorizeHandler");
-        $eventManager->unRegisterEventHandler("main", "OnAfterUserRegister", $this->MODULE_ID, "\Mindbox\Event", "OnAfterUserRegisterHandler");
-        $eventManager->unRegisterEventHandler("main", "OnBeforeUserRegister", $this->MODULE_ID, "\Mindbox\Event", "OnBeforeUserRegisterHandler");
-        $eventManager->unRegisterEventHandler("main", "OnBeforeUserUpdate", $this->MODULE_ID, "\Mindbox\Event", "OnBeforeUserUpdateHandler");
-        $eventManager->unRegisterEventHandler("main", "OnBeforeUserAdd", $this->MODULE_ID, "\Mindbox\Event", "OnBeforeUserAddHandler");
-        $eventManager->unRegisterEventHandler("main", "OnAfterUserAdd", $this->MODULE_ID, "\Mindbox\Event", "OnAfterUserAddHandler");
-        $eventManager->unRegisterEventHandler("sale", "OnBeforeSaleOrderFinalAction", $this->MODULE_ID, "\Mindbox\Event", "OnBeforeSaleOrderFinalActionHandler");
-        $eventManager->unRegisterEventHandler("sale", "OnSaleOrderBeforeSaved", $this->MODULE_ID, "\Mindbox\Event", "OnSaleOrderBeforeSavedHandler");
-        $eventManager->unRegisterEventHandler("sale", "OnSaleOrderSaved", $this->MODULE_ID, "\Mindbox\Event", "OnSaleOrderSavedHandler");
-        $eventManager->unRegisterEventHandler("main", "OnProlog", $this->MODULE_ID, "\Mindbox\Event", "OnPrologHandler");
+        $moduleEventController = new \Mindbox\EventController();
+        $moduleEventController->unInstallEvents();
         return true;
     }
 

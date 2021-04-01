@@ -307,6 +307,19 @@ if (!empty(\Mindbox\Helper::getOffersCatalogId(COption::GetOptionString(ADMIN_MO
     ];
 }
 
+$arAllOptions[] = getMessage('EVENT_LIST_GROUP');
+
+$eventList = \Mindbox\EventController::getOptionEventList();
+$optionEventCode = \Mindbox\EventController::getOptionEventCode();
+$arAllOptions[] = [
+    $optionEventCode,
+    getMessage($optionEventCode),
+    COption::GetOptionString(ADMIN_MODULE_NAME, $optionEventCode, ''),
+    [
+        'multiselectbox',
+        $eventList,
+    ]
+];
 ?>
 
 <form name='minboxoptions' method='POST' action='<?php echo $APPLICATION->GetCurPage() ?>?mid=<?= htmlspecialcharsbx($mid)
@@ -327,3 +340,12 @@ if (!empty(\Mindbox\Helper::getOffersCatalogId(COption::GetOptionString(ADMIN_MO
 
     <?php $tabControl->End(); ?>
 </form>
+<style>
+   select[name="MINDBOX_ENABLE_EVENT_LIST[]"],
+   select[name="MINDBOX_CATALOG_PROPS[]"],
+   select[name="MINDBOX_CATALOG_OFFER_PROPS[]"]
+    {
+        min-width: 300px;
+        width: 300px;
+    }
+</style>
