@@ -26,20 +26,20 @@ class Helper
     {
         $number = $number % 100;
         if ($number >= 11 && $number <= 19) {
-            $ending = $endingArray[ 2 ];
+            $ending = $endingArray[2];
         } else {
             $i = $number % 10;
             switch ($i) {
                 case (1):
-                    $ending = $endingArray[ 0 ];
+                    $ending = $endingArray[0];
                     break;
                 case (2):
                 case (3):
                 case (4):
-                    $ending = $endingArray[ 1 ];
+                    $ending = $endingArray[1];
                     break;
                 default:
-                    $ending = $endingArray[ 2 ];
+                    $ending = $endingArray[2];
             }
         }
 
@@ -61,8 +61,8 @@ class Helper
             ]
         )->fetch();
 
-        if ($rsUser && isset($rsUser[ 'UF_MINDBOX_ID' ]) && $rsUser['UF_MINDBOX_ID'] > 0) {
-            $mindboxId = $rsUser[ 'UF_MINDBOX_ID' ];
+        if ($rsUser && isset($rsUser['UF_MINDBOX_ID']) && $rsUser['UF_MINDBOX_ID'] > 0) {
+            $mindboxId = $rsUser['UF_MINDBOX_ID'];
         }
 
         if (!$mindboxId && \COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {
@@ -84,7 +84,10 @@ class Helper
             } catch (Exceptions\MindboxClientException $e) {
                 // mindbox not available
                 $message = date('d.m.Y H:i:s');
-                $logger->error($message, ['getCustomerInfo', [Options::getModuleOption('WEBSITE_ID') => $id], $e->getMessage()]);
+                $logger->error(
+                    $message,
+                    ['getCustomerInfo', [Options::getModuleOption('WEBSITE_ID') => $id], $e->getMessage()]
+                );
             }
 
             if ($response && $response->getResult()->getCustomer()->getProcessingStatus() === 'Found') {
@@ -99,11 +102,17 @@ class Helper
                     $id,
                     $fields
                 );
-                unset($_SESSION[ 'NEW_USER_MB_ID' ]);
-            } else if ($response && $response->getResult()->getCustomer()->getProcessingStatus() === 'NotFound') {
-                $message = date('d.m.Y H:i:s');
-                $logger->error($message, ['getCustomerInfo', [Options::getModuleOption('WEBSITE_ID') => $id], $response->getResult()->getCustomer()->getProcessingStatus()]);
-                $mindboxId = self::registerCustomer($id);
+                unset($_SESSION['NEW_USER_MB_ID']);
+            } else {
+                if ($response && $response->getResult()->getCustomer()->getProcessingStatus() === 'NotFound') {
+                    $message = date('d.m.Y H:i:s');
+                    $logger->error($message, [
+                        'getCustomerInfo',
+                        [Options::getModuleOption('WEBSITE_ID') => $id],
+                        $response->getResult()->getCustomer()->getProcessingStatus()
+                    ]);
+                    $mindboxId = self::registerCustomer($id);
+                }
             }
         }
 
@@ -147,22 +156,22 @@ class Helper
 
         $mindbox = Options::getConfig();
 
-        if (!isset($arFields[ 'PERSONAL_PHONE' ])) {
-            $arFields[ 'PERSONAL_PHONE' ] = $arFields[ 'PERSONAL_MOBILE' ];
+        if (!isset($arFields['PERSONAL_PHONE'])) {
+            $arFields['PERSONAL_PHONE'] = $arFields['PERSONAL_MOBILE'];
         }
 
-        if (isset($arFields[ 'PERSONAL_PHONE' ])) {
-            $arFields[ 'PERSONAL_PHONE' ] = Helper::formatPhone($arFields[ 'PERSONAL_PHONE' ]);
+        if (isset($arFields['PERSONAL_PHONE'])) {
+            $arFields['PERSONAL_PHONE'] = Helper::formatPhone($arFields['PERSONAL_PHONE']);
         }
 
-        $sex = substr(ucfirst($arFields[ 'PERSONAL_GENDER' ]), 0, 1) ?: null;
+        $sex = substr(ucfirst($arFields['PERSONAL_GENDER']), 0, 1) ?: null;
         $fields = [
-            'email'       => $arFields[ 'EMAIL' ],
-            'lastName'    => $arFields[ 'LAST_NAME' ],
-            'middleName'  => $arFields[ 'SECOND_NAME' ],
-            'firstName'   => $arFields[ 'NAME' ],
-            'mobilePhone' => self::normalizePhoneNumber($arFields[ 'PERSONAL_PHONE' ]),
-            'birthDate'   => Helper::formatDate($arFields[ 'PERSONAL_BIRTHDAY' ]),
+            'email'       => $arFields['EMAIL'],
+            'lastName'    => $arFields['LAST_NAME'],
+            'middleName'  => $arFields['SECOND_NAME'],
+            'firstName'   => $arFields['NAME'],
+            'mobilePhone' => self::normalizePhoneNumber($arFields['PERSONAL_PHONE']),
+            'birthDate'   => Helper::formatDate($arFields['PERSONAL_BIRTHDAY']),
             'sex'         => $sex,
         ];
 
@@ -170,7 +179,7 @@ class Helper
             return isset($item);
         });
 
-        $fields[ 'subscriptions' ] = [
+        $fields['subscriptions'] = [
             [
                 'pointOfContact' => 'Email',
                 'isSubscribed'   => true,
@@ -213,6 +222,7 @@ class Helper
             if ($status === 'ValidationError') {
                 $errors = $registerResponse->getValidationMessages();
                 $logger->error($message, ['ValidationError' => $errors]);
+
                 return false;
             }
 
@@ -228,7 +238,7 @@ class Helper
             $logger->debug($message, ['$mindboxId' => $mindboxId]);
 
             $fields = [
-                'UF_MINDBOX_ID'      => $mindboxId
+                'UF_MINDBOX_ID' => $mindboxId
             ];
 
             $user = new \CUser;
@@ -251,6 +261,7 @@ class Helper
             '+\1 (\2) \3 \4 \5',
             (string)$in
         );
+
         return $out;
     }
 
@@ -286,6 +297,7 @@ class Helper
         if ($arProduct['XML_ID']) {
             $elementId = $arProduct['XML_ID'];
         }
+
         return $elementId;
     }
 
@@ -302,6 +314,7 @@ class Helper
         if ($arSection['XML_ID']) {
             $sectionId = $arSection['XML_ID'];
         }
+
         return $sectionId;
     }
 
@@ -320,7 +333,7 @@ class Helper
             ]
         );
         while ($ar_res = $result->Fetch()) {
-            $arIblock[ $ar_res[ 'ID' ] ] = $ar_res[ 'NAME' ] . " (" . $ar_res[ 'ID' ] . ")";
+            $arIblock[$ar_res['ID']] = $ar_res['NAME'] . " (" . $ar_res['ID'] . ")";
         }
 
         return $arIblock;
@@ -336,8 +349,8 @@ class Helper
         $catalogId = COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '0');
         if (!empty($catalogId) && $catalogId !== '0') {
             $iblockProperties = CIBlock::GetProperties($catalogId);
-            while ($iblockProperty = $iblockProperties-> Fetch()) {
-                $props['PROPERTY_'.$iblockProperty['CODE']] = $iblockProperty['NAME'];
+            while ($iblockProperty = $iblockProperties->Fetch()) {
+                $props['PROPERTY_' . $iblockProperty['CODE']] = $iblockProperty['NAME'];
             }
         }
 
@@ -357,6 +370,7 @@ class Helper
         if (!empty($catalogId) && $catalogId !== '0') {
             $select = ['ID', 'IBLOCK_ID', 'OFFERS_IBLOCK_ID'];
             $filter = ['IBLOCK_ID' => $catalogId];
+
             return CCatalog::GetList([], $filter, false, [], $select)->Fetch()['OFFERS_IBLOCK_ID'];
         }
 
@@ -385,8 +399,8 @@ class Helper
 
         if (!empty($offersCatalogId) && $offersCatalogId !== '0') {
             $iblockProperties = CIBlock::GetProperties($offersCatalogId);
-            while ($iblockProperty = $iblockProperties-> Fetch()) {
-                $offerProps['PROPERTY_'.$iblockProperty['CODE']] = $iblockProperty['NAME'];
+            while ($iblockProperty = $iblockProperties->Fetch()) {
+                $offerProps['PROPERTY_' . $iblockProperty['CODE']] = $iblockProperty['NAME'];
             }
         }
 
@@ -437,7 +451,7 @@ class Helper
         if (empty($matches)) {
             $matches = self::getOrderFieldsMatch();
         }
-        $matches =  array_change_key_case($matches, CASE_UPPER);
+        $matches = array_change_key_case($matches, CASE_UPPER);
         $code = mb_strtoupper($code);
 
         if (!empty($matches[$code])) {
@@ -521,6 +535,7 @@ class Helper
         } else {
             $isSync = true;
         }
+
         return $isSync;
     }
 
@@ -544,60 +559,60 @@ class Helper
     public static function getTransactionId()
     {
         $transactionId = \Bitrix\Sale\Fuser::getId() . date('dmYHi');
-        if (!$_SESSION[ 'MINDBOX_TRANSACTION_ID' ]) {
-            $_SESSION[ 'MINDBOX_TRANSACTION_ID' ] = $transactionId;
+        if (!$_SESSION['MINDBOX_TRANSACTION_ID']) {
+            $_SESSION['MINDBOX_TRANSACTION_ID'] = $transactionId;
 
             return $transactionId;
         } else {
-            return $_SESSION[ 'MINDBOX_TRANSACTION_ID' ];
+            return $_SESSION['MINDBOX_TRANSACTION_ID'];
         }
     }
 
     public static function processHlbBasketRule($lineId, $mindboxPrice)
     {
 
-        $result = \Bitrix\Highloadblock\HighloadBlockTable::getList(['filter'=>['=NAME'=>"Mindbox"]]);
+        $result = \Bitrix\Highloadblock\HighloadBlockTable::getList(['filter' => ['=NAME' => "Mindbox"]]);
         if ($row = $result->fetch()) {
             $hlbl = $row["ID"];
         }
         $hlblock = \Bitrix\Highloadblock\HighloadBlockTable::getById($hlbl)->fetch();
         $entity = \Bitrix\Highloadblock\HighloadBlockTable::compileEntity($hlblock);
-        $entity_data_class = $entity->getDataClass();
+        $entityDataClass = $entity->getDataClass();
 
         if ($mindboxPrice) {
             $data = [
-                "UF_DISCOUNTED_PRICE"       =>  $mindboxPrice
+                "UF_DISCOUNTED_PRICE" => $mindboxPrice
             ];
 
             $arFilter = [
                 "select" => ["*"],
-                "order" => ["ID" => "ASC"],
+                "order"  => ["ID" => "ASC"],
                 "filter" => [
-                    "UF_BASKET_ID"   =>  $lineId
+                    "UF_BASKET_ID" => $lineId
                 ]
             ];
-            $rsData = $entity_data_class::getList($arFilter);
+            $rsData = $entityDataClass::getList($arFilter);
 
             if ($arData = $rsData->Fetch()) {
-                $result = $entity_data_class::update($arData['ID'], $data);
+                $result = $entityDataClass::update($arData['ID'], $data);
             } else {
                 $data = [
-                    'UF_BASKET_ID'  =>  $lineId,
-                    "UF_DISCOUNTED_PRICE"       =>  $mindboxPrice
+                    'UF_BASKET_ID'        => $lineId,
+                    "UF_DISCOUNTED_PRICE" => $mindboxPrice
                 ];
-                $result = $entity_data_class::add($data);
+                $result = $entityDataClass::add($data);
             }
         } else {
             $arFilter = [
                 "select" => ["*"],
-                "order" => ["ID" => "ASC"],
+                "order"  => ["ID" => "ASC"],
                 "filter" => [
-                    "UF_BASKET_ID"   =>  $lineId
+                    "UF_BASKET_ID" => $lineId
                 ]
             ];
-            $rsData = $entity_data_class::getList($arFilter);
+            $rsData = $entityDataClass::getList($arFilter);
             if ($arData = $rsData->Fetch()) {
-                $result = $entity_data_class::delete($arData['ID']);
+                $result = $entityDataClass::delete($arData['ID']);
             }
         }
     }
@@ -610,10 +625,12 @@ class Helper
         $arDiscountList = [];
         $arActualAction = [];
 
-        $objectClass = get_class($object);
-        if ($objectClass == 'Bitrix\Sale\Basket') {
-            $discounts = \Bitrix\Sale\Discount::buildFromBasket($object, new \Bitrix\Sale\Discount\Context\Fuser($object->getFUserId(true)));
-        } else {
+        if ($object instanceof \Bitrix\Sale\Basket) {
+            $discounts = \Bitrix\Sale\Discount::buildFromBasket(
+                $object,
+                new \Bitrix\Sale\Discount\Context\Fuser($object->getFUserId(true))
+            );
+        } elseif ($object instanceof \Bitrix\Sale\Order) {
             $discounts = \Bitrix\Sale\Discount::buildFromOrder($object);
         }
         $discounts->calculate();
@@ -639,7 +656,6 @@ class Helper
             }
         }
 
-        $requestedPromotions = [];
         if (array_key_exists($basketItem->getId(), $arActualAction)) {
             foreach ($arActualAction[$basketItem->getId()] as $discountId) {
                 $discountPrice = 0;
@@ -657,14 +673,14 @@ class Helper
                         ) {
                             $discountPercentValue = $arActionDescrData['VALUE'];
                             $externalId = "SCR-" . $arDiscount['REAL_DISCOUNT_ID'];
-                            $discountPrice = $basketItem->getBasePrice()*($discountPercentValue/100);
+                            $discountPrice = $basketItem->getBasePrice() * ($discountPercentValue / 100);
                         }
                     } elseif ($arDiscount['MODULE_ID'] === 'catalog') {
                         if (array_key_exists('VALUE_EXACT', $arActionDescrData)) {
                             $discountPrice = $arActionDescrData['VALUE_EXACT'];
                         } else {
                             $discountPercentValue = $arActionDescrData['VALUE'];
-                            $discountPrice = $basketItem->getBasePrice()*($discountPercentValue/100);
+                            $discountPrice = $basketItem->getBasePrice() * ($discountPercentValue / 100);
                         }
                         $externalId = "PD-" . $arDiscount['REAL_DISCOUNT_ID'];
                     }
@@ -673,16 +689,17 @@ class Helper
                         $requestedPromotions[] = [
                             'type'      => 'discount',
                             'promotion' => [
-                                'ids'  => [
+                                'ids' => [
                                     'externalId' => $externalId
                                 ],
                             ],
-                            'amount'    => roundEx($discountPrice*$basketItem->getQuantity(), 2)
+                            'amount'    => roundEx($discountPrice * $basketItem->getQuantity(), 2)
                         ];
                     }
                 }
             }
         }
+
         return $requestedPromotions;
     }
 
@@ -710,19 +727,19 @@ class Helper
                 ) {
                     $realDiscountId = 'CATALOG-GROUP-' . $catalogGroupId;
                     $arDiscount['BASKET'] = [
-                        'DISCOUNT_ID'   =>  $realDiscountId,
-                        'APPLY'         =>  'Y',
-                        'DESCR'         =>  'Discount by price type'
+                        'DISCOUNT_ID' => $realDiscountId,
+                        'APPLY'       => 'Y',
+                        'DESCR'       => 'Discount by price type'
                     ];
                     $arDiscount['DISCOUNT'] = [
-                        'MODULE_ID' =>  'catalog',
-                        'REAL_DISCOUNT_ID'  =>  $realDiscountId,
+                        'MODULE_ID'        => 'catalog',
+                        'REAL_DISCOUNT_ID' => $realDiscountId,
                     ];
                     $arDiscount['DISCOUNT']['ACTIONS_DESCR_DATA']['BASKET'][] = [
-                        'VALUE' =>  100 - (($basketItem->getBasePrice()/$allProductPricesItem['PRICE'])*100),
-                        'VALUE_EXACT'   =>  $allProductPricesItem['PRICE'] - $basketItem->getBasePrice(),
-                        'VALUE_TYPE'    =>  'P',
-                        'VALUE_ACTION'  =>  'D'
+                        'VALUE'        => 100 - (($basketItem->getBasePrice() / $allProductPricesItem['PRICE']) * 100),
+                        'VALUE_EXACT'  => $allProductPricesItem['PRICE'] - $basketItem->getBasePrice(),
+                        'VALUE_TYPE'   => 'P',
+                        'VALUE_ACTION' => 'D'
                     ];
                 }
             }
@@ -741,6 +758,7 @@ class Helper
                 }
             }
         }
+
         return $basketItem->getBasePrice();
     }
 
@@ -748,7 +766,7 @@ class Helper
     {
         $basePriceGroupId = 1;
         $rsGroup = \Bitrix\Catalog\GroupTable::getList();
-        while ($arGroup=$rsGroup->fetch()) {
+        while ($arGroup = $rsGroup->fetch()) {
             if ($arGroup['BASE'] === 'Y') {
                 $basePriceGroupId = $arGroup['ID'];
                 break;
@@ -760,11 +778,11 @@ class Helper
             "filter" => [
                 "=PRODUCT_ID" => $productId,
             ],
-            "order" => ["CATALOG_GROUP_ID" => "ASC"]
+            "order"  => ["CATALOG_GROUP_ID" => "ASC"]
         ])->fetchAll();
 
         return [
-            'PRICES' => $allProductPrices,
+            'PRICES'                      => $allProductPrices,
             'BASE_PRICE_CATALOG_GROUP_ID' => $basePriceGroupId
         ];
     }
@@ -780,6 +798,7 @@ class Helper
                 $arResultPrices['UNROUND_BASE_PRICE'] = $arProductPrice['PRICE'];
             }
         }
+
         return $arResultPrices;
     }
 }
