@@ -268,11 +268,9 @@ class EventController
         }
 
         $bitrixEventList = array_keys($eventList);
-        var_dump($eventList);
-        var_dump($bitrixEventList);
+
         if (!empty($bitrixEventList) && is_array($bitrixEventList)) {
             $strValue = implode(',', $bitrixEventList);
-            var_dump($strValue);
             $this->setOptionAfterRegisterHandlers($strValue);
         }
 
