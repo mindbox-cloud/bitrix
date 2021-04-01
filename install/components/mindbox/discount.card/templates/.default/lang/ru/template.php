@@ -1,8 +1,8 @@
 <?php
-$MESS['MB_DC_CARD_NUMBER'] = 'Íîìåð êàðòû';
-$MESS['MB_DC_BIND_BUTTON'] = 'Ïðèâÿçàòü';
-$MESS['MB_DC_SUCCESS_MESSAGE'] = 'Íà ìîáèëüíûé òåëåôîí, ïðèâÿçàííûé ê êàðòå îòïðàâëåí êîä àâòîðèçàöèè';
-$MESS['MB_DC_AUTH_CODE'] = 'Êîä àâòîðèçàöèè';
-$MESS['MB_DC_RESEND_BUTTON'] = 'Ïåðåîòïðàâèòü';
-$MESS['MB_DC_CHECK_CODE'] = 'Ïðîâåðèòü êîä';
-$MESS['MB_DC_CANCEL_BUTTON'] = 'Îòìåíèòü';
+$MESS['MB_DC_CARD_NUMBER'] = 'ÐÐ¾Ð¼ÐµÑ€ ÐºÐ°Ñ€Ñ‚Ñ‹';
+$MESS['MB_DC_BIND_BUTTON'] = 'ÐŸÑ€Ð¸Ð²ÑÐ·Ð°Ñ‚ÑŒ';
+$MESS['MB_DC_SUCCESS_MESSAGE'] = 'ÐÐ° Ð¼Ð¾Ð±Ð¸Ð»ÑŒÐ½Ñ‹Ð¹ Ñ‚ÐµÐ»ÐµÑ„Ð¾Ð½, Ð¿Ñ€Ð¸Ð²ÑÐ·Ð°Ð½Ð½Ñ‹Ð¹ Ðº ÐºÐ°Ñ€Ñ‚Ðµ Ð¾Ñ‚Ð¿Ñ€Ð°Ð²Ð»ÐµÐ½ ÐºÐ¾Ð´ Ð°Ð²Ñ‚Ð¾Ñ€Ð¸Ð·Ð°Ñ†Ð¸Ð¸';
+$MESS['MB_DC_AUTH_CODE'] = 'ÐšÐ¾Ð´ Ð°Ð²Ñ‚Ð¾Ñ€Ð¸Ð·Ð°Ñ†Ð¸Ð¸';
+$MESS['MB_DC_RESEND_BUTTON'] = 'ÐŸÐµÑ€ÐµÐ¾Ñ‚Ð¿Ñ€Ð°Ð²Ð¸Ñ‚ÑŒ';
+$MESS['MB_DC_CHECK_CODE'] = 'ÐŸÑ€Ð¾Ð²ÐµÑ€Ð¸Ñ‚ÑŒ ÐºÐ¾Ð´';
+$MESS['MB_DC_CANCEL_BUTTON'] = 'ÐžÑ‚Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ';
