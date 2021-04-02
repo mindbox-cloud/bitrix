@@ -163,7 +163,7 @@ class Event
 
     /**
      * @bitrixModuleId main
-     * @bitrixEventCode OnBeforeUserRegisterHandler
+     * @bitrixEventCode OnBeforeUserRegister
      * @optionNameRu Перед регистрацией пользователя
      * @param $arFields
      * @return false
