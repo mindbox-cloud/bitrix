@@ -1,8 +1,7 @@
 # Модуль Mindbox для Bitrix Framework
 Внимание! Полная работоспособность модуля гарантирована на 1С-Битрикс старше 17.5.10
 
-## Начало работы
-### Установка модуля https://developers.mindbox.ru/docs/%D0%BC%D0%BE%D0%B4%D1%83%D0%BB%D1%8C-bitrix
+### [Описание установки модуля](https://developers.mindbox.ru/docs/%D0%BC%D0%BE%D0%B4%D1%83%D0%BB%D1%8C-bitrix)
 
 
 В процессе установки:
