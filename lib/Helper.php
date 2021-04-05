@@ -181,13 +181,9 @@ class Helper
 
         $fields['subscriptions'] = [
             [
-                'pointOfContact' => 'Email',
+                'brand' => Options::getModuleOption('BRAND'),
                 'isSubscribed'   => true,
-            ],
-            [
-                'pointOfContact' => 'Sms',
-                'isSubscribed'   => true,
-            ],
+            ]
         ];
 
         $customer = Helper::iconvDTO(new CustomerRequestDTO($fields));
