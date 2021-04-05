@@ -163,7 +163,7 @@ class Event
 
     /**
      * @bitrixModuleId main
-     * @bitrixEventCode OnBeforeUserRegisterHandler
+     * @bitrixEventCode OnBeforeUserRegister
      * @optionNameRu Перед регистрацией пользователя
      * @param $arFields
      * @return false
@@ -230,6 +230,7 @@ class Event
         $subscriptions = [
             'subscription' => [
                 'brand'        => Options::getModuleOption('BRAND'),
+                'pointOfContact' => 'Email',
                 'isSubscribed' => $isSubscribed
             ]
         ];
@@ -380,10 +381,6 @@ class Event
                     'ids'         => [Options::getModuleOption('WEBSITE_ID') => $arFields['USER_ID']]
                 ];
 
-                $isSubscribed = true;
-                if ($arFields['UF_MB_IS_SUBSCRIBED'] === '0') {
-                    $isSubscribed = false;
-                }
                 $fields = array_filter($fields, function ($item) {
                     return isset($item);
                 });

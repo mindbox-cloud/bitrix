@@ -9,8 +9,6 @@ use \Bitrix\Main\Type\DateTime;
 
 IncludeModuleLangFile(__FILE__);
 
-include __DIR__ . "/../lib/SaleActionDiscountFromDirectory.php";
-
 class mindbox_marketing extends CModule
 {
     var $MODULE_ID = "mindbox.marketing";
