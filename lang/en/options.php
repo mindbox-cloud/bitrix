@@ -20,6 +20,8 @@ $MESS['DOCS_LINK'] = 'Docs for <a href="https://github.com/mindbox-moscow/bitrix
 $MESS['MODE'] = "Mode";
 $MESS['BRAND'] = "Brand";
 $MESS['IDENTIFIERS'] =  "Identifiers";
+$MESS['EVENT_LIST_GROUP'] = 'Event list';
+$MESS['ENABLE_EVENT_LIST'] = 'Enable events';
 $MESS['CONNECTION_SETTINGS'] = "Connection settings";
 $MESS['PRODUCT_SETTINGS'] = "Products settings";
 $MESS['SITE_PROTOCOL'] = 'Use HTTPS when exporting';

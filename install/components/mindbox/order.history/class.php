@@ -28,13 +28,15 @@ class OrderHistory extends CBitrixComponent implements Controllerable
         parent::__construct($component);
 
         try {
-            if(!Loader::includeModule('mindbox.marketing')) {
-                ShowError(GetMessage('MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));;
+            if (!Loader::includeModule('mindbox.marketing')) {
+                ShowError(GetMessage('MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));
+                ;
                 return;
             }
 
-            if(!Loader::includeModule('catalog')) {
-                ShowError(GetMessage('MODULE_NOT_INCLUDED', ['#MODULE#' => 'catalog']));;
+            if (!Loader::includeModule('catalog')) {
+                ShowError(GetMessage('MODULE_NOT_INCLUDED', ['#MODULE#' => 'catalog']));
+                ;
                 die();
             }
         } catch (LoaderException $e) {
@@ -92,8 +94,6 @@ class OrderHistory extends CBitrixComponent implements Controllerable
 
 
         try {
-
-
             $queryParams = [
                 'startingIndex' =>  $start,
                 'countToReturn' =>  $range,
@@ -105,6 +105,7 @@ class OrderHistory extends CBitrixComponent implements Controllerable
                 ->sendRequest();
 
             $ordersDTO = $response->getResult()->getOrders();
+
 
             foreach ($ordersDTO as $order) {
                 $id = $order->getId('mindbox');
@@ -126,7 +127,7 @@ class OrderHistory extends CBitrixComponent implements Controllerable
                     $orders[$id]['lines'][] = [
                         'name' => $product['NAME'],
                         'link' => $product['DETAIL_PAGE_URL'],
-                        'price' => $arSku['basePricePerItem']
+                        'price' => $line->getField('discountedPrice')
                     ];
                     foreach ($line->getAppliedDiscounts() as $discount) {
                         if ($discount->getType() === 'balance') {
@@ -137,8 +138,11 @@ class OrderHistory extends CBitrixComponent implements Controllerable
 
                 $acuiredBonuses += intval($order->getTotalAcquiredBalanceChange());
 
+                $deliveryCost = $order->getField('deliveryCost');
+
                 $orders[$id]['spentBonuses'] = $spentBonuses;
                 $orders[$id]['acuiredBonuses'] = $acuiredBonuses;
+                $orders[$id]['deliveryCost'] = $deliveryCost;
             }
         } catch (MindboxClientException $e) {
             $orders = [];
@@ -189,13 +193,17 @@ class OrderHistory extends CBitrixComponent implements Controllerable
             $html .= GetMessage('ORDER_HEADER', ['#ID#' => $order['id'], '#CREATED#' => $order['created'] ]);
             $html .= GetMessage('ORDER_START_HEAD');
             if ($order['spentBonuses']) {
-                $html .= GetMessage('ORDER_SPENT', ['#SPENT#' => $order['spentBonuses'], '#END#' => Helper::getNumEnding($order['spentBonuses'],
-                    GetMessage('ENDINGS_ARRAY'))]);
+                $html .= GetMessage('ORDER_SPENT', ['#SPENT#' => $order['spentBonuses'], '#END#' => Helper::getNumEnding(
+                    $order['spentBonuses'],
+                    GetMessage('ENDINGS_ARRAY')
+                )]);
             }
 
             if ($order['acuiredBonuses']) {
-                $html .=  ' ' . GetMessage('ORDER_ACUIRED', ['#ACUIRED#' => $order['acuiredBonuses'],'#END#' => Helper::getNumEnding($order['acuiredBonuses'],
-                    GetMessage('ENDINGS_ARRAY'))]);
+                $html .=  ' ' . GetMessage('ORDER_ACUIRED', ['#ACUIRED#' => $order['acuiredBonuses'],'#END#' => Helper::getNumEnding(
+                    $order['acuiredBonuses'],
+                    GetMessage('ENDINGS_ARRAY')
+                )]);
             }
 
             $html .= GetMessage('ORDER_END_HEAD');
@@ -206,7 +214,6 @@ class OrderHistory extends CBitrixComponent implements Controllerable
             }
 
             $html .= GetMessage('ORDER_END_TABLE');
-
         }
         return $html;
     }

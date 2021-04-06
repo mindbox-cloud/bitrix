@@ -19,6 +19,8 @@ $MESS['WEBSITE_ID'] = 'Идентификатор клиента';
 $MESS['DOCS_LINK'] = 'Документация по <a href="https://github.com/mindbox-moscow/bitrix" target="_blank">модулю</a>. Документация <a href="https://developers.mindbox.ru/" target="_blank">Mindbox API</a>';
 $MESS['MODE'] = "Режим работы";
 $MESS['IDENTIFIERS'] = 'Идентификаторы';
+$MESS['EVENT_LIST_GROUP'] = 'Обработчики событий';
+$MESS['ENABLE_EVENT_LIST'] = 'Активные обработчики';
 $MESS['CONNECTION_SETTINGS'] = 'Настройки подключения';
 $MESS['PRODUCT_SETTINGS'] = 'Настройки продуктов';
 $MESS['ORDER_SETTINGS'] = 'Настройки заказов';
