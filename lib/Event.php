@@ -648,7 +648,7 @@ class Event
                     'externalId' => Helper::getTransactionId()
                 ]
             ],
-            'totalPrice'    =>  $_SESSION['TOTAL_PRICE'] + $order->getDeliveryPrice(),
+            'totalPrice'    =>  $order->getPrice(),
             'deliveryCost'  =>  $order->getDeliveryPrice()
         ];
 
@@ -724,14 +724,8 @@ class Event
                 $logger->log('$createOrderResult', $createOrderResult);
             }
 
-
-            return new \Bitrix\Main\EventResult(
-                \Bitrix\Main\EventResult::ERROR,
-                new \Bitrix\Sale\ResultError('test', 'SALE_EVENT_WRONG_ORDER'),
-                'sale'
-            );
-
             if ($createOrderResult->getValidationErrors()) {
+                unset($_SESSION[ 'MINDBOX_TRANSACTION_ID' ]);
                 $validationErrors = $createOrderResult->getValidationErrors();
                 try {
                     $orderDTO = new OrderCreateRequestDTO();
@@ -746,8 +740,6 @@ class Event
                         $orderDTO,
                         Options::getOperationName('rollbackOrderTransaction')
                     )->sendRequest();
-
-                    unset($_SESSION[ 'MINDBOX_TRANSACTION_ID' ]);
 
                     return new \Bitrix\Main\EventResult(
                         \Bitrix\Main\EventResult::ERROR,
@@ -768,6 +760,17 @@ class Event
                 if ($logger) {
                     $logger->log('PriceHasBeenChanged', [1]);
                 }
+
+                unset($_SESSION[ 'MINDBOX_TRANSACTION_ID' ]);
+
+                $basket->refreshData();
+                $basket->save();
+
+                return new \Bitrix\Main\EventResult(
+                    \Bitrix\Main\EventResult::ERROR,
+                    new \Bitrix\Sale\ResultError(Loc::getMessage("MB_ORDER_PROCESSING_STATUS_CHANGED"), 'SALE_EVENT_WRONG_ORDER'),
+                    'sale'
+                );
 
                 $index = 0;
                 $priceHasBeenChanged = true;
@@ -830,8 +833,10 @@ class Event
                 'sale'
             );
         } catch (Exceptions\MindboxUnavailableException $e) {
+            unset($_SESSION[ 'MINDBOX_TRANSACTION_ID' ]);
             return new Main\EventResult(Main\EventResult::SUCCESS);
         } catch (Exceptions\MindboxClientException $e) {
+            unset($_SESSION[ 'MINDBOX_TRANSACTION_ID' ]);
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
@@ -1263,12 +1268,29 @@ class Event
     {
         global $USER;
 
+        if (\CModule::IncludeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('OnSaleBasketBeforeSavedHadler');
+            $logger->log('$_REQUEST', $_REQUEST);
+        }
+
+        /*
+        if(empty($_REQUEST)) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+        */
+
         if (!$USER || is_string($USER)) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
         $mindbox = static::mindbox();
         if (!$mindbox) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+
+        if ($_REQUEST['soa-action'] === 'saveOrderAjax' &&
+            $_REQUEST['save'] === 'Y'
+        ) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
@@ -1390,8 +1412,6 @@ class Event
                     )->sendRequest()->getResult()->getField('order');
                 }
 
-                $_SESSION['TOTAL_PRICE'] = $preorderInfo->getField('totalPrice');
-
                 if (!$preorderInfo) {
                     return new Main\EventResult(Main\EventResult::SUCCESS);
                 }
@@ -1413,10 +1433,7 @@ class Event
 
                 $lines = $preorderInfo->getLines();
 
-                if (\CModule::IncludeModule('intensa.logger')) {
-                    $logger = new \Intensa\Logger\ILog('OnSaleBasketBeforeSavedHadler');
-                    $logger->log('$lines', $lines);
-                }
+
 
 
                 $mindboxBasket = [];
