@@ -31,7 +31,7 @@ class BonusHistory extends CBitrixComponent implements Controllerable
         parent::__construct($component);
 
         try {
-            if(!Loader::includeModule('mindbox.marketing')) {
+            if (!Loader::includeModule('mindbox.marketing')) {
                 ShowError(GetMessage('MB_BH_MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));
                 return;
             }
@@ -86,7 +86,7 @@ class BonusHistory extends CBitrixComponent implements Controllerable
         $page = intval($page);
         $history = [];
         $mindboxId = $this->getMindboxId();
-        if(!$mindboxId) {
+        if (!$mindboxId) {
             throw new MindboxException(GetMessage('MB_BH_ERROR_MESSAGE'));
         }
         $operation = Options::getOperationName('getBonusPointsHistory');
@@ -99,37 +99,63 @@ class BonusHistory extends CBitrixComponent implements Controllerable
         $customer->setId('mindboxId', $mindboxId);
 
         try {
-            $response = $this->mindbox->customer()->getBonusPointsHistory($customer, $pageDTO,
-                $operation)->sendRequest();
+            $response = $this->mindbox->customer()->getBonusPointsHistory(
+                $customer,
+                $pageDTO,
+                $operation
+            )->sendRequest();
         } catch (Exception $e) {
             throw new MindboxException('Requested page is empty or doesn\'t exist');
         }
 
         $result = $response->getResult();
 
-        if(!$result->getCustomerActions()) {
+        if (!$result->getCustomerActions()) {
             throw new MindboxException('Requested page is empty or doesn\'t exist');
         }
 
 
         foreach ($result->getCustomerActions() as $action) {
             foreach ($action->getCustomerBalanceChanges() as $customerBalanceChanges) {
+                $comment = $customerBalanceChanges->getField('comment');
+                if (empty($comment)) {
+                    $type = $customerBalanceChanges->getField('balanceChangeKind')->getField('systemName');
+                    $isPositive = (int)$customerBalanceChanges->getField('changeAmount') > 0;
+                    $orderId = array_pop($action->getOrder()->getField('ids'));
+                    $comment = '';
+                    if ($type === 'RetailOrderBonus') {
+                        if ($isPositive) {
+                            $comment = GetMessage('MB_EARN_POINTS') . $orderId;
+                        } else {
+                            $comment = GetMessage('MB_RETURN_POINTS') . $orderId;
+                        }
+                    } elseif ($type === 'RetailOrderPayment') {
+                        if ($isPositive) {
+                            $comment = GetMessage('MB_SPEND_POINTS') . $orderId;
+                        } else {
+                            $comment = GetMessage('MB_REFUND_POINTS') . $orderId;
+                        }
+                    }
+                }
+
                 $history[] = [
                     'start' => $this->formatTime($action->getDateTimeUtc()),
                     'size' => $customerBalanceChanges->getChangeAmount(),
-                    'name' => $action->getActionTemplate()->getName(),
+                    'name' => $comment,
                     'end' => $this->formatTime($customerBalanceChanges->getExpirationDateTimeUtc())
                 ];
             }
         }
 
-        if(!$this->getMindboxId()) {
+        if (!$this->getMindboxId()) {
             return $history;
         }
 
-        $request = $this->mindbox->getClientV3()->prepareRequest('POST',
+        $request = $this->mindbox->getClientV3()->prepareRequest(
+            'POST',
             Options::getOperationName('getCustomerInfo'),
-            new DTO(['customer' => ['ids' => ['mindboxId' => $this->getMindboxId()]]]));
+            new DTO(['customer' => ['ids' => ['mindboxId' => $this->getMindboxId()]]])
+        );
 
         try {
             $response = $request->sendRequest()->getResult();
@@ -147,7 +173,7 @@ class BonusHistory extends CBitrixComponent implements Controllerable
 
     public function formatTime($utc)
     {
-        return str_replace('T', ' ', substr($utc, 0, -1));
+        return (new DateTime($utc))->format('Y-m-d H:i:s');
     }
 
     public function executeComponent()
@@ -177,7 +203,8 @@ class BonusHistory extends CBitrixComponent implements Controllerable
         $html = '';
 
         foreach ($history as $change) {
-            $html .= GetMessage('MB_BH_BALANCE_HTML',
+            $html .= GetMessage(
+                'MB_BH_BALANCE_HTML',
                 [
                    '#START#' => $change['start'],
                    '#SIZE#' => $change['size'],

@@ -4,9 +4,9 @@
  */
 
 $arModuleVersion =
-	[
-		"VERSION" => "2.1.2",
-		"VERSION_DATE" => "2021-02-04 16:08:00",
-		"MODULE_NAME" => GetMessage("MODULE_NAME"),
-		"MODULE_DESCRIPTION" => GetMessage("MODULE_DESCRIPTION")
-	];
+    [
+        "VERSION" => "2.3.0",
+        "VERSION_DATE" => "2021-04-01 13:00:00",
+        "MODULE_NAME" => GetMessage("MODULE_NAME"),
+        "MODULE_DESCRIPTION" => GetMessage("MODULE_DESCRIPTION")
+    ];
