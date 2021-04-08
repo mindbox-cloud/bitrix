@@ -1542,9 +1542,16 @@ class Event
         return new Main\EventResult(Main\EventResult::SUCCESS);
     }
 
+    /**
+     * @bitrixModuleId sale
+     * @bitrixEventCode OnSaleBasketItemRefreshData
+     * @optionNameRu При обновлении корзины
+     * @param $event
+     * @return \Bitrix\Main\EventResult
+     */
     public function OnSaleBasketItemRefreshDataHandler($event)
     {
-        $basketItem = $event;
+        $basketItem = $event->getParameter("ENTITY");
 
         if ($basketItem->getField('DELAY') === 'Y') {
             $_SESSION['WISHLIST'][$basketItem->getProductId()] = $basketItem;
@@ -1559,7 +1566,6 @@ class Event
         if (empty($_SESSION['WISHLIST']) && isset($_SESSION['WISHLIST_COUNT'])) {
             self::clearWishList();
         }
-
 
         return new Main\EventResult(Main\EventResult::SUCCESS);
     }
@@ -1911,7 +1917,6 @@ class Event
 
     private static function clearWishList()
     {
-
         $mindbox = static::mindbox();
         if (!$mindbox) {
             return false;
