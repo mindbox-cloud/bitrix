@@ -1,8 +1,8 @@
 <?php
-$MESS['MB_DC_MODULE_NOT_INCLUDED'] = 'Îøèáêà: ìîäóëü #MODULE# íå ïîäêëþ÷åí';
-$MESS['MB_DC_CARD_NOT_FOUND'] = 'Êàðòà ñ òàêèì íîìåðîì íå íàéäåíà';
-$MESS['MB_DC_PHONE_NOT_FOUND'] = 'Êàðòà íå ïðèâÿçàííà ê òåëåôîíó';
-$MESS['MB_DC_WRONG_CODE'] = 'Íåâåðíûé êîä';
-$MESS['MB_DC_CARD_ERROR'] = 'Îøèáêà ïðèâÿçêè êàðòû';
-$MESS['MB_DC_CARD_SUCCESS'] = 'Êàðòà óñïåøíî äîáàâëåííà';
-$MESS['MB_DC_BAD_MODULE_SETTING'] = 'Îøèáêà â íàñòðîéêàõ ìîäóëÿ';
+$MESS['MB_DC_MODULE_NOT_INCLUDED'] = 'ÐžÑˆÐ¸Ð±ÐºÐ°: Ð¼Ð¾Ð´ÑƒÐ»ÑŒ #MODULE# Ð½Ðµ Ð¿Ð¾Ð´ÐºÐ»ÑŽÑ‡ÐµÐ½';
+$MESS['MB_DC_CARD_NOT_FOUND'] = 'ÐšÐ°Ñ€Ñ‚Ð° Ñ Ñ‚Ð°ÐºÐ¸Ð¼ Ð½Ð¾Ð¼ÐµÑ€Ð¾Ð¼ Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½Ð°';
+$MESS['MB_DC_PHONE_NOT_FOUND'] = 'ÐšÐ°Ñ€Ñ‚Ð° Ð½Ðµ Ð¿Ñ€Ð¸Ð²ÑÐ·Ð°Ð½Ð½Ð° Ðº Ñ‚ÐµÐ»ÐµÑ„Ð¾Ð½Ñƒ';
+$MESS['MB_DC_WRONG_CODE'] = 'ÐÐµÐ²ÐµÑ€Ð½Ñ‹Ð¹ ÐºÐ¾Ð´';
+$MESS['MB_DC_CARD_ERROR'] = 'ÐžÑˆÐ¸Ð±ÐºÐ° Ð¿Ñ€Ð¸Ð²ÑÐ·ÐºÐ¸ ÐºÐ°Ñ€Ñ‚Ñ‹';
+$MESS['MB_DC_CARD_SUCCESS'] = 'ÐšÐ°Ñ€Ñ‚Ð° ÑƒÑÐ¿ÐµÑˆÐ½Ð¾ Ð´Ð¾Ð±Ð°Ð²Ð»ÐµÐ½Ð½Ð°';
+$MESS['MB_DC_BAD_MODULE_SETTING'] = 'ÐžÑˆÐ¸Ð±ÐºÐ° Ð² Ð½Ð°ÑÑ‚Ñ€Ð¾Ð¹ÐºÐ°Ñ… Ð¼Ð¾Ð´ÑƒÐ»Ñ';
