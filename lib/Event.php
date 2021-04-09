@@ -801,6 +801,8 @@ class Event
 
         $orderDTO->setCustomer($customer);
 
+        unset($_SESSION['MINDBOX_TRANSACTION_ID']);
+
         try {
             if (\Mindbox\Helper::isUnAuthorizedOrder($arUser) || (is_object($USER) && !$USER->IsAuthorized())) {
                 $createOrderResult = $mindbox->order()->beginUnauthorizedOrderTransaction(
@@ -815,8 +817,16 @@ class Event
             }
 
             if ($logger) {
-                $logger->log('$createOrderResult', $createOrderResult);
+                $logger->log('processingStatus', $createOrderResult->getResult()->getOrder()->getField('processingStatus'));
             }
+
+
+
+            return new \Bitrix\Main\EventResult(
+                \Bitrix\Main\EventResult::ERROR,
+                new \Bitrix\Sale\ResultError(Loc::getMessage("MB_ORDER_PROCESSING_STATUS_CHANGED"), 'SALE_EVENT_WRONG_ORDER'),
+                'sale'
+            );
 
             if ($createOrderResult->getValidationErrors()) {
                 $strValidationError = '';
@@ -864,9 +874,6 @@ class Event
                 }
 
                 unset($_SESSION[ 'MINDBOX_TRANSACTION_ID' ]);
-
-                $basket->refreshData();
-                $basket->save();
 
                 return new \Bitrix\Main\EventResult(
                     \Bitrix\Main\EventResult::ERROR,
@@ -944,8 +951,6 @@ class Event
             unset($_SESSION[ 'MINDBOX_TRANSACTION_ID' ]);
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
-
-
 
         return new \Bitrix\Main\EventResult(\Bitrix\Main\EventResult::SUCCESS);
     }
