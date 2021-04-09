@@ -52,7 +52,8 @@ class Options
         'rollbackOrderTransaction'  =>  'RollbackOrderTransaction',
         'saveOfflineOrder'          =>  'SaveOfflineOrder',
         'setWishList'   =>  'SetWishList',
-        'clearWishList' =>  'ClearWishList'
+        'clearWishList' =>  'ClearWishList',
+        'clearCart'     =>  'ClearCart'
     ];
 
     private static $sdkOptions = [

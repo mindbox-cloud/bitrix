@@ -1843,6 +1843,10 @@ class Event
             self::clearWishList();
         }
 
+        if (empty($arLines)) {
+            self::clearCart();
+        }
+
         try {
             $mindbox->productList()->setProductList(
                 new ProductListItemRequestCollection($lines),
@@ -1924,6 +1928,31 @@ class Event
 
         try {
             $mindbox->productList()->clearWishList(Options::getOperationName('clearWishList'))->sendRequest();
+            unset($_SESSION['WISHLIST_COUNT']);
+        } catch (Exceptions\MindboxClientErrorException $e) {
+            $lastResponse = $mindbox->productList()->getLastResponse();
+            if ($lastResponse) {
+                $request = $lastResponse->getRequest();
+                QueueTable::push($request);
+            }
+        } catch (Exceptions\MindboxClientException $e) {
+            $lastResponse = $mindbox->productList()->getLastResponse();
+            if ($lastResponse) {
+                $request = $lastResponse->getRequest();
+                QueueTable::push($request);
+            }
+        }
+    }
+
+    private static function clearCart()
+    {
+        $mindbox = static::mindbox();
+        if (!$mindbox) {
+            return false;
+        }
+
+        try {
+            $mindbox->productList()->clearCart(Options::getOperationName('clearCart'))->sendRequest();
             unset($_SESSION['WISHLIST_COUNT']);
         } catch (Exceptions\MindboxClientErrorException $e) {
             $lastResponse = $mindbox->productList()->getLastResponse();
