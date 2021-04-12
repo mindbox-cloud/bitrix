@@ -11,7 +11,7 @@ $MESS['MB_OH_ORDER_HEADER'] = '<p>Заказ <b>№ #ID#</b> от #CREATED#.</p>
 $MESS['MB_OH_ORDER_SPENT'] = 'Для оплаты заказа было использовано #SPENT# балл#END#.';
 $MESS['MB_OH_ORDER_ACUIRED'] = 'За заказ начислено #ACUIRED# балл#END#.';
 $MESS['MB_OH_ENDINGS_ARRAY'] = ['', 'а', 'ов'];
-$MESS['MB_OH_ORDER_LINE'] = '<tr><td width="70%"><a href="#LINK#" target="_blank">#NAME#</a></td><td width="30%">#PRICE#</td></tr>';
+$MESS['MB_OH_ORDER_LINE'] = '<tr><td><a href="#LINK#" target="_blank">#NAME#</a></td><td>#PRICE#</td></tr>';
 $MESS['MB_OH_ITEM_NAME'] = 'Название товара';
 $MESS['MB_OH_ITEM_PRICE'] = 'Цена';
 $MESS['MB_OH_MORE'] = 'Ещё';

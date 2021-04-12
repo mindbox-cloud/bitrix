@@ -185,10 +185,11 @@ class YmlFeedMindbox
                         $offerUrl = $dom->createElement("url", htmlspecialchars(self::getProtocol() . $_SERVER["SERVER_NAME"] . $prods[$prodId]["DETAIL_PAGE_URL"], ENT_XML1 | ENT_QUOTES));
                         $offer->appendChild($offerUrl);
                     }
+
                     if (!empty($ofr['prices']) && $ofr['prices']['RESULT_PRICE']['BASE_PRICE'] !== $ofr['prices']['RESULT_PRICE']['DISCOUNT_PRICE']) {
                         $offerPrice = $dom->createElement("price", $ofr['prices']['RESULT_PRICE']['DISCOUNT_PRICE']);
                         $offer->appendChild($offerPrice);
-                        $oldPrice = $dom->createElement("oldprice", $ofr["CATALOG_PRICE_" . $basePriceId]);
+                        $oldPrice = $dom->createElement("oldprice", $ofr['prices']['RESULT_PRICE']['BASE_PRICE']);
                         $offer->appendChild($oldPrice);
                     } else {
                         $offerPrice = $dom->createElement("price", $ofr["CATALOG_PRICE_" . $basePriceId]);
@@ -252,10 +253,11 @@ class YmlFeedMindbox
                     $offerUrl = $dom->createElement("url", htmlspecialchars(self::getProtocol() . $_SERVER["SERVER_NAME"] . $prod["DETAIL_PAGE_URL"], ENT_XML1 | ENT_QUOTES));
                     $offer->appendChild($offerUrl);
                 }
+
                 if (!empty($prod['prices']) && $prod['prices']['RESULT_PRICE']['BASE_PRICE'] !== $prod['prices']['RESULT_PRICE']['DISCOUNT_PRICE']) {
                     $offerPrice = $dom->createElement("price", $prod['prices']['RESULT_PRICE']['DISCOUNT_PRICE']);
                     $offer->appendChild($offerPrice);
-                    $oldPrice = $dom->createElement("oldprice", $prod["CATALOG_PRICE_" . $basePriceId]);
+                    $oldPrice = $dom->createElement("oldprice", $prod['prices']['RESULT_PRICE']['BASE_PRICE']);
                     $offer->appendChild($oldPrice);
                 } else {
                     $offerPrice = $dom->createElement("price", $prod["CATALOG_PRICE_" . $basePriceId]);
@@ -373,14 +375,21 @@ class YmlFeedMindbox
         );
 
         $addProps = Options::getModuleOption("CATALOG_OFFER_PROPS");
+
+        foreach ($offersByProducts as &$offers) {
+            foreach ($offers as $offerId => &$offer) {
+                $offer['prices'] = \CCatalogProduct::GetOptimalPrice($offer['ID']);
+                if ($offer['prices']['RESULT_PRICE']['PRICE_TYPE_ID'] !== $basePriceId) {
+                    $offer['prices']['RESULT_PRICE'] = Helper::getPriceByType($offer);
+                }
+            }
+        }
+
         if (!empty($addProps)) {
             $addProps = explode(',', $addProps);
-
             $props = self::getProps($addProps, $offersCatalogId);
-
             foreach ($offersByProducts as &$offers) {
                 foreach ($offers as $offerId => &$offer) {
-                    $offer['prices'] = \CCatalogProduct::GetOptimalPrice($offer['ID']);
                     if (!empty($props[$offerId])) {
                         $offer['props'] = $props[$offerId];
                     }
@@ -458,6 +467,9 @@ class YmlFeedMindbox
                 $prod['XML_ID'] = $prod['ID'];
             }
             $prod['prices'] = \CCatalogProduct::GetOptimalPrice($prod['ID']);
+            if ($prod['prices']['RESULT_PRICE']['PRICE_TYPE_ID'] !== $basePriceId) {
+                $prod['prices']['RESULT_PRICE'] = Helper::getPriceByType($prod);
+            }
             $prodsInfo[$prod["ID"]] = $prod;
         }
 
