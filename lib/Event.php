@@ -630,11 +630,6 @@ class Event
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
-        if (\CModule::IncludeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('OnSaleOrderBeforeSavedHandler');
-            $logger->log('fired', [1]);
-        }
-
         global $USER;
 
         if (!$USER || is_string($USER)) {
@@ -814,10 +809,6 @@ class Event
                 )->sendRequest();
             }
 
-            if ($logger) {
-                $logger->log('processingStatus', $createOrderResult->getResult()->getOrder()->getField('processingStatus'));
-            }
-
             if ($createOrderResult->getValidationErrors()) {
                 $strValidationError = '';
                 $validationErrors = $createOrderResult->getValidationErrors();
@@ -857,46 +848,11 @@ class Event
                     }
                 }
             } elseif ($createOrderResult->getResult()->getOrder()->getField('processingStatus') === 'PriceHasBeenChanged') {
-                if ($logger) {
-                    $logger->log('PriceHasBeenChanged', [1]);
-                }
-
                 return new \Bitrix\Main\EventResult(
                     \Bitrix\Main\EventResult::ERROR,
                     new \Bitrix\Sale\ResultError(Loc::getMessage("MB_ORDER_PROCESSING_STATUS_CHANGED"), 'SALE_EVENT_WRONG_ORDER'),
                     'sale'
                 );
-
-                $index = 0;
-                $priceHasBeenChanged = true;
-                while ($index < self::PRICE_HAS_BEEN_CHANGED) {
-                    if (\Mindbox\Helper::isUnAuthorizedOrder($arUser) || (is_object($USER) && !$USER->IsAuthorized())) {
-                        $createOrderRes = $mindbox->order()->beginUnauthorizedOrderTransaction(
-                            $orderDTO,
-                            Options::getOperationName('beginUnauthorizedOrderTransaction')
-                        )->sendRequest();
-                    } else {
-                        $createOrderRes = $mindbox->order()->beginAuthorizedOrderTransaction(
-                            $orderDTO,
-                            Options::getOperationName('beginAuthorizedOrderTransaction')
-                        )->sendRequest();
-                    }
-                    if ($createOrderRes->getResult()->getOrder()->getField('processingStatus') !== 'PriceHasBeenChanged') {
-                        $priceHasBeenChanged = false;
-                        break;
-                    }
-                    $index++;
-                }
-                unset($index);
-
-                if ($priceHasBeenChanged) {
-                    unset($priceHasBeenChanged);
-                    return new \Bitrix\Main\EventResult(
-                        \Bitrix\Main\EventResult::ERROR,
-                        new \Bitrix\Sale\ResultError(Loc::getMessage("MB_ORDER_PROCESSING_STATUS_ERROR"), 'SALE_EVENT_WRONG_ORDER'),
-                        'sale'
-                    );
-                }
             } else {
                 $createOrderResult = $createOrderResult->getResult()->getField('order');
                 $_SESSION[ 'MINDBOX_ORDER' ] = $createOrderResult ? $createOrderResult->getId('mindboxId') : false;
@@ -919,10 +875,6 @@ class Event
             )->sendRequest();
 
             unset($_SESSION['TOTAL_PRICE']);
-            if ($logger) {
-                $logger->log('MindboxClientErrorException', $e->getMessage());
-            }
-
             unset($_SESSION[ 'MINDBOX_TRANSACTION_ID' ]);
 
             return new \Bitrix\Main\EventResult(
@@ -1423,11 +1375,6 @@ class Event
     public function OnBeforeSaleOrderFinalActionHandler($order, $has, $basket)
     {
         global $USER;
-
-        if (\CModule::IncludeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('OnBeforeSaleOrderFinalActionHandler');
-            $logger->log('$_REQUEST', $_REQUEST);
-        }
 
         /*
         if(empty($_REQUEST)) {
