@@ -801,8 +801,6 @@ class Event
 
         $orderDTO->setCustomer($customer);
 
-        unset($_SESSION['MINDBOX_TRANSACTION_ID']);
-
         try {
             if (\Mindbox\Helper::isUnAuthorizedOrder($arUser) || (is_object($USER) && !$USER->IsAuthorized())) {
                 $createOrderResult = $mindbox->order()->beginUnauthorizedOrderTransaction(
@@ -820,17 +818,8 @@ class Event
                 $logger->log('processingStatus', $createOrderResult->getResult()->getOrder()->getField('processingStatus'));
             }
 
-
-
-            return new \Bitrix\Main\EventResult(
-                \Bitrix\Main\EventResult::ERROR,
-                new \Bitrix\Sale\ResultError(Loc::getMessage("MB_ORDER_PROCESSING_STATUS_CHANGED"), 'SALE_EVENT_WRONG_ORDER'),
-                'sale'
-            );
-
             if ($createOrderResult->getValidationErrors()) {
                 $strValidationError = '';
-                unset($_SESSION[ 'MINDBOX_TRANSACTION_ID' ]);
                 $validationErrors = $createOrderResult->getValidationErrors();
                 $arValidationError = $validationErrors->getFieldsAsArray();
                 foreach ($arValidationError as $validationError) {
@@ -850,7 +839,6 @@ class Event
                         Options::getOperationName('rollbackOrderTransaction')
                     )->sendRequest();
 
-                    unset($_SESSION['MINDBOX_TRANSACTION_ID']);
                     unset($_SESSION['TOTAL_PRICE']);
 
                     return new \Bitrix\Main\EventResult(
@@ -872,8 +860,6 @@ class Event
                 if ($logger) {
                     $logger->log('PriceHasBeenChanged', [1]);
                 }
-
-                unset($_SESSION[ 'MINDBOX_TRANSACTION_ID' ]);
 
                 return new \Bitrix\Main\EventResult(
                     \Bitrix\Main\EventResult::ERROR,
