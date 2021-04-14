@@ -535,6 +535,16 @@ class Helper
         return $isSync;
     }
 
+    /**
+     * What is mode?
+     *
+     * @return boolean
+     */
+    public static function isStandardMode()
+    {
+        return COption::GetOptionString('mindbox.marketing', 'MODE') === 'standard';
+    }
+
 
     /**
      * Check if order is unauthorized

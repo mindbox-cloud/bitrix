@@ -1352,6 +1352,36 @@ class Event
         return new Main\EventResult(Main\EventResult::SUCCESS);
     }
 
+    /**
+     * @bitrixModuleId sale
+     * @bitrixEventCode OnSaleBasketSaved
+     * @optionNameRu После сохранения корзины
+     * @param $basket
+     * @return Main\EventResult|false
+     */
+    public function OnSaleBasketSavedHandler($basket)
+    {
+        if (\CModule::IncludeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('OnSaleBasketSavedHandler');
+            $logger->log('fire', [1]);
+        }
+
+        $mindbox = static::mindbox();
+        if (!$mindbox) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+        $basketItems = $basket->getBasketItems();
+        self::setCartMindbox($basketItems);
+        if (empty($basketItems)) {
+            $_SESSION['CLEAR_CART'] = 'Y';
+        } else {
+            unset($_SESSION['CLEAR_CART']);
+        }
+
+        $logger->log('$_SESSION[\'CLEAR_CART\']', $_SESSION['CLEAR_CART']);
+
+        return new Main\EventResult(Main\EventResult::SUCCESS);
+    }
 
     /**
      * @bitrixModuleId sale
@@ -1362,7 +1392,19 @@ class Event
      */
     public function OnBeforeSaleOrderFinalActionHandler($order, $has, $basket)
     {
+
+        if (Helper::isStandardMode()) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+
         global $USER;
+
+        if (\CModule::IncludeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('OnBeforeSaleOrderFinalActionHandler');
+            $logger->log('fire', [1]);
+            $logger->log('$has', $has);
+            $logger->log('$_REQUEST', $_REQUEST);
+        }
 
         if (!$USER || is_string($USER)) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
@@ -1373,10 +1415,7 @@ class Event
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
-        $preorder = new PreorderRequestDTO();
-
         $basketItems = $basket->getBasketItems();
-        self::setCartMindbox($basketItems);
         $lines = [];
         $bitrixBasket = [];
 
@@ -1461,82 +1500,81 @@ class Event
             $preorder->setCustomer($customer);
         }
 
-        if (\COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {
-            try {
-                if ($USER->IsAuthorized()) {
-                    $preorderInfo = $mindbox->order()->calculateAuthorizedCart(
-                        $preorder,
-                        Options::getOperationName('calculateAuthorizedCart')
-                    )->sendRequest()->getResult()->getField('order');
-                } else {
-                    $preorderInfo = $mindbox->order()->calculateUnauthorizedCart(
-                        $preorder,
-                        Options::getOperationName('calculateUnauthorizedCart')
-                    )->sendRequest()->getResult()->getField('order');
-                }
+        try {
+            if ($USER->IsAuthorized()) {
+                $preorderInfo = $mindbox->order()->calculateAuthorizedCart(
+                    $preorder,
+                    Options::getOperationName('calculateAuthorizedCart')
+                )->sendRequest()->getResult()->getField('order');
+            } else {
+                $preorderInfo = $mindbox->order()->calculateUnauthorizedCart(
+                    $preorder,
+                    Options::getOperationName('calculateUnauthorizedCart')
+                )->sendRequest()->getResult()->getField('order');
+            }
 
 
-                if (!$preorderInfo) {
-                    return new Main\EventResult(Main\EventResult::SUCCESS);
-                }
-
-                $_SESSION['TOTAL_PRICE'] = $preorderInfo->getField('totalPrice');
-
-                $discounts = $preorderInfo->getDiscountsInfo();
-                foreach ($discounts as $discount) {
-                    if ($discount->getType() === 'balance') {
-                        $balance = $discount->getField('balance');
-                        if ($balance['balanceType']['ids']['systemName'] === 'Main') {
-                            $_SESSION['ORDER_AVAILABLE_BONUSES'] = $discount->getField('availableAmountForCurrentOrder');
-                        }
-                    }
-
-                    if ($discount->getType() === 'promoCode') {
-                        $_SESSION['PROMO_CODE_AMOUNT'] = $discount['availableAmountForCurrentOrder'];
-                    }
-                }
-
-
-                $lines = $preorderInfo->getLines();
-                $mindboxBasket = [];
-                $mindboxAdditional = [];
-                $context = $basket->getContext();
-
-                foreach ($lines as $line) {
-                    $lineId = $line->getField('lineId');
-                    $bitrixProduct = $bitrixBasket[$lineId];
-
-                    if (isset($mindboxBasket[$lineId])) {
-                        $mindboxAdditional[] = [
-                            'PRODUCT_ID'             => $bitrixProduct->getProductId(),
-                            'PRICE'                  => floatval($line->getDiscountedPrice()) / floatval($line->getQuantity()),
-                            'CUSTOM_PRICE'           => 'Y',
-                            'QUANTITY'               => $line->getQuantity(),
-                            'CURRENCY'               => $context['CURRENCY'],
-                            'NAME'                   => $bitrixProduct->getField('NAME'),
-                            'LID'                    => SITE_ID,
-                            'DETAIL_PAGE_URL'        => $bitrixProduct->getField('DETAIL_PAGE_URL'),
-                            'CATALOG_XML_ID'         => $bitrixProduct->getField('CATALOG_XML_ID'),
-                            'PRODUCT_XML_ID'         => $bitrixProduct->getField('PRODUCT_XML_ID'),
-                            'PRODUCT_PROVIDER_CLASS' => $bitrixProduct->getProviderName(),
-                            'CAN_BUY'                => 'Y'
-                        ];
-                    } else {
-                        $mindboxPrice = floatval($line->getDiscountedPrice()) / floatval($line->getQuantity());
-                        $mindboxBasket[$lineId] = $bitrixProduct;
-                        Helper::processHlbBasketRule($lineId, $mindboxPrice);
-                    }
-                }
-
-                foreach ($mindboxAdditional as $product) {
-                    $item = $basket->createItem("catalog", $product["PRODUCT_ID"]);
-                    unset($product["PRODUCT_ID"]);
-                    $item->setFields($product);
-                }
-            } catch (Exceptions\MindboxClientException $e) {
+            if (!$preorderInfo) {
                 return new Main\EventResult(Main\EventResult::SUCCESS);
             }
+
+            $_SESSION['TOTAL_PRICE'] = $preorderInfo->getField('totalPrice');
+
+            $discounts = $preorderInfo->getDiscountsInfo();
+            foreach ($discounts as $discount) {
+                if ($discount->getType() === 'balance') {
+                    $balance = $discount->getField('balance');
+                    if ($balance['balanceType']['ids']['systemName'] === 'Main') {
+                        $_SESSION['ORDER_AVAILABLE_BONUSES'] = $discount->getField('availableAmountForCurrentOrder');
+                    }
+                }
+
+                if ($discount->getType() === 'promoCode') {
+                    $_SESSION['PROMO_CODE_AMOUNT'] = $discount['availableAmountForCurrentOrder'];
+                }
+            }
+
+
+            $lines = $preorderInfo->getLines();
+            $mindboxBasket = [];
+            $mindboxAdditional = [];
+            $context = $basket->getContext();
+
+            foreach ($lines as $line) {
+                $lineId = $line->getField('lineId');
+                $bitrixProduct = $bitrixBasket[$lineId];
+
+                if (isset($mindboxBasket[$lineId])) {
+                    $mindboxAdditional[] = [
+                        'PRODUCT_ID'             => $bitrixProduct->getProductId(),
+                        'PRICE'                  => floatval($line->getDiscountedPrice()) / floatval($line->getQuantity()),
+                        'CUSTOM_PRICE'           => 'Y',
+                        'QUANTITY'               => $line->getQuantity(),
+                        'CURRENCY'               => $context['CURRENCY'],
+                        'NAME'                   => $bitrixProduct->getField('NAME'),
+                        'LID'                    => SITE_ID,
+                        'DETAIL_PAGE_URL'        => $bitrixProduct->getField('DETAIL_PAGE_URL'),
+                        'CATALOG_XML_ID'         => $bitrixProduct->getField('CATALOG_XML_ID'),
+                        'PRODUCT_XML_ID'         => $bitrixProduct->getField('PRODUCT_XML_ID'),
+                        'PRODUCT_PROVIDER_CLASS' => $bitrixProduct->getProviderName(),
+                        'CAN_BUY'                => 'Y'
+                    ];
+                } else {
+                    $mindboxPrice = floatval($line->getDiscountedPrice()) / floatval($line->getQuantity());
+                    $mindboxBasket[$lineId] = $bitrixProduct;
+                    Helper::processHlbBasketRule($lineId, $mindboxPrice);
+                }
+            }
+
+            foreach ($mindboxAdditional as $product) {
+                $item = $basket->createItem("catalog", $product["PRODUCT_ID"]);
+                unset($product["PRODUCT_ID"]);
+                $item->setFields($product);
+            }
+        } catch (Exceptions\MindboxClientException $e) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
         }
+
 
 
         return new Main\EventResult(Main\EventResult::SUCCESS);
@@ -1551,13 +1589,29 @@ class Event
      */
     public function OnSaleBasketItemRefreshDataHandler($event)
     {
-        $basketItem = $event->getParameter("ENTITY");
+        $basketItem = $event;
+
+        if (\CModule::IncludeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('OnSaleBasketItemRefreshDataHandler');
+            $logger->log('$basketItem->getField(\'DELAY\')', $basketItem->getField('DELAY'));
+        }
+
+        $basket = Sale\Basket::loadItemsForFUser(Sale\Fuser::getId(), Main\Context::getCurrent()->getSite());
+        $basketItems = $basket->getBasketItems();
+        if (empty($basketItems)) {
+            $_SESSION['CLEAR_CART'] = 'Y';
+        } else {
+            unset($_SESSION['CLEAR_CART']);
+        }
 
         if ($basketItem->getField('DELAY') === 'Y') {
             $_SESSION['WISHLIST'][$basketItem->getProductId()] = $basketItem;
         } else if ($basketItem->getField('DELAY') === 'N' && array_key_exists($basketItem->getProductId(), $_SESSION['WISHLIST'])) {
             unset($_SESSION['WISHLIST'][$basketItem->getProductId()]);
         }
+
+        //$logger->log('$_SESSION[\'WISHLIST\']', $_SESSION['WISHLIST']);
+        $logger->log('$_SESSION[\'WISHLIST_COUNT\']', $_SESSION['WISHLIST_COUNT']);
 
         if (!empty($_SESSION['WISHLIST']) && count($_SESSION['WISHLIST']) !== $_SESSION['WISHLIST_COUNT']) {
             self::setWishList();
@@ -1839,12 +1893,13 @@ class Event
             $lines[] = $line;
         }
 
-        if (empty($arAllLines)) {
+        if (empty($arAllLines) && count($_SESSION['WISHLIST_COUNT'])) {
             self::clearWishList();
         }
 
-        if (empty($arLines)) {
+        if (empty($arLines) && !isset($_SESSION['CLEAR_CART'])) {
             self::clearCart();
+            return;
         }
 
         try {
@@ -1864,6 +1919,12 @@ class Event
 
     private static function setWishList()
     {
+
+        if (\CModule::IncludeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('setWishList');
+            $logger->log('fire', [1]);
+        }
+
         $mindbox = static::mindbox();
         if (!$mindbox) {
             return false;
@@ -1903,6 +1964,7 @@ class Event
                 Options::getOperationName('setWishList')
             )->sendRequest();
             $_SESSION['WISHLIST_COUNT'] = count($_SESSION['WISHLIST']);
+            $logger->log('wishlist count', $_SESSION['WISHLIST_COUNT']);
             self::setCartMindbox($basketItems);
         } catch (Exceptions\MindboxClientErrorException $e) {
             $lastResponse = $mindbox->productList()->getLastResponse();
@@ -1926,9 +1988,13 @@ class Event
             return false;
         }
 
+        $basket = Sale\Basket::loadItemsForFUser(Sale\Fuser::getId(), Main\Context::getCurrent()->getSite());
+        $basketItems = $basket->getBasketItems();
+
         try {
             $mindbox->productList()->clearWishList(Options::getOperationName('clearWishList'))->sendRequest();
             unset($_SESSION['WISHLIST_COUNT']);
+            self::setCartMindbox($basketItems);
         } catch (Exceptions\MindboxClientErrorException $e) {
             $lastResponse = $mindbox->productList()->getLastResponse();
             if ($lastResponse) {
@@ -1946,14 +2012,25 @@ class Event
 
     private static function clearCart()
     {
+
+        if (\CModule::IncludeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('clearCart');
+            $logger->log('fire', [1]);
+            $logger->log('$_SESSION[\'CLEAR_CART\']', $_SESSION['CLEAR_CART']);
+        }
+
         $mindbox = static::mindbox();
         if (!$mindbox) {
             return false;
         }
 
+        if (isset($_SESSION['CLEAR_CART'])) {
+            return false;
+        }
+
         try {
             $mindbox->productList()->clearCart(Options::getOperationName('clearCart'))->sendRequest();
-            unset($_SESSION['WISHLIST_COUNT']);
+            //unset($_SESSION['WISHLIST_COUNT']);
         } catch (Exceptions\MindboxClientErrorException $e) {
             $lastResponse = $mindbox->productList()->getLastResponse();
             if ($lastResponse) {
