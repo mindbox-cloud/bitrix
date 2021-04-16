@@ -6,6 +6,7 @@ namespace Mindbox;
 use \Bitrix\Main\Loader;
 use \Bitrix\Highloadblock\HighloadBlockTable as HLB;
 use \Bitrix\Highloadblock\HighloadBlockLangTable;
+use \Bitrix\Main\Localization\Loc;
 
 class ExtensionCartRulesActions extends \CSaleActionCtrlBasketGroup
 {
@@ -35,11 +36,11 @@ class ExtensionCartRulesActions extends \CSaleActionCtrlBasketGroup
         $arResult = [
             "controlId" => static::GetControlID(),
             "group" => false,
-            "label" => "Применить скидку из справочника",
+            "label" => Loc::getMessage('APPLY_DISCOUNT_FROM_HIGHLOAD_BLOCK'),
             "defaultText" => "",
             "showIn" => static::GetShowIn($arParams["SHOW_IN_GROUPS"]),
             "control" => [
-                "Применить скидку из HighLoad блока",
+                Loc::getMessage('APPLY_DISCOUNT_FROM_HIGHLOAD_BLOCK'),
                 $arAtoms["HLB"]
             ]
         ];
