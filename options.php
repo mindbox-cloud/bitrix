@@ -231,13 +231,7 @@ $arAllOptions['CLIENTS'] = [
         ['text']
 
     ],
-    [
-        'USER_FIELDS_MATCH',
-        '',
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'USER_FIELDS_MATCH', ''),
-        ['text']
-    ],
-    ['', '', Helper::getUserMatchesTable(), ['statichtml']],
+    getMessage('ADDITIONAL_FIELDS_SETTINGS'),
     [
         'USER_BITRIX_FIELDS',
         getMessage('BITRIX_FIELDS'),
@@ -254,7 +248,15 @@ $arAllOptions['CLIENTS'] = [
         ['text']
     ],
     ['', '', Helper::getAddOrderMatchButton('user_module_button_add'), ['statichtml']],
+    ['', '', Helper::getUserMatchesTable(), ['statichtml']],
+    [
+        'USER_FIELDS_MATCH',
+        '',
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'USER_FIELDS_MATCH', ''),
+        ['text']
+    ],
     ];
+
 $arAllOptions['ORDERS'] = [
     [
         'TRANSACTION_ID',
@@ -262,13 +264,7 @@ $arAllOptions['ORDERS'] = [
         COption::GetOptionString(ADMIN_MODULE_NAME, 'TRANSACTION_ID', ''),
         ['text']
     ],
-    [
-        'ORDER_FIELDS_MATCH',
-        '',
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'ORDER_FIELDS_MATCH', '{}'),
-        ['text']
-    ],
-    ['', '', Helper::getOrderMatchesTable(), ['statichtml']],
+    getMessage('ADDITIONAL_FIELDS_SETTINGS'),
     [
         'ORDER_BITRIX_FIELDS',
         getMessage('BITRIX_FIELDS'),
@@ -284,7 +280,14 @@ $arAllOptions['ORDERS'] = [
         COption::GetOptionString(ADMIN_MODULE_NAME, 'ORDER_MINDBOX_FIELDS', ''),
         ['text']
     ],
-    ['', '', Helper::getAddOrderMatchButton('order_module_button_add'), ['statichtml']]
+    ['', '', Helper::getAddOrderMatchButton('order_module_button_add'), ['statichtml']],
+    ['', '', Helper::getOrderMatchesTable(), ['statichtml']],
+    [
+        'ORDER_FIELDS_MATCH',
+        '',
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'ORDER_FIELDS_MATCH', '{}'),
+        ['text']
+    ],
 ];
 
 if (!empty(COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', ''))) {

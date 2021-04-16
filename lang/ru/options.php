@@ -44,3 +44,4 @@ $MESS['COMMON_SETTINGS'] = 'Общие настройки';
 $MESS['FEED'] = 'Настройки yml-фида';
 $MESS['CLIENTS'] = 'Настройки клиентов';
 $MESS['ORDERS'] = 'Настройки заказов';
+$MESS['ADDITIONAL_FIELDS_SETTINGS'] = 'Настройка дополнительных полей';

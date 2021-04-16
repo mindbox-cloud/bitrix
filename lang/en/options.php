@@ -45,3 +45,4 @@ $MESS['COMMON_SETTINGS'] = 'Common settings';
 $MESS['FEED'] = 'Yml-feed settings';
 $MESS['CLIENTS'] = 'Clients settings';
 $MESS['ORDERS'] = 'Orders settings';
+$MESS['ADDITIONAL_FIELDS_SETTINGS'] = 'Additional fields settings';
