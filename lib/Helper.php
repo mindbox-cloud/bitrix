@@ -805,32 +805,15 @@ class Helper
      */
     public static function isNewOrder($values)
     {
-        $arFields = [
-            'UPDATED_1C',
-            'LID',
-            'USER_ID',
-            'CURRENCY',
-            'STATUS_ID',
-            'DATE_STATUS',
-            'PERSON_TYPE_ID',
-            'PRICE',
-            'PAYED',
-            'SUM_PAID',
-            'PRICE_DELIVERY',
-            'DELIVERY_ID',
-            'PAY_SYSTEM_ID',
-            'USER_DESCRIPTION',
-            'COMPANY_ID'
-        ];
-
-        $isNewOrder = true;
-        foreach ($values as $key => $value) {
-            if (!in_array($key, $arFields) ||
-                (in_array($key, $arFields) && !empty($value))
-            ) {
-                $isNewOrder = false;
-                break;
-            }
+        $isNewOrder = false;
+        if(
+            array_key_exists('LID', $values) && empty($values['LID'])                       &&
+            array_key_exists('USER_ID', $values) && empty($values['USER_ID'])               &&
+            array_key_exists('PRICE', $values) && empty($values['PRICE'])                   &&
+            array_key_exists('DELIVERY_ID', $values) && empty($values['DELIVERY_ID'])       &&
+            array_key_exists('PAY_SYSTEM_ID', $values) && empty($values['PAY_SYSTEM_ID'])
+        ) {
+            $isNewOrder = true;
         }
 
         return $isNewOrder;
