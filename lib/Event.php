@@ -617,11 +617,21 @@ class Event
      * @bitrixModuleId sale
      * @bitrixEventCode OnSaleOrderBeforeSaved
      * @optionNameRu Перед сохранением заказа
-     * @param $order
+     * @notCompatible true
+     * @param $event
      * @return Main\EventResult
      */
-    public function OnSaleOrderBeforeSavedHandler($order)
+    public function OnSaleOrderBeforeSavedHandler($event)
     {
+        $order = $event->getParameter("ENTITY");
+        $values = $event->getParameter("VALUES");
+
+        $isNewOrder = Helper::isNewOrder($values);
+
+        if (!$isNewOrder) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+
         $standartMode = \COption::GetOptionString('mindbox.marketing', 'MODE') === 'standard';
 
         if ($standartMode) {

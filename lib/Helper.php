@@ -797,4 +797,42 @@ class Helper
 
         return $arResultPrices;
     }
+
+    /**
+     * Check if order is new
+     *
+     * @return boolean
+     */
+    public static function isNewOrder($values)
+    {
+        $arFields = [
+            'UPDATED_1C',
+            'LID',
+            'USER_ID',
+            'CURRENCY',
+            'STATUS_ID',
+            'DATE_STATUS',
+            'PERSON_TYPE_ID',
+            'PRICE',
+            'PAYED',
+            'SUM_PAID',
+            'PRICE_DELIVERY',
+            'DELIVERY_ID',
+            'PAY_SYSTEM_ID',
+            'USER_DESCRIPTION',
+            'COMPANY_ID'
+        ];
+
+        $isNewOrder = true;
+        foreach ($values as $key => $value) {
+            if (!in_array($key, $arFields) ||
+                (in_array($key, $arFields) && !empty($value))
+            ) {
+                $isNewOrder = false;
+                break;
+            }
+        }
+
+        return $isNewOrder;
+    }
 }
