@@ -632,9 +632,9 @@ class Event
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
-        $standartMode = \COption::GetOptionString('mindbox.marketing', 'MODE') === 'standard';
+        $standardMode = \COption::GetOptionString('mindbox.marketing', 'MODE') === 'standard';
 
-        if ($standartMode) {
+        if ($standardMode) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
