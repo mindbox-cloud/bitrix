@@ -1361,10 +1361,6 @@ class Event
      */
     public function OnSaleBasketSavedHandler($basket)
     {
-        if (\CModule::IncludeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('OnSaleBasketSavedHandler');
-            $logger->log('fire', [1]);
-        }
 
         $mindbox = static::mindbox();
         if (!$mindbox) {
@@ -1373,12 +1369,8 @@ class Event
         $basketItems = $basket->getBasketItems();
         self::setCartMindbox($basketItems);
         if (empty($basketItems)) {
-            $_SESSION['CLEAR_CART'] = 'Y';
-        } else {
-            unset($_SESSION['CLEAR_CART']);
+            $_SESSION['MB_CLEAR_CART'] = 'Y';
         }
-
-        $logger->log('$_SESSION[\'CLEAR_CART\']', $_SESSION['CLEAR_CART']);
 
         return new Main\EventResult(Main\EventResult::SUCCESS);
     }
@@ -1398,13 +1390,6 @@ class Event
         }
 
         global $USER;
-
-        if (\CModule::IncludeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('OnBeforeSaleOrderFinalActionHandler');
-            $logger->log('fire', [1]);
-            $logger->log('$has', $has);
-            $logger->log('$_REQUEST', $_REQUEST);
-        }
 
         if (!$USER || is_string($USER)) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
@@ -1591,33 +1576,25 @@ class Event
     {
         $basketItem = $event;
 
-        if (\CModule::IncludeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('OnSaleBasketItemRefreshDataHandler');
-            $logger->log('$basketItem->getField(\'DELAY\')', $basketItem->getField('DELAY'));
-        }
-
         $basket = Sale\Basket::loadItemsForFUser(Sale\Fuser::getId(), Main\Context::getCurrent()->getSite());
         $basketItems = $basket->getBasketItems();
         if (empty($basketItems)) {
-            $_SESSION['CLEAR_CART'] = 'Y';
+            $_SESSION['MB_CLEAR_CART'] = 'Y';
         } else {
-            unset($_SESSION['CLEAR_CART']);
+            unset($_SESSION['MB_CLEAR_CART']);
         }
 
         if ($basketItem->getField('DELAY') === 'Y') {
-            $_SESSION['WISHLIST'][$basketItem->getProductId()] = $basketItem;
-        } else if ($basketItem->getField('DELAY') === 'N' && array_key_exists($basketItem->getProductId(), $_SESSION['WISHLIST'])) {
-            unset($_SESSION['WISHLIST'][$basketItem->getProductId()]);
+            $_SESSION['MB_WISHLIST'][$basketItem->getProductId()] = $basketItem;
+        } else if ($basketItem->getField('DELAY') === 'N' && array_key_exists($basketItem->getProductId(), $_SESSION['MB_WISHLIST'])) {
+            unset($_SESSION['MB_WISHLIST'][$basketItem->getProductId()]);
         }
 
-        //$logger->log('$_SESSION[\'WISHLIST\']', $_SESSION['WISHLIST']);
-        $logger->log('$_SESSION[\'WISHLIST_COUNT\']', $_SESSION['WISHLIST_COUNT']);
-
-        if (!empty($_SESSION['WISHLIST']) && count($_SESSION['WISHLIST']) !== $_SESSION['WISHLIST_COUNT']) {
+        if (!empty($_SESSION['MB_WISHLIST']) && count($_SESSION['MB_WISHLIST']) !== $_SESSION['MB_WISHLIST_COUNT']) {
             self::setWishList();
         }
 
-        if (empty($_SESSION['WISHLIST']) && isset($_SESSION['WISHLIST_COUNT'])) {
+        if (empty($_SESSION['MB_WISHLIST']) && isset($_SESSION['MB_WISHLIST_COUNT'])) {
             self::clearWishList();
         }
 
@@ -1893,12 +1870,14 @@ class Event
             $lines[] = $line;
         }
 
-        if (empty($arAllLines) && count($_SESSION['WISHLIST_COUNT'])) {
+        if (empty($arAllLines) && count($_SESSION['MB_WISHLIST_COUNT'])) {
             self::clearWishList();
         }
 
-        if (empty($arLines) && !isset($_SESSION['CLEAR_CART'])) {
-            self::clearCart();
+        if (empty($arLines)) {
+            if (!isset($_SESSION['MB_CLEAR_CART'])) {
+                self::clearCart();
+            }
             return;
         }
 
@@ -1919,11 +1898,6 @@ class Event
 
     private static function setWishList()
     {
-
-        if (\CModule::IncludeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('setWishList');
-            $logger->log('fire', [1]);
-        }
 
         $mindbox = static::mindbox();
         if (!$mindbox) {
@@ -1963,8 +1937,7 @@ class Event
                 new ProductListItemRequestCollection($lines),
                 Options::getOperationName('setWishList')
             )->sendRequest();
-            $_SESSION['WISHLIST_COUNT'] = count($_SESSION['WISHLIST']);
-            $logger->log('wishlist count', $_SESSION['WISHLIST_COUNT']);
+            $_SESSION['MB_WISHLIST_COUNT'] = count($_SESSION['MB_WISHLIST']);
             self::setCartMindbox($basketItems);
         } catch (Exceptions\MindboxClientErrorException $e) {
             $lastResponse = $mindbox->productList()->getLastResponse();
@@ -1993,7 +1966,7 @@ class Event
 
         try {
             $mindbox->productList()->clearWishList(Options::getOperationName('clearWishList'))->sendRequest();
-            unset($_SESSION['WISHLIST_COUNT']);
+            unset($_SESSION['MB_WISHLIST_COUNT']);
             self::setCartMindbox($basketItems);
         } catch (Exceptions\MindboxClientErrorException $e) {
             $lastResponse = $mindbox->productList()->getLastResponse();
@@ -2013,24 +1986,15 @@ class Event
     private static function clearCart()
     {
 
-        if (\CModule::IncludeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('clearCart');
-            $logger->log('fire', [1]);
-            $logger->log('$_SESSION[\'CLEAR_CART\']', $_SESSION['CLEAR_CART']);
-        }
-
         $mindbox = static::mindbox();
         if (!$mindbox) {
             return false;
         }
 
-        if (isset($_SESSION['CLEAR_CART'])) {
-            return false;
-        }
+        $_SESSION['MB_CLEAR_CART'] = 'Y';
 
         try {
             $mindbox->productList()->clearCart(Options::getOperationName('clearCart'))->sendRequest();
-            //unset($_SESSION['WISHLIST_COUNT']);
         } catch (Exceptions\MindboxClientErrorException $e) {
             $lastResponse = $mindbox->productList()->getLastResponse();
             if ($lastResponse) {
