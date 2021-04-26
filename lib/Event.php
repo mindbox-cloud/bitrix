@@ -1733,7 +1733,7 @@ class Event
 
                 $user = new CUser;
                 $user->Update(
-                    $arFields['USER_ID'],
+                    $arFields['ID'],
                     $fields
                 );
                 unset($_SESSION['NEW_USER_MB_ID']);
