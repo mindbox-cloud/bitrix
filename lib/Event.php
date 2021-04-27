@@ -318,7 +318,7 @@ class Event
                 $USER->Add($arFields);
 
                 $errors = $registerResponse->getValidationMessages();
-                $APPLICATION->ThrowException(self::formatValidationMessages($errors));
+                $APPLICATION->ThrowException(Helper::formatValidationMessages($errors));
 
                 return false;
             }
@@ -605,7 +605,7 @@ class Event
 
             if ($status === 'ValidationError') {
                 $errors = $updateResponse->getValidationMessages();
-                $APPLICATION->ThrowException(self::formatValidationMessages($errors));
+                $APPLICATION->ThrowException(Helper::formatValidationMessages($errors));
 
                 return false;
             }
@@ -1361,13 +1361,12 @@ class Event
      */
     public function OnSaleBasketSavedHandler($basket)
     {
-
         $mindbox = static::mindbox();
         if (!$mindbox) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
         $basketItems = $basket->getBasketItems();
-        self::setCartMindbox($basketItems);
+        Helper::setCartMindbox($basketItems);
         if (empty($basketItems)) {
             $_SESSION['MB_CLEAR_CART'] = 'Y';
         }
@@ -1591,11 +1590,11 @@ class Event
         }
 
         if (!empty($_SESSION['MB_WISHLIST']) && count($_SESSION['MB_WISHLIST']) !== $_SESSION['MB_WISHLIST_COUNT']) {
-            self::setWishList();
+            Helper::setWishList();
         }
 
         if (empty($_SESSION['MB_WISHLIST']) && isset($_SESSION['MB_WISHLIST_COUNT'])) {
-            self::clearWishList();
+            Helper::clearWishList();
         }
 
         return new Main\EventResult(Main\EventResult::SUCCESS);
@@ -1723,7 +1722,7 @@ class Event
 
             if ($status === 'ValidationError') {
                 $errors = $registerResponse->getValidationMessages();
-                $APPLICATION->ThrowException(self::formatValidationMessages($errors));
+                $APPLICATION->ThrowException(Helper::formatValidationMessages($errors));
                 return false;
             } else {
                 $customer = $registerResponse->getCustomer();
@@ -1814,217 +1813,5 @@ class Event
         $mindbox = Options::getConfig();
 
         return $mindbox;
-    }
-
-    /**
-     * @param $id
-     * @return bool
-     */
-    private static function isAnonym($id)
-    {
-        $mindboxId = Helper::getMindboxId($id);
-
-        if (!$mindboxId) {
-            return true;
-        }
-
-        return false;
-    }
-
-
-    /**
-     * @param $basketItems
-     */
-    private static function setCartMindbox($basketItems)
-    {
-        $mindbox = static::mindbox();
-        if (!$mindbox) {
-            return;
-        }
-
-        $arLines = [];
-        $arAllLines = [];
-        foreach ($basketItems as $basketItem) {
-            $arAllLines[$basketItem->getProductId()] = $basketItem->getProductId();
-            if ($basketItem->getField('DELAY') === 'Y') {
-                continue;
-            }
-            $productId = $basketItem->getProductId();
-            $arLines[$productId]['basketItem'] = $basketItem;
-            $arLines[$productId]['quantity'] += $basketItem->getQuantity();
-            $arLines[$productId]['priceOfLine'] += $basketItem->getPrice() * $basketItem->getQuantity();
-        }
-
-        $lines = [];
-        foreach ($arLines as $arLine) {
-            $product = new ProductRequestDTO();
-            $product->setId(
-                Options::getModuleOption('EXTERNAL_SYSTEM'),
-                Helper::getElementCode($arLine['basketItem']->getProductId())
-            );
-
-            $line = new ProductListItemRequestDTO();
-            $line->setProduct($product);
-            $line->setCount($arLine['quantity']);
-            $line->setPriceOfLine($arLine['priceOfLine']);
-            $lines[] = $line;
-        }
-
-        if (empty($arAllLines) && count($_SESSION['MB_WISHLIST_COUNT'])) {
-            self::clearWishList();
-        }
-
-        if (empty($arLines)) {
-            if (!isset($_SESSION['MB_CLEAR_CART'])) {
-                self::clearCart();
-            }
-            return;
-        }
-
-        try {
-            $mindbox->productList()->setProductList(
-                new ProductListItemRequestCollection($lines),
-                Options::getOperationName('setProductList')
-            )->sendRequest();
-        } catch (Exceptions\MindboxClientErrorException $e) {
-        } catch (Exceptions\MindboxClientException $e) {
-            $lastResponse = $mindbox->productList()->getLastResponse();
-            if ($lastResponse) {
-                $request = $lastResponse->getRequest();
-                QueueTable::push($request);
-            }
-        }
-    }
-
-    private static function setWishList()
-    {
-
-        $mindbox = static::mindbox();
-        if (!$mindbox) {
-            return false;
-        }
-
-        $basket = Sale\Basket::loadItemsForFUser(Sale\Fuser::getId(), Main\Context::getCurrent()->getSite());
-        $basketItems = $basket->getBasketItems();
-        $arLines = [];
-        foreach ($basketItems as $basketItem) {
-            if ($basketItem->getField('DELAY') === 'N') {
-                continue;
-            }
-            $productId = $basketItem->getProductId();
-            $arLines[ $productId ]['basketItem'] = $basketItem;
-            $arLines[ $productId ]['quantity'] += $basketItem->getQuantity();
-            $arLines[ $productId ]['priceOfLine'] += $basketItem->getPrice();
-        }
-
-        $lines = [];
-        foreach ($arLines as $arLine) {
-            $product = new ProductRequestDTO();
-            $product->setId(Options::getModuleOption('EXTERNAL_SYSTEM'), Helper::getElementCode($arLine['basketItem']->getProductId()));
-            $line = new ProductListItemRequestDTO();
-            $line->setProduct($product);
-            $line->setCount($arLine['quantity']);
-            $line->setPriceOfLine($arLine['priceOfLine']);
-            $lines[] = $line;
-        }
-
-        if (empty($lines)) {
-            return false;
-        }
-
-        try {
-            $mindbox->productList()->setWishList(
-                new ProductListItemRequestCollection($lines),
-                Options::getOperationName('setWishList')
-            )->sendRequest();
-            $_SESSION['MB_WISHLIST_COUNT'] = count($_SESSION['MB_WISHLIST']);
-            self::setCartMindbox($basketItems);
-        } catch (Exceptions\MindboxClientErrorException $e) {
-            $lastResponse = $mindbox->productList()->getLastResponse();
-            if ($lastResponse) {
-                $request = $lastResponse->getRequest();
-                QueueTable::push($request);
-            }
-        } catch (Exceptions\MindboxClientException $e) {
-            $lastResponse = $mindbox->productList()->getLastResponse();
-            if ($lastResponse) {
-                $request = $lastResponse->getRequest();
-                QueueTable::push($request);
-            }
-        }
-    }
-
-    private static function clearWishList()
-    {
-        $mindbox = static::mindbox();
-        if (!$mindbox) {
-            return false;
-        }
-
-        $basket = Sale\Basket::loadItemsForFUser(Sale\Fuser::getId(), Main\Context::getCurrent()->getSite());
-        $basketItems = $basket->getBasketItems();
-
-        try {
-            $mindbox->productList()->clearWishList(Options::getOperationName('clearWishList'))->sendRequest();
-            unset($_SESSION['MB_WISHLIST_COUNT']);
-            self::setCartMindbox($basketItems);
-        } catch (Exceptions\MindboxClientErrorException $e) {
-            $lastResponse = $mindbox->productList()->getLastResponse();
-            if ($lastResponse) {
-                $request = $lastResponse->getRequest();
-                QueueTable::push($request);
-            }
-        } catch (Exceptions\MindboxClientException $e) {
-            $lastResponse = $mindbox->productList()->getLastResponse();
-            if ($lastResponse) {
-                $request = $lastResponse->getRequest();
-                QueueTable::push($request);
-            }
-        }
-    }
-
-    private static function clearCart()
-    {
-
-        $mindbox = static::mindbox();
-        if (!$mindbox) {
-            return false;
-        }
-
-        $_SESSION['MB_CLEAR_CART'] = 'Y';
-
-        try {
-            $mindbox->productList()->clearCart(Options::getOperationName('clearCart'))->sendRequest();
-        } catch (Exceptions\MindboxClientErrorException $e) {
-            $lastResponse = $mindbox->productList()->getLastResponse();
-            if ($lastResponse) {
-                $request = $lastResponse->getRequest();
-                QueueTable::push($request);
-            }
-        } catch (Exceptions\MindboxClientException $e) {
-            $lastResponse = $mindbox->productList()->getLastResponse();
-            if ($lastResponse) {
-                $request = $lastResponse->getRequest();
-                QueueTable::push($request);
-            }
-        }
-    }
-
-    /**
-     * @param $errors
-     * @return string
-     */
-    private static function formatValidationMessages($errors)
-    {
-        Loc::loadMessages(__FILE__);
-
-        $strError = '';
-        foreach ($errors as $error) {
-            $strError .= Loc::getMessage($error->getLocation()) . ': ' . $error->getMessage() . PHP_EOL;
-        }
-
-        $strError = rtrim($strError, PHP_EOL);
-
-        return $strError;
     }
 }
