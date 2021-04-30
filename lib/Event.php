@@ -24,10 +24,6 @@ use Mindbox\DTO\V2\Requests\LineRequestDTO;
 use Mindbox\DTO\V2\Requests\OrderCreateRequestDTO;
 use Mindbox\DTO\V2\Requests\OrderUpdateRequestDTO;
 use Mindbox\DTO\V2\Requests\PreorderRequestDTO;
-use Mindbox\DTO\V3\Requests\ProductListItemRequestCollection;
-use Mindbox\DTO\V3\Requests\ProductListItemRequestDTO;
-use Mindbox\DTO\V3\Requests\ProductRequestDTO;
-use Mindbox\DTO\V3\Requests\SubscriptionRequestCollection;
 
 Loader::includeModule('catalog');
 Loader::includeModule('sale');
@@ -1375,7 +1371,7 @@ class Event
         $preorder = new PreorderRequestDTO();
 
         $basketItems = $basket->getBasketItems();
-        self::setCartMindbox($basketItems);
+        Helper::setCartMindbox($basketItems);
         $lines = [];
         $bitrixBasket = [];
 
@@ -1769,55 +1765,6 @@ class Event
         }
 
         return false;
-    }
-
-
-    /**
-     * @param $basketItems
-     */
-    private static function setCartMindbox($basketItems)
-    {
-        $mindbox = static::mindbox();
-        if (!$mindbox) {
-            return;
-        }
-
-        $arLines = [];
-        foreach ($basketItems as $basketItem) {
-            $productId = $basketItem->getProductId();
-            $arLines[$productId]['basketItem'] = $basketItem;
-            $arLines[$productId]['quantity'] += $basketItem->getQuantity();
-            $arLines[$productId]['priceOfLine'] += $basketItem->getPrice() * $basketItem->getQuantity();
-        }
-
-        $lines = [];
-        foreach ($arLines as $arLine) {
-            $product = new ProductRequestDTO();
-            $product->setId(
-                Options::getModuleOption('EXTERNAL_SYSTEM'),
-                Helper::getElementCode($arLine['basketItem']->getProductId())
-            );
-
-            $line = new ProductListItemRequestDTO();
-            $line->setProduct($product);
-            $line->setCount($arLine['quantity']);
-            $line->setPriceOfLine($arLine['priceOfLine']);
-            $lines[] = $line;
-        }
-
-        try {
-            $mindbox->productList()->setProductList(
-                new ProductListItemRequestCollection($lines),
-                Options::getOperationName('setProductList')
-            )->sendRequest();
-        } catch (Exceptions\MindboxClientErrorException $e) {
-        } catch (Exceptions\MindboxClientException $e) {
-            $lastResponse = $mindbox->productList()->getLastResponse();
-            if ($lastResponse) {
-                $request = $lastResponse->getRequest();
-                QueueTable::push($request);
-            }
-        }
     }
 
     /**

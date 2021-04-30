@@ -13,10 +13,16 @@ use COption;
 use CPHPCache;
 use CSaleOrderProps;
 use Mindbox\DTO\DTO;
+use Mindbox\DTO\DTOCollection;
+use Mindbox\DTO\V3\Requests\CustomerIdentityRequestDTO;
 use Mindbox\Options;
 use Mindbox\Templates\AdminLayouts;
 use Psr\Log\LoggerInterface;
 use Mindbox\DTO\V3\Requests\CustomerRequestDTO;
+use Mindbox\DTO\V3\Requests\ProductListItemRequestCollection;
+use Mindbox\DTO\V3\Requests\ProductListItemRequestDTO;
+use Mindbox\DTO\V3\Requests\ProductRequestDTO;
+use Mindbox\DTO\V3\Requests\SubscriptionRequestCollection;
 
 class Helper
 {
@@ -796,5 +802,73 @@ class Helper
         }
 
         return $arResultPrices;
+    }
+
+    /**
+     * @param $basketItems
+     */
+    public static function setCartMindbox($basketItems)
+    {
+        global $USER;
+
+        $mindbox = static::mindbox();
+        if (!$mindbox) {
+            return;
+        }
+
+        $arLines = [];
+        foreach ($basketItems as $basketItem) {
+            $productId = $basketItem->getProductId();
+            $arLines[$productId]['basketItem'] = $basketItem;
+            $arLines[$productId]['quantity'] += $basketItem->getQuantity();
+            $arLines[$productId]['priceOfLine'] += $basketItem->getPrice() * $basketItem->getQuantity();
+        }
+
+        $lines = [];
+        foreach ($arLines as $arLine) {
+            $product = new ProductRequestDTO();
+            $product->setId(
+                Options::getModuleOption('EXTERNAL_SYSTEM'),
+                Helper::getElementCode($arLine['basketItem']->getProductId())
+            );
+
+            $line = new ProductListItemRequestDTO();
+            $line->setProduct($product);
+            $line->setCount($arLine['quantity']);
+            $line->setPriceOfLine($arLine['priceOfLine']);
+            $lines[] = $line;
+        }
+
+        if (is_object($USER) && $USER->IsAuthorized() && !empty($USER->GetEmail())) {
+            $fields = [
+                'email' =>  $USER->GetEmail()
+            ];
+            $customer = Helper::iconvDTO(new CustomerIdentityRequestDTO($fields));
+        }
+
+        try {
+            $mindbox->productList()->setProductList(
+                new ProductListItemRequestCollection($lines),
+                Options::getOperationName('setProductList'),
+                $customer
+            )->sendRequest();
+        } catch (Exceptions\MindboxClientErrorException $e) {
+        } catch (Exceptions\MindboxClientException $e) {
+            $lastResponse = $mindbox->productList()->getLastResponse();
+            if ($lastResponse) {
+                $request = $lastResponse->getRequest();
+                QueueTable::push($request);
+            }
+        }
+    }
+
+    /**
+     * @return Mindbox
+     */
+    private static function mindbox()
+    {
+        $mindbox = Options::getConfig();
+
+        return $mindbox;
     }
 }
