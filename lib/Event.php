@@ -52,10 +52,6 @@ class Event
      */
     public function OnAfterUserAuthorizeHandler($arUser)
     {
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('OnAfterUserAuthorizeHandler');
-            $logger->log('$arUser', $arUser);
-        }
 
         if (!$arUser['user_fields']['ID']) {
             return true;
