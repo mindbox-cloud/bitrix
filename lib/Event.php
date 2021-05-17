@@ -53,6 +53,7 @@ class Event
      */
     public function OnAfterUserAuthorizeHandler($arUser)
     {
+
         if (!$arUser['user_fields']['ID']) {
             return true;
         }
@@ -86,7 +87,6 @@ class Event
 
         if (isset($_SESSION['NEW_USER_MINDBOX']) && $_SESSION['NEW_USER_MINDBOX'] === true) {
             unset($_SESSION['NEW_USER_MINDBOX']);
-
             return true;
         }
 
@@ -128,20 +128,42 @@ class Event
             }
         }
 
-        if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
-            $customer = new CustomerRequestDTO([
-                'ids' => [
-                    Options::getModuleOption('WEBSITE_ID') => $arUser['user_fields']['ID']
-                ]
-            ]);
-        } else {
-            $customer = new CustomerRequestDTO([
-                'ids' => [
-                    'mindboxId' => $mindboxId
-                ]
-            ]);
+        $customer = new CustomerRequestDTO([
+            'ids' => [
+                Options::getModuleOption('WEBSITE_ID') => $arUser['user_fields']['ID']
+            ]
+        ]);
+
+        $lastName = trim($arUser['user_fields']['LAST_NAME']);
+        $firstName = trim($arUser['user_fields']['NAME']);
+        $middleName = trim($arUser['user_fields']['SECOND_NAME']);
+        $email = trim($arUser['user_fields']['EMAIL']);
+        $mobilePhone = trim($arUser['user_fields']['PERSONAL_PHONE']);
+        $phoneNumber = trim($arUser['user_fields']['PHONE_NUMBER']);
+
+        if (!empty($phoneNumber)) {
+            $mobilePhone = $phoneNumber;
         }
 
+        if (!empty($lastName)) {
+            $customer->setLastName($lastName);
+        }
+
+        if (!empty($firstName)) {
+            $customer->setFirstName($firstName);
+        }
+
+        if (!empty($middleName)) {
+            $customer->setMiddleName($middleName);
+        }
+
+        if (!empty($email)) {
+            $customer->setEmail($email);
+        }
+
+        if (!empty($mobilePhone)) {
+            $customer->setMobilePhone($mobilePhone);
+        }
 
         try {
             $mindbox->customer()->authorize(
