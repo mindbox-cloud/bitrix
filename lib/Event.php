@@ -1432,7 +1432,6 @@ class Event
         $preorder = new PreorderRequestDTO();
 
         $basketItems = $basket->getBasketItems();
-        Helper::setCartMindbox($basketItems);
         $lines = [];
         $bitrixBasket = [];
         $preorder = new \Mindbox\DTO\V3\Requests\PreorderRequestDTO();
