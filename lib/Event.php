@@ -39,8 +39,6 @@ Loader::includeModule('main');
  */
 class Event
 {
-    const PRICE_HAS_BEEN_CHANGED = 5;
-
     protected $mindbox;
 
     const TRACKER_JS_FILENAME = "https://api.mindbox.ru/scripts/v1/tracker.js";
@@ -1357,12 +1355,6 @@ class Event
     public function OnBeforeSaleOrderFinalActionHandler($order, $has, $basket)
     {
         global $USER;
-
-        /*
-        if(empty($_REQUEST)) {
-            return new Main\EventResult(Main\EventResult::SUCCESS);
-        }
-        */
 
         if (!$USER || is_string($USER)) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
