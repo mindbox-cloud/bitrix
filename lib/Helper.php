@@ -7,6 +7,8 @@ namespace Mindbox;
 
 use Bitrix\Main\Loader;
 use Bitrix\Main\UserTable;
+use Bitrix\Sale;
+use Bitrix\Main;
 use CCatalog;
 use CIBlock;
 use COption;
@@ -148,7 +150,7 @@ class Helper
         }
     }
 
-    private function registerCustomer($websiteUserId)
+    private static function registerCustomer($websiteUserId)
     {
         global $APPLICATION, $USER;
 
@@ -541,6 +543,16 @@ class Helper
         return $isSync;
     }
 
+    /**
+     * What is mode?
+     *
+     * @return boolean
+     */
+    public static function isStandardMode()
+    {
+        return COption::GetOptionString('mindbox.marketing', 'MODE') === 'standard';
+    }
+
 
     /**
      * Check if order is unauthorized
@@ -805,6 +817,22 @@ class Helper
     }
 
     /**
+     * @param $id
+     * @return bool
+     */
+    private static function isAnonym($id)
+    {
+        $mindboxId = Helper::getMindboxId($id);
+
+        if (!$mindboxId) {
+            return true;
+        }
+
+        return false;
+    }
+
+
+    /**
      * @param $basketItems
      */
     public static function setCartMindbox($basketItems)
@@ -817,7 +845,13 @@ class Helper
         }
 
         $arLines = [];
+        $arAllLines = [];
         foreach ($basketItems as $basketItem) {
+            $arAllLines[$basketItem->getProductId()] = $basketItem->getProductId();
+            if ($basketItem->getField('DELAY') === 'Y') {
+                continue;
+            }
+
             $productId = $basketItem->getProductId();
             $arLines[$productId]['basketItem'] = $basketItem;
             $arLines[$productId]['quantity'] += $basketItem->getQuantity();
@@ -841,18 +875,143 @@ class Helper
 
         if (is_object($USER) && $USER->IsAuthorized() && !empty($USER->GetEmail())) {
             $fields = [
-                'email' =>  $USER->GetEmail()
+                'email' => $USER->GetEmail()
             ];
             $customer = Helper::iconvDTO(new CustomerIdentityRequestDTO($fields));
+
+            if (empty($arAllLines) && count($_SESSION['MB_WISHLIST_COUNT'])) {
+                self::clearWishList();
+            }
+
+            if (empty($arLines)) {
+                if (!isset($_SESSION['MB_CLEAR_CART'])) {
+                    self::clearCart();
+                }
+
+                return;
+            }
+
+            try {
+                $mindbox->productList()->setProductList(
+                    new ProductListItemRequestCollection($lines),
+                    Options::getOperationName('setProductList'),
+                    $customer
+                )->sendRequest();
+            } catch (Exceptions\MindboxClientErrorException $e) {
+            } catch (Exceptions\MindboxClientException $e) {
+                $lastResponse = $mindbox->productList()->getLastResponse();
+                if ($lastResponse) {
+                    $request = $lastResponse->getRequest();
+                    QueueTable::push($request);
+                }
+            }
+        }
+    }
+
+    public static function setWishList()
+    {
+        $mindbox = static::mindbox();
+        if (!$mindbox) {
+            return false;
+        }
+
+        $basket = Sale\Basket::loadItemsForFUser(Sale\Fuser::getId(), Main\Context::getCurrent()->getSite());
+        $basketItems = $basket->getBasketItems();
+        $arLines = [];
+        foreach ($basketItems as $basketItem) {
+            if ($basketItem->getField('DELAY') === 'N') {
+                continue;
+            }
+            $productId = $basketItem->getProductId();
+            $arLines[ $productId ]['basketItem'] = $basketItem;
+            $arLines[ $productId ]['quantity'] += $basketItem->getQuantity();
+            $arLines[ $productId ]['priceOfLine'] += $basketItem->getPrice();
+        }
+
+        $lines = [];
+        foreach ($arLines as $arLine) {
+            $product = new ProductRequestDTO();
+            $product->setId(Options::getModuleOption('EXTERNAL_SYSTEM'), Helper::getElementCode($arLine['basketItem']->getProductId()));
+            $line = new ProductListItemRequestDTO();
+            $line->setProduct($product);
+            $line->setCount($arLine['quantity']);
+            $line->setPriceOfLine($arLine['priceOfLine']);
+            $lines[] = $line;
+        }
+
+        if (empty($lines)) {
+            return false;
         }
 
         try {
-            $mindbox->productList()->setProductList(
+            $mindbox->productList()->setWishList(
                 new ProductListItemRequestCollection($lines),
-                Options::getOperationName('setProductList'),
-                $customer
+                Options::getOperationName('setWishList')
             )->sendRequest();
+            $_SESSION['MB_WISHLIST_COUNT'] = count($_SESSION['MB_WISHLIST']);
+            self::setCartMindbox($basketItems);
         } catch (Exceptions\MindboxClientErrorException $e) {
+            $lastResponse = $mindbox->productList()->getLastResponse();
+            if ($lastResponse) {
+                $request = $lastResponse->getRequest();
+                QueueTable::push($request);
+            }
+        } catch (Exceptions\MindboxClientException $e) {
+            $lastResponse = $mindbox->productList()->getLastResponse();
+            if ($lastResponse) {
+                $request = $lastResponse->getRequest();
+                QueueTable::push($request);
+            }
+        }
+    }
+
+    public static function clearWishList()
+    {
+        $mindbox = static::mindbox();
+        if (!$mindbox) {
+            return false;
+        }
+
+        $basket = Sale\Basket::loadItemsForFUser(Sale\Fuser::getId(), Main\Context::getCurrent()->getSite());
+        $basketItems = $basket->getBasketItems();
+
+        try {
+            $mindbox->productList()->clearWishList(Options::getOperationName('clearWishList'))->sendRequest();
+            unset($_SESSION['MB_WISHLIST_COUNT']);
+            self::setCartMindbox($basketItems);
+        } catch (Exceptions\MindboxClientErrorException $e) {
+            $lastResponse = $mindbox->productList()->getLastResponse();
+            if ($lastResponse) {
+                $request = $lastResponse->getRequest();
+                QueueTable::push($request);
+            }
+        } catch (Exceptions\MindboxClientException $e) {
+            $lastResponse = $mindbox->productList()->getLastResponse();
+            if ($lastResponse) {
+                $request = $lastResponse->getRequest();
+                QueueTable::push($request);
+            }
+        }
+    }
+
+    private static function clearCart()
+    {
+
+        $mindbox = static::mindbox();
+        if (!$mindbox) {
+            return false;
+        }
+
+        $_SESSION['MB_CLEAR_CART'] = 'Y';
+
+        try {
+            $mindbox->productList()->clearCart(Options::getOperationName('clearCart'))->sendRequest();
+        } catch (Exceptions\MindboxClientErrorException $e) {
+            $lastResponse = $mindbox->productList()->getLastResponse();
+            if ($lastResponse) {
+                $request = $lastResponse->getRequest();
+                QueueTable::push($request);
+            }
         } catch (Exceptions\MindboxClientException $e) {
             $lastResponse = $mindbox->productList()->getLastResponse();
             if ($lastResponse) {
@@ -863,6 +1022,24 @@ class Helper
     }
 
     /**
+     * @param $errors
+     * @return string
+     */
+    private static function formatValidationMessages($errors)
+    {
+        Loc::loadMessages(__FILE__);
+
+        $strError = '';
+        foreach ($errors as $error) {
+            $strError .= Loc::getMessage($error->getLocation()) . ': ' . $error->getMessage() . PHP_EOL;
+        }
+
+        $strError = rtrim($strError, PHP_EOL);
+
+        return $strError;
+    }
+
+    /**
      * @return Mindbox
      */
     private static function mindbox()
@@ -870,5 +1047,25 @@ class Helper
         $mindbox = Options::getConfig();
 
         return $mindbox;
+    }
+
+    /**
+     * Check if order is new
+     *
+     * @return boolean
+     */
+    public static function isNewOrder($values)
+    {
+        $isNewOrder = false;
+        if (array_key_exists('LID', $values) && empty($values['LID'])                       &&
+            array_key_exists('USER_ID', $values) && empty($values['USER_ID'])               &&
+            array_key_exists('PRICE', $values) && empty($values['PRICE'])                   &&
+            array_key_exists('DELIVERY_ID', $values) && empty($values['DELIVERY_ID'])       &&
+            array_key_exists('PAY_SYSTEM_ID', $values) && empty($values['PAY_SYSTEM_ID'])
+        ) {
+            $isNewOrder = true;
+        }
+
+        return $isNewOrder;
     }
 }
