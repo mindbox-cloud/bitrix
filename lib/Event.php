@@ -618,14 +618,24 @@ class Event
      * @bitrixModuleId sale
      * @bitrixEventCode OnSaleOrderBeforeSaved
      * @optionNameRu Перед сохранением заказа
-     * @param $order
+     * @notCompatible true
+     * @param $event
      * @return Main\EventResult
      */
-    public function OnSaleOrderBeforeSavedHandler($order)
+    public function OnSaleOrderBeforeSavedHandler($event)
     {
-        $standartMode = \COption::GetOptionString('mindbox.marketing', 'MODE') === 'standard';
+        $order = $event->getParameter("ENTITY");
+        $values = $event->getParameter("VALUES");
 
-        if ($standartMode) {
+        $isNewOrder = Helper::isNewOrder($values);
+
+        if (!$isNewOrder) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+
+        $standardMode = \COption::GetOptionString('mindbox.marketing', 'MODE') === 'standard';
+
+        if ($standardMode) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
@@ -1782,7 +1792,7 @@ class Event
 
                 $user = new CUser;
                 $user->Update(
-                    $arFields['USER_ID'],
+                    $arFields['ID'],
                     $fields
                 );
                 unset($_SESSION['NEW_USER_MB_ID']);

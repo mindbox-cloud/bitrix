@@ -1034,4 +1034,24 @@ class Helper
 
         return $mindbox;
     }
+
+    /**
+     * Check if order is new
+     *
+     * @return boolean
+     */
+    public static function isNewOrder($values)
+    {
+        $isNewOrder = false;
+        if (array_key_exists('LID', $values) && empty($values['LID'])                       &&
+            array_key_exists('USER_ID', $values) && empty($values['USER_ID'])               &&
+            array_key_exists('PRICE', $values) && empty($values['PRICE'])                   &&
+            array_key_exists('DELIVERY_ID', $values) && empty($values['DELIVERY_ID'])       &&
+            array_key_exists('PAY_SYSTEM_ID', $values) && empty($values['PAY_SYSTEM_ID'])
+        ) {
+            $isNewOrder = true;
+        }
+
+        return $isNewOrder;
+    }
 }
