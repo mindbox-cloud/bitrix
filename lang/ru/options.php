@@ -40,3 +40,8 @@ $MESS['MODULE_VERSION'] = 'Версия модуля ';
 $MESS['NEED_TABLE_UPGRADE'] = 'Чтобы ускорить генерацию фида, измените место хранения свойств в <a href="#LINK#" target="_blank">настройках</a>. Необходимо, чтобы свойства <a href="https://dev.1c-bitrix.ru/user_help/content/iblock/iblock_edit.php" target="_blank">хранились в отдельной таблице</a>.';
 $MESS['CLIENTS'] = 'Настройки клиентов';
 $MESS['API_DOMAIN'] = 'Домен API';
+$MESS['COMMON_SETTINGS'] = 'Общие настройки';
+$MESS['FEED'] = 'Настройки yml-фида';
+$MESS['CLIENTS'] = 'Настройки клиентов';
+$MESS['ORDERS'] = 'Настройки заказов';
+$MESS['ADDITIONAL_FIELDS_SETTINGS'] = 'Настройка дополнительных полей';
