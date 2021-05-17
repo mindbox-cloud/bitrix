@@ -16,13 +16,15 @@ use CPHPCache;
 use CSaleOrderProps;
 use Mindbox\DTO\DTO;
 use Mindbox\DTO\DTOCollection;
+use Mindbox\DTO\V3\Requests\CustomerIdentityRequestDTO;
 use Mindbox\Options;
 use Mindbox\Templates\AdminLayouts;
 use Psr\Log\LoggerInterface;
 use Mindbox\DTO\V3\Requests\CustomerRequestDTO;
-use Mindbox\DTO\V3\Requests\ProductRequestDTO;
-use Mindbox\DTO\V3\Requests\ProductListItemRequestDTO;
 use Mindbox\DTO\V3\Requests\ProductListItemRequestCollection;
+use Mindbox\DTO\V3\Requests\ProductListItemRequestDTO;
+use Mindbox\DTO\V3\Requests\ProductRequestDTO;
+use Mindbox\DTO\V3\Requests\SubscriptionRequestCollection;
 
 class Helper
 {
@@ -835,6 +837,8 @@ class Helper
      */
     public static function setCartMindbox($basketItems)
     {
+        global $USER;
+
         $mindbox = static::mindbox();
         if (!$mindbox) {
             return;
@@ -847,6 +851,7 @@ class Helper
             if ($basketItem->getField('DELAY') === 'Y') {
                 continue;
             }
+
             $productId = $basketItem->getProductId();
             $arLines[$productId]['basketItem'] = $basketItem;
             $arLines[$productId]['quantity'] += $basketItem->getQuantity();
@@ -868,28 +873,37 @@ class Helper
             $lines[] = $line;
         }
 
-        if (empty($arAllLines) && count($_SESSION['MB_WISHLIST_COUNT'])) {
-            self::clearWishList();
-        }
+        if (is_object($USER) && $USER->IsAuthorized() && !empty($USER->GetEmail())) {
+            $fields = [
+                'email' => $USER->GetEmail()
+            ];
+            $customer = Helper::iconvDTO(new CustomerIdentityRequestDTO($fields));
 
-        if (empty($arLines)) {
-            if (!isset($_SESSION['MB_CLEAR_CART'])) {
-                self::clearCart();
+            if (empty($arAllLines) && count($_SESSION['MB_WISHLIST_COUNT'])) {
+                self::clearWishList();
             }
-            return;
-        }
 
-        try {
-            $mindbox->productList()->setProductList(
-                new ProductListItemRequestCollection($lines),
-                Options::getOperationName('setProductList')
-            )->sendRequest();
-        } catch (Exceptions\MindboxClientErrorException $e) {
-        } catch (Exceptions\MindboxClientException $e) {
-            $lastResponse = $mindbox->productList()->getLastResponse();
-            if ($lastResponse) {
-                $request = $lastResponse->getRequest();
-                QueueTable::push($request);
+            if (empty($arLines)) {
+                if (!isset($_SESSION['MB_CLEAR_CART'])) {
+                    self::clearCart();
+                }
+
+                return;
+            }
+
+            try {
+                $mindbox->productList()->setProductList(
+                    new ProductListItemRequestCollection($lines),
+                    Options::getOperationName('setProductList'),
+                    $customer
+                )->sendRequest();
+            } catch (Exceptions\MindboxClientErrorException $e) {
+            } catch (Exceptions\MindboxClientException $e) {
+                $lastResponse = $mindbox->productList()->getLastResponse();
+                if ($lastResponse) {
+                    $request = $lastResponse->getRequest();
+                    QueueTable::push($request);
+                }
             }
         }
     }

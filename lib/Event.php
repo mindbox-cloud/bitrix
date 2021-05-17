@@ -25,10 +25,6 @@ use Mindbox\DTO\V2\Requests\LineRequestDTO;
 use Mindbox\DTO\V2\Requests\OrderCreateRequestDTO;
 use Mindbox\DTO\V2\Requests\OrderUpdateRequestDTO;
 use Mindbox\DTO\V2\Requests\PreorderRequestDTO;
-use Mindbox\DTO\V3\Requests\ProductListItemRequestCollection;
-use Mindbox\DTO\V3\Requests\ProductListItemRequestDTO;
-use Mindbox\DTO\V3\Requests\ProductRequestDTO;
-use Mindbox\DTO\V3\Requests\SubscriptionRequestCollection;
 
 Loader::includeModule('catalog');
 Loader::includeModule('sale');
@@ -1432,6 +1428,7 @@ class Event
         }
 
         $basketItems = $basket->getBasketItems();
+        Helper::setCartMindbox($basketItems);
         $lines = [];
         $bitrixBasket = [];
 
