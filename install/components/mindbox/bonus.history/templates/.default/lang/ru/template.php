@@ -1,9 +1,9 @@
 <?php
-$MESS['MB_BH_AVAILABLE'] = 'Äîñòóïíî';
-$MESS['MB_BH_BLOCKED'] = 'Çàáëîêèðîâàííî';
-$MESS['MB_BH_DATE'] = 'Äàòà';
-$MESS['MB_BH_CHANGE'] = 'Ðàçìåð èçìåíåíèÿ';
-$MESS['MB_BH_REASON'] = 'Ïðè÷èíà';
-$MESS['MB_BH_EXPIRE_DATE'] = 'Äàòà ñãîðàíèÿ';
-$MESS['MB_BH_MORE'] = 'Åù¸';
-$MESS['MB_BH_BONUSES'] = 'áàëëîâ';
+$MESS['MB_BH_AVAILABLE'] = 'Ð”Ð¾ÑÑ‚ÑƒÐ¿Ð½Ð¾';
+$MESS['MB_BH_BLOCKED'] = 'Ð—Ð°Ð±Ð»Ð¾ÐºÐ¸Ñ€Ð¾Ð²Ð°Ð½Ð½Ð¾';
+$MESS['MB_BH_DATE'] = 'Ð”Ð°Ñ‚Ð°';
+$MESS['MB_BH_CHANGE'] = 'Ð Ð°Ð·Ð¼ÐµÑ€ Ð¸Ð·Ð¼ÐµÐ½ÐµÐ½Ð¸Ñ';
+$MESS['MB_BH_REASON'] = 'ÐŸÑ€Ð¸Ñ‡Ð¸Ð½Ð°';
+$MESS['MB_BH_EXPIRE_DATE'] = 'Ð”Ð°Ñ‚Ð° ÑÐ³Ð¾Ñ€Ð°Ð½Ð¸Ñ';
+$MESS['MB_BH_MORE'] = 'Ð•Ñ‰Ñ‘';
+$MESS['MB_BH_BONUSES'] = 'Ð±Ð°Ð»Ð»Ð¾Ð²';
