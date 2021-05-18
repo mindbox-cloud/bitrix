@@ -1025,7 +1025,7 @@ class Helper
      * @param $errors
      * @return string
      */
-    private static function formatValidationMessages($errors)
+    public static function formatValidationMessages($errors)
     {
         Loc::loadMessages(__FILE__);
 
