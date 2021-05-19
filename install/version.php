@@ -1,8 +1,8 @@
-<?php
-$arModuleVersion =
-[
-    "VERSION" => "2.3.1",
-    "VERSION_DATE" => "2021-04-20 13:00:00",
+<?
+$arModuleVersion = array(
+	"VERSION" => "2.4.0",
+	"VERSION_DATE" => "2021-05-19 11:05:00",
     "MODULE_NAME" => GetMessage("MODULE_NAME"),
     "MODULE_DESCRIPTION" => GetMessage("MODULE_DESCRIPTION")
-];
+);
+?>
