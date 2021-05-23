@@ -381,7 +381,8 @@ class EventController
 
 
     /**
-     *
+     * Метод проводит ревизию зарегистрированных событий с таблице b_module_to_module и событий из класса Event
+     * Если событие есть в базе, но нет в классе - удаляем запись из базы
      */
     public function revisionHandlers()
     {
