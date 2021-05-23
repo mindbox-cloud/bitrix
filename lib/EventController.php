@@ -3,6 +3,8 @@
 
 namespace Mindbox;
 
+use Bitrix\Main\Localization\Loc;
+
 defined('ADMIN_MODULE_NAME') or define('ADMIN_MODULE_NAME', 'mindbox.marketing');
 /**
  * Class EventController
@@ -25,14 +27,8 @@ class EventController
     /**
      * @var string
      */
-    protected $russianNameCode = 'optionNameRu';
-    /**
-     * @var string
-     */
-    protected $englishNameCode = 'optionNameEn';
-    /**
-     * @var null
-     */
+    protected $langEventName = 'langEventName';
+
     protected $eventManager = null;
 
     /**
@@ -83,14 +79,19 @@ class EventController
                         'notCompatible' => $methodDocsParams[$this->notCompatibleCode],
                         'method' => $method->getName(),
                         'class' => $fullClassName,
-                        'name_ru' => $methodDocsParams[$this->russianNameCode],
-                        'name_en' => $methodDocsParams[$this->russianNameCode],
+                        'name' => $this->getHumanEventName($methodDocsParams[$this->langEventName])
                     ];
                 }
             }
         }
 
         return $eventList;
+    }
+
+    public function getHumanEventName($langCode)
+    {
+        $langName = Loc::getMessage($langCode);
+        return (!empty($langName)) ? $langName : $langCode;
     }
 
     /**
@@ -106,7 +107,7 @@ class EventController
 
         if (!empty($listEvents) && is_array($listEvents)) {
             foreach ($listEvents as $item) {
-                $return[$item['bitrixEvent']] = ($lang === 'en') ? $item['name_en'] : $item['name_ru'];
+                $return[$item['bitrixEvent']] = $item['name'];
             }
         }
 

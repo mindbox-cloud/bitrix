@@ -43,7 +43,7 @@ class Event
     /**
      * @bitrixModuleId main
      * @bitrixEventCode OnAfterUserAuthorize
-     * @optionNameRu После авторизации пользователя
+     * @langEventName OnAfterUserAuthorize
      * @param $arUser
      * @return bool
      */
@@ -182,7 +182,7 @@ class Event
     /**
      * @bitrixModuleId main
      * @bitrixEventCode OnBeforeUserRegister
-     * @optionNameRu Перед регистрацией пользователя
+     * @langEventName OnBeforeUserRegister
      * @param $arFields
      * @return false
      */
@@ -354,7 +354,7 @@ class Event
     /**
      * @bitrixModuleId main
      * @bitrixEventCode OnAfterUserRegister
-     * @optionNameRu После регистрации пользователя
+     * @langEventName OnAfterUserRegister
      * @param $arFields
      * @return bool
      */
@@ -481,7 +481,7 @@ class Event
     /**
      * @bitrixModuleId main
      * @bitrixEventCode OnBeforeUserUpdate
-     * @optionNameRu Перед обновлением пользователя
+     * @langEventName OnBeforeUserUpdate
      * @param $arFields
      * @return bool
      */
@@ -625,7 +625,7 @@ class Event
     /**
      * @bitrixModuleId sale
      * @bitrixEventCode OnSaleOrderBeforeSaved
-     * @optionNameRu Перед сохранением заказа
+     * @langEventName OnSaleOrderBeforeSaved
      * @notCompatible true
      * @param $event
      * @return Main\EventResult
@@ -913,7 +913,7 @@ class Event
     /**
      * @bitrixModuleId sale
      * @bitrixEventCode OnSaleOrderSaved
-     * @optionNameRu После сохранения заказа
+     * @langEventName OnSaleOrderSaved
      * @notCompatible true
      * @param $order
      * @return Main\EventResult
@@ -1379,7 +1379,7 @@ class Event
     /**
      * @bitrixModuleId sale
      * @bitrixEventCode OnSaleBasketSaved
-     * @optionNameRu После сохранения корзины
+     * @langEventName OnSaleBasketSaved
      * @param $basket
      * @return Main\EventResult|false
      */
@@ -1401,7 +1401,7 @@ class Event
     /**
      * @bitrixModuleId sale
      * @bitrixEventCode OnBeforeSaleOrderFinalAction
-     * @optionNameRu Перед финальным обсчетом
+     * @langEventName OnBeforeSaleOrderFinalAction
      * @param $basket
      * @return Main\EventResult|false
      */
@@ -1593,7 +1593,7 @@ class Event
     /**
      * @bitrixModuleId sale
      * @bitrixEventCode OnSaleBasketItemRefreshData
-     * @optionNameRu При обновлении корзины
+     * @langEventName OnSaleBasketItemRefreshData
      * @param $event
      * @return \Bitrix\Main\EventResult
      */
@@ -1629,7 +1629,7 @@ class Event
     /**
      * @bitrixModuleId main
      * @bitrixEventCode OnBeforeUserAdd
-     * @optionNameRu Перед добавлением пользователя
+     * @langEventName OnBeforeUserAdd
      * @param $arFields
      * @return false
      */
@@ -1765,7 +1765,7 @@ class Event
     /**
      * @bitrixModuleId main
      * @bitrixEventCode OnAfterUserAdd
-     * @optionNameRu После добавлением пользователя
+     * @langEventName OnAfterUserAdd
      * @param $arFields
      * @return false
      */
@@ -1819,7 +1819,7 @@ class Event
     /**
      * @bitrixModuleId main
      * @bitrixEventCode OnProlog
-     * @optionNameRu Подключение трекера
+     * @langEventName OnProlog
      * @param $arFields
      * @return false
      */
