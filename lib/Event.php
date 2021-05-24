@@ -1230,12 +1230,7 @@ class Event
             $customer->setFirstName($arOrderProperty['NAME']);
             $customer->setMobilePhone($arOrderProperty['PHONE']);
 
-            if (\Mindbox\Helper::isUnAuthorizedOrder($arUser) || (is_object($USER) && !$USER->IsAuthorized())) {
-                //  unauthorized user
-            } else {
-                //  authorized user
-                $customer->setId(Options::getModuleOption('WEBSITE_ID'), $order->getUserId());
-            }
+            $customer->setId(Options::getModuleOption('WEBSITE_ID'), $order->getUserId());
 
             $isSubscribed = true;
             if ($arOrderProperty['UF_MB_IS_SUBSCRIBED'] === 'N') {
