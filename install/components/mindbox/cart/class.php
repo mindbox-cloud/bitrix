@@ -36,19 +36,21 @@ class Cart extends CBitrixComponent implements Controllerable
         try {
             if (!Loader::includeModule('mindbox.marketing')) {
                 ShowError(GetMessage('MB_CART_MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));
-
                 return;
             }
 
             if (!Loader::includeModule('sale')) {
                 ShowError(GetMessage('MB_CART_MODULE_NOT_INCLUDED', ['#MODULE#' => 'sale']));
-
                 return;
             }
 
             if (!Loader::includeModule('catalog')) {
                 ShowError(GetMessage('MB_CART_MODULE_NOT_INCLUDED', ['#MODULE#' => 'catalog']));
+                return;
+            }
 
+            if (!Loader::includeModule('highloadblock')) {
+                ShowError(GetMessage('MB_CART_MODULE_NOT_INCLUDED', ['#MODULE#' => 'catalog']));
                 return;
             }
         } catch (LoaderException $e) {
