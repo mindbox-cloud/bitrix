@@ -7,8 +7,8 @@ use Bitrix\Highloadblock as HL;
 
 class CartRulesInstaller
 {
-    const HL_NAME = 'Mindboxdev';
-    const HL_TABLE = 'mindboxdev';
+    const HL_NAME = 'Mindbox';
+    const HL_TABLE = 'mindbox';
     const DISCOUNT_NAME = 'Mindbox';
 
     protected $hlNames = [
@@ -91,7 +91,6 @@ class CartRulesInstaller
     public function checkExistHighLoadBlock()
     {
         $getHlBlock = HL\HighloadBlockTable::getList([
-            //'filter' => ['=NAME' => self::HL_NAME]
             'filter' => ['=NAME' => self::HL_NAME]
         ])->fetch();
 
