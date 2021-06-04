@@ -431,6 +431,8 @@ class EventController
             }
         }
 
-        $this->setOptionValue(implode(',', $regEventHandlers));
+        if (!empty($regEventHandlers)) {
+            $this->setOptionValue(implode(',', $regEventHandlers));
+        }
     }
 }
