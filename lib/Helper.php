@@ -1,11 +1,9 @@
 <?php
-/**
- * Created by @copyright QSOFT.
- */
 
 namespace Mindbox;
 
 use Bitrix\Main\Loader;
+use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\UserTable;
 use Bitrix\Sale;
 use Bitrix\Main;
