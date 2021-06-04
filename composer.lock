@@ -1,23 +1,23 @@
 {
     "_readme": [
         "This file locks the dependencies of your project to a known state",
-        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1b079956559e59151c0dc72064de01a5",
+    "content-hash": "e66c5d4a2ba8c0e6636b0c2227f5dcbc",
     "packages": [
         {
             "name": "mindbox/sdk",
-            "version": "1.0.0",
+            "version": "1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mindbox-moscow/php-sdk.git",
-                "reference": "7dd8fc69099afe4d44f32abc449dddd720adab41"
+                "reference": "10fb42d25d5fbd7181267bed74f670548542fce0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mindbox-moscow/php-sdk/zipball/7dd8fc69099afe4d44f32abc449dddd720adab41",
-                "reference": "7dd8fc69099afe4d44f32abc449dddd720adab41",
+                "url": "https://api.github.com/repos/mindbox-moscow/php-sdk/zipball/10fb42d25d5fbd7181267bed74f670548542fce0",
+                "reference": "10fb42d25d5fbd7181267bed74f670548542fce0",
                 "shasum": ""
             },
             "require": {
@@ -47,20 +47,20 @@
                 "mindbox",
                 "sdk"
             ],
-            "time": "2019-05-06T11:50:48+00:00"
+            "time": "2021-06-02T13:15:00+00:00"
         },
         {
             "name": "psr/log",
-            "version": "1.1.3",
+            "version": "1.1.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-fig/log.git",
-                "reference": "0f73288fd15629204f9d42b7055f72dacbe811fc"
+                "reference": "d49695b909c3b7628b6289db5479a1c204601f11"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-fig/log/zipball/0f73288fd15629204f9d42b7055f72dacbe811fc",
-                "reference": "0f73288fd15629204f9d42b7055f72dacbe811fc",
+                "url": "https://api.github.com/repos/php-fig/log/zipball/d49695b909c3b7628b6289db5479a1c204601f11",
+                "reference": "d49695b909c3b7628b6289db5479a1c204601f11",
                 "shasum": ""
             },
             "require": {
@@ -84,7 +84,7 @@
             "authors": [
                 {
                     "name": "PHP-FIG",
-                    "homepage": "http://www.php-fig.org/"
+                    "homepage": "https://www.php-fig.org/"
                 }
             ],
             "description": "Common interface for logging libraries",
@@ -94,7 +94,7 @@
                 "psr",
                 "psr-3"
             ],
-            "time": "2020-03-23T09:12:05+00:00"
+            "time": "2021-05-03T11:20:27+00:00"
         }
     ],
     "packages-dev": [],
@@ -104,5 +104,6 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],
-    "platform-dev": []
+    "platform-dev": [],
+    "plugin-api-version": "1.1.0"
 }

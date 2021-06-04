@@ -3,6 +3,8 @@
 
 namespace Mindbox;
 
+use Bitrix\Main\Localization\Loc;
+
 defined('ADMIN_MODULE_NAME') or define('ADMIN_MODULE_NAME', 'mindbox.marketing');
 /**
  * Class EventController
@@ -25,14 +27,8 @@ class EventController
     /**
      * @var string
      */
-    protected $russianNameCode = 'optionNameRu';
-    /**
-     * @var string
-     */
-    protected $englishNameCode = 'optionNameEn';
-    /**
-     * @var null
-     */
+    protected $langEventName = 'langEventName';
+
     protected $eventManager = null;
 
     /**
@@ -83,14 +79,19 @@ class EventController
                         'notCompatible' => $methodDocsParams[$this->notCompatibleCode],
                         'method' => $method->getName(),
                         'class' => $fullClassName,
-                        'name_ru' => $methodDocsParams[$this->russianNameCode],
-                        'name_en' => $methodDocsParams[$this->russianNameCode],
+                        'name' => $this->getHumanEventName($methodDocsParams[$this->langEventName])
                     ];
                 }
             }
         }
 
         return $eventList;
+    }
+
+    public function getHumanEventName($langCode)
+    {
+        $langName = Loc::getMessage($langCode);
+        return (!empty($langName)) ? $langName : $langCode;
     }
 
     /**
@@ -106,7 +107,7 @@ class EventController
 
         if (!empty($listEvents) && is_array($listEvents)) {
             foreach ($listEvents as $item) {
-                $return[$item['bitrixEvent']] = ($lang === 'en') ? $item['name_en'] : $item['name_ru'];
+                $return[$item['bitrixEvent']] = $item['name'];
             }
         }
 
@@ -298,7 +299,7 @@ class EventController
 
         if (!empty($bitrixEventList) && is_array($bitrixEventList)) {
             $strValue = implode(',', $bitrixEventList);
-            $this->setOptionAfterRegisterHandlers($strValue);
+            $this->setOptionValue($strValue);
         }
 
         $this->installEventControllerHandler();
@@ -310,22 +311,28 @@ class EventController
      */
     public function unInstallEvents()
     {
-        $eventList = $this->getModuleEvents();
+        $dataBaseEventList = $this->getAllRegisteredEvents();
 
-        foreach ($eventList as $item) {
-            $this->unRegisterEventHandler($item);
+        foreach ($dataBaseEventList as $item) {
+            $eventFields = [
+                'bitrixModule' => $item['FROM_MODULE_ID'],
+                'bitrixEvent' => $item['MESSAGE_ID'],
+                'class' => $item['TO_CLASS'],
+                'method' => $item['TO_METHOD']
+            ];
+            $this->unRegisterEventHandler($eventFields);
         }
 
         $this->unInstallEventControllerHandler();
         $this->unInstallCartRulesHandler();
-        $this->setOptionAfterRegisterHandlers('');
+        $this->setOptionValue('');
     }
 
     /**
      * Устанавливает значение настройке после регистрации основных обработчиков
      * @param $stringValue
      */
-    public function setOptionAfterRegisterHandlers($stringValue)
+    public function setOptionValue($stringValue)
     {
         \COption::SetOptionString(ADMIN_MODULE_NAME, self::getOptionEventCode(), $stringValue);
     }
@@ -340,5 +347,90 @@ class EventController
         $arEventOptions = explode(',', $value);
         $self = new EventController();
         $self->handle($arEventOptions);
+    }
+
+    /**
+     * Метод возвщает списко всех записей модуля из таблицы b_module_to_module
+     * @return array
+     */
+    protected function getAllRegisteredEvents()
+    {
+        $adminModuleName = ADMIN_MODULE_NAME;
+        $return = [];
+
+        if (!empty($adminModuleName)) {
+
+            $getActiveModuleEvents = \Mindbox\DataBase\ModuleToModuleTable::getList(
+                [
+                    'filter' => [
+                        'TO_MODULE_ID' => $adminModuleName
+                    ],
+                ]
+            );
+
+            while ($row = $getActiveModuleEvents->fetch()) {
+                if ($row['TO_MODULE_ID'] === $adminModuleName) {
+                    $return[] = $row;
+                }
+            }
+
+        }
+
+        return $return;
+    }
+
+
+    /**
+     * Метод проводит ревизию зарегистрированных событий с таблице b_module_to_module и событий из класса Event
+     * Если событие есть в базе, но нет в классе - удаляем запись из базы
+     */
+    public function revisionHandlers()
+    {
+        $dataBaseEventList = $this->getAllRegisteredEvents();
+        $declareEventList = $this->getModuleEvents();
+
+        if (!empty($dataBaseEventList) && is_array($dataBaseEventList)) {
+            foreach ($dataBaseEventList as $item) {
+
+                if ($item['TO_CLASS'] === '\Mindbox\Event') {
+
+                    $exist = false;
+
+                    foreach ($declareEventList as $declareEvent) {
+                        if ($item['TO_METHOD'] === $declareEvent['method'] && $item['MESSAGE_ID'] === $declareEvent['bitrixEvent']) {
+                            $exist = true;
+                            break;
+                        }
+                    }
+
+                    if ($exist === false) {
+                        $eventFields = [
+                            'bitrixModule' => $item['FROM_MODULE_ID'],
+                            'bitrixEvent' => $item['MESSAGE_ID'],
+                            'class' => $item['TO_CLASS'],
+                            'method' => $item['TO_METHOD']
+                        ];
+
+                        $this->unRegisterEventHandler($eventFields);
+                    }
+                }
+            }
+        }
+
+        $this->revisionEventListOptionValue();
+    }
+
+    protected function revisionEventListOptionValue()
+    {
+        $regEventHandlers = [];
+        $getRegEventList = $this->getAllRegisteredEvents();
+
+        foreach ($getRegEventList as $item) {
+            if ($item['TO_CLASS'] === '\Mindbox\Event') {
+                $regEventHandlers[] = $item['MESSAGE_ID'];
+            }
+        }
+
+        $this->setOptionValue(implode(',', $regEventHandlers));
     }
 }

@@ -64,6 +64,9 @@ class mindbox_marketing extends CModule
         $this->InstallDB();
         $this->InstallUserFields();
 
+        $cartRuleInstaller = new \Mindbox\Installer\CartRulesInstaller();
+        $cartRuleInstaller->install();
+
         $GLOBALS["APPLICATION"]->IncludeAdminFile(GetMessage("MINDBOX_INSTALL_TITLE"), __DIR__ . "/step1.php");
     }
 
@@ -82,12 +85,13 @@ class mindbox_marketing extends CModule
         } elseif ($request["step"] == 2) {
             $this->UnInstallEvents();
             $this->UnInstallFiles();
-
             $this->UnInstallAgents();
 
             if ($request["savedata"] != "Y") {
                 $this->UnInstallUserFields();
                 $this->UnInstallDB();
+                $cartRuleInstaller = new \Mindbox\Installer\CartRulesInstaller();
+                $cartRuleInstaller->unInstall();
             }
 
             UnRegisterModule($this->MODULE_ID);
