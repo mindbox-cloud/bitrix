@@ -5,7 +5,7 @@ use Mindbox\YmlFeedMindbox;
 use Mindbox\Helper;
 
 defined('B_PROLOG_INCLUDED') and (B_PROLOG_INCLUDED === true) or die();
-defined('ADMIN_MODULE_NAME') or define('ADMIN_MODULE_NAME', 'mindbox.marketing');
+defined('MINDBOX_ADMIN_MODULE_NAME') or define('MINDBOX_ADMIN_MODULE_NAME', 'mindbox.marketing');
 
 global $APPLICATION;
 
@@ -21,7 +21,7 @@ function ShowParamsHTMLByarray($arParams)
         if (is_array($Option)) {
             $Option[0] = 'MINDBOX_' . $Option[0];
         }
-        __AdmSettingsDrawRow(ADMIN_MODULE_NAME, $Option);
+        __AdmSettingsDrawRow(MINDBOX_ADMIN_MODULE_NAME, $Option);
     }
 }
 
@@ -37,13 +37,13 @@ if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
             if (is_array($option)) {
                 $option = implode(',', $option);
             }
-            COption::SetOptionString(ADMIN_MODULE_NAME, str_replace('MINDBOX_', '', $key), $option);
+            COption::SetOptionString(MINDBOX_ADMIN_MODULE_NAME, str_replace('MINDBOX_', '', $key), $option);
         }
     }
 
     foreach ($mayEmptyProps as $mayEmptyProp) {
         if (!isset($_POST[$mayEmptyProp])) {
-            COption::SetOptionString(ADMIN_MODULE_NAME, str_replace('MINDBOX_', '', $mayEmptyProp), '');
+            COption::SetOptionString(MINDBOX_ADMIN_MODULE_NAME, str_replace('MINDBOX_', '', $mayEmptyProp), '');
         }
     }
 
@@ -55,7 +55,7 @@ if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
             $trackerJsFilename,
             str_replace(
                 '#endpointId#',
-                COption::GetOptionString(ADMIN_MODULE_NAME, 'ENDPOINT', ''),
+                COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'ENDPOINT', ''),
                 file_get_contents($trackerJsFilenameOrig)
             )
         );
@@ -97,7 +97,7 @@ $arAllOptions['COMMON'] = [
     [
         'MODULE_VERSION',
         getMessage('MODULE_VERSION'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'MODULE_VERSION', $arModuleVersion['VERSION']),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'MODULE_VERSION', $arModuleVersion['VERSION']),
         ['text'],
         'Y'
     ],
@@ -105,7 +105,7 @@ $arAllOptions['COMMON'] = [
     [
         'MODE',
         getMessage('MODE'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'MODE', 'standard'),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'MODE', 'standard'),
         [
             'selectbox',
             [
@@ -117,38 +117,38 @@ $arAllOptions['COMMON'] = [
     [
         'ENDPOINT',
         getMessage('ENDPOINT'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'ENDPOINT', ''),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'ENDPOINT', ''),
         ['text']
     ],
     [
         'SECRET_KEY',
         getMessage('SECRET_KEY'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'SECRET_KEY', ''),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'SECRET_KEY', ''),
         ['text']
 
     ],
     [
         'WEBSITE_PREFIX',
         getMessage('WEBSITE_PREFIX'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'WEBSITE_PREFIX', ''),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'WEBSITE_PREFIX', ''),
         ['text']
     ],
     [
         'BRAND',
         getMessage('BRAND'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'BRAND', ''),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'BRAND', ''),
         ['text']
     ],
     [
         'SYSTEM_NAME',
         getMessage('SYSTEM_NAME'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'SYSTEM_NAME', ''),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'SYSTEM_NAME', ''),
         ['text']
     ],
     [
         'API_DOMAIN',
         getMessage('API_DOMAIN'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'API_DOMAIN', 'ru'),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'API_DOMAIN', 'ru'),
         [
             'selectbox',
             [
@@ -160,7 +160,7 @@ $arAllOptions['COMMON'] = [
     [
         'HTTP_CLIENT',
         getMessage('HTTP_CLIENT'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'HTTP_CLIENT', 'curl'),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'HTTP_CLIENT', 'curl'),
         [
             'selectbox',
             [
@@ -172,19 +172,19 @@ $arAllOptions['COMMON'] = [
     [
         'QUEUE_TIMEOUT',
         getMessage('QUEUE_TIMEOUT'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'QUEUE_TIMEOUT', '30'),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'QUEUE_TIMEOUT', '30'),
         ['text']
     ],
     [
         'TIMEOUT',
         getMessage('TIMEOUT'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'TIMEOUT', '5'),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'TIMEOUT', '5'),
         ['text']
     ],
     [
         'LOG_PATH',
         getMessage('LOG_PATH'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'LOG_PATH', $_SERVER['DOCUMENT_ROOT'] . '/logs/'),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'LOG_PATH', $_SERVER['DOCUMENT_ROOT'] . '/logs/'),
         ['text']
     ],
 ];
@@ -193,13 +193,13 @@ $arAllOptions['FEED'] = [
     [
         'EXTERNAL_SYSTEM',
         getMessage('EXTERNAL_SYSTEM'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'EXTERNAL_SYSTEM', ''),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'EXTERNAL_SYSTEM', ''),
         ['text']
     ],
     [
         'CATALOG_IBLOCK_ID',
         getMessage('CATALOG_IBLOCK_ID'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', ''),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', ''),
         [
             'selectbox',
             Helper::getIblocks()
@@ -208,13 +208,13 @@ $arAllOptions['FEED'] = [
     [
         'PROTOCOL',
         getMessage('SITE_PROTOCOL'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'PROTOCOL', 'N'),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'PROTOCOL', 'N'),
         ['checkbox']
     ],
     [
         'YML_NAME',
         getMessage('YML_NAME'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'YML_NAME', 'upload/mindbox.xml'),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'YML_NAME', 'upload/mindbox.xml'),
         ['text']
     ],
     'CATALOG_PROPS_UPGRADE'       => '',
@@ -227,7 +227,7 @@ $arAllOptions['CLIENTS'] = [
     [
         'WEBSITE_ID',
         getMessage('WEBSITE_ID'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'WEBSITE_ID', ''),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'WEBSITE_ID', ''),
         ['text']
 
     ],
@@ -235,7 +235,7 @@ $arAllOptions['CLIENTS'] = [
     [
         'USER_BITRIX_FIELDS',
         getMessage('BITRIX_FIELDS'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'USER_BITRIX_FIELDS', ''),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'USER_BITRIX_FIELDS', ''),
         [
             'selectbox',
             Helper::getUserFields()
@@ -244,7 +244,7 @@ $arAllOptions['CLIENTS'] = [
     [
         'USER_MINDBOX_FIELDS',
         getMessage('MINDBOX_FIELDS'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'USER_MINDBOX_FIELDS', ''),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'USER_MINDBOX_FIELDS', ''),
         ['text']
     ],
     ['', '', Helper::getAddOrderMatchButton('user_module_button_add'), ['statichtml']],
@@ -252,7 +252,7 @@ $arAllOptions['CLIENTS'] = [
     [
         'USER_FIELDS_MATCH',
         '',
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'USER_FIELDS_MATCH', ''),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'USER_FIELDS_MATCH', ''),
         ['text']
     ],
     ];
@@ -261,14 +261,14 @@ $arAllOptions['ORDERS'] = [
     [
         'TRANSACTION_ID',
         getMessage('TRANSACTION_ID'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'TRANSACTION_ID', ''),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'TRANSACTION_ID', ''),
         ['text']
     ],
     getMessage('ADDITIONAL_FIELDS_SETTINGS'),
     [
         'ORDER_BITRIX_FIELDS',
         getMessage('BITRIX_FIELDS'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'ORDER_BITRIX_FIELDS', ''),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'ORDER_BITRIX_FIELDS', ''),
         [
             'selectbox',
             Helper::getOrderFields()
@@ -277,7 +277,7 @@ $arAllOptions['ORDERS'] = [
     [
         'ORDER_MINDBOX_FIELDS',
         getMessage('MINDBOX_FIELDS'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'ORDER_MINDBOX_FIELDS', ''),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'ORDER_MINDBOX_FIELDS', ''),
         ['text']
     ],
     ['', '', Helper::getAddOrderMatchButton('order_module_button_add'), ['statichtml']],
@@ -285,12 +285,12 @@ $arAllOptions['ORDERS'] = [
     [
         'ORDER_FIELDS_MATCH',
         '',
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'ORDER_FIELDS_MATCH', '{}'),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'ORDER_FIELDS_MATCH', '{}'),
         ['text']
     ],
 ];
 
-if (!empty(COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', ''))) {
+if (!empty(COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', ''))) {
     if (YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['VERSION'] === '1') {
         $arAllOptions['FEED']['CATALOG_PROPS_UPGRADE'] = [
             'note' => getMessage(
@@ -306,7 +306,7 @@ if (!empty(COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', ''))
     $arAllOptions['FEED']['CATALOG_PROPS'] = [
         'CATALOG_PROPS',
         getMessage('CATALOG_PROPS'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_PROPS', ''),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'CATALOG_PROPS', ''),
         [
             'multiselectbox',
             \Mindbox\Helper::getProps()
@@ -314,7 +314,7 @@ if (!empty(COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', ''))
     ];
 }
 
-if (!empty(\Mindbox\Helper::getOffersCatalogId(COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '')))) {
+if (!empty(\Mindbox\Helper::getOffersCatalogId(COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '')))) {
     if (YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['VERSION'] === '1') {
         $arAllOptions['FEED']['CATALOG_OFFER_PROPS_UPGRADE'] = [
             'note' => getMessage(
@@ -330,7 +330,7 @@ if (!empty(\Mindbox\Helper::getOffersCatalogId(COption::GetOptionString(ADMIN_MO
     $arAllOptions['FEED']['CATALOG_OFFER_PROPS'] = [
         'CATALOG_OFFER_PROPS',
         getMessage('CATALOG_OFFER_PROPS'),
-        COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_OFFER_PROPS', ''),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'CATALOG_OFFER_PROPS', ''),
         [
             'multiselectbox',
             \Mindbox\Helper::getOffersProps()
@@ -345,7 +345,7 @@ $optionEventCode = \Mindbox\EventController::getOptionEventCode();
 $arAllOptions['COMMON'][] = [
     $optionEventCode,
     getMessage($optionEventCode),
-    COption::GetOptionString(ADMIN_MODULE_NAME, $optionEventCode, ''),
+    COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, $optionEventCode, ''),
     [
         'multiselectbox',
         $eventList,
