@@ -194,7 +194,7 @@ class BonusHistory extends CBitrixComponent implements Controllerable
         try {
             $this->arResult['HISTORY'] = $this->getHistory($page);
         } catch (MindboxException $e) {
-            $this->arResult['ERROR'] = GetMessage('MB_BH_ERROR_MESSAGE');
+            $this->arResult['ERROR'] = GetMessage('MB_BH_EMPTY_MESSAGE');
         }
     }
 
