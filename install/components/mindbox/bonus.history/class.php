@@ -80,6 +80,11 @@ class BonusHistory extends CBitrixComponent implements Controllerable
      */
     public function getHistory($page)
     {
+        global $USER;
+        if (!$USER->IsAuthorized()) {
+            throw new MindboxException(GetMessage('MB_BH_ERROR_MESSAGE'));
+        }
+
         if (!$this->mindbox) {
             throw new MindboxException('Incorrect module settings');
         }

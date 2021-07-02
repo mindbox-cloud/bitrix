@@ -7,6 +7,7 @@ use Bitrix\Main\Engine\Contract\Controllerable;
 use Bitrix\Main\Loader;
 use Bitrix\Main\LoaderException;
 use Mindbox\Exceptions\MindboxClientException;
+use Mindbox\Exceptions\MindboxException;
 use Mindbox\Helper;
 use Mindbox\Options;
 use Mindbox\Ajax;
@@ -30,13 +31,11 @@ class OrderHistory extends CBitrixComponent implements Controllerable
         try {
             if (!Loader::includeModule('mindbox.marketing')) {
                 ShowError(GetMessage('MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));
-                ;
                 return;
             }
 
             if (!Loader::includeModule('catalog')) {
                 ShowError(GetMessage('MODULE_NOT_INCLUDED', ['#MODULE#' => 'catalog']));
-                ;
                 die();
             }
         } catch (LoaderException $e) {
@@ -58,8 +57,14 @@ class OrderHistory extends CBitrixComponent implements Controllerable
         $this->arParams = Ajax::loadParams(self::getName());
         $size = isset($this->arParams['PAGE_SIZE']) ? $this->arParams['PAGE_SIZE'] : 0;
 
-        $orders = $this->getOrders($page);
-        $showMore = count($orders) === intval($size);
+        try {
+            $orders = $this->getOrders($page);
+            $showMore = count($orders) === intval($size);
+        } catch (MindboxException $e) {
+            die(__FILE__);
+            $this->arResult['ERROR'] = GetMessage('MODULE_NOT_INCLUDED');
+        }
+
 
         return [
             'type' => 'success',
@@ -85,6 +90,11 @@ class OrderHistory extends CBitrixComponent implements Controllerable
      */
     public function getOrders($page)
     {
+        global $USER;
+        if (!$USER->IsAuthorized()) {
+            throw new MindboxException(GetMessage('MODULE_NOT_INCLUDED'));
+        }
+
         $page = intval($page);
 
         list($start, $range) = $this->getInterval($page);
@@ -172,8 +182,11 @@ class OrderHistory extends CBitrixComponent implements Controllerable
     public function prepareResult()
     {
         $page = $_REQUEST['page'] ?: 1;
-
-        $this->arResult['ORDERS'] = $this->getOrders($page);
+        try {
+            $this->arResult['ORDERS'] = $this->getOrders($page);
+        } catch (MindboxException $e) {
+            $this->arResult['ERROR'] = GetMessage('MB_BH_EMPTY_MESSAGE');
+        }
     }
 
     protected function getProductById($id)
