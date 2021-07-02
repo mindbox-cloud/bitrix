@@ -7,6 +7,7 @@ $MESS['MB_OH_RESEND_BUTTON'] = 'Resend';
 $MESS['MB_OH_CHECK_CODE'] = 'Check code';
 $MESS['MB_OH_CANCEL_BUTTON'] = 'Cancel';
 $MESS['MB_OH_ERROR_MESSAGE'] = 'Order history is temporarily unavailable';
+$MESS['MB_OH_EMPTY_MESSAGE'] = 'Order history is empty';
 $MESS['MB_OH_ORDER_HEADER'] = '<p>Order <b>№ #ID#</b> from #CREATED#.</p><p>';
 $MESS['MB_OH_ORDER_SPENT'] = 'To pay for the order was used #SPENT# point#END#.';
 $MESS['MB_OH_ORDER_ACUIRED'] = 'For the order accrued #ACUIRED# point#END#.';
