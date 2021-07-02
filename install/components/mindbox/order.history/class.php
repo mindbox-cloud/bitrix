@@ -185,7 +185,6 @@ class OrderHistory extends CBitrixComponent implements Controllerable
         try {
             $this->arResult['ORDERS'] = $this->getOrders($page);
         } catch (MindboxException $e) {
-            var_dump($e->getMessage());
             $this->arResult['ERROR'] = GetMessage('MB_BH_EMPTY_MESSAGE');
         }
     }
