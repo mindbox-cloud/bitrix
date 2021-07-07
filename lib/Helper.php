@@ -876,6 +876,7 @@ class Helper
                 'email' => $USER->GetEmail()
             ];
             $customer = Helper::iconvDTO(new CustomerIdentityRequestDTO($fields));
+        }
 
             if (empty($arAllLines) && count($_SESSION['MB_WISHLIST_COUNT'])) {
                 self::clearWishList();
@@ -903,7 +904,7 @@ class Helper
                     QueueTable::push($request);
                 }
             }
-        }
+
     }
 
     public static function setWishList()
