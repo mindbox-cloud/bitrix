@@ -878,33 +878,32 @@ class Helper
             $customer = Helper::iconvDTO(new CustomerIdentityRequestDTO($fields));
         }
 
-            if (empty($arAllLines) && count($_SESSION['MB_WISHLIST_COUNT'])) {
-                self::clearWishList();
+        if (empty($arAllLines) && count($_SESSION['MB_WISHLIST_COUNT'])) {
+            self::clearWishList();
+        }
+
+        if (empty($arLines)) {
+            if (!isset($_SESSION['MB_CLEAR_CART'])) {
+                self::clearCart();
             }
 
-            if (empty($arLines)) {
-                if (!isset($_SESSION['MB_CLEAR_CART'])) {
-                    self::clearCart();
-                }
+            return;
+        }
 
-                return;
+        try {
+            $mindbox->productList()->setProductList(
+                new ProductListItemRequestCollection($lines),
+                Options::getOperationName('setProductList'),
+                $customer
+            )->sendRequest();
+        } catch (Exceptions\MindboxClientErrorException $e) {
+        } catch (Exceptions\MindboxClientException $e) {
+            $lastResponse = $mindbox->productList()->getLastResponse();
+            if ($lastResponse) {
+                $request = $lastResponse->getRequest();
+                QueueTable::push($request);
             }
-
-            try {
-                $mindbox->productList()->setProductList(
-                    new ProductListItemRequestCollection($lines),
-                    Options::getOperationName('setProductList'),
-                    $customer
-                )->sendRequest();
-            } catch (Exceptions\MindboxClientErrorException $e) {
-            } catch (Exceptions\MindboxClientException $e) {
-                $lastResponse = $mindbox->productList()->getLastResponse();
-                if ($lastResponse) {
-                    $request = $lastResponse->getRequest();
-                    QueueTable::push($request);
-                }
-            }
-
+        }
     }
 
     public static function setWishList()
