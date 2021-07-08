@@ -5,7 +5,7 @@
 
 namespace Mindbox;
 
-defined('ADMIN_MODULE_NAME') or define('ADMIN_MODULE_NAME', 'mindbox.marketing');
+defined('MINDBOX_ADMIN_MODULE_NAME') or define('MINDBOX_ADMIN_MODULE_NAME', 'mindbox.marketing');
 
 use Bitrix\Landing\Help;
 use Bitrix\Main\Loader;
