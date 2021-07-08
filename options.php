@@ -97,9 +97,8 @@ $arAllOptions['COMMON'] = [
     [
         'MODULE_VERSION',
         getMessage('MODULE_VERSION'),
-        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'MODULE_VERSION', $arModuleVersion['VERSION']),
-        ['text'],
-        'Y'
+        COption::GetOptionString(ADMIN_MODULE_NAME, 'MODULE_VERSION', $arModuleVersion['VERSION']),
+        ['text']
     ],
     getMessage('CONNECTION_SETTINGS'),
     [
@@ -391,5 +390,11 @@ $arAllOptions['COMMON'][] = [
     input[type="text"] {
         min-width: 288px;
         width: 288px;
+    }
+    input[name=MINDBOX_MODULE_VERSION] {
+        pointer-events: none !important;
+        background-color: #fff !important;
+        border-color: #ccc !important;
+        opacity: 0.4 !important;
     }
 </style>
