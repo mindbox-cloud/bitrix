@@ -1066,4 +1066,14 @@ class Helper
 
         return $isNewOrder;
     }
+
+    /**
+     * Check if is admin section
+     *
+     * @return boolean
+     */
+    public static function isAdminSection()
+    {
+        return \Bitrix\Main\Context::getCurrent()->getRequest()->isAdminSection();
+    }
 }
