@@ -15,6 +15,7 @@ class Options
         'calculateCart' => 'CalculateCart',
         'calculateAuthorizedCart' => 'CalculateAuthorizedCart',
         'calculateUnauthorizedCart' =>  'CalculateUnauthorizedCart',
+        'calculateAuthorizedCartAdmin'  => 'CalculateAuthorizedCartAdmin',
         'cancelOrder' => 'CancelOrder',
         'checkActive' => 'CheckCustomerIsInLoyalityProgram',
         'checkAuthorizationCode' => 'CheckMobilePhoneAuthorizationCode',
@@ -26,6 +27,7 @@ class Options
         'createOrder' => 'CreateOrder',
         'beginUnauthorizedOrderTransaction' =>  'BeginUnauthorizedOrderTransaction',
         'beginAuthorizedOrderTransaction' =>  'BeginAuthorizedOrderTransaction',
+        'beginAuthorizedOrderTransactionAdmin'  =>  'BeginAuthorizedOrderTransactionAdmin',
         'createAuthorizedOrder' =>  'CreateAuthorizedOrder',
         'createUnauthorizedOrder'   =>  'CreateUnauthorizedOrder',
         'edit' => 'EditCustomer',
@@ -49,7 +51,9 @@ class Options
         'viewProduct' => 'ViewProduct',
         'viewCategory' => 'ViewCategory',
         'commitOrderTransaction'    =>  'CommitOrderTransaction',
+        'commitOrderTransactionAdmin'   =>  'CommitOrderTransactionAdmin',
         'rollbackOrderTransaction'  =>  'RollbackOrderTransaction',
+        'rollbackOrderTransactionAdmin' =>  'RollbackOrderTransactionAdmin',
         'saveOfflineOrder'          =>  'SaveOfflineOrder',
         'setWishList'   =>  'SetWishList',
         'clearWishList' =>  'ClearWishList',
@@ -67,7 +71,7 @@ class Options
     public static function getOperationName($alias)
     {
         if (empty(static::$operations[$alias])) {
-            throw new MindboxConfigException('Unknow Operation Name');
+            throw new MindboxConfigException('Unknow Operation Name: ' . $alias);
         }
 
         return  static::getPrefix() . '.' . static::$operations[$alias];

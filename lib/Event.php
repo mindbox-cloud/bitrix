@@ -841,18 +841,18 @@ class Event
 
         $orderDTO->setField('order', $arOrder);
 
-        if (!(\Mindbox\Helper::isUnAuthorizedOrder($arUser) || (is_object($USER) && !$USER->IsAuthorized()))) {
+        if (!(\Mindbox\Helper::isUnAuthorizedOrder($arUser) || (is_object($USER) && !$USER->IsAuthorized())) || Helper::isAdminSection()) {
             $customer->setId('mindboxId', $mindboxId);
         }
 
-        if (is_object($USER) && $USER->IsAuthorized() && \Mindbox\Helper::isUnAuthorizedOrder($arUser)) {
+        if (is_object($USER) && $USER->IsAuthorized() && \Mindbox\Helper::isUnAuthorizedOrder($arUser) && !Helper::isAdminSection()) {
             $customer->setId(Options::getModuleOption('WEBSITE_ID'), $USER->GetID());
         }
 
         $orderDTO->setCustomer($customer);
 
         try {
-            if (\Mindbox\Helper::isUnAuthorizedOrder($arUser) || (is_object($USER) && !$USER->IsAuthorized())) {
+            if ((\Mindbox\Helper::isUnAuthorizedOrder($arUser) && !Helper::isAdminSection()) || (is_object($USER) && !$USER->IsAuthorized())) {
                 $createOrderResult = $mindbox->order()->beginUnauthorizedOrderTransaction(
                     $orderDTO,
                     Options::getOperationName('beginUnauthorizedOrderTransaction')
@@ -860,7 +860,7 @@ class Event
             } else {
                 $createOrderResult = $mindbox->order()->beginAuthorizedOrderTransaction(
                     $orderDTO,
-                    Options::getOperationName('beginAuthorizedOrderTransaction')
+                    Options::getOperationName('beginAuthorizedOrderTransaction' . (Helper::isAdminSection()? 'Admin':''))
                 )->sendRequest();
             }
 
@@ -882,7 +882,7 @@ class Event
                     ]);
                     $createOrderResult = $mindbox->order()->rollbackOrderTransaction(
                         $orderDTO,
-                        Options::getOperationName('rollbackOrderTransaction')
+                        Options::getOperationName('rollbackOrderTransaction' . (Helper::isAdminSection()? 'Admin':''))
                     )->sendRequest();
 
                     unset($_SESSION['TOTAL_PRICE']);
@@ -926,7 +926,7 @@ class Event
             ]);
             $mindbox->order()->rollbackOrderTransaction(
                 $orderDTO,
-                Options::getOperationName('rollbackOrderTransaction')
+                Options::getOperationName('rollbackOrderTransaction' . (Helper::isAdminSection()? 'Admin':''))
             )->sendRequest();
 
             unset($_SESSION['TOTAL_PRICE']);
@@ -1129,7 +1129,7 @@ class Event
                 ]);
                 $createOrderResult = $mindbox->order()->commitOrderTransaction(
                     $orderDTO,
-                    Options::getOperationName('commitOrderTransaction')
+                    Options::getOperationName('commitOrderTransaction' . (Helper::isAdminSection()? 'Admin':''))
                 )->sendRequest();
                 unset($_SESSION['MINDBOX_TRANSACTION_ID']);
                 unset($_SESSION['PAY_BONUSES']);
@@ -1573,7 +1573,7 @@ class Event
             if ($USER->IsAuthorized()) {
                 $preorderInfo = $mindbox->order()->calculateAuthorizedCart(
                     $preorder,
-                    Options::getOperationName('calculateAuthorizedCart')
+                    Options::getOperationName('calculateAuthorizedCart' . (Helper::isAdminSection()? 'Admin':''))
                 )->sendRequest()->getResult()->getField('order');
             } else {
                 $preorderInfo = $mindbox->order()->calculateUnauthorizedCart(
