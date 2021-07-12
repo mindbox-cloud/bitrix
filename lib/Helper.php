@@ -1076,4 +1076,19 @@ class Helper
     {
         return \Bitrix\Main\Context::getCurrent()->getRequest()->isAdminSection();
     }
+
+    public static function checkBasketItem($basketItem)
+    {
+        if (Helper::isAdminSection()) {
+            if (!$basketItem->getProductId()) {
+                return false;
+            }
+        } else {
+            if (!$basketItem->getId()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }

@@ -726,11 +726,17 @@ class Event
             $productBasePrice = Helper::getBasePrice($basketItem);
             $requestedPromotions = Helper::getRequestedPromotions($basketItem, $order);
 
+            if (Helper::isAdminSection()) {
+                $lineId = $basketItem->getProductId();
+            } else {
+                $lineId = $basketItem->getId();
+            }
+
             $arLine = [
                 'lineNumber'       => $i++,
                 'basePricePerItem' => $productBasePrice,
                 'quantity'         => $basketItem->getQuantity(),
-                'lineId'           => $basketItem->getId(),
+                'lineId'           => $lineId,
                 'product'          => [
                     'ids' => [
                         Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getElementCode($basketItem->getProductId())
@@ -1412,6 +1418,12 @@ class Event
      */
     public function OnSaleBasketSavedHandler($basket)
     {
+
+        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('OnSaleBasketSavedHandler');
+            $logger->log('fire', 1);
+        }
+
         $mindbox = static::mindbox();
         if (!$mindbox) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
@@ -1434,6 +1446,11 @@ class Event
      */
     public function OnBeforeSaleOrderFinalActionHandler($order, $has, $basket)
     {
+
+        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('OnBeforeSaleOrderFinalActionHandler');
+            $logger->log('fire', 1);
+        }
 
         if (Helper::isStandardMode()) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
@@ -1464,7 +1481,9 @@ class Event
         $preorder = new \Mindbox\DTO\V3\Requests\PreorderRequestDTO();
 
         foreach ($basketItems as $basketItem) {
-            if (!$basketItem->getId()) {
+            $logger->log('$basketItem productId', $basketItem->getProductId());
+
+            if (!Helper::checkBasketItem($basketItem)) {
                 continue;
             }
 
@@ -1476,10 +1495,17 @@ class Event
             $bitrixBasket[$basketItem->getId()] = $basketItem;
             $catalogPrice = Helper::getBasePrice($basketItem);
 
+            if (Helper::isAdminSection()) {
+                $lineId = $basketItem->getProductId();
+            } else {
+                $lineId = $basketItem->getId();
+            }
+
+
             $arLine = [
                 'basePricePerItem' => $catalogPrice,
                 'quantity'         => $basketItem->getQuantity(),
-                'lineId'           => $basketItem->getId(),
+                'lineId'           => $lineId,
                 'product'          => [
                     'ids' => [
                         Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getElementCode($basketItem->getProductId())
@@ -1498,6 +1524,8 @@ class Event
 
             $lines[] = $arLine;
         }
+
+        $logger->log('$lines', $lines);
 
         if (empty($lines)) {
             return false;
