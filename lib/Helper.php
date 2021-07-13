@@ -582,6 +582,7 @@ class Helper
 
     public static function processHlbBasketRule($lineId, $mindboxPrice)
     {
+        \CModule::IncludeModule('highloadblock');
 
         $result = \Bitrix\Highloadblock\HighloadBlockTable::getList(['filter' => ['=NAME' => "Mindbox"]]);
         if ($row = $result->fetch()) {
