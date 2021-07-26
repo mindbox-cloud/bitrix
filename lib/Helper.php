@@ -571,10 +571,11 @@ class Helper
     public static function getTransactionId()
     {
         $transactionId = \Bitrix\Sale\Fuser::getId() . date('dmYHi');
-        if (!$_SESSION['MINDBOX_TRANSACTION_ID']) {
+        if (!$_SESSION['MINDBOX_TRANSACTION_ID'] || Helper::isAdminSection()) {
             $_SESSION['MINDBOX_TRANSACTION_ID'] = $transactionId;
 
             return $transactionId;
+            //return '9038457788';
         } else {
             return $_SESSION['MINDBOX_TRANSACTION_ID'];
         }
@@ -1075,7 +1076,11 @@ class Helper
      */
     public static function isAdminSection()
     {
-        return \Bitrix\Main\Context::getCurrent()->getRequest()->isAdminSection();
+        global $APPLICATION;
+        $currentPage = $APPLICATION->GetCurPage();
+        $request = \Bitrix\Main\Context::getCurrent()->getRequest();
+
+        return  ($request->isAdminSection() && strpos($currentPage, '/bitrix/admin') !== false);
     }
 
     public static function checkBasketItem($basketItem)
@@ -1091,5 +1096,20 @@ class Helper
         }
 
         return true;
+    }
+
+    public static function getOrderPropertyByCode($code)
+    {
+        $return = [];
+        $orderProps = \CSaleOrderProps::GetList(
+            ['SORT' => 'ASC'],
+            ['CODE' => $code]
+        );
+
+        if ($arProps = $orderProps->Fetch()) {
+            $return = $arProps;
+        }
+
+        return $return;
     }
 }

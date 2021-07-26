@@ -17,6 +17,7 @@ use Bitrix\Sale;
 use CUser;
 use DateTime;
 use DateTimeZone;
+use Intensa\Logger\ILog;
 use Mindbox\DTO\DTO;
 use Mindbox\DTO\V2\Requests\DiscountRequestDTO;
 use Mindbox\DTO\V3\Requests\CustomerRequestDTO;
@@ -670,7 +671,7 @@ class Event
         $isNewOrder = Helper::isNewOrder($values);
 
         if (!$isNewOrder) {
-            return new Main\EventResult(Main\EventResult::SUCCESS);
+            //return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
         $standardMode = \COption::GetOptionString('mindbox.marketing', 'MODE') === 'standard';
@@ -692,6 +693,8 @@ class Event
 
         $basket = $order->getBasket();
         global $USER;
+
+        self::finalAction($order, $basket);
 
         $delivery = $order->getDeliverySystemId();
         $delivery = current($delivery);
@@ -769,7 +772,7 @@ class Event
 
         $arOrder = [
             'ids'          => [
-                Options::getModuleOption('TRANSACTION_ID') => ''
+                Options::getModuleOption('TRANSACTION_ID') => (!$isNewOrder && Helper::isAdminSection()) ? $order->getId() : '',
             ],
             'lines'        => $lines,
             'transaction'  => [
@@ -838,7 +841,7 @@ class Event
             $customer->setMobilePhone($arOrderProperty['PHONE']);
             $arOrder['mobilePhone'] = $arOrderProperty['PHONE'];
         }
-
+        $logger->log('order', $arOrder);
         $orderDTO->setField('order', $arOrder);
 
         if (!(\Mindbox\Helper::isUnAuthorizedOrder($arUser) || (is_object($USER) && !$USER->IsAuthorized())) || Helper::isAdminSection()) {
@@ -875,8 +878,8 @@ class Event
                     $orderDTO = new OrderCreateRequestDTO();
                     $orderDTO->setField('order', [
                         'transaction' => [
-                            "ids" => [
-                                "externalId" => Helper::getTransactionId()
+                            'ids' => [
+                                'externalId' => Helper::getTransactionId()
                             ]
                         ]
                     ]);
@@ -910,17 +913,19 @@ class Event
                 );
             } else {
                 $createOrderResult = $createOrderResult->getResult()->getField('order');
+                $logger->log('$createOrderResult', $createOrderResult);
                 $_SESSION[ 'MINDBOX_ORDER' ] = $createOrderResult ? $createOrderResult->getId('mindboxId') : false;
                 return new Main\EventResult(Main\EventResult::SUCCESS);
             }
             $createOrderResult = $createOrderResult->getResult()->getField('order');
+            $logger->log('logger', $createOrderResult->getId('mindboxId'));
             $_SESSION['MINDBOX_ORDER'] = $createOrderResult ? $createOrderResult->getId('mindboxId') : false;
         } catch (Exceptions\MindboxClientErrorException $e) {
             $orderDTO = new OrderCreateRequestDTO();
             $orderDTO->setField('order', [
                 'transaction' => [
-                    "ids" => [
-                        "externalId" => Helper::getTransactionId()
+                    'ids' => [
+                        'externalId' => Helper::getTransactionId()
                     ]
                 ]
             ]);
@@ -961,6 +966,16 @@ class Event
         $order = $event->getParameter("ENTITY");
         $oldValues = $event->getParameter("VALUES");
         $isNew = $event->getParameter("IS_NEW");
+
+        if (\CModule::IncludeModule('intensa.logger')) {
+            $logger = new ILog('OnSaleOrderSavedHandler_dev');
+
+        }
+
+        $loggerSave = new ILog('save_property');
+
+
+        $logger->log('isNew', $isNew);
 
         if (!$isNew) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
@@ -1094,26 +1109,17 @@ class Event
                 $customer->setEmail($arOrderProperty['EMAIL']);
                 $arOrder['email'] = $arOrderProperty['EMAIL'];
             }
-            /*
-            if(!empty($arOrderProperty[ 'FIO' ])) {
-                $customer->setLastName($arOrderProperty[ 'FIO' ]);
-            }
-            if(!empty($arOrderProperty[ 'NAME' ])){
-                $customer->setFirstName($arOrderProperty[ 'NAME' ]);
-            }
-            */
+
             if (!empty($arOrderProperty['PHONE'])) {
                 $customer->setMobilePhone($arOrderProperty['PHONE']);
                 $arOrder['mobilePhone'] = $arOrderProperty['PHONE'];
             }
 
             $offlineOrderDTO->setField('order', $arOrder);
-            //$customer->setId('websiteId', $USER->GetID());
-
             $offlineOrderDTO->setCustomer($customer);
 
             try {
-                unset($_SESSION['PROMO_CODE_AMOUNT'], $_SESSION['PROMO_CODE']);
+
 
                 $orderDTO = new OrderCreateRequestDTO();
                 $orderDTO->setField('order', [
@@ -1131,6 +1137,44 @@ class Event
                     $orderDTO,
                     Options::getOperationName('commitOrderTransaction' . (Helper::isAdminSection()? 'Admin':''))
                 )->sendRequest();
+                if (\CModule::IncludeModule('intensa.logger')) {
+                    $loggerProp = new ILog('order_test');
+                    $loggerProp->log('PROMO_CODE', $_SESSION['PROMO_CODE']);
+                    $loggerProp->log('PROMO_CODE_AMOUNT', $_SESSION['PROMO_CODE_AMOUNT']);
+                }
+
+
+                $setPropertiesList = [];
+
+                if (isset($_SESSION['PROMO_CODE']) && !empty($_SESSION['PROMO_CODE'])) {
+                    $setPropertiesList['MINDBOX_PROMO_CODE'] = $_SESSION['PROMO_CODE'];
+                }
+
+                if (isset($_SESSION['PROMO_CODE_AMOUNT']) && !empty($_SESSION['PROMO_CODE_AMOUNT'])) {
+                    $setPropertiesList['MINDBOX_PROMO_CODE_AMOUNT'] = $_SESSION['PROMO_CODE_AMOUNT'];
+                }
+
+                $loggerProp->log('setProps', $setPropertiesList);
+
+                if (!empty($setPropertiesList)) {
+                    $orderPropertyCollection = $order->getPropertyCollection();
+                    foreach ($setPropertiesList as $propCode => $propValue) {
+                         $orderPropertyData = Helper::getOrderPropertyByCode($propCode);
+                         $loggerProp->log('$orderPropertyData', $orderPropertyData);
+
+                         if (!empty($orderPropertyData)) {
+                             $propertyItemObj = $orderPropertyCollection->getItemByOrderPropertyId($orderPropertyData['ID']);
+                             $loggerProp->log('$propertyItemObj', $propertyItemObj);
+                             $propertyItemObj->setValue($propValue);
+                             $propertyItemObj->save();
+
+                         }
+                    }
+                }
+
+
+                unset($_SESSION['PROMO_CODE_AMOUNT']);
+                unset($_SESSION['PROMO_CODE']);
                 unset($_SESSION['MINDBOX_TRANSACTION_ID']);
                 unset($_SESSION['PAY_BONUSES']);
                 unset($_SESSION['TOTAL_PRICE']);
@@ -1420,7 +1464,7 @@ class Event
     {
 
         if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('OnSaleBasketSavedHandler');
+            $logger = new \Intensa\Logger\ILog('OnSaleBasketSavedHandler_new');
             $logger->log('fire', 1);
         }
 
@@ -1446,11 +1490,16 @@ class Event
      */
     public function OnBeforeSaleOrderFinalActionHandler($order, $has, $basket)
     {
+        self::finalAction($order, $basket);
+    }
 
+    public static function finalAction($order, $basket)
+    {
         if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('OnBeforeSaleOrderFinalActionHandler');
+            $logger = new \Intensa\Logger\ILog('OnBeforeSaleOrderFinalActionHandler_new');
             $logger->log('fire', 1);
         }
+
 
         if (Helper::isStandardMode()) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
@@ -1471,6 +1520,19 @@ class Event
             $_REQUEST['save'] === 'Y'
         ) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+
+        // @todo тут пытаемся сделать хак с сессией
+        $propertyCollection = $order->getPropertyCollection();
+        $setOrderPromoCode = $propertyCollection->getItemByOrderPropertyCode('MINDBOX_PROMO_CODE');
+
+        if (!empty($setOrderPromoCode)) {
+            $setOrderPromoCodeValue = $setOrderPromoCode->getValue();
+            $logger->log('$setOrderPromoCodeValue', $setOrderPromoCodeValue);
+
+            if (!empty($setOrderPromoCodeValue)) {
+                $_SESSION['PROMO_CODE'] = $setOrderPromoCodeValue;
+            }
         }
 
         $preorder = new PreorderRequestDTO();
@@ -1587,7 +1649,7 @@ class Event
             }
 
             $_SESSION['TOTAL_PRICE'] = $preorderInfo->getField('totalPrice');
-
+            $logger->log('total', $_SESSION['TOTAL_PRICE']);
             $discounts = $preorderInfo->getDiscountsInfo();
             foreach ($discounts as $discount) {
                 if ($discount->getType() === 'balance') {
@@ -1602,17 +1664,18 @@ class Event
                 }
             }
 
-                $lines = $preorderInfo->getLines();
-
-                $mindboxBasket = [];
-                $mindboxAdditional = [];
-                $context = $basket->getContext();
+            $lines = $preorderInfo->getLines();
+            $logger->log('$lines', $lines);
+            $mindboxBasket = [];
+            $mindboxAdditional = [];
+            $context = $basket->getContext();
 
             foreach ($lines as $line) {
                 $lineId = $line->getField('lineId');
                 $bitrixProduct = $bitrixBasket[$lineId];
 
                 if (isset($mindboxBasket[$lineId])) {
+
                     $mindboxAdditional[] = [
                         'PRODUCT_ID'             => $bitrixProduct->getProductId(),
                         'PRICE'                  => floatval($line->getDiscountedPrice()) / floatval($line->getQuantity()),
@@ -1627,6 +1690,8 @@ class Event
                         'PRODUCT_PROVIDER_CLASS' => $bitrixProduct->getProviderName(),
                         'CAN_BUY'                => 'Y'
                     ];
+
+                    $logger->log('$mindboxAdditional', $mindboxAdditional);
                     foreach ($mindboxAdditional as $product) {
                         $item = $basket->createItem("catalog", $product["PRODUCT_ID"]);
                         unset($product["PRODUCT_ID"]);
@@ -1639,6 +1704,7 @@ class Event
                 }
             }
         } catch (Exceptions\MindboxClientException $e) {
+            $logger->log('error', $e->getMessage());
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
@@ -1723,19 +1789,6 @@ class Event
         if (isset($arFields['PERSONAL_PHONE'])) {
             $arFields['PERSONAL_PHONE'] = Helper::formatPhone($arFields['PERSONAL_PHONE']);
         }
-
-        /*
-        if (isset($_SESSION[ 'OFFLINE_REGISTER' ]) && $_SESSION[ 'OFFLINE_REGISTER' ]) {
-            return $arFields;
-        }
-        */
-
-        /*
-        if (!$USER->CheckFields($arFields)) {
-            $APPLICATION->ThrowException($USER->LAST_ERROR);
-            return false;
-        }
-        */
 
         $sex = substr(ucfirst($arFields['PERSONAL_GENDER']), 0, 1) ?: null;
         $fields = [
