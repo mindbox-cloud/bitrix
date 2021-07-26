@@ -592,6 +592,7 @@ class Helper
         $hlblock = \Bitrix\Highloadblock\HighloadBlockTable::getById($hlbl)->fetch();
         $entity = \Bitrix\Highloadblock\HighloadBlockTable::compileEntity($hlblock);
         $entityDataClass = $entity->getDataClass();
+        \CModule::IncludeModule('intensa.logger');
         $logger = new ILog('hl_disc');
         $logger->log('$mindboxPrice', $mindboxPrice);
         if ($mindboxPrice) {
