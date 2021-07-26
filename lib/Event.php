@@ -651,14 +651,12 @@ class Event
     {
         $order = $event->getParameter("ENTITY");
         $values = $event->getParameter("VALUES");
-
+        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('OnSaleOrderBeforeSavedHandler');
+            $logger->log('$order->isPaid()', $order->isPaid());
+            $logger->log('$order->getField(\'DATE_PAYED\')', $order->getField('DATE_PAYED'));
+        }
         if (Helper::isAdminSection()) {
-            if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-                $logger = new \Intensa\Logger\ILog('OnSaleOrderBeforeSavedHandler');
-                $logger->log('$order->isPaid()', $order->isPaid());
-                $logger->log('$order->getField(\'DATE_PAYED\')', $order->getField('DATE_PAYED'));
-            }
-
             if ($order->isPaid() && strtotime($order->getField('DATE_PAYED')) < time()) {
                 return new \Bitrix\Main\EventResult(
                     \Bitrix\Main\EventResult::ERROR,
