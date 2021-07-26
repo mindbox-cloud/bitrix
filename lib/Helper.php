@@ -12,6 +12,7 @@ use CIBlock;
 use COption;
 use CPHPCache;
 use CSaleOrderProps;
+use Intensa\Logger\ILog;
 use Mindbox\DTO\DTO;
 use Mindbox\DTO\DTOCollection;
 use Mindbox\DTO\V3\Requests\CustomerIdentityRequestDTO;
@@ -571,11 +572,10 @@ class Helper
     public static function getTransactionId()
     {
         $transactionId = \Bitrix\Sale\Fuser::getId() . date('dmYHi');
-        if (!$_SESSION['MINDBOX_TRANSACTION_ID'] || Helper::isAdminSection()) {
+        if (!$_SESSION['MINDBOX_TRANSACTION_ID']) {
             $_SESSION['MINDBOX_TRANSACTION_ID'] = $transactionId;
 
             return $transactionId;
-            //return '9038457788';
         } else {
             return $_SESSION['MINDBOX_TRANSACTION_ID'];
         }
@@ -592,7 +592,8 @@ class Helper
         $hlblock = \Bitrix\Highloadblock\HighloadBlockTable::getById($hlbl)->fetch();
         $entity = \Bitrix\Highloadblock\HighloadBlockTable::compileEntity($hlblock);
         $entityDataClass = $entity->getDataClass();
-
+        $logger = new ILog('hl_disc');
+        $logger->log('$mindboxPrice', $mindboxPrice);
         if ($mindboxPrice) {
             $data = [
                 "UF_DISCOUNTED_PRICE" => $mindboxPrice
@@ -605,10 +606,13 @@ class Helper
                     "UF_BASKET_ID" => $lineId
                 ]
             ];
+            $logger->log('$arFilter', $arFilter);
             $rsData = $entityDataClass::getList($arFilter);
 
             if ($arData = $rsData->Fetch()) {
                 $result = $entityDataClass::update($arData['ID'], $data);
+                $logger->log('$arData', $arData);
+                $logger->log('$result', $result);
             } else {
                 $data = [
                     'UF_BASKET_ID'        => $lineId,

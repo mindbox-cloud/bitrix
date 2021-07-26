@@ -670,8 +670,8 @@ class Event
 
         $isNewOrder = Helper::isNewOrder($values);
 
-        if (!$isNewOrder) {
-            //return new Main\EventResult(Main\EventResult::SUCCESS);
+        if (!$isNewOrder && !Helper::isAdminSection()) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
         $standardMode = \COption::GetOptionString('mindbox.marketing', 'MODE') === 'standard';
@@ -694,7 +694,9 @@ class Event
         $basket = $order->getBasket();
         global $USER;
 
-        self::finalAction($order, $basket);
+        if (Helper::isAdminSection()) {
+            self::finalAction($order, $basket);
+        }
 
         $delivery = $order->getDeliverySystemId();
         $delivery = current($delivery);
@@ -729,11 +731,7 @@ class Event
             $productBasePrice = Helper::getBasePrice($basketItem);
             $requestedPromotions = Helper::getRequestedPromotions($basketItem, $order);
 
-            if (Helper::isAdminSection()) {
-                $lineId = $basketItem->getProductId();
-            } else {
-                $lineId = $basketItem->getId();
-            }
+            $lineId = $basketItem->getId();
 
             $arLine = [
                 'lineNumber'       => $i++,
@@ -977,7 +975,7 @@ class Event
 
         $logger->log('isNew', $isNew);
 
-        if (!$isNew) {
+        if (!$isNew && !Helper::isAdminSection()) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
@@ -1152,6 +1150,10 @@ class Event
 
                 if (isset($_SESSION['PROMO_CODE_AMOUNT']) && !empty($_SESSION['PROMO_CODE_AMOUNT'])) {
                     $setPropertiesList['MINDBOX_PROMO_CODE_AMOUNT'] = $_SESSION['PROMO_CODE_AMOUNT'];
+                }
+
+                if (isset($_SESSION['PAY_BONUSES']) && !empty($_SESSION['PAY_BONUSES'])) {
+                    $setPropertiesList['MINDBOX_BONUS'] = $_SESSION['PAY_BONUSES'];
                 }
 
                 $loggerProp->log('setProps', $setPropertiesList);
@@ -1490,13 +1492,17 @@ class Event
      */
     public function OnBeforeSaleOrderFinalActionHandler($order, $has, $basket)
     {
+        if (\CModule::IncludeModule('intensa.logger')) {
+            $logger = new ILog('final_event');
+            $logger->log('вызов');
+        }
         self::finalAction($order, $basket);
     }
 
     public static function finalAction($order, $basket)
     {
         if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('OnBeforeSaleOrderFinalActionHandler_new');
+            $logger = new \Intensa\Logger\ILog('OnBeforeSaleOrderFinalActionHandler_2');
             $logger->log('fire', 1);
         }
 
@@ -1523,16 +1529,30 @@ class Event
         }
 
         // @todo тут пытаемся сделать хак с сессией
-        $propertyCollection = $order->getPropertyCollection();
-        $setOrderPromoCode = $propertyCollection->getItemByOrderPropertyCode('MINDBOX_PROMO_CODE');
 
-        if (!empty($setOrderPromoCode)) {
+        if (Helper::isAdminSection()) {
+            $propertyCollection = $order->getPropertyCollection();
+            $setOrderPromoCode = $propertyCollection->getItemByOrderPropertyCode('MINDBOX_PROMO_CODE');
+
+
             $setOrderPromoCodeValue = $setOrderPromoCode->getValue();
             $logger->log('$setOrderPromoCodeValue', $setOrderPromoCodeValue);
+            $_SESSION['PROMO_CODE'] = $setOrderPromoCodeValue;
 
-            if (!empty($setOrderPromoCodeValue)) {
-                $_SESSION['PROMO_CODE'] = $setOrderPromoCodeValue;
-            }
+
+
+            $setBonus = $propertyCollection->getItemByOrderPropertyCode('MINDBOX_BONUS');
+
+
+            $setBonusValue = $setBonus->getValue();
+            $logger->log('$setBonusValue', $setOrderPromoCodeValue);
+            $_SESSION['PAY_BONUSES'] = $setBonusValue;
+
+
+
+            // @info сохраним корзину, чтобы получить корректный lineId
+            $basket->save();
+            $basket->refresh();
         }
 
         $preorder = new PreorderRequestDTO();
@@ -1557,17 +1577,15 @@ class Event
             $bitrixBasket[$basketItem->getId()] = $basketItem;
             $catalogPrice = Helper::getBasePrice($basketItem);
 
-            if (Helper::isAdminSection()) {
-                $lineId = $basketItem->getProductId();
-            } else {
-                $lineId = $basketItem->getId();
-            }
 
+
+            $logger->log('$basketItem->getProductId()', $basketItem->getProductId());
+            $logger->log('$basketItem->getId()', $basketItem->getId());
 
             $arLine = [
                 'basePricePerItem' => $catalogPrice,
                 'quantity'         => $basketItem->getQuantity(),
-                'lineId'           => $lineId,
+                'lineId'           => $basketItem->getId(),
                 'product'          => [
                     'ids' => [
                         Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getElementCode($basketItem->getProductId())
@@ -1669,6 +1687,7 @@ class Event
             $mindboxBasket = [];
             $mindboxAdditional = [];
             $context = $basket->getContext();
+            $logger->log('$bitrixBasket  ', $bitrixBasket);
 
             foreach ($lines as $line) {
                 $lineId = $line->getField('lineId');
@@ -1700,9 +1719,13 @@ class Event
                 } else {
                     $mindboxPrice = floatval($line->getDiscountedPrice()) / floatval($line->getQuantity());
                     $mindboxBasket[$lineId] = $bitrixProduct;
+                    $logger->log('$lineId', $lineId);
+                    $logger->log('$mindboxPrice', $mindboxPrice);
                     Helper::processHlbBasketRule($lineId, $mindboxPrice);
                 }
             }
+
+            $logger->log('$mindboxBasket', $mindboxBasket);
         } catch (Exceptions\MindboxClientException $e) {
             $logger->log('error', $e->getMessage());
             return new Main\EventResult(Main\EventResult::SUCCESS);
