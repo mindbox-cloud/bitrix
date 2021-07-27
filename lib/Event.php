@@ -761,7 +761,19 @@ class Event
 
         $arCoupons = [];
         if ($_SESSION['PROMO_CODE'] && !empty($_SESSION['PROMO_CODE'])) {
-            $arCoupons['ids']['code'] = $_SESSION['PROMO_CODE'];
+
+            if (strpos($_SESSION['PROMO_CODE'], ',') !== false) {
+                $applyCouponsList = explode(',', $_SESSION['PROMO_CODE']);
+
+                if (is_array($applyCouponsList) && !empty($applyCouponsList)) {
+                    foreach ($applyCouponsList as $couponItem) {
+                        $arCoupons[]['ids']['code'] = trim($couponItem);
+                    }
+                }
+
+            } else {
+                $arCoupons[]['ids']['code'] = $_SESSION['PROMO_CODE'];
+            }
         }
 
         unset($_SESSION[ 'MINDBOX_TRANSACTION_ID' ]);
@@ -784,7 +796,7 @@ class Event
         ];
 
         if (!empty($arCoupons)) {
-            $arOrder['coupons'] = [$arCoupons];
+            $arOrder['coupons'] = $arCoupons;
         }
 
         $bonuses = $_SESSION['PAY_BONUSES'] ?: 0;
@@ -1052,8 +1064,21 @@ class Event
             }
 
             $arCoupons = [];
+
             if ($_SESSION['PROMO_CODE'] && !empty($_SESSION['PROMO_CODE'])) {
-                $arCoupons['ids']['code'] = $_SESSION['PROMO_CODE'];
+
+                if (strpos($_SESSION['PROMO_CODE'], ',') !== false) {
+                    $applyCouponsList = explode(',', $_SESSION['PROMO_CODE']);
+
+                    if (is_array($applyCouponsList) && !empty($applyCouponsList)) {
+                        foreach ($applyCouponsList as $couponItem) {
+                            $arCoupons[]['ids']['code'] = trim($couponItem);
+                        }
+                    }
+
+                } else {
+                    $arCoupons[]['ids']['code'] = $_SESSION['PROMO_CODE'];
+                }
             }
 
             $arOrder = [
@@ -1066,7 +1091,7 @@ class Event
             ];
 
             if (!empty($arCoupons)) {
-                $arOrder['coupons'] = [$arCoupons];
+                $arOrder['coupons'] = $arCoupons;
             }
 
             $bonuses = $_SESSION['PAY_BONUSES'] ?: 0;
@@ -1341,7 +1366,29 @@ class Event
                 ]);
             }
 
-            $code = $_SESSION['PROMO_CODE'];
+            if ($_SESSION['PROMO_CODE'] && !empty($_SESSION['PROMO_CODE'])) {
+
+                if (strpos($_SESSION['PROMO_CODE'], ',') !== false) {
+                    $applyCouponsList = explode(',', $_SESSION['PROMO_CODE']);
+
+                    if (is_array($applyCouponsList) && !empty($applyCouponsList)) {
+                        foreach ($applyCouponsList as $couponItem) {
+                            $discounts[] = new DiscountRequestDTO([
+                                'type'   => 'promoCode',
+                                'id'     => trim($couponItem),
+                                'amount' => $_SESSION['PROMO_CODE_AMOUNT'] ?: 0
+                            ]);
+                        }
+                    }
+                } else {
+                    $discounts[] = new DiscountRequestDTO([
+                        'type'   => 'promoCode',
+                        'id'     => $_SESSION['PROMO_CODE'],
+                        'amount' => $_SESSION['PROMO_CODE_AMOUNT'] ?: 0
+                    ]);
+                }
+            }
+
             if ($code) {
                 $discounts[] = new DiscountRequestDTO([
                     'type'   => 'promoCode',
@@ -1533,17 +1580,11 @@ class Event
         if (Helper::isAdminSection()) {
             $propertyCollection = $order->getPropertyCollection();
             $setOrderPromoCode = $propertyCollection->getItemByOrderPropertyCode('MINDBOX_PROMO_CODE');
-
-
             $setOrderPromoCodeValue = $setOrderPromoCode->getValue();
             $logger->log('$setOrderPromoCodeValue', $setOrderPromoCodeValue);
             $_SESSION['PROMO_CODE'] = $setOrderPromoCodeValue;
 
-
-
             $setBonus = $propertyCollection->getItemByOrderPropertyCode('MINDBOX_BONUS');
-
-
             $setBonusValue = $setBonus->getValue();
             $logger->log('$setBonusValue', $setOrderPromoCodeValue);
             $_SESSION['PAY_BONUSES'] = $setBonusValue;
@@ -1612,8 +1653,21 @@ class Event
         }
 
         $arCoupons = [];
+
         if ($_SESSION['PROMO_CODE'] && !empty($_SESSION['PROMO_CODE'])) {
-            $arCoupons['ids']['code'] = $_SESSION['PROMO_CODE'];
+
+            if (strpos($_SESSION['PROMO_CODE'], ',') !== false) {
+                $applyCouponsList = explode(',', $_SESSION['PROMO_CODE']);
+
+                if (is_array($applyCouponsList) && !empty($applyCouponsList)) {
+                    foreach ($applyCouponsList as $couponItem) {
+                        $arCoupons[]['ids']['code'] = trim($couponItem);
+                    }
+                }
+
+            } else {
+                $arCoupons[]['ids']['code'] = $_SESSION['PROMO_CODE'];
+            }
         }
 
         $arOrder = [
@@ -1624,7 +1678,7 @@ class Event
         ];
 
         if (!empty($arCoupons)) {
-            $arOrder['coupons'] = [$arCoupons];
+            $arOrder['coupons'] = $arCoupons;
         }
 
         $bonuses = $_SESSION['PAY_BONUSES'] ?: 0;
