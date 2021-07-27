@@ -766,9 +766,11 @@ class Event
 
         unset($_SESSION[ 'MINDBOX_TRANSACTION_ID' ]);
 
+        $shopOrderId = $order->getId();
+        $logger->log('isNew', $isNewOrder);
         $arOrder = [
             'ids'          => [
-                Options::getModuleOption('TRANSACTION_ID') => (!$isNewOrder && Helper::isAdminSection()) ? $order->getId() : '',
+                Options::getModuleOption('TRANSACTION_ID') => ($shopOrderId > 0) ? $shopOrderId : '',
             ],
             'lines'        => $lines,
             'transaction'  => [
