@@ -1,16 +1,16 @@
 <?php
-/**
- * Created by @copyright QSOFT.
- */
 
 use Bitrix\Main\Engine\Contract\Controllerable;
 use Bitrix\Main\Loader;
 use Bitrix\Main\LoaderException;
+use Bitrix\Main\PhoneNumber\Format;
+use Bitrix\Main\PhoneNumber\Parser;
 use Mindbox\DTO\V3\Requests\CustomerRequestDTO;
 use Mindbox\Exceptions\MindboxClientException;
 use Mindbox\Helper;
 use Mindbox\Options;
 use Mindbox\Ajax;
+
 
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) {
     die();
@@ -125,6 +125,7 @@ class AuthSms extends CBitrixComponent implements Controllerable
         }
 
         $customerDto = new CustomerRequestDTO(['mobilePhone' => $phone]);
+
         try {
             $checkCodeResponse = $this->mindbox->customer()->checkAuthorizationCode(
                 $customerDto,
@@ -133,6 +134,7 @@ class AuthSms extends CBitrixComponent implements Controllerable
             )->sendRequest();
 
             $validationErrors = $checkCodeResponse->getValidationErrors();
+
             if (!empty($validationErrors)) {
                 return Ajax::errorResponse(reset($validationErrors)->GetMessage());
             }
@@ -153,13 +155,20 @@ class AuthSms extends CBitrixComponent implements Controllerable
                         "PERSONAL_PHONE" => $user->getField('mobilePhone')
                     ],
                     [
+                        "PERSONAL_PHONE" => $this->preparePhoneNumber($user->getField('mobilePhone'))
+                    ],
+                    [
                         'PERSONAL_MOBILE' => $user->getField('mobilePhone')
+                    ],
+                    [
+                        'PERSONAL_MOBILE' => $this->preparePhoneNumber($user->getField('mobilePhone'))
                     ],
                     [
                         'EMAIL' => $user->getField('email')
                     ]
                 ]
             ];
+
             $dbUser = Bitrix\Main\UserTable::getList(
                 [
                     'filter' => $arFilter
@@ -167,15 +176,19 @@ class AuthSms extends CBitrixComponent implements Controllerable
             );
 
             if ($bxUser = $dbUser->fetch()) {
+
                 $fields = [
                     'UF_MINDBOX_ID' => $user->getId('mindboxId')
                 ];
+
                 $user = new \CUser;
                 $user->Update(
                     $bxUser['ID'],
                     $fields
                 );
+
                 $USER->Authorize($bxUser['ID']);
+
                 return [
                     'type' => 'success',
                     'message' => GetMessage('MB_AUS_SUCCESS')
@@ -201,10 +214,9 @@ class AuthSms extends CBitrixComponent implements Controllerable
                     'LAST_NAME' => $lastName,
                     'EMAIL' => $email,
                     'LOGIN' => $mobilePhone,
-                    'PERSONAL_PHONE' => '+79995877788',
-                    'PHONE_NUMBER' => '+79995877788',
-                    //'PERSONAL_BIRTHDAY' => date('d.m.Y', strtotime($birthDate)),
-                    'PERSONAL_GENDER' => (($sex == 'female') ? 'F' : 'M'),
+                    'PERSONAL_PHONE' => $this->preparePhoneNumber($mobilePhone),
+                    'PHONE_NUMBER' => $this->preparePhoneNumber($mobilePhone),
+                    'PERSONAL_GENDER' => ($sex == 'female') ? 'F' : 'M',
                     'LID' => $siteId,
                     'ACTIVE' => 'Y',
                     'PASSWORD' => $password,
@@ -213,16 +225,15 @@ class AuthSms extends CBitrixComponent implements Controllerable
                 ];
 
                 if (!empty($birthDate)) {
-
+                    global $DB;
+                    $siteDateFormat = $DB->DateFormatToPHP(\CSite::GetDateFormat('SHORT'));
+                    $arFields['PERSONAL_BIRTHDAY'] = date($siteDateFormat, strtotime($birthDate));
                 }
-                $siteDateFormat = \CSite::GetDateFormat('SHORT');
-                var_dump($siteDateFormat);
-                //$ID = $USER->Add($arFields);
-                var_dump($arFields);
-                var_dump($USER->LAST_ERROR);
-                die();
-                if (intval($ID) > 0) {
-                    $USER->Authorize($ID);
+
+                $createUserId = $USER->Add($arFields);
+
+                if (intval($createUserId) > 0) {
+                    $USER->Authorize($createUserId);
                     return [
                         'type' => 'success',
                         'message' => GetMessage('MB_AUS_SUCCESS')
@@ -234,6 +245,15 @@ class AuthSms extends CBitrixComponent implements Controllerable
         } catch (MindboxClientException $e) {
             return Ajax::errorResponse(GetMessage('MB_AUS_REG_UNAVAILABLE'));
         }
+    }
+
+    protected function preparePhoneNumber($number)
+    {
+        if (strpos($number, '+') === false) {
+            $number = '+' . $number;
+        }
+
+        return $number;
     }
 
     public function fillupAction($fields)
