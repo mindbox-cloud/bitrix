@@ -12,7 +12,6 @@ use CIBlock;
 use COption;
 use CPHPCache;
 use CSaleOrderProps;
-use Intensa\Logger\ILog;
 use Mindbox\DTO\DTO;
 use Mindbox\DTO\DTOCollection;
 use Mindbox\DTO\V3\Requests\CustomerIdentityRequestDTO;
@@ -593,8 +592,7 @@ class Helper
         $entity = \Bitrix\Highloadblock\HighloadBlockTable::compileEntity($hlblock);
         $entityDataClass = $entity->getDataClass();
         \CModule::IncludeModule('intensa.logger');
-        $logger = new ILog('hl_disc');
-        $logger->log('$mindboxPrice', $mindboxPrice);
+
         if ($mindboxPrice) {
             $data = [
                 "UF_DISCOUNTED_PRICE" => $mindboxPrice
@@ -607,19 +605,17 @@ class Helper
                     "UF_BASKET_ID" => $lineId
                 ]
             ];
-            $logger->log('$arFilter', $arFilter);
+
             $rsData = $entityDataClass::getList($arFilter);
 
             if ($arData = $rsData->Fetch()) {
-                $result = $entityDataClass::update($arData['ID'], $data);
-                $logger->log('$arData', $arData);
-                $logger->log('$result', $result);
+                $entityDataClass::update($arData['ID'], $data);
             } else {
                 $data = [
                     'UF_BASKET_ID'        => $lineId,
                     "UF_DISCOUNTED_PRICE" => $mindboxPrice
                 ];
-                $result = $entityDataClass::add($data);
+                $entityDataClass::add($data);
             }
         } else {
             $arFilter = [
