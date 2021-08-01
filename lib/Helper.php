@@ -585,13 +585,14 @@ class Helper
         \CModule::IncludeModule('highloadblock');
 
         $result = \Bitrix\Highloadblock\HighloadBlockTable::getList(['filter' => ['=NAME' => "Mindbox"]]);
+
         if ($row = $result->fetch()) {
             $hlbl = $row["ID"];
         }
+
         $hlblock = \Bitrix\Highloadblock\HighloadBlockTable::getById($hlbl)->fetch();
         $entity = \Bitrix\Highloadblock\HighloadBlockTable::compileEntity($hlblock);
         $entityDataClass = $entity->getDataClass();
-        \CModule::IncludeModule('intensa.logger');
 
         if ($mindboxPrice) {
             $data = [

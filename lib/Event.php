@@ -710,6 +710,7 @@ class Event
         $basketItems = $basket->getBasketItems();
         $lines = [];
         $i = 1;
+
         foreach ($basketItems as $basketItem) {
             if ($basketItem->getField('CAN_BUY') == 'N') {
                 continue;
@@ -794,6 +795,7 @@ class Event
         }
 
         $bonuses = $_SESSION['PAY_BONUSES'] ?: 0;
+
         if ($bonuses && is_object($USER) && $USER->IsAuthorized()) {
             $bonusPoints = [
                 'amount' => $bonuses
@@ -806,7 +808,8 @@ class Event
         $customer = new CustomerRequestV2DTO();
 
         if (is_object($USER) && $USER->IsAuthorized()) {
-            $mindboxId = Helper::getMindboxId($USER->GetID());
+            $orderUserId = (Helper::isAdminSection()) ? $order->getUserId() : $USER->GetID();
+            $mindboxId = Helper::getMindboxId($orderUserId);
         }
 
         $customFields = [];
@@ -815,33 +818,27 @@ class Event
 
         foreach ($ar['properties'] as $arProperty) {
             $arProperty['CODE'] = Helper::sanitizeNamesForMindbox($arProperty['CODE']);
+
             if (count($arProperty['VALUE']) === 1) {
                 $value = current($arProperty['VALUE']);
             } else {
                 $value = $arProperty['VALUE'];
             }
             $arOrderProperty[$arProperty['CODE']] = array_pop($arProperty['VALUE']);
+
             if (!empty($customName = Helper::getMatchByCode($arProperty['CODE']))) {
                 $customFields[$customName] = $value;
             }
         }
 
         $customFields['deliveryType'] = $delivery;
-
         $arOrder['customFields'] = $customFields;
 
         if (!empty($arOrderProperty['EMAIL'])) {
             $customer->setEmail($arOrderProperty['EMAIL']);
             $arOrder['email'] = $arOrderProperty['EMAIL'];
         }
-        /*
-        if(!empty($arOrderProperty[ 'FIO' ])) {
-            $customer->setLastName($arOrderProperty[ 'FIO' ]);
-        }
-        if(!empty($arOrderProperty[ 'NAME' ])){
-            $customer->setFirstName($arOrderProperty[ 'NAME' ]);
-        }
-        */
+
         if (!empty($arOrderProperty['PHONE'])) {
             $customer->setMobilePhone($arOrderProperty['PHONE']);
             $arOrder['mobilePhone'] = $arOrderProperty['PHONE'];
@@ -1544,8 +1541,6 @@ class Event
             $setBonusValue = $setBonus->getValue();
             $_SESSION['PAY_BONUSES'] = $setBonusValue;
 
-
-
             // @info сохраним корзину, чтобы получить корректный lineId
             $basket->save();
             $basket->refresh();
@@ -1559,6 +1554,7 @@ class Event
         $preorder = new \Mindbox\DTO\V3\Requests\PreorderRequestDTO();
 
         foreach ($basketItems as $basketItem) {
+
             if (!Helper::checkBasketItem($basketItem)) {
                 continue;
             }
@@ -1641,10 +1637,14 @@ class Event
 
         $customer = new CustomerRequestDTO();
         if ($USER->IsAuthorized()) {
-            $mindboxId = Helper::getMindboxId($USER->GetID());
+            // @info тут берем пользователя из заказа, если прецессинг админки
+            $orderUserId = (Helper::isAdminSection() && !empty($order->getUserId())) ? $order->getUserId() :  $USER->GetID();
+            $mindboxId = Helper::getMindboxId($orderUserId);
+
             if (!$mindboxId) {
                 return new Main\EventResult(Main\EventResult::SUCCESS);
             }
+
             $customer->setId('mindboxId', $mindboxId);
             $preorder->setCustomer($customer);
         }
