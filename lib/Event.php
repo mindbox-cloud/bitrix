@@ -1612,9 +1612,11 @@ class Event
             }
         }
 
+        $orderId = (Helper::isAdminSection() && !empty($order->getId())) ? $order->getId() : '';
+
         $arOrder = [
             'ids'   => [
-                Options::getModuleOption('TRANSACTION_ID') => '',
+                Options::getModuleOption('TRANSACTION_ID') => $orderId,
             ],
             'lines' => $lines
         ];
