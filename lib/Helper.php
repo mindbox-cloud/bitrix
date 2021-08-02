@@ -570,7 +570,7 @@ class Helper
      */
     public static function getTransactionId()
     {
-        $transactionId = \Bitrix\Sale\Fuser::getId() . date('dmYHi');
+        $transactionId = \Bitrix\Sale\Fuser::getId() . date('dmYHis');
         if (!$_SESSION['MINDBOX_TRANSACTION_ID']) {
             $_SESSION['MINDBOX_TRANSACTION_ID'] = $transactionId;
 
