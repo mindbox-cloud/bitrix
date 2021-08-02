@@ -1114,4 +1114,24 @@ class Helper
 
         return $return;
     }
+
+    public static function getSiteList($onlyActive = false): array
+    {
+        $return = [];
+        $queryParams = [
+            'select' => ['LID']
+        ];
+
+        if ($onlyActive === true) {
+            $queryParams['filter'] = ['ACTIVE' => 'Y'];
+        }
+
+        $getSites = \Bitrix\Main\SiteTable::getList($queryParams);
+
+        while ($siteItem = $getSites->fetch()) {
+            $return[] = $siteItem['LID'];
+        }
+
+        return $return;
+    }
 }

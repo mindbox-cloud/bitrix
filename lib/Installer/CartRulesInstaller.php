@@ -46,7 +46,7 @@ class CartRulesInstaller
                 'UF_DISCOUNTED_PRICE' => [
                     'ENTITY_ID' => $userFieldObject,
                     'FIELD_NAME' => 'UF_DISCOUNTED_PRICE',
-                    'USER_TYPE_ID' => 'integer',
+                    'USER_TYPE_ID' => 'double',
                     'MANDATORY' => 'N',
                     'EDIT_FORM_LABEL' => ['ru' => '', 'en' => ''],
                     'LIST_COLUMN_LABEL' => ['ru' => '', 'en' => ''],
@@ -57,7 +57,7 @@ class CartRulesInstaller
                 'UF_BASKET_ID' => [
                     'ENTITY_ID' => $userFieldObject,
                     'FIELD_NAME' => 'UF_BASKET_ID',
-                    'USER_TYPE_ID' => 'double',
+                    'USER_TYPE_ID' => 'integer',
                     'MANDATORY' => 'N',
                     'EDIT_FORM_LABEL' => ['ru' => '', 'en' => ''],
                     'LIST_COLUMN_LABEL' => ['ru' => '', 'en' => ''],
