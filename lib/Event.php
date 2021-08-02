@@ -1175,6 +1175,24 @@ class Event
                 unset($_SESSION['MINDBOX_TRANSACTION_ID']);
                 unset($_SESSION['PAY_BONUSES']);
                 unset($_SESSION['TOTAL_PRICE']);
+
+                if (Helper::isAdminSection()) {
+                    $discount = $order->getDiscount();
+                    \Bitrix\Sale\DiscountCouponsManager::clearApply(true);
+                    \Bitrix\Sale\DiscountCouponsManager::useSavedCouponsForApply(true);
+                    $discount->setOrderRefresh(true);
+                    $discount->setApplyResult(array());
+
+                    /** @var \Bitrix\Sale\Basket $basket */
+                    if (!($basket = $order->getBasket())) {
+                        //throw new \Bitrix\Main\ObjectNotFoundException('Entity "Basket" not found');
+                    }
+
+                    $basket->refreshData(array('PRICE', 'COUPONS'));
+                    $discount->calculate();
+                    $basket->save();
+                    //$order->save();
+                }
             } catch (Exceptions\MindboxClientErrorException $e) {
                 unset($_SESSION['PAY_BONUSES']);
                 unset($_SESSION['TOTAL_PRICE']);
