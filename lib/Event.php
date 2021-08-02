@@ -1976,7 +1976,7 @@ class Event
     public function OnAdminSaleOrderEditHandler()
     {
         $jsString = "<script>document.addEventListener('DOMContentLoaded', function(){
-    let inputPromoCodeMindbox = document.querySelector('input[name=\"PROPERTIES[21]\"]');
+    let inputPromoCodeMindbox = document.querySelector('input[name=\"PROPERTIES[64]\"]');
     console.log(inputPromoCodeMindbox)   
     if (inputPromoCodeMindbox) {
       inputPromoCodeMindbox.insertAdjacentHTML('afterend', \"<input type='submit' class='bx-adm-pc-input-submit' value='Применить' onclick='BX.Sale.Admin.OrderEditPage.onRefreshOrderDataAndSave(); return false;'>\")
