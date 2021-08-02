@@ -1977,9 +1977,13 @@ class Event
     {
         $jsString = "<script>document.addEventListener('DOMContentLoaded', function(){
     let inputPromoCodeMindbox = document.querySelector('input[name=\"PROPERTIES[64]\"]');
-    console.log(inputPromoCodeMindbox)   
     if (inputPromoCodeMindbox) {
-      inputPromoCodeMindbox.insertAdjacentHTML('afterend', \"<input type='submit' class='bx-adm-pc-input-submit' value='Применить' onclick='BX.Sale.Admin.OrderEditPage.onRefreshOrderDataAndSave(); return false;'>\")
+      inputPromoCodeMindbox.insertAdjacentHTML('afterend', \"<input style='margin: 0 10px;' type='submit' class='bx-adm-pc-input-submit' value='Применить' onclick='BX.Sale.Admin.OrderEditPage.onRefreshOrderDataAndSave(); return false;'>\")
+    } 
+    
+    let inputBonusMindbox = document.querySelector('input[name=\"PROPERTIES[65]\"]');
+    if (inputBonusMindbox) {
+      inputBonusMindbox.insertAdjacentHTML('afterend', \"<input style='margin: 0 10px;' type='submit' class='bx-adm-pc-input-submit' value='Применить' onclick='BX.Sale.Admin.OrderEditPage.onRefreshOrderDataAndSave(); return false;'>\")
     } 
 });</script>";
         Asset::getInstance()->addString($jsString, AssetLocation::AFTER_JS);
