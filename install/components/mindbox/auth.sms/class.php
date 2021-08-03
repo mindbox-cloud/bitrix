@@ -224,6 +224,7 @@ class AuthSms extends CBitrixComponent implements Controllerable
                 }
             }
         } catch (MindboxClientException $e) {
+
             return Ajax::errorResponse(GetMessage('MB_AUS_REG_UNAVAILABLE'));
         }
     }

@@ -1139,11 +1139,15 @@ class Helper
     public static function getAdditionLoyaltyOrderPropsIds()
     {
         $return = [];
-        $additionalPropertiesCode = [
+        // @todo данный код будем использовать при релизе.
+        /*$additionalPropertiesCode = [
             OrderPropertiesInstaller::PROPERTY_BONUS,
             OrderPropertiesInstaller::PROPERTY_PROMO_CODE
+        ];*/
+        $additionalPropertiesCode = [
+            'MINDBOX_BONUS',
+            'MINDBOX_PROMO_CODE'
         ];
-
         $getOrderProps = \CSaleOrderProps::GetList([], ['CODE' => $additionalPropertiesCode]);
 
         while ($item = $getOrderProps->Fetch()) {

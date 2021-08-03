@@ -240,7 +240,7 @@ HTML;
         $orderPropertyIds = Helper::getAdditionLoyaltyOrderPropsIds();
 
 
-        if (!empty($orderPropertyIds)) {
+        if (!empty($orderPropertyIds) && is_array($orderPropertyIds)) {
 
             $encodeOrderPropertyIds = json_encode($orderPropertyIds);
 
