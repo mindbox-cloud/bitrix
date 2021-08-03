@@ -15,6 +15,7 @@ use CSaleOrderProps;
 use Mindbox\DTO\DTO;
 use Mindbox\DTO\DTOCollection;
 use Mindbox\DTO\V3\Requests\CustomerIdentityRequestDTO;
+use Mindbox\Installer\OrderPropertiesInstaller;
 use Mindbox\Options;
 use Mindbox\Templates\AdminLayouts;
 use Psr\Log\LoggerInterface;
@@ -1134,4 +1135,22 @@ class Helper
 
         return $return;
     }
+
+    public static function getAdditionLoyaltyOrderPropsIds()
+    {
+        $return = [];
+        $additionalPropertiesCode = [
+            OrderPropertiesInstaller::PROPERTY_BONUS,
+            OrderPropertiesInstaller::PROPERTY_PROMO_CODE
+        ];
+
+        $getOrderProps = \CSaleOrderProps::GetList([], ['CODE' => $additionalPropertiesCode]);
+
+        while ($item = $getOrderProps->Fetch()) {
+            $return[$item['ID']] = $item['ID'];
+        }
+
+        return $return;
+    }
+
 }

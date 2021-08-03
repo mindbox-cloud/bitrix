@@ -350,13 +350,6 @@ $arAllOptions['COMMON'][] = [
         $eventList,
     ]
 ];
-
-// dev block
-
-$new = new \Mindbox\Installer\OrderPropertiesInstaller();
-$new->dev();
-
-var_dump(Helper::getSiteList());
 ?>
 
 <form name='minboxoptions' method='POST'

@@ -2,6 +2,8 @@
 
 namespace Mindbox\Templates;
 
+use Mindbox\Helper;
+
 trait AdminLayouts
 {
     /**
@@ -230,5 +232,40 @@ HTML;
                 }
             </script>
 HTML;
+    }
+
+    public static function addButtonForOrderProperties()
+    {
+        $return = '';
+        $orderPropertyIds = Helper::getAdditionLoyaltyOrderPropsIds();
+
+
+        if (!empty($orderPropertyIds)) {
+
+            $encodeOrderPropertyIds = json_encode($orderPropertyIds);
+
+            $return = <<<HTML
+            <script>
+                document.addEventListener('DOMContentLoaded', function(){
+                    let propsIds = {$encodeOrderPropertyIds};
+                    let saveButton = "<input style='margin: 0 10px;' type='submit' class='bx-adm-pc-input-submit' value='Применить' onclick='BX.Sale.Admin.OrderEditPage.onRefreshOrderDataAndSave(); return false;'>"
+                    
+                    for (let propId in propsIds) {
+                      let propertyInput = document.querySelector('input[name="PROPERTIES[' + propId + ']"]');
+                      if (propertyInput) {
+                        if (propertyInput.value) {
+                          propertyInput.style.background = '#00994040';
+                        }
+                        propertyInput.insertAdjacentHTML('afterend', saveButton);
+                      }
+
+                    }
+                });
+            </script>
+HTML;
+        }
+
+        return $return;
+
     }
 }
