@@ -61,10 +61,8 @@ class OrderHistory extends CBitrixComponent implements Controllerable
             $orders = $this->getOrders($page);
             $showMore = count($orders) === intval($size);
         } catch (MindboxException $e) {
-            die(__FILE__);
-            $this->arResult['ERROR'] = GetMessage('MODULE_NOT_INCLUDED');
+            $this->arResult['ERROR'] = $e->getMessage();
         }
-
 
         return [
             'type' => 'success',
@@ -185,7 +183,7 @@ class OrderHistory extends CBitrixComponent implements Controllerable
         try {
             $this->arResult['ORDERS'] = $this->getOrders($page);
         } catch (MindboxException $e) {
-            $this->arResult['ERROR'] = GetMessage('MB_BH_EMPTY_MESSAGE');
+            $this->arResult['ERROR'] = $e->getMessage();
         }
     }
 

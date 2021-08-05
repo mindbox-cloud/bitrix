@@ -16,10 +16,16 @@ Asset::getInstance()->addCss("/bitrix/css/mindbox/style.css");
 ?>
 
 <div class="mindbox">
-    <?php if (empty($arResult['ORDERS'])) {
-        ?><span><?=GetMessage('MB_OH_EMPTY_MESSAGE')?></span>
+    <?php if (!empty($arResult['ERROR'])) {
+        ?>
+        <span><?=$arResult['ERROR']?></span>
         <?php
-    } ?>
+    } else {
+        ?>
+        <?php if (empty($arResult['ORDERS'])) {
+            ?><span><?=GetMessage('MB_OH_EMPTY_MESSAGE')?></span>
+            <?php
+        } ?>
         <div id='mindbox-orders-history'>
             <?php foreach ($arResult['ORDERS'] as $order) : ?>
                 <?=GetMessage('MB_OH_ORDER_HEADER', ['#ID#' => $order['id'], '#CREATED#' => $order['created'] ])?>
@@ -50,9 +56,13 @@ Asset::getInstance()->addCss("/bitrix/css/mindbox/style.css");
                 </table>
             <?php endforeach; ?>
         </div>
-    <?php if (count($arResult['ORDERS']) === $arParams['PAGE_SIZE']) : ?>
+        <?php if (count($arResult['ORDERS']) === $arParams['PAGE_SIZE']) : ?>
         <div class="more" id="mindbox-order-more" data-page="1">
             <div class="btn btn-primary" id="mindbox-order-history--load-more"><?=GetMessage('MB_OH_MORE')?></div>
         </div>
-    <?php endif; ?>
+        <?php endif; ?>
+
+        <?php
+    }
+    ?>
 </div>

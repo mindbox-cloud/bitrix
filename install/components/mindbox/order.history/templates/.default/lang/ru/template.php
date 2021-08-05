@@ -6,7 +6,6 @@ $MESS['MB_OH_AUTH_CODE'] = 'Код авторизации';
 $MESS['MB_OH_RESEND_BUTTON'] = 'Переотправить';
 $MESS['MB_OH_CHECK_CODE'] = 'Проверить код';
 $MESS['MB_OH_CANCEL_BUTTON'] = 'Отменить';
-$MESS['MB_OH_ERROR_MESSAGE'] = 'История заказов временно недоступна';
 $MESS['MB_OH_EMPTY_MESSAGE'] = 'История заказов пуста';
 $MESS['MB_OH_ORDER_HEADER'] = '<p>Заказ <b>№ #ID#</b> от #CREATED#.</p><p>';
 $MESS['MB_OH_ORDER_SPENT'] = 'Для оплаты заказа было использовано #SPENT# балл#END#.';

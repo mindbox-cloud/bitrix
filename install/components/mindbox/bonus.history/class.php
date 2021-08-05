@@ -183,12 +183,8 @@ class BonusHistory extends CBitrixComponent implements Controllerable
 
     public function executeComponent()
     {
-
-
         $_SESSION[self::getName()] = $this->arParams;
-
         $this->prepareResult();
-
         $this->includeComponentTemplate();
     }
 
@@ -199,7 +195,7 @@ class BonusHistory extends CBitrixComponent implements Controllerable
         try {
             $this->arResult['HISTORY'] = $this->getHistory($page);
         } catch (MindboxException $e) {
-            $this->arResult['ERROR'] = GetMessage('MB_BH_EMPTY_MESSAGE');
+            $this->arResult['ERROR'] = $e->getMessage();
         }
     }
 
