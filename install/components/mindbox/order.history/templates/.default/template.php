@@ -16,16 +16,18 @@ Asset::getInstance()->addCss("/bitrix/css/mindbox/style.css");
 ?>
 
 <div class="mindbox">
-    <?php if (!empty($arResult['ERROR'])) {
+    <?php
+    if (!empty($arResult['ERROR'])) :
         ?>
         <span><?=$arResult['ERROR']?></span>
         <?php
-    } else {
+    else:
         ?>
-        <?php if (empty($arResult['ORDERS'])) {
-            ?><span><?=GetMessage('MB_OH_EMPTY_MESSAGE')?></span>
-            <?php
-        } ?>
+        <?php
+        if (empty($arResult['ORDERS'])):
+            ?>
+            <span><?=GetMessage('MB_OH_EMPTY_MESSAGE')?></span>
+        <?php endif; ?>
         <div id='mindbox-orders-history'>
             <?php foreach ($arResult['ORDERS'] as $order) : ?>
                 <?=GetMessage('MB_OH_ORDER_HEADER', ['#ID#' => $order['id'], '#CREATED#' => $order['created'] ])?>
@@ -63,6 +65,6 @@ Asset::getInstance()->addCss("/bitrix/css/mindbox/style.css");
         <?php endif; ?>
 
         <?php
-    }
+    endif;
     ?>
 </div>
