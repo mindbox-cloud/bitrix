@@ -11,3 +11,6 @@ $MESS['MB_USER_EDIT_ERROR'] = 'Ошибка при изменени данных
 $MESS['MB_ORDER_PROCESSING_STATUS_ERROR'] = 'Цена заказа не может быть рассчитана';
 $MESS['MB_ORDER_PROCESSING_STATUS_CHANGED'] = 'Цена заказа изменилась. Пожалуйста, <a href="javascript: window.location.reload()">обновите</a> страницу для актуализации цен.';
 $MESS['MB_ORDER_CANNOT_BE_CHANGED'] = 'Заказ с проведенной оплатой не может быть изменен';
+$MESS['MB_CART_PROMOCODE_NOT_FOUND'] = 'Промокод не найден';
+$MESS['MB_CART_PROMOCODE_ERR'] = 'Нельзя применить данный промокод';
+$MESS['MB_CART_PROMO_USED'] = 'Промокод был использован ранее';

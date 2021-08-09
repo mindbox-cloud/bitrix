@@ -660,7 +660,19 @@ class Event
                     'sale'
                 );
             }
+
+            if (!empty($_SESSION['SET_COUPON_ERROR'])) {
+                $setPromoCodeError = $_SESSION['SET_COUPON_ERROR'];
+                unset($_SESSION['SET_COUPON_ERROR']);
+
+                return new \Bitrix\Main\EventResult(
+                    \Bitrix\Main\EventResult::ERROR,
+                    new \Bitrix\Sale\ResultError($setPromoCodeError, 'SALE_EVENT_WRONG_ORDER'),
+                    'sale'
+                );
+            }
         }
+
 
         $isNewOrder = Helper::isNewOrder($values);
 
@@ -1678,8 +1690,31 @@ class Event
                 return new Main\EventResult(Main\EventResult::SUCCESS);
             }
 
+
+            if (Helper::isAdminSection()) {
+                // @info функционал для процессинга в админке. Передаем OnBeforeOrderSaved ошибку применения купона
+                $couponsInfo = reset($preorderInfo->getField('couponsInfo'));
+                $setCouponError = false;
+
+                if ($couponsInfo['coupon']['status'] == 'NotFound') {
+                    $setCouponError = Loc::getMessage('MB_CART_PROMOCODE_NOT_FOUND');
+                }
+                elseif ($couponsInfo['coupon']['status'] == 'CanNotBeUsedForCurrentOrder') {
+                    $setCouponError = Loc::getMessage('MB_CART_PROMOCODE_ERR');
+                }
+                elseif ($couponsInfo['coupon']['status'] == 'Used') {
+                    $setCouponError = Loc::getMessage('MB_CART_PROMO_USED');
+                }
+
+                if (!empty($setCouponError)) {
+                    $_SESSION['SET_COUPON_ERROR'] = $setCouponError;
+                }
+            }
+
+
             $_SESSION['TOTAL_PRICE'] = $preorderInfo->getField('totalPrice');
             $discounts = $preorderInfo->getDiscountsInfo();
+
             foreach ($discounts as $discount) {
                 if ($discount->getType() === 'balance') {
                     $balance = $discount->getField('balance');
@@ -1985,7 +2020,7 @@ class Event
     public function OnAdminSaleOrderEditHandler()
     {
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'loyalty') {
-            $jsString = Helper::addButtonForOrderProperties();
+            $jsString = Helper::getAdditionalScriptForOrderEditPage();
 
             if (isset($jsString) && !empty($jsString)) {
                 Asset::getInstance()->addString($jsString, AssetLocation::AFTER_JS);

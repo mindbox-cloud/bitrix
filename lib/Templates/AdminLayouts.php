@@ -236,7 +236,7 @@ HTML;
 HTML;
     }
 
-    public static function addButtonForOrderProperties()
+    public static function getAdditionalScriptForOrderEditPage(): string
     {
         $return = '';
         $orderPropertyIds = Helper::getAdditionLoyaltyOrderPropsIds();
@@ -284,8 +284,6 @@ HTML;
             </script>
 HTML;
         }
-
         return $return;
-
     }
 }
