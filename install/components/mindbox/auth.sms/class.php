@@ -11,7 +11,6 @@ use Mindbox\Helper;
 use Mindbox\Options;
 use Mindbox\Ajax;
 
-
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) {
     die();
 }
@@ -39,7 +38,8 @@ class AuthSms extends CBitrixComponent implements Controllerable
                 return;
             }
         } catch (LoaderException $e) {
-            ShowError(GetMessage('MB_AUS_MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));;
+            ShowError(GetMessage('MB_AUS_MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));
+            ;
             return;
         }
 
@@ -140,9 +140,22 @@ class AuthSms extends CBitrixComponent implements Controllerable
             }
 
             $user = $checkCodeResponse->getResult()->getCustomer();
+            $userEmail = $user->getField('email');
+            $userFirstName = $user->getField('firstName');
+            $userLastName = $user->getField('lastName');
 
             if ($user->getProcessingStatus() !== 'Found') {
                 return Ajax::errorResponse(GetMessage('MB_AUS_USER_NOT_FOUND'));
+            }
+
+            if (empty($userEmail) ||
+                empty($userFirstName)   ||
+                empty($userLastName)
+            ) {
+                $_SESSION['NEW_USER_MB_ID'] = $user->getId('mindboxId');
+                return [
+                    'type' => 'fillup'
+                ];
             }
 
             $arFilter = [
@@ -176,7 +189,6 @@ class AuthSms extends CBitrixComponent implements Controllerable
             );
 
             if ($bxUser = $dbUser->fetch()) {
-
                 $fields = [
                     'UF_MINDBOX_ID' => $user->getId('mindboxId')
                 ];
@@ -293,24 +305,8 @@ class AuthSms extends CBitrixComponent implements Controllerable
 
         $customer->setId('mindboxId', $_SESSION['NEW_USER_MB_ID']);
 
-        try {
-            $registerResponse = $this->mindbox->customer()->fill(
-                $customer,
-                Options::getOperationName('fill')
-            )->sendRequest();
-        } catch (MindboxClientException $e) {
-            return Ajax::errorResponse($e);
-        }
-        if ($errors = $registerResponse->getValidationErrors()) {
-            $errors = $this->parseValidtaionErrors($errors);
-
-            return [
-                'type' => 'validation errors',
-                'errors' => $errors
-            ];
-        }
-
         $_SESSION['OFFLINE_REGISTER'] = true;
+
         $reg = $USER->Register(
             $fields['EMAIL'],
             $fields['NAME'],
@@ -325,6 +321,22 @@ class AuthSms extends CBitrixComponent implements Controllerable
 
         if ($reg['TYPE'] !== 'OK') {
             return Ajax::errorResponse($reg['MESSAGE']);
+        }
+
+        try {
+            $registerResponse = $this->mindbox->customer()->edit(
+                $customer,
+                Options::getOperationName('edit')
+            )->sendRequest();
+        } catch (MindboxClientException $e) {
+            return Ajax::errorResponse($e);
+        }
+        if ($errors = $registerResponse->getValidationErrors()) {
+            $errors = $this->parseValidtaionErrors($errors);
+            return [
+                'type' => 'validation errors',
+                'errors' => $errors
+            ];
         }
 
         return ['type' => 'success'];

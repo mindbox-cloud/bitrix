@@ -484,7 +484,6 @@ class Event
                         $arFields['USER_ID'],
                         $fields
                     );
-                    unset($_SESSION['NEW_USER_MB_ID']);
                 } else {
                     return true;
                 }
@@ -1827,7 +1826,6 @@ class Event
                     $arFields['ID'],
                     $fields
                 );
-                unset($_SESSION['NEW_USER_MB_ID']);
             }
         }
     }
