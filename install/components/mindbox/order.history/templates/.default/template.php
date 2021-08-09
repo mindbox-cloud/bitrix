@@ -21,10 +21,10 @@ Asset::getInstance()->addCss("/bitrix/css/mindbox/style.css");
         ?>
         <span><?=$arResult['ERROR']?></span>
         <?php
-    else:
+    else :
         ?>
         <?php
-        if (empty($arResult['ORDERS'])):
+        if (empty($arResult['ORDERS'])) :
             ?>
             <span><?=GetMessage('MB_OH_EMPTY_MESSAGE')?></span>
         <?php endif; ?>
