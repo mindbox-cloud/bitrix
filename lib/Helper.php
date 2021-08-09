@@ -6,6 +6,7 @@ use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\UserTable;
 use Bitrix\Sale;
+use Bitrix\Sale\Order;
 use Bitrix\Main;
 use CCatalog;
 use CIBlock;
@@ -1139,22 +1140,118 @@ class Helper
     public static function getAdditionLoyaltyOrderPropsIds()
     {
         $return = [];
-        // @todo данный код будем использовать при релизе.
-        /*$additionalPropertiesCode = [
+        $additionalPropertiesCode = [
             OrderPropertiesInstaller::PROPERTY_BONUS,
             OrderPropertiesInstaller::PROPERTY_PROMO_CODE
-        ];*/
-        $additionalPropertiesCode = [
-            'MINDBOX_BONUS',
-            'MINDBOX_PROMO_CODE'
         ];
+
         $getOrderProps = \CSaleOrderProps::GetList([], ['CODE' => $additionalPropertiesCode]);
 
         while ($item = $getOrderProps->Fetch()) {
-            $return[$item['ID']] = $item['ID'];
+            $return[$item['ID']] = $item['CODE'];
         }
 
         return $return;
+    }
+
+    public static function calculateAuthorizedCartByOrderId($orderId)
+    {
+        $return = null;
+
+        if ((int)$orderId > 0) {
+            $mindbox = static::mindbox();
+
+            $order =  \Bitrix\Sale\Order::load($orderId);
+            $basket = $order->getBasket();
+            $basketItems = $basket->getBasketItems();
+
+            $lines = [];
+            $bitrixBasket = [];
+
+            $preorder = new \Mindbox\DTO\V3\Requests\PreorderRequestDTO();
+
+            foreach ($basketItems as $basketItem) {
+
+                if (!Helper::checkBasketItem($basketItem)) {
+                    continue;
+                }
+
+                if ($basketItem->getField('CAN_BUY') == 'N') {
+                    continue;
+                }
+
+                $requestedPromotions = Helper::getRequestedPromotions($basketItem, $order);
+                $bitrixBasket[$basketItem->getId()] = $basketItem;
+                $catalogPrice = Helper::getBasePrice($basketItem);
+
+                $arLine = [
+                    'basePricePerItem' => $catalogPrice,
+                    'quantity'         => $basketItem->getQuantity(),
+                    'lineId'           => $basketItem->getId(),
+                    'product'          => [
+                        'ids' => [
+                            Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getElementCode($basketItem->getProductId())
+                        ]
+                    ],
+                    'status'           => [
+                        'ids' => [
+                            'externalId' => 'CheckedOut'
+                        ]
+                    ]
+                ];
+
+                if (!empty($requestedPromotions)) {
+                    $arLine['requestedPromotions'] = $requestedPromotions;
+                }
+
+                $lines[] = $arLine;
+            }
+            $orderId = $order->getId();
+            $arOrder = [
+                'ids'   => [
+                    Options::getModuleOption('TRANSACTION_ID') => $orderId,
+                ],
+                'lines' => $lines
+            ];
+            $preorder->setField('order', $arOrder);
+            $customer = new CustomerRequestDTO();
+            global $USER;
+
+            if ($USER->IsAuthorized()) {
+                $orderUserId = $order->getUserId();
+                $mindboxId = Helper::getMindboxId($orderUserId);
+
+                if (!$mindboxId) {
+                    return new Main\EventResult(Main\EventResult::SUCCESS);
+                }
+
+                $customer->setId('mindboxId', $mindboxId);
+                $preorder->setCustomer($customer);
+
+                try {
+                    $preorderInfo = $mindbox->order()->calculateAuthorizedCart(
+                        $preorder,
+                        Options::getOperationName('calculateAuthorizedCart' . (Helper::isAdminSection()? 'Admin':''))
+                    )->sendRequest()->getResult()->getField('order');
+                    if (!empty($preorderInfo) && is_object($preorderInfo)) {
+                        return $preorderInfo;
+                    }
+                } catch (Exceptions\MindboxClientException $e) {
+                }
+            }
+        }
+
+        return $return;
+    }
+
+    public function getAvailableBonusForCurrentOrder($orderId)
+    {
+        $getCalcOrderData =  self::calculateAuthorizedCartByOrderId($orderId);
+
+        if (!empty($getCalcOrderData) && is_object($getCalcOrderData)) {
+            $totalBonusPointsInfo = $getCalcOrderData->getField('totalBonusPointsInfo');
+            return $totalBonusPointsInfo['availableAmountForCurrentOrder'];
+        }
     }
 
 }

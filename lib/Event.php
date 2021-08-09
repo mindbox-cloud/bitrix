@@ -909,9 +909,16 @@ class Event
                     }
                 }
             } elseif ($createOrderResult->getResult()->getOrder()->getField('processingStatus') === 'PriceHasBeenChanged') {
+
+                if (Helper::isAdminSection()) {
+                    $errorMessage = $createOrderResult->getResult()->getOrder()->getField('statusDescription');
+                } else {
+                    $errorMessage = Loc::getMessage("MB_ORDER_PROCESSING_STATUS_CHANGED");
+                }
+
                 return new \Bitrix\Main\EventResult(
                     \Bitrix\Main\EventResult::ERROR,
-                    new \Bitrix\Sale\ResultError(Loc::getMessage("MB_ORDER_PROCESSING_STATUS_CHANGED"), 'SALE_EVENT_WRONG_ORDER'),
+                    new \Bitrix\Sale\ResultError($errorMessage, 'SALE_EVENT_WRONG_ORDER'),
                     'sale'
                 );
             } else {
@@ -1659,6 +1666,7 @@ class Event
                     $preorder,
                     Options::getOperationName('calculateAuthorizedCart' . (Helper::isAdminSection()? 'Admin':''))
                 )->sendRequest()->getResult()->getField('order');
+
             } else {
                 $preorderInfo = $mindbox->order()->calculateUnauthorizedCart(
                     $preorder,
@@ -1684,6 +1692,7 @@ class Event
                     $_SESSION['PROMO_CODE_AMOUNT'] = $discount['availableAmountForCurrentOrder'];
                 }
             }
+
 
             $lines = $preorderInfo->getLines();
             $mindboxBasket = [];
@@ -1975,10 +1984,12 @@ class Event
      */
     public function OnAdminSaleOrderEditHandler()
     {
-        $jsString = Helper::addButtonForOrderProperties();
+        if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'loyalty') {
+            $jsString = Helper::addButtonForOrderProperties();
 
-        if (isset($jsString) && !empty($jsString)) {
-            Asset::getInstance()->addString($jsString, AssetLocation::AFTER_JS);
+            if (isset($jsString) && !empty($jsString)) {
+                Asset::getInstance()->addString($jsString, AssetLocation::AFTER_JS);
+            }
         }
     }
 }

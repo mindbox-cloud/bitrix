@@ -3,6 +3,8 @@
 namespace Mindbox\Templates;
 
 use Mindbox\Helper;
+use Mindbox\Installer\OrderPropertiesInstaller;
+use Bitrix\Main\Localization\Loc;
 
 trait AdminLayouts
 {
@@ -238,10 +240,16 @@ HTML;
     {
         $return = '';
         $orderPropertyIds = Helper::getAdditionLoyaltyOrderPropsIds();
+        $bonusPropertyCode = OrderPropertiesInstaller::PROPERTY_BONUS;
 
+        $orderId = (int)trim(htmlspecialchars($_REQUEST['ID']));
+
+        if (!empty($orderId)) {
+            $bonusAvailableDescription = Loc::getMessage('MB_BONUS_AVAILABLE');
+            $bonusAvailableValue = Helper::getAvailableBonusForCurrentOrder($orderId);
+        }
 
         if (!empty($orderPropertyIds) && is_array($orderPropertyIds)) {
-
             $encodeOrderPropertyIds = json_encode($orderPropertyIds);
 
             $return = <<<HTML
@@ -249,13 +257,25 @@ HTML;
                 document.addEventListener('DOMContentLoaded', function(){
                     let propsIds = {$encodeOrderPropertyIds};
                     let saveButton = "<input style='margin: 0 10px;' type='submit' class='bx-adm-pc-input-submit' value='Применить' onclick='BX.Sale.Admin.OrderEditPage.onRefreshOrderDataAndSave(); return false;'>"
+                    let defaultBitrixPromocode = document.querySelector('#sale-admin-order-coupons');
+                    
+                    if (defaultBitrixPromocode) {
+                        defaultBitrixPromocode.closest('.adm-s-result-container-promo').remove();
+                    }
                     
                     for (let propId in propsIds) {
                       let propertyInput = document.querySelector('input[name="PROPERTIES[' + propId + ']"]');
+                     
                       if (propertyInput) {
+                        
+                        if (propsIds[propId] === '{$bonusPropertyCode}') {
+                          propertyInput.insertAdjacentHTML('afterend', '<br><i style="margin-top: 6px;display: block;">{$bonusAvailableDescription}{$bonusAvailableValue}</i> ');
+                        }
+                        
                         if (propertyInput.value) {
                           propertyInput.style.background = '#00994040';
                         }
+                        
                         propertyInput.insertAdjacentHTML('afterend', saveButton);
                       }
 
