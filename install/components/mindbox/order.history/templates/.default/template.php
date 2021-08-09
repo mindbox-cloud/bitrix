@@ -16,12 +16,12 @@ Asset::getInstance()->addCss("/bitrix/css/mindbox/style.css");
 ?>
 
 <div class="mindbox">
-    <? if (!empty($arResult['ERROR'])): ?>
+    <?php if (!empty($arResult['ERROR'])) : ?>
         <span><?= $arResult['ERROR'] ?></span>
-    <? else: ?>
-        <? if (empty($arResult['ORDERS'])): ?>
+    <?php else : ?>
+        <?php if (empty($arResult['ORDERS'])) : ?>
             <span><?= GetMessage('MB_OH_EMPTY_MESSAGE') ?></span>
-        <? endif; ?>
+        <?php endif; ?>
         <div id='mindbox-orders-history'>
             <?php foreach ($arResult['ORDERS'] as $order) : ?>
                 <?= GetMessage('MB_OH_ORDER_HEADER', ['#ID#' => $order['id'], '#CREATED#' => $order['created']]) ?>
@@ -53,8 +53,10 @@ Asset::getInstance()->addCss("/bitrix/css/mindbox/style.css");
                         <th><?= GetMessage('MB_OH_ITEM_PRICE') ?></th>
                     </tr>
                     <?php foreach ($order['lines'] as $line) : ?>
-                        <?= GetMessage('MB_OH_ORDER_LINE',
-                            ['#LINK#' => $line['link'], '#NAME#' => $line['name'], '#PRICE#' => $line['price']]); ?>
+                        <?= GetMessage(
+                            'MB_OH_ORDER_LINE',
+                            ['#LINK#' => $line['link'], '#NAME#' => $line['name'], '#PRICE#' => $line['price']]
+                        ); ?>
                     <?php endforeach; ?>
                 </table>
             <?php endforeach; ?>
@@ -65,5 +67,5 @@ Asset::getInstance()->addCss("/bitrix/css/mindbox/style.css");
             </div>
         <?php endif; ?>
 
-    <? endif; ?>
+    <?php endif; ?>
 </div>
