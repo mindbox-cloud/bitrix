@@ -1167,10 +1167,6 @@ class Event
                     $setPropertiesList['MINDBOX_PROMO_CODE'] = $_SESSION['PROMO_CODE'];
                 }
 
-                if (isset($_SESSION['PROMO_CODE_AMOUNT']) && !empty($_SESSION['PROMO_CODE_AMOUNT'])) {
-                    $setPropertiesList['MINDBOX_PROMO_CODE_AMOUNT'] = $_SESSION['PROMO_CODE_AMOUNT'];
-                }
-
                 if (isset($_SESSION['PAY_BONUSES']) && !empty($_SESSION['PAY_BONUSES'])) {
                     $setPropertiesList['MINDBOX_BONUS'] = $_SESSION['PAY_BONUSES'];
                 }
