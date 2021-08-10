@@ -3,8 +3,6 @@
 use Bitrix\Main\Engine\Contract\Controllerable;
 use Bitrix\Main\Loader;
 use Bitrix\Main\LoaderException;
-use Bitrix\Main\PhoneNumber\Format;
-use Bitrix\Main\PhoneNumber\Parser;
 use Mindbox\DTO\V3\Requests\CustomerRequestDTO;
 use Mindbox\Exceptions\MindboxClientException;
 use Mindbox\Helper;
@@ -39,7 +37,7 @@ class AuthSms extends CBitrixComponent implements Controllerable
                 return;
             }
         } catch (LoaderException $e) {
-            ShowError(GetMessage('MB_AUS_MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));;
+            ShowError(GetMessage('MB_AUS_MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));
             return;
         }
 
