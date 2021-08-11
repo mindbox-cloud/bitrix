@@ -242,7 +242,7 @@ HTML;
         $orderPropertyIds = Helper::getAdditionLoyaltyOrderPropsIds();
         $bonusPropertyCode = OrderPropertiesInstaller::PROPERTY_BONUS;
 
-        $orderId = (int)trim(htmlspecialchars($_REQUEST['ID']));
+        $orderId = (int)$_REQUEST['ID'];
 
         if (!empty($orderId)) {
             $bonusAvailableDescription = Loc::getMessage('MB_BONUS_AVAILABLE');

@@ -1102,12 +1102,18 @@ class Helper
         return true;
     }
 
-    public static function getOrderPropertyByCode($code)
+    public static function getOrderPropertyByCode($code, $personType = false)
     {
         $return = [];
+        $filter = ['CODE' => $code];
+
+        if (!empty($personType)) {
+            $filter['PERSON_TYPE_ID'] = $personType;
+        }
+
         $orderProps = \CSaleOrderProps::GetList(
             ['SORT' => 'ASC'],
-            ['CODE' => $code]
+            $filter
         );
 
         if ($arProps = $orderProps->Fetch()) {

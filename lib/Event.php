@@ -1173,14 +1173,18 @@ class Event
 
                 if (!empty($setPropertiesList)) {
                     $orderPropertyCollection = $order->getPropertyCollection();
+                    $orderPersonType = $order->getPersonTypeId();
+
                     foreach ($setPropertiesList as $propCode => $propValue) {
-                         $orderPropertyData = Helper::getOrderPropertyByCode($propCode);
+                         $orderPropertyData = Helper::getOrderPropertyByCode($propCode, $orderPersonType);
 
                          if (!empty($orderPropertyData)) {
                              $propertyItemObj = $orderPropertyCollection->getItemByOrderPropertyId($orderPropertyData['ID']);
-                             $propertyItemObj->setValue($propValue);
-                             $propertyItemObj->save();
 
+                             if (!empty($propertyItemObj) && is_object($propertyItemObj)) {
+                                 $propertyItemObj->setValue($propValue);
+                                 $propertyItemObj->save();
+                             }
                          }
                     }
                 }

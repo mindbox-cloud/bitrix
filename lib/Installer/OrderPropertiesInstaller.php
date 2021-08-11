@@ -238,8 +238,7 @@ class OrderPropertiesInstaller
             $addPropertyFields = array_merge($addPropertyFields, $fields);
         }
 
-        $result = \CSaleOrderProps::Add($addPropertyFields);
-        var_dump($result);
+        \CSaleOrderProps::Add($addPropertyFields);
     }
 
     /**
