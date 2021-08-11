@@ -1241,7 +1241,7 @@ class Helper
                     }
 
                 } else {
-                    $arCoupons[]['ids']['code'] = $_SESSION['PROMO_CODE'];
+                    $arCoupons[]['ids']['code'] = $setOrderPromoCodeValue;
                 }
             }
 
@@ -1291,12 +1291,18 @@ class Helper
 
     public function getAvailableBonusForCurrentOrder($orderId)
     {
+        $return = 0;
         $getCalcOrderData =  self::calculateAuthorizedCartByOrderId($orderId);
 
         if (!empty($getCalcOrderData) && is_object($getCalcOrderData)) {
             $totalBonusPointsInfo = $getCalcOrderData->getField('totalBonusPointsInfo');
-            return $totalBonusPointsInfo['availableAmountForCurrentOrder'];
+
+            if ($totalBonusPointsInfo['availableAmountForCurrentOrder']) {
+                $return = $totalBonusPointsInfo['availableAmountForCurrentOrder'];
+            }
         }
+
+        return $return;
     }
 
 }
