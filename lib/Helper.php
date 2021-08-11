@@ -1177,7 +1177,6 @@ class Helper
 
                 $setBonus = $propertyCollection->getItemByOrderPropertyCode('MINDBOX_BONUS');
                 $setBonusValue = $setBonus->getValue();
-                $_SESSION['PAY_BONUSES'] = $setBonusValue;
             }
 
 
@@ -1248,6 +1247,15 @@ class Helper
 
             if (!empty($arCoupons)) {
                 $arOrder['coupons'] = $arCoupons;
+            }
+
+            if (!empty($setBonusValue)) {
+
+                $arOrder['bonusPoints'] = [
+                    [
+                        'amount' => $setBonusValue
+                    ]
+                ];
             }
 
             $preorder->setField('order', $arOrder);
