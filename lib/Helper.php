@@ -1156,6 +1156,7 @@ class Helper
 
     public static function calculateAuthorizedCartByOrderId($orderId)
     {
+        global $USER;
         $return = null;
 
         if ((int)$orderId > 0) {
@@ -1167,6 +1168,18 @@ class Helper
 
             $lines = [];
             $bitrixBasket = [];
+
+            $propertyCollection = $order->getPropertyCollection();
+
+            if (is_object($propertyCollection)) {
+                $setOrderPromoCode = $propertyCollection->getItemByOrderPropertyCode('MINDBOX_PROMO_CODE');
+                $setOrderPromoCodeValue = $setOrderPromoCode->getValue();
+
+                $setBonus = $propertyCollection->getItemByOrderPropertyCode('MINDBOX_BONUS');
+                $setBonusValue = $setBonus->getValue();
+                $_SESSION['PAY_BONUSES'] = $setBonusValue;
+            }
+
 
             $preorder = new \Mindbox\DTO\V3\Requests\PreorderRequestDTO();
 
@@ -1206,6 +1219,7 @@ class Helper
 
                 $lines[] = $arLine;
             }
+
             $orderId = $order->getId();
             $arOrder = [
                 'ids'   => [
@@ -1213,9 +1227,32 @@ class Helper
                 ],
                 'lines' => $lines
             ];
+
+            $arCoupons = [];
+
+            if (!empty($setOrderPromoCodeValue)) {
+
+                if (strpos($setOrderPromoCodeValue, ',') !== false) {
+                    $applyCouponsList = explode(',', $setOrderPromoCodeValue);
+
+                    if (is_array($applyCouponsList) && !empty($applyCouponsList)) {
+                        foreach ($applyCouponsList as $couponItem) {
+                            $arCoupons[]['ids']['code'] = trim($couponItem);
+                        }
+                    }
+
+                } else {
+                    $arCoupons[]['ids']['code'] = $_SESSION['PROMO_CODE'];
+                }
+            }
+
+            if (!empty($arCoupons)) {
+                $arOrder['coupons'] = $arCoupons;
+            }
+
             $preorder->setField('order', $arOrder);
             $customer = new CustomerRequestDTO();
-            global $USER;
+
 
             if ($USER->IsAuthorized()) {
                 $orderUserId = $order->getUserId();
