@@ -1551,12 +1551,18 @@ class Event
         if (Helper::isAdminSection()) {
             $propertyCollection = $order->getPropertyCollection();
             $setOrderPromoCode = $propertyCollection->getItemByOrderPropertyCode('MINDBOX_PROMO_CODE');
-            $setOrderPromoCodeValue = $setOrderPromoCode->getValue();
-            $_SESSION['PROMO_CODE'] = $setOrderPromoCodeValue;
-
             $setBonus = $propertyCollection->getItemByOrderPropertyCode('MINDBOX_BONUS');
-            $setBonusValue = $setBonus->getValue();
-            $_SESSION['PAY_BONUSES'] = $setBonusValue;
+
+            if (!empty($setOrderPromoCode) && is_object($setOrderPromoCode)) {
+                $setOrderPromoCodeValue = $setOrderPromoCode->getValue();
+                $_SESSION['PROMO_CODE'] = $setOrderPromoCodeValue;
+            }
+
+            if (!empty($setBonus) && is_object($setBonus)) {
+                $setBonusValue = $setBonus->getValue();
+                $_SESSION['PAY_BONUSES'] = $setBonusValue;
+            }
+
 
             // @info сохраним корзину, чтобы получить корректный lineId
             $basket->save();
