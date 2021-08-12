@@ -39,7 +39,6 @@ class AuthSms extends CBitrixComponent implements Controllerable
             }
         } catch (LoaderException $e) {
             ShowError(GetMessage('MB_AUS_MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));
-            ;
             return;
         }
 
@@ -143,6 +142,9 @@ class AuthSms extends CBitrixComponent implements Controllerable
             $userEmail = $user->getField('email');
             $userFirstName = $user->getField('firstName');
             $userLastName = $user->getField('lastName');
+            $userMobilePhone = $user->getField('mobilePhone');
+            $userBirthDate = $user->getField('birthDate');
+            $userSex = $user->getField('sex');
 
             if ($user->getProcessingStatus() !== 'Found') {
                 return Ajax::errorResponse(GetMessage('MB_AUS_USER_NOT_FOUND'));
@@ -154,7 +156,13 @@ class AuthSms extends CBitrixComponent implements Controllerable
             ) {
                 $_SESSION['NEW_USER_MB_ID'] = $user->getId('mindboxId');
                 return [
-                    'type' => 'fillup'
+                    'type' => 'fillup',
+                    'mobilePhone' =>  $userMobilePhone,
+                    'firstName' =>  $userFirstName,
+                    'lastName'  =>  $userLastName,
+                    'email'     =>  $userEmail,
+                    'birthDate' =>  date('d.m.Y', strtotime($userBirthDate)),
+                    'sex'       =>  $userSex
                 ];
             }
 
@@ -275,6 +283,11 @@ class AuthSms extends CBitrixComponent implements Controllerable
         }
         global $USER;
 
+        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('fillupAction');
+            $logger->log('$fields', $fields);
+        }
+
         foreach ($fields as $key => $value) {
             $fields[$key] = htmlspecialcharsEx(trim($value));
         }
@@ -303,40 +316,72 @@ class AuthSms extends CBitrixComponent implements Controllerable
             $customer->setField('sex', $sex);
         }
 
-        $customer->setId('mindboxId', $_SESSION['NEW_USER_MB_ID']);
+        $mindboxId = $_SESSION['NEW_USER_MB_ID'];
+        $customer->setId('mindboxId', $mindboxId);
 
         $_SESSION['OFFLINE_REGISTER'] = true;
 
-        $reg = $USER->Register(
-            $fields['EMAIL'],
-            $fields['NAME'],
-            $fields['LAST_NAME'],
-            $fields['PASSWORD'],
-            $fields['CONFIRM_PASSWORD'],
-            $fields['EMAIL'],
-            false,
-            $fields['captcha_word'],
-            $fields['captcha_sid']
-        );
+        $dbUser = Bitrix\Main\UserTable::getList([
+                'filter' => [
+                    'UF_MINDBOX_ID' => $mindboxId
+                ]
+            ]);
 
-        if ($reg['TYPE'] !== 'OK') {
-            return Ajax::errorResponse($reg['MESSAGE']);
-        }
-
-        try {
-            $registerResponse = $this->mindbox->customer()->edit(
-                $customer,
-                Options::getOperationName('edit')
-            )->sendRequest();
-        } catch (MindboxClientException $e) {
-            return Ajax::errorResponse($e);
-        }
-        if ($errors = $registerResponse->getValidationErrors()) {
-            $errors = $this->parseValidtaionErrors($errors);
+        if ($bxUser = $dbUser->fetch()) {
+            $USER->Authorize($bxUser['ID']);
             return [
-                'type' => 'validation errors',
-                'errors' => $errors
+                'type' => 'success',
+                'message' => GetMessage('MB_AUS_SUCCESS')
             ];
+        } else {
+            if (!$fields['PASSWORD'] ||
+                !$fields['CONFIRM_PASSWORD']
+            ) {
+                $fields['PASSWORD'] = $fields['CONFIRM_PASSWORD'] = \Bitrix\Main\Authentication\ApplicationPasswordTable::generatePassword();
+            }
+
+            $reg = $USER->Register(
+                $fields['EMAIL'],
+                $fields['NAME'],
+                $fields['LAST_NAME'],
+                $fields['PASSWORD'],
+                $fields['CONFIRM_PASSWORD'],
+                $fields['EMAIL'],
+                false,
+                $fields['captcha_word'],
+                $fields['captcha_sid']
+            );
+
+            if ($reg['TYPE'] !== 'OK') {
+                return Ajax::errorResponse($reg['MESSAGE']);
+            }
+
+            $fields = [
+                'UF_MINDBOX_ID' => $mindboxId
+            ];
+
+            $user = new \CUser;
+            $user->Update(
+                $USER->GetID(),
+                $fields
+            );
+
+            try {
+                $registerResponse = $this->mindbox->customer()->edit(
+                    $customer,
+                    Options::getOperationName('edit')
+                )->sendRequest();
+            } catch (MindboxClientException $e) {
+                return Ajax::errorResponse($e);
+            }
+            if ($errors = $registerResponse->getValidationErrors()) {
+                $errors = $this->parseValidtaionErrors($errors);
+
+                return [
+                    'type'   => 'validation errors',
+                    'errors' => $errors
+                ];
+            }
         }
 
         return ['type' => 'success'];

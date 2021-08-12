@@ -106,10 +106,19 @@ $(document).ready(function() {
             }
 
             else if(response.data.type === 'fillup') {
+
+                let $genderId = (response.data.sex === 'male')? 1:2;
+
                 $('#mindbox-input-code').hide();
                 $('#mindbox-fillup-profile').show();
 
-                $('#mindbox-fillup-phone').val(response.data.phone);
+                $('#mindbox-fillup-phone').val(response.data.mobilePhone);
+                $('#mindbox-fillup-email').val(response.data.email);
+                $('#mindbox-fillup-name').val(response.data.firstName);
+                $('#mindbox-fillup-last-name').val(response.data.lastName);
+                $('#mindbox-fillup-date').val(response.data.birthDate);
+                $('#mindbox-gender_' + $genderId).attr('checked', 'checked');
+
             }
         });
     });
