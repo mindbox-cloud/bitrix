@@ -25,15 +25,7 @@ $arComponentParameters = [
                 'BIRTH_DATE'   => GetMessage('BIRTH_DATE'),
                 'GENDER'       => GetMessage('GENDER')
             ],
-            "DEFAULT" => [
-                'NAME',
-                'LAST_NAME',
-                'EMAIL',
-                'MOBILE_PHONE',
-                'PASSWORD',
-                'BIRTH_DATE',
-                'GENDER'
-            ]
+            "DEFAULT" => 'EMAIL'
         ]
     ]
 ];
