@@ -25,6 +25,7 @@ use Mindbox\DTO\V2\Requests\LineRequestDTO;
 use Mindbox\DTO\V2\Requests\OrderCreateRequestDTO;
 use Mindbox\DTO\V2\Requests\OrderUpdateRequestDTO;
 use Mindbox\DTO\V2\Requests\PreorderRequestDTO;
+use MongoDB\Driver\Exception\Exception;
 
 Loader::includeModule('catalog');
 Loader::includeModule('sale');
@@ -674,6 +675,27 @@ class Event
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
+        try {
+            $orderDTO = new OrderCreateRequestDTO();
+            $orderDTO->setField('order', [
+                'transaction' => [
+                    "ids" => [
+                        "externalId" => Helper::getTransactionId()
+                    ]
+                ]
+            ]);
+            $mindbox->order()->rollbackOrderTransaction(
+                $orderDTO,
+                Options::getOperationName('rollbackOrderTransaction')
+            );
+            $request = $mindbox->order()->getRequest();
+            if ($request) {
+                $_SESSION['MINDBOX_TASK_ID'] = QueueTable::push($request);
+            }
+        } catch (Exception $exception) {
+            unset($_SESSION[ 'MINDBOX_TRANSACTION_ID' ]);
+        }
+
         $basket = $order->getBasket();
         global $USER;
 
@@ -1112,6 +1134,14 @@ class Event
                 unset($_SESSION['MINDBOX_TRANSACTION_ID']);
                 unset($_SESSION['PAY_BONUSES']);
                 unset($_SESSION['TOTAL_PRICE']);
+
+                if (isset($_SESSION['MINDBOX_TASK_ID']) && $_SESSION['MINDBOX_TASK_ID'] > 0) {
+                    QueueTable::update($_SESSION['MINDBOX_TASK_ID'], [
+                        'STATUS_EXEC' => 'Y',
+                        'DATE_EXEC' => \Bitrix\Main\Type\DateTime::createFromTimestamp(time())
+                    ]);
+                    unset($_SESSION['MINDBOX_TASK_ID']);
+                }
             } catch (Exceptions\MindboxClientErrorException $e) {
                 unset($_SESSION['PAY_BONUSES']);
                 unset($_SESSION['TOTAL_PRICE']);

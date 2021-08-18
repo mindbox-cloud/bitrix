@@ -120,7 +120,7 @@ class mindbox_marketing extends CModule
             "\Mindbox\QueueTable::start();",
             $this->MODULE_ID,
             "N",
-            15 * 60,
+            60,
             $now,
             "Y",
             $now,
