@@ -348,7 +348,7 @@ class Helper
     {
         $props = [];
 
-        $catalogId = COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '0');
+        $catalogId = COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '0');
         if (!empty($catalogId) && $catalogId !== '0') {
             $iblockProperties = CIBlock::GetProperties($catalogId);
             while ($iblockProperty = $iblockProperties->Fetch()) {
@@ -391,7 +391,7 @@ class Helper
             return $offerProps;
         }
 
-        $catalogId = COption::GetOptionString(ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '0');
+        $catalogId = COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '0');
 
         if (!empty($catalogId) && $catalogId !== '0') {
             $select = ['ID', 'IBLOCK_ID', 'OFFERS_IBLOCK_ID'];
