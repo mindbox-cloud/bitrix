@@ -110,13 +110,13 @@ class BonusHistory extends CBitrixComponent implements Controllerable
                 $operation
             )->sendRequest();
         } catch (Exception $e) {
-            throw new MindboxException('Requested page is empty or doesn\'t exist');
+            throw new MindboxException(GetMessage('MB_BH_ERROR_MESSAGE'));
         }
 
         $result = $response->getResult();
 
         if (!$result->getCustomerActions()) {
-            throw new MindboxException('Requested page is empty or doesn\'t exist');
+            throw new MindboxException(GetMessage('MB_BH_ERROR_MESSAGE'));
         }
 
 
