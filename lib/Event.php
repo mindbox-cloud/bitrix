@@ -192,6 +192,14 @@ class Event
             return $arFields;
         }
 
+        if (isset($_REQUEST['c']) &&
+            $_REQUEST['c'] === 'mindbox:auth.sms' &&
+            isset($_REQUEST['action']) &&
+            $_REQUEST['action'] === 'fillup'
+        ) {
+            return $arFields;
+        }
+
         global $APPLICATION, $USER;
 
         $mindbox = static::mindbox();
@@ -1655,6 +1663,10 @@ class Event
         }
 
         if ($_REQUEST['mode'] == 'class' && $_REQUEST['c'] == 'mindbox:auth.sms' && $_REQUEST['action'] == 'checkCode') {
+            return $arFields;
+        }
+
+        if ($_REQUEST['mode'] == 'class' && $_REQUEST['c'] == 'mindbox:auth.sms' && $_REQUEST['action'] == 'fillup') {
             return $arFields;
         }
 
