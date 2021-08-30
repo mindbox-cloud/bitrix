@@ -283,11 +283,6 @@ class AuthSms extends CBitrixComponent implements Controllerable
         }
         global $USER;
 
-        if (\Bitrix\Main\Loader::includeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('fillupAction');
-            $logger->log('$fields', $fields);
-        }
-
         foreach ($fields as $key => $value) {
             $fields[$key] = htmlspecialcharsEx(trim($value));
         }
@@ -321,14 +316,52 @@ class AuthSms extends CBitrixComponent implements Controllerable
 
         $_SESSION['OFFLINE_REGISTER'] = true;
 
-        $dbUser = Bitrix\Main\UserTable::getList([
-                'filter' => [
-                    'UF_MINDBOX_ID' => $mindboxId
+        $arFilter = [
+            [
+                "LOGIC"=>"OR",
+                [
+                    "UF_MINDBOX_ID"=>$mindboxId
+                ],
+                [
+                    "EMAIL"=>$fields['EMAIL']
                 ]
-            ]);
+            ]
+        ];
+
+        $dbUser = Bitrix\Main\UserTable::getList([
+            'filter' => $arFilter
+        ]);
 
         if ($bxUser = $dbUser->fetch()) {
+            $fields = [
+                'UF_MINDBOX_ID' => $mindboxId
+            ];
+
             $USER->Authorize($bxUser['ID']);
+
+            $user = new \CUser;
+            $user->Update(
+                $USER->GetID(),
+                $fields
+            );
+
+            try {
+                $registerResponse = $this->mindbox->customer()->edit(
+                    $customer,
+                    Options::getOperationName('edit')
+                )->sendRequest();
+            } catch (MindboxClientException $e) {
+                return Ajax::errorResponse($e);
+            }
+            if ($errors = $registerResponse->getValidationErrors()) {
+                $errors = $this->parseValidationErrors($errors);
+
+                return [
+                    'type'   => 'validation errors',
+                    'errors' => $errors
+                ];
+            }
+
             return [
                 'type' => 'success',
                 'message' => GetMessage('MB_AUS_SUCCESS')
@@ -375,7 +408,7 @@ class AuthSms extends CBitrixComponent implements Controllerable
                 return Ajax::errorResponse($e);
             }
             if ($errors = $registerResponse->getValidationErrors()) {
-                $errors = $this->parseValidtaionErrors($errors);
+                $errors = $this->parseValidationErrors($errors);
 
                 return [
                     'type'   => 'validation errors',
@@ -410,7 +443,7 @@ class AuthSms extends CBitrixComponent implements Controllerable
         }
     }
 
-    protected function parseValidtaionErrors($errors)
+    protected function parseValidationErrors($errors)
     {
         $parsedErrors = [];
         foreach ($errors as $error) {
