@@ -100,8 +100,8 @@ class Options
 
         try {
             $mindbox =  new Mindbox($config, new MindboxFileLogger($path, 'debug'));
-            $mindbox->getClientV2()->addHeaders(['Mindbox-Integration' => 'Bitrix']);
-            $mindbox->getClientV3()->addHeaders(['Mindbox-Integration' => 'Bitrix']);
+            $mindbox->getClientV2()->addHeaders(['Mindbox-Integration' => 'Bitrix', 'Mindbox-Integration-Version' => COption::GetOptionString('mindbox.marketing', 'MODULE_VERSION', '1.0')]);
+            $mindbox->getClientV3()->addHeaders(['Mindbox-Integration' => 'Bitrix', 'Mindbox-Integration-Version' => COption::GetOptionString('mindbox.marketing', 'MODULE_VERSION', '1.0')]);
 
             return $mindbox;
         } catch (MindboxConfigException $e) {

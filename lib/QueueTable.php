@@ -16,9 +16,10 @@ class QueueTable extends Entity\DataManager
 
     public static function push(MindboxRequest $request)
     {
-        if(isset($request)) {
-            self::add(['REQUEST_DATA' => serialize($request)]);
+        if (isset($request)) {
+            $result = self::add(['REQUEST_DATA' => serialize($request)]);
         }
+        return $result->getPrimary();
     }
 
     public static function execute()
@@ -47,7 +48,8 @@ class QueueTable extends Entity\DataManager
                 $status = 'N';
             }
 
-            self::update($task['ID'],
+            self::update(
+                $task['ID'],
                 [
                     'STATUS_EXEC' => $status,
                     'DATE_EXEC' => DateTime::createFromTimestamp(time())
@@ -95,5 +97,4 @@ class QueueTable extends Entity\DataManager
             ])
         ];
     }
-
 }
