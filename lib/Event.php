@@ -5,7 +5,7 @@
 
 namespace Mindbox;
 
-defined('ADMIN_MODULE_NAME') or define('ADMIN_MODULE_NAME', 'mindbox.marketing');
+defined('MINDBOX_ADMIN_MODULE_NAME') or define('MINDBOX_ADMIN_MODULE_NAME', 'mindbox.marketing');
 
 use Bitrix\Landing\Help;
 use Bitrix\Main\Loader;
@@ -25,6 +25,7 @@ use Mindbox\DTO\V2\Requests\LineRequestDTO;
 use Mindbox\DTO\V2\Requests\OrderCreateRequestDTO;
 use Mindbox\DTO\V2\Requests\OrderUpdateRequestDTO;
 use Mindbox\DTO\V2\Requests\PreorderRequestDTO;
+use MongoDB\Driver\Exception\Exception;
 
 Loader::includeModule('catalog');
 Loader::includeModule('sale');
@@ -201,6 +202,10 @@ class Event
 
         if (!isset($arFields['PERSONAL_PHONE'])) {
             $arFields['PERSONAL_PHONE'] = $arFields['PERSONAL_MOBILE'];
+        }
+
+        if (empty($arFields['PERSONAL_PHONE']) && !empty($arFields['PHONE_NUMBER'])) {
+            $arFields['PERSONAL_PHONE'] = $arFields['PHONE_NUMBER'];
         }
 
         if (isset($arFields['PERSONAL_PHONE'])) {
@@ -380,6 +385,18 @@ class Event
                 $arFields['USER_ID'],
                 $fields
             );
+
+            if (!isset($arFields['PERSONAL_PHONE'])) {
+                $arFields['PERSONAL_PHONE'] = $arFields['PERSONAL_MOBILE'];
+            }
+
+            if (empty($arFields['PERSONAL_PHONE']) && !empty($arFields['PHONE_NUMBER'])) {
+                $arFields['PERSONAL_PHONE'] = $arFields['PHONE_NUMBER'];
+            }
+
+            if (isset($arFields['PERSONAL_PHONE'])) {
+                $arFields['PERSONAL_PHONE'] = Helper::formatPhone($arFields['PERSONAL_PHONE']);
+            }
 
             if ($arFields['USER_ID']) {
                 $sex = substr(ucfirst($arFields['PERSONAL_GENDER']), 0, 1) ?: null;
@@ -658,6 +675,27 @@ class Event
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
+        try {
+            $orderDTO = new OrderCreateRequestDTO();
+            $orderDTO->setField('order', [
+                'transaction' => [
+                    "ids" => [
+                        "externalId" => Helper::getTransactionId()
+                    ]
+                ]
+            ]);
+            $mindbox->order()->rollbackOrderTransaction(
+                $orderDTO,
+                Options::getOperationName('rollbackOrderTransaction')
+            );
+            $request = $mindbox->order()->getRequest();
+            if ($request) {
+                $_SESSION['MINDBOX_TASK_ID'] = QueueTable::push($request);
+            }
+        } catch (Exception $exception) {
+            unset($_SESSION[ 'MINDBOX_TRANSACTION_ID' ]);
+        }
+
         $basket = $order->getBasket();
         global $USER;
 
@@ -668,7 +706,7 @@ class Event
         $paymentCollection = $order->getPaymentCollection();
         foreach ($paymentCollection as $payment) {
             $payments[] = [
-                'type'   => $payment->getPaymentSystemName(),
+                'type'   => $payment->getPaymentSystemId(),
                 'amount' => $payment->getSum()
             ];
         }
@@ -937,7 +975,7 @@ class Event
         $paymentCollection = $order->getPaymentCollection();
         foreach ($paymentCollection as $payment) {
             $payments[] = [
-                'type'   => $payment->getPaymentSystemName(),
+                'type'   => $payment->getPaymentSystemId(),
                 'amount' => $payment->getSum()
             ];
         }
@@ -1096,6 +1134,14 @@ class Event
                 unset($_SESSION['MINDBOX_TRANSACTION_ID']);
                 unset($_SESSION['PAY_BONUSES']);
                 unset($_SESSION['TOTAL_PRICE']);
+
+                if (isset($_SESSION['MINDBOX_TASK_ID']) && $_SESSION['MINDBOX_TASK_ID'] > 0) {
+                    QueueTable::update($_SESSION['MINDBOX_TASK_ID'], [
+                        'STATUS_EXEC' => 'Y',
+                        'DATE_EXEC' => \Bitrix\Main\Type\DateTime::createFromTimestamp(time())
+                    ]);
+                    unset($_SESSION['MINDBOX_TASK_ID']);
+                }
             } catch (Exceptions\MindboxClientErrorException $e) {
                 unset($_SESSION['PAY_BONUSES']);
                 unset($_SESSION['TOTAL_PRICE']);
@@ -1230,12 +1276,7 @@ class Event
             $customer->setFirstName($arOrderProperty['NAME']);
             $customer->setMobilePhone($arOrderProperty['PHONE']);
 
-            if (\Mindbox\Helper::isUnAuthorizedOrder($arUser) || (is_object($USER) && !$USER->IsAuthorized())) {
-                //  unauthorized user
-            } else {
-                //  authorized user
-                $customer->setId(Options::getModuleOption('WEBSITE_ID'), $order->getUserId());
-            }
+            $customer->setId(Options::getModuleOption('WEBSITE_ID'), $order->getUserId());
 
             $isSubscribed = true;
             if ($arOrderProperty['UF_MB_IS_SUBSCRIBED'] === 'N') {

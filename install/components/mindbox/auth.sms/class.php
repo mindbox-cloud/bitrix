@@ -1,7 +1,4 @@
 <?php
-/**
- * Created by @copyright QSOFT.
- */
 
 use Bitrix\Main\Engine\Contract\Controllerable;
 use Bitrix\Main\Loader;
@@ -11,6 +8,7 @@ use Mindbox\Exceptions\MindboxClientException;
 use Mindbox\Helper;
 use Mindbox\Options;
 use Mindbox\Ajax;
+
 
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) {
     die();
@@ -40,7 +38,6 @@ class AuthSms extends CBitrixComponent implements Controllerable
             }
         } catch (LoaderException $e) {
             ShowError(GetMessage('MB_AUS_MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));
-            ;
             return;
         }
 
@@ -126,6 +123,7 @@ class AuthSms extends CBitrixComponent implements Controllerable
         }
 
         $customerDto = new CustomerRequestDTO(['mobilePhone' => $phone]);
+
         try {
             $checkCodeResponse = $this->mindbox->customer()->checkAuthorizationCode(
                 $customerDto,
@@ -134,6 +132,7 @@ class AuthSms extends CBitrixComponent implements Controllerable
             )->sendRequest();
 
             $validationErrors = $checkCodeResponse->getValidationErrors();
+
             if (!empty($validationErrors)) {
                 return Ajax::errorResponse(reset($validationErrors)->GetMessage());
             }
@@ -144,38 +143,63 @@ class AuthSms extends CBitrixComponent implements Controllerable
                 return Ajax::errorResponse(GetMessage('MB_AUS_USER_NOT_FOUND'));
             }
 
+            $getMobilePhone = $user->getField('mobilePhone');
+            $getEmail = $user->getField('email');
+
             $arFilter = [
                 [
-                    "LOGIC"=>"OR",
+                    "LOGIC" => "OR",
                     [
                         'UF_MINDBOX_ID' => $user->getId('mindboxId')
                     ],
-                    [
-                        "PERSONAL_PHONE"    =>  $user->getField('mobilePhone')
-                    ],
-                    [
-                        'PERSONAL_MOBILE'   =>  $user->getField('mobilePhone')
-                    ],
-                    [
-                        'EMAIL' =>  $user->getField('email')
-                    ]
                 ]
             ];
+
+            if (isset($getMobilePhone) && !empty($getMobilePhone)) {
+                $arFilter = array_merge($arFilter, [
+                    [
+                        "PERSONAL_PHONE" => $getMobilePhone
+                    ],
+                    [
+                        "PERSONAL_PHONE" => $this->preparePhoneNumber($getMobilePhone)
+                    ],
+                    [
+                        'PERSONAL_MOBILE' => $getMobilePhone
+                    ],
+                    [
+                        'PERSONAL_MOBILE' => $this->preparePhoneNumber($getMobilePhone)
+                    ],
+                ]);
+            }
+
+            if (!empty($getEmail)) {
+                $arFilter = array_merge($arFilter, [
+                    [
+                        'EMAIL' => $getEmail
+                    ]
+                ]);
+            }
+
             $dbUser = Bitrix\Main\UserTable::getList(
                 [
                     'filter' => $arFilter
                 ]
             );
+
             if ($bxUser = $dbUser->fetch()) {
+
                 $fields = [
-                    'UF_MINDBOX_ID'      => $user->getId('mindboxId')
+                    'UF_MINDBOX_ID' => $user->getId('mindboxId')
                 ];
+
                 $user = new \CUser;
                 $user->Update(
                     $bxUser['ID'],
                     $fields
                 );
+
                 $USER->Authorize($bxUser['ID']);
+
                 return [
                     'type' => 'success',
                     'message' => GetMessage('MB_AUS_SUCCESS')
@@ -187,7 +211,7 @@ class AuthSms extends CBitrixComponent implements Controllerable
                 $email = $user->getField('email');
                 $context = \Bitrix\Main\Application::getInstance()->getContext();
                 $siteId = $context->getSite();
-                $password  = randString(10);
+                $password = randString(10);
                 $mobilePhone = $user->getField('mobilePhone');
                 $birthDate = $user->getField('birthDate');
                 $sex = $user->getField('sex');
@@ -197,24 +221,30 @@ class AuthSms extends CBitrixComponent implements Controllerable
                 }
 
                 $arFields = [
-                    "NAME"              => $firstName,
-                    "LAST_NAME"         => $lastName,
-                    "EMAIL"             => $email,
-                    "LOGIN"             => $mobilePhone,
-                    'PERSONAL_PHONE'    =>  $mobilePhone,
-                    'PHONE_NUMBER'      =>  $mobilePhone,
-                    'PERSONAL_BIRTHDAY' =>  date('d.m.Y', strtotime($birthDate)),
-                    'PERSONAL_GENDER'   =>  (($sex == 'female')? 'F':'M'),
-                    "LID"               => $siteId,
-                    "ACTIVE"            => "Y",
-                    "PASSWORD"          => $password,
-                    "CONFIRM_PASSWORD"  => $password,
-                    'UF_MINDBOX_ID'     =>  $user->getId('mindboxId')
+                    'NAME' => $firstName,
+                    'LAST_NAME' => $lastName,
+                    'EMAIL' => $email,
+                    'LOGIN' => $mobilePhone,
+                    'PERSONAL_PHONE' => $this->preparePhoneNumber($mobilePhone),
+                    'PHONE_NUMBER' => $this->preparePhoneNumber($mobilePhone),
+                    'PERSONAL_GENDER' => ($sex == 'female') ? 'F' : 'M',
+                    'LID' => $siteId,
+                    'ACTIVE' => 'Y',
+                    'PASSWORD' => $password,
+                    'CONFIRM_PASSWORD' => $password,
+                    'UF_MINDBOX_ID' => $user->getId('mindboxId')
                 ];
 
-                $ID = $USER->Add($arFields);
-                if (intval($ID) > 0) {
-                    $USER->Authorize($ID);
+                if (!empty($birthDate)) {
+                    global $DB;
+                    $siteDateFormat = $DB->DateFormatToPHP(\CSite::GetDateFormat('SHORT'));
+                    $arFields['PERSONAL_BIRTHDAY'] = date($siteDateFormat, strtotime($birthDate));
+                }
+
+                $createUserId = $USER->Add($arFields);
+
+                if (intval($createUserId) > 0) {
+                    $USER->Authorize($createUserId);
                     return [
                         'type' => 'success',
                         'message' => GetMessage('MB_AUS_SUCCESS')
@@ -228,13 +258,22 @@ class AuthSms extends CBitrixComponent implements Controllerable
         }
     }
 
+    protected function preparePhoneNumber($number)
+    {
+        if (strpos($number, '+') === false) {
+            $number = '+' . $number;
+        }
+
+        return $number;
+    }
+
     public function fillupAction($fields)
     {
         if (!$this->mindbox) {
             return Ajax::errorResponse(GetMessage('MB_AUS_BAD_MODULE_SETTING'));
         }
         global $USER;
-        
+
         foreach ($fields as $key => $value) {
             $fields[$key] = htmlspecialcharsEx(trim($value));
         }
@@ -247,7 +286,7 @@ class AuthSms extends CBitrixComponent implements Controllerable
         if ($fields['PERSONAL_GENDER'] === 'F') {
             $sex = 'female';
         }
-        
+
         $fields['PERSONAL_PHONE'] = Helper::formatPhone($fields['PERSONAL_PHONE']);
         $customer = new CustomerRequestDTO(
             [
@@ -298,10 +337,10 @@ class AuthSms extends CBitrixComponent implements Controllerable
         if ($reg['TYPE'] !== 'OK') {
             return Ajax::errorResponse($reg['MESSAGE']);
         }
-        
+
         return ['type' => 'success'];
     }
-    
+
     public function captchaUpdateAction()
     {
         global $APPLICATION;
