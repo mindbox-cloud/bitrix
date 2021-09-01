@@ -287,15 +287,6 @@ class AuthSms extends CBitrixComponent implements Controllerable
             $fields[$key] = htmlspecialcharsEx(trim($value));
         }
 
-        $sex = false;
-        if ($fields['PERSONAL_GENDER'] === 'M') {
-            $sex = 'male';
-        }
-
-        if ($fields['PERSONAL_GENDER'] === 'F') {
-            $sex = 'female';
-        }
-
         $fields['PERSONAL_PHONE'] = Helper::formatPhone($fields['PERSONAL_PHONE']);
         $customer = new CustomerRequestDTO(
             [
@@ -303,13 +294,10 @@ class AuthSms extends CBitrixComponent implements Controllerable
                 'lastName' => $fields['LAST_NAME'],
                 'firstName' => $fields['NAME'],
                 'mobilePhone' => $fields['PERSONAL_PHONE'],
-                'birthDate' => Helper::formatDate($fields['PERSONAL_BIRTHDAY']),
+                'birthDate' => $fields['PERSONAL_BIRTHDAY'],
+                'sex'   =>  $fields['PERSONAL_GENDER']
             ]
         );
-
-        if ($sex) {
-            $customer->setField('sex', $sex);
-        }
 
         $mindboxId = $_SESSION['NEW_USER_MB_ID'];
         $customer->setId('mindboxId', $mindboxId);
@@ -333,9 +321,18 @@ class AuthSms extends CBitrixComponent implements Controllerable
         ]);
 
         if ($bxUser = $dbUser->fetch()) {
-            $fields = [
-                'UF_MINDBOX_ID' => $mindboxId
-            ];
+            $fields['UF_MINDBOX_ID'] = $mindboxId;
+            if ($fields['PERSONAL_GENDER'] == 'female') {
+                $fields['PERSONAL_GENDER'] = 'F';
+            } else {
+                $fields['PERSONAL_GENDER'] = 'M';
+            }
+
+            if (!empty($fields['PERSONAL_BIRTHDAY'])) {
+                global $DB;
+                $siteDateFormat = $DB->DateFormatToPHP(\CSite::GetDateFormat('SHORT'));
+                $fields['PERSONAL_BIRTHDAY'] = date($siteDateFormat, strtotime($fields['PERSONAL_BIRTHDAY']));
+            }
 
             $USER->Authorize($bxUser['ID']);
 
@@ -344,6 +341,8 @@ class AuthSms extends CBitrixComponent implements Controllerable
                 $USER->GetID(),
                 $fields
             );
+
+            $strError = $user->LAST_ERROR;
 
             try {
                 $registerResponse = $this->mindbox->customer()->edit(
@@ -354,7 +353,7 @@ class AuthSms extends CBitrixComponent implements Controllerable
                 return Ajax::errorResponse($e);
             }
             if ($errors = $registerResponse->getValidationErrors()) {
-                $errors = $this->parseValidationErrors($errors);
+                $errors = $this->parseValidtaionErrors($errors);
 
                 return [
                     'type'   => 'validation errors',
@@ -408,7 +407,7 @@ class AuthSms extends CBitrixComponent implements Controllerable
                 return Ajax::errorResponse($e);
             }
             if ($errors = $registerResponse->getValidationErrors()) {
-                $errors = $this->parseValidationErrors($errors);
+                $errors = $this->parseValidtaionErrors($errors);
 
                 return [
                     'type'   => 'validation errors',
@@ -443,7 +442,7 @@ class AuthSms extends CBitrixComponent implements Controllerable
         }
     }
 
-    protected function parseValidationErrors($errors)
+    protected function parseValidtaionErrors($errors)
     {
         $parsedErrors = [];
         foreach ($errors as $error) {
