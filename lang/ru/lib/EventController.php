@@ -11,3 +11,4 @@ $MESS['OnSaleBasketItemRefreshData'] = 'При обновлении корзин
 $MESS['OnBeforeUserAdd'] = 'Перед добавлением пользователя';
 $MESS['OnAfterUserAdd'] = 'После добавлением пользователя';
 $MESS['OnProlog'] = 'Подключение трекера';
+$MESS['OnSaleBasketItemEntityDeleted'] = 'Удаление элемента из корзины заказа';

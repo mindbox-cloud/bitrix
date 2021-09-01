@@ -1046,11 +1046,9 @@ class Helper
     /**
      * @return Mindbox
      */
-    private static function mindbox()
+    public static function mindbox()
     {
-        $mindbox = Options::getConfig();
-
-        return $mindbox;
+        return Options::getConfig();
     }
 
     /**
@@ -1310,5 +1308,4 @@ class Helper
 
         return $return;
     }
-
 }

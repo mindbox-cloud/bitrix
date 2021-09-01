@@ -18,6 +18,7 @@ use Bitrix\Sale;
 use CUser;
 use DateTime;
 use DateTimeZone;
+use Intensa\Logger\ILog;
 use Mindbox\DTO\DTO;
 use Mindbox\DTO\V2\Requests\DiscountRequestDTO;
 use Mindbox\DTO\V3\Requests\CustomerRequestDTO;
@@ -2031,6 +2032,50 @@ class Event
 
             if (isset($jsString) && !empty($jsString)) {
                 Asset::getInstance()->addString($jsString, AssetLocation::AFTER_JS);
+            }
+        }
+    }
+
+    /**
+     * @bitrixModuleId sale
+     * @bitrixEventCode OnSaleBasketItemEntityDeleted
+     * @langEventName OnSaleBasketItemEntityDeleted
+     * @notCompatible true
+     * @return bool
+     */
+    public function OnSaleBasketItemDeletedHandler(\Bitrix\Main\Event $event)
+    {
+        $entity = $event->getParameter("ENTITY");
+        $order = $entity->getCollection()->getOrder();
+        $orderId = $order->getId();
+        $orderUserId = $order->getField('USER_ID');
+
+        if (!empty($entity)) {
+            $deleteLines[] = [
+                'lineId' => $entity->getId(),
+                'quantity' => $entity->getQuantity(),
+                'status' => 'Cancelled',
+            ];
+
+            $requestData = [
+                'order' => [
+                    'ids' => [
+                        Options::getModuleOption('TRANSACTION_ID') => $orderId
+                    ],
+                'lines' => $deleteLines
+                ]
+            ];
+
+            $request = Helper::mindbox()->getClientV3()->prepareRequest(
+                'POST',
+                Options::getOperationName('updateOrderItemsStatus'),
+                new DTO($requestData)
+            );
+
+            try {
+                $response = $request->sendRequest();
+            } catch (Exceptions\MindboxClientException $e) {
+                // return false;
             }
         }
     }
