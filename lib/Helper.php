@@ -1084,7 +1084,7 @@ class Helper
         $currentPage = $APPLICATION->GetCurPage();
         $request = \Bitrix\Main\Context::getCurrent()->getRequest();
 
-        return  ($request->isAdminSection() || strpos($currentPage, '/bitrix/admin') !== false || strpos($currentPage,'/bitrix/js') !== false);
+        return  ($request->isAdminSection() || strpos($currentPage, '/bitrix/admin') !== false || strpos($_SERVER['HTTP_REFERER'],'/bitrix/admin') !== false);
     }
 
     public static function checkBasketItem($basketItem)

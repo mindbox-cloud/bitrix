@@ -653,13 +653,14 @@ class Event
         $values = $event->getParameter("VALUES");
 
         if (Helper::isAdminSection()) {
-            if ($order->isPaid() && strtotime($order->getField('DATE_PAYED')) < time()) {
+            // @todo: временно убрал ограничение оплаченного заказа
+            /*if ($order->isPaid() && strtotime($order->getField('DATE_PAYED')) < time()) {
                 return new \Bitrix\Main\EventResult(
                     \Bitrix\Main\EventResult::ERROR,
                     new \Bitrix\Sale\ResultError(Loc::getMessage("MB_ORDER_CANNOT_BE_CHANGED"), 'SALE_EVENT_WRONG_ORDER'),
                     'sale'
                 );
-            }
+            }*/
 
             if (!empty($_SESSION['SET_COUPON_ERROR'])) {
                 $setPromoCodeError = $_SESSION['SET_COUPON_ERROR'];
