@@ -655,13 +655,13 @@ class Event
 
         if (Helper::isAdminSection()) {
             // @todo: временно убрал ограничение оплаченного заказа
-            /*if ($order->isPaid() && strtotime($order->getField('DATE_PAYED')) < time()) {
+            if ($order->isPaid() && strtotime($order->getField('DATE_PAYED')) < time()) {
                 return new \Bitrix\Main\EventResult(
                     \Bitrix\Main\EventResult::ERROR,
                     new \Bitrix\Sale\ResultError(Loc::getMessage("MB_ORDER_CANNOT_BE_CHANGED"), 'SALE_EVENT_WRONG_ORDER'),
                     'sale'
                 );
-            }*/
+            }
 
             if (!empty($_SESSION['SET_COUPON_ERROR'])) {
                 $setPromoCodeError = $_SESSION['SET_COUPON_ERROR'];
@@ -1791,7 +1791,6 @@ class Event
     public function OnSaleBasketItemRefreshDataHandler($event)
     {
         $basketItem = $event;
-
         $basket = Sale\Basket::loadItemsForFUser(Sale\Fuser::getId(), Main\Context::getCurrent()->getSite());
         $basketItems = $basket->getBasketItems();
         if (empty($basketItems)) {
@@ -2053,7 +2052,7 @@ class Event
         if (!empty($entity)) {
             $deleteLines[] = [
                 'lineId' => $entity->getId(),
-                'quantity' => $entity->getQuantity(),
+                'quantity' => $entity->getQuantity() + 1,
                 'status' => 'Cancelled',
             ];
 
