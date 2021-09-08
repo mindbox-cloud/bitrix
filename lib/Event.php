@@ -1780,7 +1780,7 @@ class Event
             return $arFields;
         }
 
-        if ($registerResponse) {
+        if ($registerResponse && \COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {
             $registerResponse = Helper::iconvDTO($registerResponse, false);
             $status = $registerResponse->getStatus();
 
