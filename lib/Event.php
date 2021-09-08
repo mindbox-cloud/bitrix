@@ -1676,9 +1676,6 @@ class Event
      */
     public function OnBeforeUserAddHandler(&$arFields)
     {
-        if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
-            return $arFields;
-        }
 
         if ($_REQUEST['mode'] == 'class' && $_REQUEST['c'] == 'mindbox:auth.sms' && $_REQUEST['action'] == 'checkCode') {
             return $arFields;
