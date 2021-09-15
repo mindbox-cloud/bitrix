@@ -18,7 +18,6 @@ use Bitrix\Sale;
 use CUser;
 use DateTime;
 use DateTimeZone;
-use Intensa\Logger\ILog;
 use Mindbox\DTO\DTO;
 use Mindbox\DTO\V2\Requests\DiscountRequestDTO;
 use Mindbox\DTO\V3\Requests\CustomerRequestDTO;
@@ -653,6 +652,10 @@ class Event
         $order = $event->getParameter("ENTITY");
         $values = $event->getParameter("VALUES");
 
+        if (Helper::isInternalOrder($order->getId())) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+
         if (Helper::isAdminSection()) {
             // @todo: временно убрал ограничение оплаченного заказа
             if ($order->isPaid() && strtotime($order->getField('DATE_PAYED')) < time()) {
@@ -992,6 +995,11 @@ class Event
         if (!$isNew && !Helper::isAdminSection()) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
+
+        if (Helper::isInternalOrder($order->getId())) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+
 
         $mindbox = static::mindbox();
         if (!$mindbox) {

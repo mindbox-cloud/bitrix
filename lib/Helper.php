@@ -616,7 +616,7 @@ class Helper
             } else {
                 $data = [
                     'UF_BASKET_ID'        => $lineId,
-                    "UF_DISCOUNTED_PRICE" => $mindboxPrice
+                    'UF_DISCOUNTED_PRICE' => $mindboxPrice
                 ];
                 $entityDataClass::add($data);
             }
@@ -1307,5 +1307,27 @@ class Helper
         }
 
         return $return;
+    }
+
+    public static function isInternalOrder($orderId)
+    {
+        $return = false;
+
+        if (class_exists('\Bitrix\Sale\TradingPlatform\OrderTable') && !empty($orderId)) {
+
+            $res = \Bitrix\Sale\TradingPlatform\OrderTable::getList([
+                'filter' => [
+                    '=ORDER_ID' => $orderId,
+                ],
+                'select' => ['ID'],
+            ]);
+
+            if ($item = $res->fetch()) {
+                $return = true;
+            }
+        }
+
+        return $return;
+
     }
 }
