@@ -1563,27 +1563,31 @@ class Event
         // @todo тут пытаемся сделать хак с сессией
 
         if (Helper::isAdminSection()) {
+            $orderPersonType = $order->getPersonTypeId();
             $propertyCollection = $order->getPropertyCollection();
-            $setOrderPromoCode = $propertyCollection->getItemByOrderPropertyCode('MINDBOX_PROMO_CODE');
-            $setBonus = $propertyCollection->getItemByOrderPropertyCode('MINDBOX_BONUS');
 
-            if (!empty($setOrderPromoCode) && is_object($setOrderPromoCode)) {
-                $setOrderPromoCodeValue = $setOrderPromoCode->getValue();
-                $_SESSION['PROMO_CODE'] = $setOrderPromoCodeValue;
+            $setOrderPromoCode = Helper::getOrderPropertyValueByCode(
+                $propertyCollection,
+                'MINDBOX_PROMO_CODE',
+                $orderPersonType
+            );
+            $setBonus =  Helper::getOrderPropertyValueByCode(
+                $propertyCollection,
+                'MINDBOX_BONUS',
+                $orderPersonType
+            );
+
+            if (!empty($setOrderPromoCode)) {
+                $_SESSION['PROMO_CODE'] = $setOrderPromoCode;
             }
 
-            if (!empty($setBonus) && is_object($setBonus)) {
-                $setBonusValue = $setBonus->getValue();
-                $_SESSION['PAY_BONUSES'] = $setBonusValue;
+            if (!empty($setBonus)) {
+                $_SESSION['PAY_BONUSES'] = $setBonus;
             }
-
-
             // @info сохраним корзину, чтобы получить корректный lineId
             $basket->save();
             $basket->refresh();
         }
-
-        $preorder = new PreorderRequestDTO();
 
         $basketItems = $basket->getBasketItems();
         $lines = [];

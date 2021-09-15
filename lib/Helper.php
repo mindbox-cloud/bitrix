@@ -13,6 +13,7 @@ use CIBlock;
 use COption;
 use CPHPCache;
 use CSaleOrderProps;
+use Intensa\Logger\ILog;
 use Mindbox\DTO\DTO;
 use Mindbox\DTO\DTOCollection;
 use Mindbox\DTO\V3\Requests\CustomerIdentityRequestDTO;
@@ -1169,6 +1170,7 @@ class Helper
             $order =  \Bitrix\Sale\Order::load($orderId);
             $basket = $order->getBasket();
             $basketItems = $basket->getBasketItems();
+            $orderPersonType = $order->getPersonTypeId();
 
             $lines = [];
             $bitrixBasket = [];
@@ -1176,11 +1178,17 @@ class Helper
             $propertyCollection = $order->getPropertyCollection();
 
             if (is_object($propertyCollection)) {
-                $setOrderPromoCode = $propertyCollection->getItemByOrderPropertyCode('MINDBOX_PROMO_CODE');
-                $setOrderPromoCodeValue = $setOrderPromoCode->getValue();
+                $setOrderPromoCodeValue = self::getOrderPropertyValueByCode(
+                    $propertyCollection,
+                    'MINDBOX_PROMO_CODE',
+                    $orderPersonType
+                );
 
-                $setBonus = $propertyCollection->getItemByOrderPropertyCode('MINDBOX_BONUS');
-                $setBonusValue = $setBonus->getValue();
+                $setBonusValue = self::getOrderPropertyValueByCode(
+                    $propertyCollection,
+                    'MINDBOX_BONUS',
+                    $orderPersonType
+                );
             }
 
 
@@ -1328,6 +1336,37 @@ class Helper
         }
 
         return $return;
+    }
 
+    /**
+     * Получение значение свойства заказа по коду.
+     * Функция с поддержкой версии Битрикс < 20.5
+     * @param $propertyCollection
+     * @param $code
+     * @param false $personType
+     * @return false
+     */
+    public static function getOrderPropertyValueByCode($propertyCollection, $code, $personType = false)
+    {
+        $return = false;
+
+        if ($propertyCollection instanceof \Bitrix\Sale\PropertyValueCollection) {
+
+            if (method_exists($propertyCollection, 'getItemByOrderPropertyCode')) {
+                $property = $propertyCollection->getItemByOrderPropertyCode($code);
+            } else {
+                $propertyData = self::getOrderPropertyByCode($code, $personType);
+
+                if (!empty($propertyData)) {
+                    $property = $propertyCollection->getItemByOrderPropertyId($propertyData['ID']);
+                }
+            }
+
+            if (!empty($property)) {
+                $return = $property->getValue();
+            }
+        }
+
+        return $return;
     }
 }
