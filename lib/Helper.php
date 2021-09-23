@@ -13,7 +13,6 @@ use CIBlock;
 use COption;
 use CPHPCache;
 use CSaleOrderProps;
-use Intensa\Logger\ILog;
 use Mindbox\DTO\DTO;
 use Mindbox\DTO\DTOCollection;
 use Mindbox\DTO\V3\Requests\CustomerIdentityRequestDTO;
@@ -1364,6 +1363,30 @@ class Helper
 
             if (!empty($property)) {
                 $return = $property->getValue();
+            }
+        }
+
+        return $return;
+    }
+
+    protected static function internalUserLoginList()
+    {
+        return [
+            'marketplaceanonymous',
+        ];
+    }
+
+    public static function isInternalOrderUser($userId)
+    {
+        $return = false;
+
+        if (!empty($userId) && (int)$userId > 0) {
+            $getUserData = \CUser::GetByID($userId);
+
+            if ($userData = $getUserData->Fetch()) {
+                if (in_array($userData['LOGIN'], self::internalUserLoginList())) {
+                    $return = true;
+                }
             }
         }
 

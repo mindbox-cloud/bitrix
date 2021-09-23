@@ -649,24 +649,27 @@ class Event
      */
     public function OnSaleOrderBeforeSavedHandler($event)
     {
+        global $USER;
+
         $order = $event->getParameter("ENTITY");
         $values = $event->getParameter("VALUES");
 
         $standardMode = \COption::GetOptionString('mindbox.marketing', 'MODE') === 'standard';
+        $mindbox = static::mindbox();
 
         if ($standardMode) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
-        global $USER;
-
         if (!$USER || is_string($USER)) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
-        $mindbox = static::mindbox();
-
         if (!$mindbox) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+
+        if (Helper::isInternalOrderUser($order->getUserId())) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
@@ -993,7 +996,17 @@ class Event
         $oldValues = $event->getParameter("VALUES");
         $isNew = $event->getParameter("IS_NEW");
 
+        $mindbox = static::mindbox();
+
         if (!$isNew && !Helper::isAdminSection()) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+
+        if (!$mindbox) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+
+        if (Helper::isInternalOrderUser($order->getUserId())) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
@@ -1001,11 +1014,6 @@ class Event
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
-
-        $mindbox = static::mindbox();
-        if (!$mindbox) {
-            return new Main\EventResult(Main\EventResult::SUCCESS);
-        }
 
         $payments = [];
         $paymentCollection = $order->getPaymentCollection();
@@ -1551,7 +1559,12 @@ class Event
         }
 
         $mindbox = static::mindbox();
+
         if (!$mindbox) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+
+        if (Helper::isInternalOrderUser($order->getUserId())) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
