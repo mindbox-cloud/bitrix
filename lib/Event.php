@@ -652,6 +652,24 @@ class Event
         $order = $event->getParameter("ENTITY");
         $values = $event->getParameter("VALUES");
 
+        $standardMode = \COption::GetOptionString('mindbox.marketing', 'MODE') === 'standard';
+
+        if ($standardMode) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+
+        global $USER;
+
+        if (!$USER || is_string($USER)) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+
+        $mindbox = static::mindbox();
+
+        if (!$mindbox) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+
         if (Helper::isInternalOrder($order->getId())) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
@@ -678,29 +696,12 @@ class Event
             }
         }
 
-
         $isNewOrder = Helper::isNewOrder($values);
 
         if (!$isNewOrder && !Helper::isAdminSection()) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
-        $standardMode = \COption::GetOptionString('mindbox.marketing', 'MODE') === 'standard';
-
-        if ($standardMode) {
-            return new Main\EventResult(Main\EventResult::SUCCESS);
-        }
-
-        global $USER;
-
-        if (!$USER || is_string($USER)) {
-            return new Main\EventResult(Main\EventResult::SUCCESS);
-        }
-
-        $mindbox = static::mindbox();
-        if (!$mindbox) {
-            return new Main\EventResult(Main\EventResult::SUCCESS);
-        }
 
         $basket = $order->getBasket();
         global $USER;
