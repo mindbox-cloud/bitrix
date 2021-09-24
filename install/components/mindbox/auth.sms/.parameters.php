@@ -7,7 +7,7 @@ $arComponentParameters = [
             'PARENT' => 'BASE',
             'NAME' => GetMessage('PERSONAL_PAGE_URL'),
             'TYPE' => 'STRING',
-            'DEFAULT' => SITE_DIR . '/'
+            'DEFAULT' => '/'
         ]
     ]
 ];

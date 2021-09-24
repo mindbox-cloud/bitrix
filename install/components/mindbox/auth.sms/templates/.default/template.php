@@ -9,7 +9,7 @@ Asset::getInstance()->addJs("/bitrix/js/mindbox/script.js");
 Asset::getInstance()->addCss("/bitrix/css/mindbox/style.css");
 ?>
 <?php if ($USER->isAuthorized()):?>
-    <?php $url = $arParams["PERSONAL_PAGE_URL"] ? $arParams["PERSONAL_PAGE_URL"] : SITE_DIR . "/";?>
+    <?php $url = $arParams['PERSONAL_PAGE_URL'] ? $arParams["PERSONAL_PAGE_URL"] :  '/';?>
     <?php LocalRedirect($url);?>
 <?php else:?>
 <div class="mindbox">
