@@ -657,6 +657,10 @@ class Event
         $standardMode = \COption::GetOptionString('mindbox.marketing', 'MODE') === 'standard';
         $mindbox = static::mindbox();
 
+        if (Helper::isDeleteOrderAdminAction()) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+
         if ($standardMode) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
@@ -997,6 +1001,10 @@ class Event
         $isNew = $event->getParameter("IS_NEW");
 
         $mindbox = static::mindbox();
+
+        if (Helper::isDeleteOrderAdminAction()) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
 
         if (!$isNew && !Helper::isAdminSection()) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
@@ -1543,6 +1551,10 @@ class Event
      */
     public function OnBeforeSaleOrderFinalActionHandler($order, $has, $basket)
     {
+        if (Helper::isDeleteOrderAdminAction()) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+
         self::finalAction($order, $basket);
     }
 
@@ -2070,6 +2082,10 @@ class Event
      */
     public function OnSaleBasketItemDeletedHandler(\Bitrix\Main\Event $event)
     {
+        if (Helper::isDeleteOrderAdminAction()) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+
         $entity = $event->getParameter("ENTITY");
         $order = $entity->getCollection()->getOrder();
         $orderId = $order->getId();

@@ -1392,4 +1392,13 @@ class Helper
 
         return $return;
     }
+
+    public static function isDeleteOrderAdminAction()
+    {
+        return (
+            ($_REQUEST['action_button'] === 'delete' || $_REQUEST['action'] === 'delete')
+            && self::isAdminSection()
+            && isset($_REQUEST['ID'])
+        );
+    }
 }
