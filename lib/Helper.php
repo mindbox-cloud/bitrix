@@ -810,7 +810,6 @@ class Helper
                 $arResultPrices['UNROUND_BASE_PRICE'] = $arProductPrice['PRICE'];
             }
         }
-
         return $arResultPrices;
     }
 
@@ -1042,9 +1041,7 @@ class Helper
      */
     private static function mindbox()
     {
-        $mindbox = Options::getConfig();
-
-        return $mindbox;
+        return Options::getConfig();
     }
 
     /**
@@ -1065,5 +1062,148 @@ class Helper
         }
 
         return $isNewOrder;
+    }
+
+    public static function getBitrixOrderStatusList()
+    {
+        $statusList = [
+            'CANCEL' => 'Отмена заказа',
+            'CANCEL_ABORT' => 'Отменить отмену заказа'
+        ];
+
+        $statusResult = \Bitrix\Sale\Internals\StatusTable::getList([
+            'order' => ['SORT'=>'ASC'],
+            'select' => ['ID'],
+        ]);
+
+        while ($statusItem = $statusResult->fetch()) {
+            $getStatusData = \CSaleStatus::GetByID($statusItem['ID']);
+            $statusList[$statusItem['ID']] = $getStatusData['NAME'] . ' [' . $statusItem['ID'] . ']';
+        }
+
+        return $statusList;
+    }
+
+    public static function getMindboxOrderStatusList()
+    {
+        return [
+            'CheckedOut' => 'CheckedOut',
+            'Delivered' => 'Delivered',
+            'Paid' => 'Paid',
+            'Cancelled' => 'Cancelled',
+            'Returned' => 'Returned'
+        ];
+    }
+
+    public static function getMindboxStatusByShopStatus($shopStatus)
+    {
+        $return = false;
+        $statusOptionsJson = COption::GetOptionString('mindbox.marketing', 'ORDER_STATUS_FIELDS_MATCH', '{}');
+        $statusOptionsData = json_decode($statusOptionsJson, true);
+
+        if (!empty($statusOptionsData) && is_array($statusOptionsData)) {
+            foreach ($statusOptionsData as $item) {
+                if ($shopStatus == $item['bitrix']) {
+                    $return = $item['mindbox'];
+                    break;
+                }
+            }
+        }
+
+        return $return;
+    }
+
+    public static function updateMindboxOrderItems(\Bitrix\Sale\Order $order, $additionalFields = [])
+    {
+        $orderId = $order->getId();
+        $orderStatus = $order->getField('STATUS_ID');
+        $orderUserId = $order->getField('USER_ID');
+
+        $mindboxStatusCode = self::getMindboxStatusByShopStatus($orderStatus);
+
+        $orderBasket = $order->getBasket();
+
+        if ($orderBasket) {
+            $basketItems = $orderBasket->getBasketItems();
+            $lines = [];
+
+            foreach ($basketItems as $basketItem) {
+                $lines[] = [
+                    'lineId' => $basketItem->getId(),
+                    'quantity' => $basketItem->getQuantity(),
+                    'basePricePerItem' => $basketItem->getPrice(),
+                    'status' => $mindboxStatusCode,
+                    'product' => [
+                        'ids' => [
+                            Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getElementCode($basketItem->getProductId())
+                        ]
+                    ],
+                ];
+            }
+        }
+
+
+        $mindbox = Options::getConfig();
+        $requestFields = [
+            'ids' => [
+                Options::getModuleOption('TRANSACTION_ID') => $orderId
+            ],
+            'lines' => $lines
+        ];
+
+        if (!empty($additionalFields) && is_array($additionalFields)) {
+            $requestFields = $requestFields + $additionalFields;
+        }
+
+        $requestData = [
+            'customer' => [
+                'ids' => [
+                    Options::getModuleOption('WEBSITE_ID') => $orderUserId
+                ],
+            ],
+            'order' => $requestFields
+        ];
+
+        $request = $mindbox->getClientV3()->prepareRequest(
+            'POST',
+            Options::getOperationName('updateOrderItems'),
+            new DTO($requestData)
+        );
+
+        try {
+            $response = $request->sendRequest();
+        } catch (Exceptions\MindboxClientException $e) {
+            return false;
+        }
+    }
+
+
+    public static function updateMindboxOrderStatus($orderId, $statusCode)
+    {
+        $mindbox = Options::getConfig();
+
+        if ($mindbox) {
+            $mindboxStatusCode = Helper::getMindboxStatusByShopStatus($statusCode);
+            if ($mindboxStatusCode !== false) {
+                $request = $mindbox->getClientV3()->prepareRequest(
+                    'POST',
+                    Options::getOperationName('updateOrderStatus'),
+                    new DTO([
+                        'orderLinesStatus' => $mindboxStatusCode,
+                        'order' => [
+                            'ids' => [
+                                'websiteId' => $orderId
+                            ]
+                        ]
+                    ])
+                );
+
+                try {
+                    $response = $request->sendRequest();
+                } catch (Exceptions\MindboxClientException $e) {
+                    return false;
+                }
+            }
+        }
     }
 }

@@ -1847,7 +1847,112 @@ class Event
      */
     private static function mindbox()
     {
-        $mindbox = Options::getConfig();
-        return $mindbox;
+        return Options::getConfig();
+    }
+
+    /**
+     * @bitrixModuleId sale
+     * @bitrixEventCode OnSalePropertyValueSetField
+     * @optionNameRu Изменение свойств заказа
+     * @notCompatible true
+     * @param Main\Event $event
+     * @return bool
+     */
+    public function OnSalePropertyValueSetFieldHandler(Main\Event $event)
+    {
+        $orderMatchList = Helper::getOrderFieldsMatch();
+
+        $getEntity = $event->getParameter('ENTITY');
+        $value = $event->getParameter('VALUE');
+        $order = $getEntity->getCollection()->getOrder();
+        $propertyData = $getEntity->getProperty();
+
+        if (!empty($order) && $order instanceof \Bitrix\Sale\Order) {
+            $additionFields = [
+                'customFields' => [$orderMatchList[$propertyData['CODE']] => $value],
+            ];
+
+            Helper::updateMindboxOrderItems($order, $additionFields);
+        }
+    }
+
+    /**
+     * @bitrixModuleId sale
+     * @bitrixEventCode OnSaleBasketItemEntitySaved
+     * @optionNameRu Изменение корзины заказа
+     * @notCompatible true
+     * @return bool
+     */
+    public static function OnSaleBasketItemEntitySavedHandler(\Bitrix\Main\Event $event)
+    {
+        $entity = $event->getParameter("ENTITY");
+        $order = $entity->getCollection()->getOrder();
+
+        if (!empty($order) && $order instanceof \Bitrix\Sale\Order) {
+            Helper::updateMindboxOrderItems($order);
+        }
+    }
+
+    /**
+     * @bitrixModuleId sale
+     * @bitrixEventCode OnSaleBasketItemEntityDeleted
+     * @optionNameRu Удаление элемента из корзины заказа
+     * @notCompatible true
+     * @return bool
+     */
+    public function OnSaleBasketItemDeletedHandler(\Bitrix\Main\Event $event)
+    {
+        $entity = $event->getParameter("ENTITY");
+        $order = $entity->getCollection()->getOrder();
+
+        if (!empty($order) && $order instanceof \Bitrix\Sale\Order) {
+            Helper::updateMindboxOrderItems($order);
+        }
+    }
+
+    /**
+     * @bitrixModuleId sale
+     * @bitrixEventCode OnBeforeSaleShipmentSetField
+     * @optionNameRu Изменение статуса отгрузки
+     * @notCompatible true
+     * @param Main\Event $event
+     * @return bool
+     */
+    public function OnBeforeSaleShipmentSetFieldHandler(Main\Event $event)
+    {
+        $orderEntity = $event->getParameter('ENTITY');
+        $orderId = $orderEntity->getField('ORDER_ID');
+        $statusValue = $event->getParameter('VALUE');
+
+        if ($event->getParameter('NAME') === 'STATUS_ID') {
+            Helper::updateMindboxOrderStatus($orderId, $statusValue);
+        }
+    }
+
+    /**
+     * @bitrixModuleId sale
+     * @bitrixEventCode OnSaleStatusOrder
+     * @optionNameRu Изменение статуса заказа
+     * @param Main\Event $event
+     * @return bool
+     */
+    public function OnSaleStatusOrderHandler($orderId, $newOrderStatus)
+    {
+        Helper::updateMindboxOrderStatus($orderId, $newOrderStatus);
+    }
+
+    /**
+     * @bitrixModuleId sale
+     * @bitrixEventCode OnSaleCancelOrder
+     * @optionNameRu Отмена заказа
+     * @param $orderId
+     * @param $cancelFlag
+     * @param $cancelDesc
+     * @return void
+     */
+    public function OnSaleCancelOrderHandler($orderId, $cancelFlag, $cancelDesc)
+    {
+        $statusCodeAlias = ($cancelFlag === 'Y') ? 'CANCEL' : 'CANCEL_ABORT';
+        Helper::updateMindboxOrderStatus($orderId, $statusCodeAlias);
     }
 }
