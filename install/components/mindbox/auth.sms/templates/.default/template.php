@@ -1,8 +1,5 @@
 <?php
-/**
- * Created by @copyright QSOFT.
- */
-if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();
 
 use Bitrix\Main\Page\Asset;
 
@@ -11,10 +8,10 @@ Asset::getInstance()->addJs("/bitrix/js/mindbox/jquery.inputmask.bundle.js");
 Asset::getInstance()->addJs("/bitrix/js/mindbox/script.js");
 Asset::getInstance()->addCss("/bitrix/css/mindbox/style.css");
 ?>
-<?if($USER->isAuthorized()):?>
-    <?$url = $arParams["PERSONAL_PAGE_URL"] ? $arParams["PERSONAL_PAGE_URL"] : SITE_DIR . "/";?>
-    <?LocalRedirect($url);?>
-<?else:?>
+<?php if ($USER->isAuthorized()):?>
+    <?php $url = $arParams['PERSONAL_PAGE_URL'] ? $arParams["PERSONAL_PAGE_URL"] :  '/';?>
+    <?php LocalRedirect($url);?>
+<?php else:?>
 <div class="mindbox">
     <div class="row">
         <div id="mindbox-auth-sms-error" class="col col-md-12 alert alert-danger" style="display: none"></div>
@@ -179,7 +176,7 @@ Asset::getInstance()->addCss("/bitrix/css/mindbox/style.css");
             </div>
         </div>
 
-        <? if($arResult["USE_CAPTCHA"] == "Y"): ?>
+        <?php if($arResult["USE_CAPTCHA"] == "Y"): ?>
             <div class="form-group">
                 <div class="col col-md-4">
                     <label for="mindbox--captcha_sid" class="control-label"><?=GetMessage('MB_AUS_CAPTCHA_TITLE')?></label>
@@ -200,7 +197,7 @@ Asset::getInstance()->addCss("/bitrix/css/mindbox/style.css");
                     <input type="text" name="captcha_word" id="mindbox--captcha_word" value="" />
                 </div>
             </div>
-        <? endif; ?>
+        <?php endif; ?>
 
         <div class="form-group">
             <div class="col col-md-12">
@@ -209,4 +206,4 @@ Asset::getInstance()->addCss("/bitrix/css/mindbox/style.css");
         </div>
     </form>
 </div>
-<?endif?>
+<?php endif?>

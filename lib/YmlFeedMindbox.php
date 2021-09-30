@@ -73,6 +73,23 @@ class YmlFeedMindbox
         }
     }
 
+    protected static function getProductGroups($productId)
+    {
+        $return = [];
+
+        if (!empty($productId)) {
+            $getElementGroups = \CIBlockElement::GetElementGroups($productId, false, ['ID', 'ACTIVE']);
+
+            while ($item = $getElementGroups->Fetch()) {
+                if ($item['ACTIVE'] === 'Y') {
+                    $return[$item['ID']] = $item['ID'];
+                }
+            }
+        }
+
+        return $return;
+    }
+
     protected static function createAgents($max)
     {
         for ($i = 1; $i <= $max; $i++) {
@@ -197,8 +214,16 @@ class YmlFeedMindbox
                     }
                     $offerCurrencyId = $dom->createElement("currencyId", htmlspecialchars($ofr["CATALOG_CURRENCY_" . $basePriceId], ENT_XML1 | ENT_QUOTES));
                     $offer->appendChild($offerCurrencyId);
-                    $offerCategoryId = $dom->createElement("categoryId", Helper::getSectionCode($prods[$prodId]["IBLOCK_SECTION_ID"]));
-                    $offer->appendChild($offerCategoryId);
+
+                    // установка категорий у товара
+                    $productCategoryList = self::getProductGroups($prodId);
+
+                    foreach ($productCategoryList as $productCategoryId) {
+                        $offerCategoryId = $dom->createElement("categoryId", Helper::getSectionCode($productCategoryId));
+                        $offer->appendChild($offerCategoryId);
+                    }
+
+
                     $img = $ofr['DETAIL_PICTURE'] ?: $ofr['PREVIEW_PICTURE'];
                     if (!empty($img)) {
                         $url = self::getPictureUrl($img);
@@ -265,8 +290,15 @@ class YmlFeedMindbox
                 }
                 $offerCurrencyId = $dom->createElement("currencyId", htmlspecialchars($prod["CATALOG_CURRENCY_" . $basePriceId], ENT_XML1 | ENT_QUOTES));
                 $offer->appendChild($offerCurrencyId);
-                $offerCategoryId = $dom->createElement("categoryId", Helper::getSectionCode($prod["IBLOCK_SECTION_ID"]));
-                $offer->appendChild($offerCategoryId);
+
+                // установка категорий у товара
+                $productCategoryList = self::getProductGroups($prod['ID']);
+
+                foreach ($productCategoryList as $productCategoryId) {
+                    $offerCategoryId = $dom->createElement("categoryId", Helper::getSectionCode($productCategoryId));
+                    $offer->appendChild($offerCategoryId);
+                }
+
                 $img = $prod['DETAIL_PICTURE'] ?: $prod['PREVIEW_PICTURE'];
                 $url = self::getPictureUrl($img);
                 if ($url) {
