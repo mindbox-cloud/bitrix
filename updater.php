@@ -1,16 +1,8 @@
 <?
 if (IsModuleInstalled('mindbox.marketing')) {
+    if (is_dir(dirname(__FILE__).'/install/components'))
+        $updater->CopyFiles("install/components", "components/");
 
-    $optionsEvent = \COption::GetOptionString('mindbox.marketing', 'ENABLE_EVENT_LIST', '');
-    $objEventController = new \Mindbox\EventController();
-
-    if (empty($optionsEvent)) {
-        $objEventController->unInstallEvents();
-        $objEventController->installEvents();
-    }
-
-    $objEventController->revisionHandlers();
-
-    $objHlInstaller = new \Mindbox\Installer\CartRulesInstaller();
-    $objHlInstaller->install();
+    if (is_dir(dirname(__FILE__).'/install/js'))
+        $updater->CopyFiles("install/js", "js/mindbox.marketing/");
 }
