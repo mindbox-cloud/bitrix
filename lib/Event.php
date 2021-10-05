@@ -1580,6 +1580,14 @@ class Event
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
+        if (
+            Helper::isAdminSection()
+            && isset($_REQUEST['action'])
+            && $_REQUEST['action'] === 'refreshOrderData'
+        ) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+
         if ($_REQUEST['soa-action'] === 'saveOrderAjax' &&
             $_REQUEST['save'] === 'Y'
         ) {
