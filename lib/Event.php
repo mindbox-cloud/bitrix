@@ -708,8 +708,8 @@ class Event
         if (!$isNewOrder && !Helper::isAdminSection()) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
-        
-        if (!Helper::isMindboxOrder($order->getId())) {
+    
+        if (!$isNewOrder && !Helper::isMindboxOrder($order->getId())) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
         
