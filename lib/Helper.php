@@ -410,7 +410,23 @@ class Helper
 
         return $offerProps;
     }
-
+    
+    public static function getGroups()
+    {
+        $arGroup = [];
+        
+        $iterator = \Bitrix\Main\GroupTable::getList([
+            'filter' => ['ACTIVE' => 'Y'],
+            'select' => ['ID', 'NAME']
+        ]);
+        
+        while ($group = $iterator->fetch()) {
+            $arGroup[$group['ID']] = $group['NAME'] . ' [' . $group['ID'] . ']';
+        }
+        
+        return $arGroup;
+    }
+    
     /**
      * @return array
      */

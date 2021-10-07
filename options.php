@@ -350,6 +350,17 @@ $arAllOptions['COMMON'][] = [
         $eventList,
     ]
 ];
+
+
+$arAllOptions['COMMON'][] = [
+        'CONTINUE_USER_GROUPS',
+        getMessage('CONTINUE_USER_GROUPS'),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'CONTINUE_USER_GROUPS', ''),
+        [
+                'multiselectbox',
+                \Mindbox\Helper::getGroups(),
+        ]
+];
 ?>
 
 <form name='minboxoptions' method='POST'
@@ -397,4 +408,78 @@ $arAllOptions['COMMON'][] = [
         border-color: #ccc !important;
         opacity: 0.4 !important;
     }
+    .mindbox-help--icon:before {
+        cursor: help;
+        content: url("/bitrix/js/main/core/images/hint.gif");
+        display: inline-block;
+        margin-right: 10px;
+        width: 5px;
+        height: 5px;
+    }
+    .mindbox-help--tooltip {
+        position: fixed;
+        padding: 10px 20px;
+        border: 1px solid #b3c9ce;
+        border-radius: 4px;
+        text-align: center;
+        font: italic 14px/1.3 sans-serif;
+        color: #333;
+        background: #fff;
+        max-width: 600px;
+        box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
+        display: none;
+    }
+    .mindbox-help--icon:hover ~ .mindbox-help--tooltip{
+        display: block;
+    }
 </style>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const settingForm = document.querySelector('form[name="minboxoptions"]');
+        const selectSettingGroup = settingForm.querySelector('select[name="MINDBOX_CONTINUE_USER_GROUPS[]"]');
+        const parrent_tr = selectSettingGroup.closest("tr");
+        const label = parrent_tr.firstElementChild;
+
+        label.classList.add('mindbox-help');
+
+        // Добавили иконку для тултипа
+        iconNode = document.createElement('span');
+        iconNode.className = 'mindbox-help--icon ';
+        label.prepend(iconNode);
+
+        iconNode.onmouseover =  function (event) {
+            const iconNode = event.target;
+            const label = iconNode.parentNode;
+
+            // Добавляем тултип
+            tooltipElem = document.createElement('div');
+            tooltipElem.className = 'mindbox-help--tooltip ';
+            tooltipElem.innerHTML = "<?= getMessage('CONTINUE_USER_GROUPS_TOOLTIP')?>";
+            label.append(tooltipElem);
+
+            // спозиционируем его сверху от аннотируемого элемента (top-center)
+            let coords = label.getBoundingClientRect();
+            let left = coords.left + (label.offsetWidth - tooltipElem.offsetWidth) / 2;
+            let top = coords.top - tooltipElem.offsetHeight - 5;
+
+            if (left < 0) {
+                left = 0; // не заезжать за левый край окна
+            }
+
+            if (top < 0) {
+                // если подсказка не помещается сверху, то отображать её снизу
+                top = coords.top + label.offsetHeight + 5;
+            }
+
+            tooltipElem.style.left = left + 'px';
+            tooltipElem.style.top = top + 'px';
+            tooltipElem.style.display = 'block';
+        }
+
+        iconNode.onmouseout = function (event) {
+            const iconNode = event.target;
+            const tooltipElem = iconNode.parentNode.querySelector('.mindbox-help--tooltip');
+            tooltipElem.remove();
+        }
+    });
+</script>
