@@ -1409,7 +1409,7 @@ class Helper
      */
     public static function getMindboxOrder($orderId)
     {
-        if (!empty($orderId)) {
+        if (empty($orderId)) {
             return false;
         }
         
