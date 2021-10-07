@@ -708,8 +708,11 @@ class Event
         if (!$isNewOrder && !Helper::isAdminSection()) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
-
-
+    
+        if (!$isNewOrder && !Helper::isMindboxOrder($order->getId())) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+        
         $basket = $order->getBasket();
         global $USER;
 
@@ -1022,7 +1025,6 @@ class Event
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
-
         $payments = [];
         $paymentCollection = $order->getPaymentCollection();
         foreach ($paymentCollection as $payment) {
@@ -1033,7 +1035,11 @@ class Event
         }
 
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'loyalty') {
-
+    
+            if (!$isNew && !Helper::isMindboxOrder($order->getId())) {
+                return new Main\EventResult(Main\EventResult::SUCCESS);
+            }
+    
             /** @var \Bitrix\Sale\Basket $basket */
             $basket = $order->getBasket();
             global $USER;
