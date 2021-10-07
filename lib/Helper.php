@@ -1098,7 +1098,7 @@ class Helper
         $currentPage = $APPLICATION->GetCurPage();
         $request = \Bitrix\Main\Context::getCurrent()->getRequest();
 
-        return  ($request->isAdminSection() || strpos($currentPage, '/bitrix/admin') !== false || strpos($_SERVER['HTTP_REFERER'],'/bitrix/admin') !== false);
+        return  ($request->isAdminSection() || strpos($currentPage, '/bitrix/admin') !== false || strpos($_SERVER['HTTP_REFERER'], '/bitrix/admin') !== false);
     }
 
     public static function checkBasketItem($basketItem)
@@ -1210,7 +1210,6 @@ class Helper
             $preorder = new \Mindbox\DTO\V3\Requests\PreorderRequestDTO();
 
             foreach ($basketItems as $basketItem) {
-
                 if (!Helper::checkBasketItem($basketItem)) {
                     continue;
                 }
@@ -1257,7 +1256,6 @@ class Helper
             $arCoupons = [];
 
             if (!empty($setOrderPromoCodeValue)) {
-
                 if (strpos($setOrderPromoCodeValue, ',') !== false) {
                     $applyCouponsList = explode(',', $setOrderPromoCodeValue);
 
@@ -1266,7 +1264,6 @@ class Helper
                             $arCoupons[]['ids']['code'] = trim($couponItem);
                         }
                     }
-
                 } else {
                     $arCoupons[]['ids']['code'] = $setOrderPromoCodeValue;
                 }
@@ -1277,7 +1274,6 @@ class Helper
             }
 
             if (!empty($setBonusValue)) {
-
                 $arOrder['bonusPoints'] = [
                     [
                         'amount' => $setBonusValue
@@ -1337,7 +1333,6 @@ class Helper
         $return = false;
 
         if (class_exists('\Bitrix\Sale\TradingPlatform\OrderTable') && !empty($orderId)) {
-
             $res = \Bitrix\Sale\TradingPlatform\OrderTable::getList([
                 'filter' => [
                     '=ORDER_ID' => $orderId,
@@ -1366,7 +1361,6 @@ class Helper
         $return = false;
 
         if ($propertyCollection instanceof \Bitrix\Sale\PropertyValueCollection) {
-
             if (method_exists($propertyCollection, 'getItemByOrderPropertyCode')) {
                 $property = $propertyCollection->getItemByOrderPropertyCode($code);
             } else {
