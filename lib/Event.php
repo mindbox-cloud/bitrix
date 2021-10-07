@@ -676,11 +676,7 @@ class Event
         if (Helper::isInternalOrderUser($order->getUserId())) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
-
-        if (Helper::isInternalOrder($order->getId())) {
-            return new Main\EventResult(Main\EventResult::SUCCESS);
-        }
-
+        
         if (Helper::isAdminSection()) {
             // @todo: временно убрал ограничение оплаченного заказа
             if ($order->isPaid() && strtotime($order->getField('DATE_PAYED')) < time()) {
@@ -783,7 +779,6 @@ class Event
 
         $arCoupons = [];
         if ($_SESSION['PROMO_CODE'] && !empty($_SESSION['PROMO_CODE'])) {
-
             if (strpos($_SESSION['PROMO_CODE'], ',') !== false) {
                 $applyCouponsList = explode(',', $_SESSION['PROMO_CODE']);
 
@@ -792,7 +787,6 @@ class Event
                         $arCoupons[]['ids']['code'] = trim($couponItem);
                     }
                 }
-
             } else {
                 $arCoupons[]['ids']['code'] = $_SESSION['PROMO_CODE'];
             }
@@ -934,7 +928,6 @@ class Event
                     }
                 }
             } elseif ($createOrderResult->getResult()->getOrder()->getField('processingStatus') === 'PriceHasBeenChanged') {
-
                 if (Helper::isAdminSection()) {
                     $errorMessage = $createOrderResult->getResult()->getOrder()->getField('statusDescription');
                 } else {
@@ -1018,11 +1011,6 @@ class Event
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
-        if (Helper::isInternalOrder($order->getId())) {
-            return new Main\EventResult(Main\EventResult::SUCCESS);
-        }
-
-
         $payments = [];
         $paymentCollection = $order->getPaymentCollection();
         foreach ($paymentCollection as $payment) {
@@ -1093,7 +1081,6 @@ class Event
             $arCoupons = [];
 
             if ($_SESSION['PROMO_CODE'] && !empty($_SESSION['PROMO_CODE'])) {
-
                 if (strpos($_SESSION['PROMO_CODE'], ',') !== false) {
                     $applyCouponsList = explode(',', $_SESSION['PROMO_CODE']);
 
@@ -1102,7 +1089,6 @@ class Event
                             $arCoupons[]['ids']['code'] = trim($couponItem);
                         }
                     }
-
                 } else {
                     $arCoupons[]['ids']['code'] = $_SESSION['PROMO_CODE'];
                 }
@@ -1169,8 +1155,6 @@ class Event
             $offlineOrderDTO->setCustomer($customer);
 
             try {
-
-
                 $orderDTO = new OrderCreateRequestDTO();
                 $orderDTO->setField('order', [
                     'ids'         => [
@@ -1205,14 +1189,14 @@ class Event
                     foreach ($setPropertiesList as $propCode => $propValue) {
                          $orderPropertyData = Helper::getOrderPropertyByCode($propCode, $orderPersonType);
 
-                         if (!empty($orderPropertyData)) {
-                             $propertyItemObj = $orderPropertyCollection->getItemByOrderPropertyId($orderPropertyData['ID']);
+                        if (!empty($orderPropertyData)) {
+                            $propertyItemObj = $orderPropertyCollection->getItemByOrderPropertyId($orderPropertyData['ID']);
 
-                             if (!empty($propertyItemObj) && is_object($propertyItemObj)) {
-                                 $propertyItemObj->setValue($propValue);
-                                 $propertyItemObj->save();
-                             }
-                         }
+                            if (!empty($propertyItemObj) && is_object($propertyItemObj)) {
+                                $propertyItemObj->setValue($propValue);
+                                $propertyItemObj->save();
+                            }
+                        }
                     }
                 }
 
@@ -1222,7 +1206,6 @@ class Event
                 unset($_SESSION['MINDBOX_TRANSACTION_ID']);
                 unset($_SESSION['PAY_BONUSES']);
                 unset($_SESSION['TOTAL_PRICE']);
-
             } catch (Exceptions\MindboxClientErrorException $e) {
                 unset($_SESSION['PAY_BONUSES']);
                 unset($_SESSION['TOTAL_PRICE']);
@@ -1385,7 +1368,6 @@ class Event
             }
 
             if ($_SESSION['PROMO_CODE'] && !empty($_SESSION['PROMO_CODE'])) {
-
                 if (strpos($_SESSION['PROMO_CODE'], ',') !== false) {
                     $applyCouponsList = explode(',', $_SESSION['PROMO_CODE']);
 
@@ -1621,7 +1603,6 @@ class Event
         $preorder = new \Mindbox\DTO\V3\Requests\PreorderRequestDTO();
 
         foreach ($basketItems as $basketItem) {
-
             if (!Helper::checkBasketItem($basketItem)) {
                 continue;
             }
@@ -1664,7 +1645,6 @@ class Event
         $arCoupons = [];
 
         if ($_SESSION['PROMO_CODE'] && !empty($_SESSION['PROMO_CODE'])) {
-
             if (strpos($_SESSION['PROMO_CODE'], ',') !== false) {
                 $applyCouponsList = explode(',', $_SESSION['PROMO_CODE']);
 
@@ -1673,7 +1653,6 @@ class Event
                         $arCoupons[]['ids']['code'] = trim($couponItem);
                     }
                 }
-
             } else {
                 $arCoupons[]['ids']['code'] = $_SESSION['PROMO_CODE'];
             }
@@ -1724,7 +1703,6 @@ class Event
                     $preorder,
                     Options::getOperationName('calculateAuthorizedCart' . (Helper::isAdminSection()? 'Admin':''))
                 )->sendRequest()->getResult()->getField('order');
-
             } else {
                 $preorderInfo = $mindbox->order()->calculateUnauthorizedCart(
                     $preorder,
@@ -1744,11 +1722,9 @@ class Event
 
                 if ($couponsInfo['coupon']['status'] == 'NotFound') {
                     $setCouponError = Loc::getMessage('MB_CART_PROMOCODE_NOT_FOUND');
-                }
-                elseif ($couponsInfo['coupon']['status'] == 'CanNotBeUsedForCurrentOrder') {
+                } elseif ($couponsInfo['coupon']['status'] == 'CanNotBeUsedForCurrentOrder') {
                     $setCouponError = Loc::getMessage('MB_CART_PROMOCODE_ERR');
-                }
-                elseif ($couponsInfo['coupon']['status'] == 'Used') {
+                } elseif ($couponsInfo['coupon']['status'] == 'Used') {
                     $setCouponError = Loc::getMessage('MB_CART_PROMO_USED');
                 }
 
@@ -1785,7 +1761,6 @@ class Event
                 $bitrixProduct = $bitrixBasket[$lineId];
 
                 if (isset($mindboxBasket[$lineId])) {
-
                     $mindboxAdditional[] = [
                         'PRODUCT_ID'             => $bitrixProduct->getProductId(),
                         'PRICE'                  => floatval($line->getDiscountedPrice()) / floatval($line->getQuantity()),
@@ -2103,7 +2078,7 @@ class Event
                     'ids' => [
                         Options::getModuleOption('TRANSACTION_ID') => $orderId
                     ],
-                'lines' => $deleteLines
+                    'lines' => $deleteLines
                 ]
             ];
 

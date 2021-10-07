@@ -25,7 +25,7 @@ function ShowParamsHTMLByarray($arParams)
     }
 }
 
-$mayEmptyProps = ['MINDBOX_CATALOG_PROPS', 'MINDBOX_CATALOG_OFFER_PROPS', 'MINDBOX_ENABLE_EVENT_LIST'];
+$mayEmptyProps = ['MINDBOX_CATALOG_PROPS', 'MINDBOX_CATALOG_OFFER_PROPS', 'MINDBOX_ENABLE_EVENT_LIST', 'MINDBOX_CONTINUE_USER_GROUPS'];
 
 if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
     if (empty($_POST['MINDBOX_PROTOCOL']) || $_POST['MINDBOX_PROTOCOL'] !== 'Y') {

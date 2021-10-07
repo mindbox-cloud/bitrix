@@ -1327,27 +1327,7 @@ class Helper
 
         return $return;
     }
-
-    public static function isInternalOrder($orderId)
-    {
-        $return = false;
-
-        if (class_exists('\Bitrix\Sale\TradingPlatform\OrderTable') && !empty($orderId)) {
-            $res = \Bitrix\Sale\TradingPlatform\OrderTable::getList([
-                'filter' => [
-                    '=ORDER_ID' => $orderId,
-                ],
-                'select' => ['ID'],
-            ]);
-
-            if ($item = $res->fetch()) {
-                $return = true;
-            }
-        }
-
-        return $return;
-    }
-
+    
     /**
      * Получение значение свойства заказа по коду.
      * Функция с поддержкой версии Битрикс < 20.5
@@ -1378,29 +1358,44 @@ class Helper
 
         return $return;
     }
-
-    protected static function internalUserLoginList()
-    {
-        return [
-            'marketplaceanonymous',
-        ];
-    }
-
+    
+    /**
+     * Проверка, доступен ли данному пользователю процессинг
+     *
+     * @param $userId
+     *
+     * @return bool
+     */
     public static function isInternalOrderUser($userId)
     {
         $return = false;
-
-        if (!empty($userId) && (int)$userId > 0) {
-            $getUserData = \CUser::GetByID($userId);
-
-            if ($userData = $getUserData->Fetch()) {
-                if (in_array($userData['LOGIN'], self::internalUserLoginList())) {
-                    $return = true;
-                }
+        $internalUserGroups = self::getInternalGroups();
+        
+        if (!empty($userId) && (int)$userId > 0 && !empty($internalUserGroups)) {
+            $userGroup = \Bitrix\Main\UserTable::getUserGroupIds($userId);
+            
+            if (count(array_diff($userGroup, $internalUserGroups)) !== count($userGroup)) {
+                $return = true;
             }
         }
 
         return $return;
+    }
+    
+    /**
+     * Возвращает группы пользователей, для которых процессинг не доступен
+     * @return array|false|string[]
+     */
+    public static function getInternalGroups()
+    {
+        $groups = [];
+        $stringGroup = Options::getModuleOption('CONTINUE_USER_GROUPS');
+        
+        if (!empty($stringGroup)) {
+            $groups = explode(',', $stringGroup);
+        }
+        
+        return $groups;
     }
 
     public static function isDeleteOrderAdminAction()
