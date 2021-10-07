@@ -1401,4 +1401,54 @@ class Helper
             && isset($_REQUEST['ID'])
         );
     }
+    
+    /**
+     * @param $orderId
+     *
+     * @return false|DTO\V2\Responses\OrderResponseDTO
+     */
+    public static function getMindboxOrder($orderId)
+    {
+        if (empty($orderId)) {
+            return false;
+        }
+        
+        $request = self::mindbox()->getClientV3()->prepareRequest(
+            'POST',
+            'Offline.GetOrder',
+                new DTO([
+                    'order' => [
+                        'ids' => [
+                            Options::getModuleOption('TRANSACTION_ID') => $orderId
+                        ],
+                    ]
+                ])
+        );
+    
+        try {
+            $response = $request->sendRequest();
+            
+            return $response->getResult()->getOrder();
+        } catch (Exceptions\MindboxClientException $e) {
+        
+        }
+        
+        return false;
+    }
+    
+    /**
+     * @param $orderId
+     *
+     * @return bool
+     */
+    public static function isMindboxOrder($orderId)
+    {
+        $order = self::getMindboxOrder($orderId);
+        
+        if ($order && $order->getField('processingStatus') === 'Found') {
+            return true;
+        }
+        
+        return false;
+    }
 }
