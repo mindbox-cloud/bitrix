@@ -322,7 +322,7 @@ class Cart extends CBitrixComponent implements Controllerable
             ];
 
             if (!empty($requestedPromotions)) {
-                $arLine['requestedPromotions'] = [$requestedPromotions];
+                $arLine['requestedPromotions'] = $requestedPromotions;
             }
 
             $lines[] = $arLine;
