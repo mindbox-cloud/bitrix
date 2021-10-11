@@ -1522,12 +1522,25 @@ class Event
             $arCoupons['ids']['code'] = $_SESSION['PROMO_CODE'];
         }
 
+        $payments = [];
+        $paymentCollection = $order->getPaymentCollection();
+        foreach ($paymentCollection as $payment) {
+            $payments[] = [
+                'type'   => $payment->getPaymentSystemId(),
+                'amount' => $payment->getSum()
+            ];
+        }
+
         $arOrder = [
             'ids'   => [
                 Options::getModuleOption('TRANSACTION_ID') => '',
             ],
             'lines' => $lines
         ];
+
+        if (!empty($payments)) {
+            $arOrder['payments'] = $payments;
+        }
 
         if (!empty($arCoupons)) {
             $arOrder['coupons'] = [$arCoupons];
