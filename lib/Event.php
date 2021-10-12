@@ -18,13 +18,11 @@ use CUser;
 use DateTime;
 use DateTimeZone;
 use Mindbox\DTO\DTO;
-use Mindbox\DTO\V2\Requests\DiscountRequestDTO;
+use Mindbox\DTO\V3\Requests\DiscountRequestDTO;
 use Mindbox\DTO\V3\Requests\CustomerRequestDTO;
-use Mindbox\DTO\V2\Requests\CustomerRequestDTO as CustomerRequestV2DTO;
-use Mindbox\DTO\V2\Requests\LineRequestDTO;
-use Mindbox\DTO\V2\Requests\OrderCreateRequestDTO;
-use Mindbox\DTO\V2\Requests\OrderUpdateRequestDTO;
-use Mindbox\DTO\V2\Requests\PreorderRequestDTO;
+use Mindbox\DTO\V3\Requests\LineRequestDTO;
+use Mindbox\DTO\V3\Requests\OrderCreateRequestDTO;
+use Mindbox\DTO\V3\Requests\OrderUpdateRequestDTO;
 use MongoDB\Driver\Exception\Exception;
 
 Loader::includeModule('catalog');
@@ -796,7 +794,7 @@ class Event
             ];
         }
 
-        $customer = new CustomerRequestV2DTO();
+        $customer = new CustomerRequestDTO();
 
         if (is_object($USER) && $USER->IsAuthorized()) {
             $mindboxId = Helper::getMindboxId($USER->GetID());
@@ -1066,7 +1064,7 @@ class Event
                 ];
             }
 
-            $customer = new CustomerRequestV2DTO();
+            $customer = new CustomerRequestDTO();
 
             if (is_object($USER) && $USER->IsAuthorized()) {
                 $mindboxId = Helper::getMindboxId($USER->GetID());
@@ -1240,7 +1238,7 @@ class Event
                 return new Main\EventResult(Main\EventResult::SUCCESS);
             }
 
-            $customer = new CustomerRequestV2DTO();
+            $customer = new CustomerRequestDTO();
             $mindboxId = Helper::getMindboxId($order->getUserId());
             $customFields = [];
             $propertyCollection = $order->getPropertyCollection();
@@ -1353,7 +1351,7 @@ class Event
                 $now = $now->setTimezone(new DateTimeZone("UTC"))->format("Y-m-d H:i:s");
                 $orderDTO->setUpdatedDateTimeUtc($now);
 
-                $customer = new CustomerRequestV2DTO();
+                $customer = new CustomerRequestDTO();
                 $mindboxId = Helper::getMindboxId($order->getUserId());
 
                 if ($mindboxId) {
@@ -1469,8 +1467,6 @@ class Event
         ) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
-
-        $preorder = new PreorderRequestDTO();
 
         $basketItems = $basket->getBasketItems();
         $lines = [];
