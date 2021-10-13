@@ -719,10 +719,6 @@ class Event
         $lines = [];
         $i = 1;
         foreach ($basketItems as $basketItem) {
-            if ($basketItem->getField('CAN_BUY') == 'N') {
-                continue;
-            }
-
             $propertyCollection = $order->getPropertyCollection();
             $ar = $propertyCollection->getArray();
             foreach ($ar['properties'] as $arProperty) {
@@ -997,9 +993,6 @@ class Event
             $lines = [];
             $i = 1;
             foreach ($basketItems as $basketItem) {
-                if ($basketItem->getField('CAN_BUY') == 'N') {
-                    continue;
-                }
                 $productBasePrice = $basketItem->getBasePrice();
                 $requestedPromotions = Helper::getRequestedPromotions($basketItem, $order);
 
@@ -1217,10 +1210,6 @@ class Event
             $lines = [];
 
             foreach ($basketItems as $basketItem) {
-                if ($basketItem->getField('CAN_BUY') == 'N') {
-                    continue;
-                }
-
                 $line = new LineRequestDTO();
                 $catalogPrice = \CPrice::GetBasePrice($basketItem->getProductId());
                 $catalogPrice = $catalogPrice['PRICE'] ?: 0;
@@ -1381,10 +1370,6 @@ class Event
 
                 $lines = [];
                 foreach ($basketItems as $basketItem) {
-                    if ($basketItem->getField('CAN_BUY') == 'N') {
-                        continue;
-                    }
-
                     $basketItem->setField('CUSTOM_PRICE', 'N');
                     $basketItem->save();
                     $line = new LineRequestDTO();
@@ -1479,10 +1464,6 @@ class Event
 
         foreach ($basketItems as $basketItem) {
             if (!$basketItem->getId()) {
-                continue;
-            }
-
-            if ($basketItem->getField('CAN_BUY') == 'N') {
                 continue;
             }
 
