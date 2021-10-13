@@ -1626,7 +1626,7 @@ class Event
             }
             // @info сохраним корзину, чтобы получить корректный lineId
             $basket->save();
-            $basket->refresh();
+            //$basket->refresh();
         }
 
         $basketItems = $basket->getBasketItems();
