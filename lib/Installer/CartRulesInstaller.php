@@ -73,7 +73,6 @@ class CartRulesInstaller
             }
 
             return $id;
-
         } else {
             $errors = $create->getErrorMessages();
         }
