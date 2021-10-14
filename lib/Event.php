@@ -243,8 +243,6 @@ class Event
             $fields['customFields'] = $customFields;
         }
 
-        $customer = Helper::iconvDTO(new CustomerRequestDTO($fields));
-
         $isSubscribed = true;
         if ($arFields['UF_MB_IS_SUBSCRIBED'] === '0') {
             $isSubscribed = false;
@@ -1795,6 +1793,7 @@ class Event
         }
 
         $isSubscribed = true;
+
         if ($arFields['UF_MB_IS_SUBSCRIBED'] === '0') {
             $isSubscribed = false;
         }
@@ -1806,7 +1805,6 @@ class Event
         ];
 
         $customer = Helper::iconvDTO(new CustomerRequestDTO($fields));
-        $customer->
 
         unset($fields);
 
