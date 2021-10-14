@@ -1586,9 +1586,17 @@ class Event
                 return new Main\EventResult(Main\EventResult::SUCCESS);
             }
 
+            
             $_SESSION['TOTAL_PRICE'] = $preorderInfo->getField('totalPrice');
-
+            
+            $totalBonusPointInfo = $preorderInfo->getField('totalBonusPointsInfo');
+          
+            if (!empty($totalBonusPointInfo) && $totalBonusPointInfo['availableAmountForCurrentOrder'] < $_SESSION['PAY_BONUSES']) {
+                $_SESSION['PAY_BONUSES'] = $totalBonusPointInfo['availableAmountForCurrentOrder'];
+            }
+            
             $discounts = $preorderInfo->getDiscountsInfo();
+            
             foreach ($discounts as $discount) {
                 if ($discount->getType() === 'balance') {
                     $balance = $discount->getField('balance');
