@@ -1538,8 +1538,7 @@ class Event
         $paymentCollection = $order->getPaymentCollection();
         foreach ($paymentCollection as $payment) {
             $payments[] = [
-                'type'   => $payment->getPaymentSystemId(),
-                'amount' => $payment->getSum()
+                'type'   => $payment->getPaymentSystemId()
             ];
         }
 
