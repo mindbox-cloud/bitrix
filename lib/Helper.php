@@ -572,14 +572,7 @@ class Helper
      */
     public static function getTransactionId()
     {
-        $transactionId = \Bitrix\Sale\Fuser::getId() . date('dmYHis');
-        if (!$_SESSION['MINDBOX_TRANSACTION_ID']) {
-            $_SESSION['MINDBOX_TRANSACTION_ID'] = $transactionId;
-
-            return $transactionId;
-        } else {
-            return $_SESSION['MINDBOX_TRANSACTION_ID'];
-        }
+        return Transaction::getInstance()->get();
     }
 
     public static function processHlbBasketRule($lineId, $mindboxPrice)

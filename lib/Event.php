@@ -652,7 +652,6 @@ class Event
         global $USER;
 
         $order = $event->getParameter("ENTITY");
-        $values = $event->getParameter("VALUES");
 
         $standardMode = \COption::GetOptionString('mindbox.marketing', 'MODE') === 'standard';
         $mindbox = static::mindbox();
@@ -703,7 +702,7 @@ class Event
             }
         }
 
-        $isNewOrder = Helper::isNewOrder($values);
+        $isNewOrder = empty($order->getId());
 
         if (!$isNewOrder && !Helper::isAdminSection()) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
@@ -801,8 +800,6 @@ class Event
             }
         }
 
-        unset($_SESSION[ 'MINDBOX_TRANSACTION_ID' ]);
-
         $shopOrderId = $order->getId();
         $arOrder = [
             'ids'          => [
@@ -818,6 +815,8 @@ class Event
             'deliveryCost' => $order->getDeliveryPrice(),
             'totalPrice'   => $_SESSION['TOTAL_PRICE'] + $order->getDeliveryPrice()
         ];
+
+
 
         if (!empty($arCoupons)) {
             $arOrder['coupons'] = $arCoupons;
@@ -971,18 +970,14 @@ class Event
             )->sendRequest();
 
             unset($_SESSION['TOTAL_PRICE']);
-            unset($_SESSION[ 'MINDBOX_TRANSACTION_ID' ]);
-
             return new \Bitrix\Main\EventResult(
                 \Bitrix\Main\EventResult::ERROR,
                 new \Bitrix\Sale\ResultError($e->getMessage(), 'SALE_EVENT_WRONG_ORDER'),
                 'sale'
             );
         } catch (Exceptions\MindboxUnavailableException $e) {
-            unset($_SESSION[ 'MINDBOX_TRANSACTION_ID' ]);
             return new Main\EventResult(Main\EventResult::SUCCESS);
         } catch (Exceptions\MindboxClientException $e) {
-            unset($_SESSION[ 'MINDBOX_TRANSACTION_ID' ]);
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
@@ -1046,9 +1041,6 @@ class Event
 
             $delivery = $order->getDeliverySystemId();
             $delivery = current($delivery);
-
-            $rsUser = \CUser::GetByID($order->getUserId());
-            $arUser = $rsUser->Fetch();
 
             $offlineOrderDTO = new \Mindbox\DTO\V3\Requests\OrderCreateRequestDTO();
             $basketItems = $basket->getBasketItems();
@@ -1222,10 +1214,8 @@ class Event
                     }
                 }
 
-
                 unset($_SESSION['PROMO_CODE_AMOUNT']);
                 unset($_SESSION['PROMO_CODE']);
-                unset($_SESSION['MINDBOX_TRANSACTION_ID']);
                 unset($_SESSION['PAY_BONUSES']);
                 unset($_SESSION['TOTAL_PRICE']);
 
