@@ -2,26 +2,29 @@
 /**
  * Created by @copyright QSOFT.
  */
-if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
+if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) {
+    die();
+}
 
 use Bitrix\Main\Page\Asset;
+
 CJSCore::Init(['jquery', 'ajax']);
 Asset::getInstance()->addJs("/bitrix/js/mindbox/jquery.inputmask.bundle.js");
 Asset::getInstance()->addJs("/bitrix/js/mindbox/script.js");
 Asset::getInstance()->addCss("/bitrix/css/mindbox/style.css");
 ?>
 
-<? if ($USER->IsAuthorized()): ?>
+<?php if ($USER->IsAuthorized()) : ?>
     <div class="mindbox">
-        <? if (empty($arResult['USER_INFO']['PERSONAL_PHONE'])): ?>
+        <?php if (empty($arResult['USER_INFO']['PERSONAL_PHONE'])) : ?>
             <div class="row">
                 <span class="col col-md-8 alert alert-info"><?= GetMessage('MB_PC_INPUT_PHONE')?></span>
             </div>
-        <? elseif ($arResult['USER_INFO']['UF_PHONE_CONFIRMED']): ?>
+        <?php elseif ($arResult['USER_INFO']['UF_PHONE_CONFIRMED']) : ?>
             <div class="row">
                 <span class="col col-md-8 alert alert-info"><?= GetMessage('MB_PC_SUCCESS_CONFIRM', ['#PHONE#' => $arResult['USER_INFO']['PERSONAL_PHONE']])?></span>
             </div>
-        <? else: ?>
+        <?php else : ?>
             <div class="row">
                 <div id="mindbox-phone-confirm-error" class="col col-md-8 alert alert-danger" style="display: none"></div>
             </div>
@@ -54,6 +57,6 @@ Asset::getInstance()->addCss("/bitrix/css/mindbox/style.css");
                     </div>
                 </div>
             </div>
-        <? endif; ?>
+        <?php endif; ?>
     </div>
-<? endif; ?>
+<?php endif; ?>
