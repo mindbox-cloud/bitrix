@@ -28,7 +28,7 @@ Asset::getInstance()->addCss("/bitrix/css/mindbox/style.css");
             <div class="row">
                 <div id="mindbox-phone-confirm-success" class="col col-md-8 alert alert-info" style="display: none"></div>
             </div>
-            <form action="" class="form-horizontal form-default" id="mindbox-phone-confirm">
+            <div class="form-horizontal form-default" id="mindbox-phone-confirm">
                 <div class="form-group">
                     <div class="col col-md-3">
                         <label for="mindbox-code" class="control-label"><?= GetMessage('MB_PC_CONFIRM_CODE')?></label>
@@ -36,12 +36,11 @@ Asset::getInstance()->addCss("/bitrix/css/mindbox/style.css");
 
                     <div class="col col-md-5">
                         <div class="form-inline-elements">
-                            <input type="number" class="form-control js-mask" name="mindbox-code" id="mindbox-code" data-type="decimal"
-                                   required>
+                            <input type="number" class="form-control js-mask" name="mindbox-code" id="mindbox-code" data-type="decimal">
 
                             <button type="button" class="btn btn-auth js-auth-code" id="mindbox-phone-confirm--resend">
-                                <span class="js-auth-code-text"><?= GetMessage('MB_PC_RESEND_BUTTON')?></span> <span
-                                        class="js-auth-code-timer"></span>
+                                <span class="js-auth-code-text"><?= GetMessage('MB_PC_RESEND_BUTTON')?></span>
+                                <span class="js-auth-code-timer"></span>
                             </button>
                         </div>
                     </div>
@@ -50,11 +49,11 @@ Asset::getInstance()->addCss("/bitrix/css/mindbox/style.css");
                 <div class="form-group">
                     <div class="col col-md-5 col-md-offset-3">
                         <div class="form-inline-elements">
-                            <button type="submit" class="btn btn-primary"><?= GetMessage('MB_PC_CHECK_CODE')?></button>
+                            <button id="submit-button" class="btn btn-primary"><?= GetMessage('MB_PC_CHECK_CODE')?></button>
                         </div>
                     </div>
                 </div>
-            </form>
+            </div>
         <? endif; ?>
     </div>
 <? endif; ?>
