@@ -683,6 +683,8 @@ class Event
         if (Helper::isAdminSection()) {
             // @todo: временно убрал ограничение оплаченного заказа
             if ($order->isPaid() && strtotime($order->getField('DATE_PAYED')) < time()) {
+                Transaction::getInstance()->clear();
+
                 return new \Bitrix\Main\EventResult(
                     \Bitrix\Main\EventResult::ERROR,
                     new \Bitrix\Sale\ResultError(Loc::getMessage("MB_ORDER_CANNOT_BE_CHANGED"), 'SALE_EVENT_WRONG_ORDER'),
@@ -693,6 +695,7 @@ class Event
             if (!empty($_SESSION['SET_COUPON_ERROR'])) {
                 $setPromoCodeError = $_SESSION['SET_COUPON_ERROR'];
                 unset($_SESSION['SET_COUPON_ERROR']);
+                Transaction::getInstance()->clear();
 
                 return new \Bitrix\Main\EventResult(
                     \Bitrix\Main\EventResult::ERROR,
@@ -780,6 +783,7 @@ class Event
         }
 
         if (empty($lines)) {
+            Transaction::getInstance()->clear();
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
@@ -926,10 +930,13 @@ class Event
                         'sale'
                     );
                 } catch (Exceptions\MindboxClientErrorException $e) {
+                    Transaction::getInstance()->clear();
                     return new Main\EventResult(Main\EventResult::ERROR);
                 } catch (Exceptions\MindboxUnavailableException $e) {
+                    Transaction::getInstance()->clear();
                     return new Main\EventResult(Main\EventResult::SUCCESS);
                 } catch (Exceptions\MindboxClientException $e) {
+                    Transaction::getInstance()->clear();
                     $request = $mindbox->order()->getRequest();
                     if ($request) {
                         QueueTable::push($request);
@@ -943,6 +950,8 @@ class Event
                     $errorMessage = Loc::getMessage("MB_ORDER_PROCESSING_STATUS_CHANGED");
                 }
 
+                Transaction::getInstance()->clear();
+
                 return new \Bitrix\Main\EventResult(
                     \Bitrix\Main\EventResult::ERROR,
                     new \Bitrix\Sale\ResultError($errorMessage, 'SALE_EVENT_WRONG_ORDER'),
@@ -951,6 +960,7 @@ class Event
             } else {
                 $createOrderResult = $createOrderResult->getResult()->getField('order');
                 $_SESSION[ 'MINDBOX_ORDER' ] = $createOrderResult ? $createOrderResult->getId('mindboxId') : false;
+
                 return new Main\EventResult(Main\EventResult::SUCCESS);
             }
             $createOrderResult = $createOrderResult->getResult()->getField('order');
@@ -970,14 +980,19 @@ class Event
             )->sendRequest();
 
             unset($_SESSION['TOTAL_PRICE']);
+
+            Transaction::getInstance()->clear();
+
             return new \Bitrix\Main\EventResult(
                 \Bitrix\Main\EventResult::ERROR,
                 new \Bitrix\Sale\ResultError($e->getMessage(), 'SALE_EVENT_WRONG_ORDER'),
                 'sale'
             );
         } catch (Exceptions\MindboxUnavailableException $e) {
+            Transaction::getInstance()->clear();
             return new Main\EventResult(Main\EventResult::SUCCESS);
         } catch (Exceptions\MindboxClientException $e) {
+            Transaction::getInstance()->clear();
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
@@ -1085,6 +1100,7 @@ class Event
             }
 
             if (empty($lines)) {
+                Transaction::getInstance()->clear();
                 return new Main\EventResult(Main\EventResult::SUCCESS);
             }
 
@@ -1131,13 +1147,10 @@ class Event
 
             $customer = new CustomerRequestV2DTO();
 
-            if (is_object($USER) && $USER->IsAuthorized()) {
-                $mindboxId = Helper::getMindboxId($USER->GetID());
-            }
-
             $customFields = [];
             $propertyCollection = $order->getPropertyCollection();
             $ar = $propertyCollection->getArray();
+
             foreach ($ar['properties'] as $arProperty) {
                 $arProperty['CODE'] = Helper::sanitizeNamesForMindbox($arProperty['CODE']);
                 if (count($arProperty['VALUE']) === 1) {
@@ -1167,20 +1180,19 @@ class Event
             $offlineOrderDTO->setCustomer($customer);
 
             try {
-
-
                 $orderDTO = new OrderCreateRequestDTO();
                 $orderDTO->setField('order', [
                     'ids'         => [
                         Options::getModuleOption('TRANSACTION_ID') => $order->getId(),
-                        'mindboxId'                                => $_SESSION['MINDBOX_ORDER']
+                        'mindboxId' => $_SESSION['MINDBOX_ORDER']
                     ],
                     'transaction' => [
-                        "ids" => [
+                        'ids' => [
                             "externalId" => Helper::getTransactionId()
                         ]
                     ]
                 ]);
+
                 $createOrderResult = $mindbox->order()->commitOrderTransaction(
                     $orderDTO,
                     Options::getOperationName('commitOrderTransaction' . (Helper::isAdminSection()? 'Admin':''))
@@ -1214,6 +1226,8 @@ class Event
                     }
                 }
 
+                Transaction::getInstance()->clear();
+
                 unset($_SESSION['PROMO_CODE_AMOUNT']);
                 unset($_SESSION['PROMO_CODE']);
                 unset($_SESSION['PAY_BONUSES']);
@@ -1222,7 +1236,7 @@ class Event
             } catch (Exceptions\MindboxClientErrorException $e) {
                 unset($_SESSION['PAY_BONUSES']);
                 unset($_SESSION['TOTAL_PRICE']);
-
+                Transaction::getInstance()->clear();
                 return new Main\EventResult(Main\EventResult::ERROR);
             } catch (Exceptions\MindboxUnavailableException $e) {
                 try {
@@ -1231,11 +1245,15 @@ class Event
                         Options::getOperationName('saveOfflineOrder')
                     )->sendRequest();
                 } catch (Exceptions\MindboxUnavailableException $e) {
+
                     $lastResponse = $mindbox->order()->getLastResponse();
+
                     if ($lastResponse) {
                         $request = $lastResponse->getRequest();
                         QueueTable::push($request);
                     }
+
+                    Transaction::getInstance()->clear();
 
                     return new Main\EventResult(Main\EventResult::SUCCESS);
                 } catch (Exceptions\MindboxClientException $e) {
@@ -1246,6 +1264,7 @@ class Event
                 }
                 unset($_SESSION['PAY_BONUSES']);
                 unset($_SESSION['TOTAL_PRICE']);
+                Transaction::getInstance()->clear();
 
                 return new Main\EventResult(Main\EventResult::SUCCESS);
             } catch (Exceptions\MindboxClientException $e) {
@@ -1255,11 +1274,15 @@ class Event
                         Options::getOperationName('saveOfflineOrder')
                     )->sendRequest();
                 } catch (Exceptions\MindboxUnavailableException $e) {
+
                     $lastResponse = $mindbox->order()->getLastResponse();
+
                     if ($lastResponse) {
                         $request = $lastResponse->getRequest();
                         QueueTable::push($request);
                     }
+
+                    Transaction::getInstance()->clear();
 
                     return new Main\EventResult(Main\EventResult::SUCCESS);
                 } catch (Exceptions\MindboxClientException $e) {
@@ -1270,6 +1293,7 @@ class Event
                 }
                 unset($_SESSION['PAY_BONUSES']);
                 unset($_SESSION['TOTAL_PRICE']);
+                Transaction::getInstance()->clear();
 
                 return new Main\EventResult(Main\EventResult::SUCCESS);
             }
