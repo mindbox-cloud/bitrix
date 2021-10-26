@@ -28,6 +28,10 @@ class EventController
      * @var string
      */
     protected $langEventName = 'langEventName';
+    /**
+     * @var string
+     */
+    protected $eventSystemCode = 'isSystem';
 
     protected $eventManager = null;
 
@@ -79,7 +83,8 @@ class EventController
                         'notCompatible' => $methodDocsParams[$this->notCompatibleCode],
                         'method' => $method->getName(),
                         'class' => $fullClassName,
-                        'name' => $this->getHumanEventName($methodDocsParams[$this->langEventName])
+                        'name' => $this->getHumanEventName($methodDocsParams[$this->langEventName]),
+                        'system' =>  $methodDocsParams[$this->eventSystemCode],
                     ];
                 }
             }
@@ -107,6 +112,10 @@ class EventController
 
         if (!empty($listEvents) && is_array($listEvents)) {
             foreach ($listEvents as $item) {
+                if ($item['system']) {
+                    continue;
+                }
+                
                 $return[$item['bitrixEvent']] = $item['name'];
             }
         }
