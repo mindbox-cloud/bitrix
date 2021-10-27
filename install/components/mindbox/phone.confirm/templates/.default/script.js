@@ -10,7 +10,7 @@ $(function () {
         });
     });
 
-    $('#mindbox-phone-confirm').on('submit', function (e) {
+    $('#mindbox-phone-confirm #submit-button').on('click', function (e) {
         e.preventDefault();
         loader.show($targetForLoader);
         var code = $('#mindbox-code').val();
