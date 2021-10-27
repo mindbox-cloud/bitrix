@@ -283,6 +283,11 @@ class EventController
         foreach ($allRegisteredEvent as $eventCode => $value) {
             $moduleEventData = $eventList[$eventCode];
             if (!empty($moduleEventData)) {
+
+                if ($moduleEventData['system']) {
+                    continue;
+                }
+
                 if (!in_array($eventCode, $activeEventList) && $value !== false) {
                     $this->unRegisterEventHandler($moduleEventData);
                 } elseif (in_array($eventCode, $activeEventList) && $value === false) {

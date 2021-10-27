@@ -1994,7 +1994,7 @@ class Event
      * @isSystem true
      * @return false
      */
-    public static function onBeforePrologHandler()
+    public static function OnBeforePrologHandler()
     {
         Loader::includeModule(MINDBOX_ADMIN_MODULE_NAME);
     }
