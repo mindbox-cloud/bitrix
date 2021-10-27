@@ -1986,6 +1986,18 @@ class Event
         $jsString .= '<script data-skip-moving="true" src="' . self::TRACKER_JS_FILENAME . '" async></script>';
         Asset::getInstance()->addString($jsString);
     }
+    
+    /**
+     * @bitrixModuleId main
+     * @bitrixEventCode OnBeforeProlog
+     * @langEventName OnBeforeProlog
+     * @isSystem true
+     * @return false
+     */
+    public static function OnBeforePrologHandler()
+    {
+        Loader::includeModule(MINDBOX_ADMIN_MODULE_NAME);
+    }
 
     /**
      * @return Mindbox
