@@ -93,10 +93,6 @@ class Cart extends CBitrixComponent implements Controllerable
         $preorder = new PreorderRequestDTO();
 
         foreach ($basket as $basketItem) {
-            if ($basketItem->getField('CAN_BUY') == 'N') {
-                continue;
-            }
-
             $bitrixBasket[$basketItem->getId()] = $basketItem;
             $productBasePrice = Helper::getBasePrice($basketItem);
             $requestedPromotions = Helper::getRequestedPromotions($basketItem, $basket);
@@ -297,10 +293,6 @@ class Cart extends CBitrixComponent implements Controllerable
         $bitrixBasket = [];
 
         foreach ($basketItems as $basketItem) {
-            if ($basketItem->getField('CAN_BUY') == 'N') {
-                continue;
-            }
-
             $bitrixBasket[$basketItem->getId()] = $basketItem;
             $productBasePrice = Helper::getBasePrice($basketItem);
             $requestedPromotions = Helper::getRequestedPromotions($basketItem, $basket);
@@ -487,10 +479,6 @@ class Cart extends CBitrixComponent implements Controllerable
 
 
         foreach ($basketItems as $basketItem) {
-            if ($basketItem->getField('CAN_BUY') == 'N') {
-                continue;
-            }
-
             $bitrixBasket[$basketItem->getId()] = $basketItem;
             $productBasePrice = Helper::getBasePrice($basketItem);
             $requestedPromotions = Helper::getRequestedPromotions($basketItem, $basket);
