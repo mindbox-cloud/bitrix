@@ -1853,7 +1853,7 @@ class Event
     /**
      * @bitrixModuleId sale
      * @bitrixEventCode OnSalePropertyValueSetField
-     * @optionNameRu Изменение свойств заказа
+     * @langEventName OnSalePropertyValueSetField
      * @notCompatible true
      * @param Main\Event $event
      * @return bool
@@ -1879,7 +1879,7 @@ class Event
     /**
      * @bitrixModuleId sale
      * @bitrixEventCode OnSaleBasketItemEntitySaved
-     * @optionNameRu Изменение корзины заказа
+     * @langEventName OnSaleBasketItemEntitySaved
      * @notCompatible true
      * @return bool
      */
@@ -1896,7 +1896,7 @@ class Event
     /**
      * @bitrixModuleId sale
      * @bitrixEventCode OnSaleBasketItemEntityDeleted
-     * @optionNameRu Удаление элемента из корзины заказа
+     * @langEventName OnSaleBasketItemEntityDeleted
      * @notCompatible true
      * @return bool
      */
@@ -1913,7 +1913,7 @@ class Event
     /**
      * @bitrixModuleId sale
      * @bitrixEventCode OnBeforeSaleShipmentSetField
-     * @optionNameRu Изменение статуса отгрузки
+     * @langEventName OnBeforeSaleShipmentSetField
      * @notCompatible true
      * @param Main\Event $event
      * @return bool
@@ -1932,7 +1932,7 @@ class Event
     /**
      * @bitrixModuleId sale
      * @bitrixEventCode OnSaleStatusOrder
-     * @optionNameRu Изменение статуса заказа
+     * @langEventName OnSaleStatusOrder
      * @param Main\Event $event
      * @return bool
      */
@@ -1944,7 +1944,7 @@ class Event
     /**
      * @bitrixModuleId sale
      * @bitrixEventCode OnSaleCancelOrder
-     * @optionNameRu Отмена заказа
+     * @langEventName OnSaleCancelOrder
      * @param $orderId
      * @param $cancelFlag
      * @param $cancelDesc
