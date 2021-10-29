@@ -1078,7 +1078,6 @@ class Helper
         ]);
 
         while ($statusItem = $statusResult->fetch()) {
-            echo "<pre>"; print_r($statusItem); echo "</pre>";
             $getStatusData = \CSaleStatus::GetByID($statusItem['ID']);
             $statusList[$statusItem['ID']] = $getStatusData['NAME'] . ' [' . $statusItem['ID'] . ']';
         }
