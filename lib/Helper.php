@@ -1099,14 +1099,17 @@ class Helper
     public static function getMindboxStatusByShopStatus($shopStatus)
     {
         $return = false;
-        $statusOptionsJson = COption::GetOptionString('mindbox.marketing', 'ORDER_STATUS_FIELDS_MATCH', '{}');
-        $statusOptionsData = json_decode($statusOptionsJson, true);
 
-        if (!empty($statusOptionsData) && is_array($statusOptionsData)) {
-            foreach ($statusOptionsData as $item) {
-                if ($shopStatus == $item['bitrix']) {
-                    $return = $item['mindbox'];
-                    break;
+        if (!empty($shopStatus)) {
+            $statusOptionsJson = COption::GetOptionString('mindbox.marketing', 'ORDER_STATUS_FIELDS_MATCH', '{}');
+            $statusOptionsData = json_decode($statusOptionsJson, true);
+
+            if (!empty($statusOptionsData) && is_array($statusOptionsData)) {
+                foreach ($statusOptionsData as $item) {
+                    if ($shopStatus == $item['bitrix']) {
+                        $return = $item['mindbox'];
+                        break;
+                    }
                 }
             }
         }
