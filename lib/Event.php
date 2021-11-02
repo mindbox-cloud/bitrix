@@ -710,11 +710,11 @@ class Event
         if (!$isNewOrder && !Helper::isAdminSection()) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
-    
+
         if (!$isNewOrder && !Helper::isMindboxOrder($order->getId())) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
-        
+
         $basket = $order->getBasket();
         global $USER;
 
@@ -734,6 +734,17 @@ class Event
             ];
         }
 
+        $mindboxOrderStatus = 'CheckedOut';
+
+        if (is_object($order)) {
+            $orderStatusId = $order->getField('STATUS_ID');
+            $getMindboxStatus = Helper::getMindboxStatusByShopStatus($orderStatusId);
+
+            if (!empty($getMindboxStatus)) {
+                $mindboxOrderStatus = $getMindboxStatus;
+            }
+        }
+
         $rsUser = \CUser::GetByID($order->getUserId());
         $arUser = $rsUser->Fetch();
 
@@ -741,7 +752,6 @@ class Event
         $basketItems = $basket->getBasketItems();
         $lines = [];
         $i = 1;
-
         foreach ($basketItems as $basketItem) {
             if ($basketItem->getField('CAN_BUY') == 'N') {
                 continue;
@@ -770,7 +780,7 @@ class Event
                 ],
                 'status'           => [
                     'ids' => [
-                        'externalId' => 'CheckedOut'
+                        'externalId' => $mindboxOrderStatus
                     ]
                 ]
             ];
@@ -1045,11 +1055,11 @@ class Event
         }
 
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'loyalty') {
-    
+
             if (!$isNew && !Helper::isMindboxOrder($order->getId())) {
                 return new Main\EventResult(Main\EventResult::SUCCESS);
             }
-    
+
             /** @var \Bitrix\Sale\Basket $basket */
             $basket = $order->getBasket();
             global $USER;
@@ -1057,10 +1067,23 @@ class Event
             $delivery = $order->getDeliverySystemId();
             $delivery = current($delivery);
 
+            $mindboxOrderStatus = 'CheckedOut';
+
+            if (is_object($order)) {
+                $orderStatusId = $order->getField('STATUS_ID');
+                $getMindboxStatus = Helper::getMindboxStatusByShopStatus($orderStatusId);
+
+                if (!empty($getMindboxStatus)) {
+                    $mindboxOrderStatus = $getMindboxStatus;
+                }
+            }
+
             $offlineOrderDTO = new \Mindbox\DTO\V3\Requests\OrderCreateRequestDTO();
             $basketItems = $basket->getBasketItems();
             $lines = [];
+
             $i = 1;
+
             foreach ($basketItems as $basketItem) {
                 if ($basketItem->getField('CAN_BUY') == 'N') {
                     continue;
@@ -1087,7 +1110,7 @@ class Event
                     ],
                     'status'           => [
                         'ids' => [
-                            'externalId' => 'CheckedOut'
+                            'externalId' => $mindboxOrderStatus
                         ]
                     ]
                 ];
@@ -1643,6 +1666,17 @@ class Event
             //$basket->refresh();
         }
 
+        $mindboxOrderStatus = 'CheckedOut';
+
+        if (is_object($order)) {
+            $orderStatusId = $order->getField('STATUS_ID');
+            $getMindboxStatus = Helper::getMindboxStatusByShopStatus($orderStatusId);
+
+            if (!empty($getMindboxStatus)) {
+                $mindboxOrderStatus = $getMindboxStatus;
+            }
+        }
+
         $basketItems = $basket->getBasketItems();
         $lines = [];
         $bitrixBasket = [];
@@ -1673,7 +1707,7 @@ class Event
                 ],
                 'status'           => [
                     'ids' => [
-                        'externalId' => 'CheckedOut'
+                        'externalId' => $mindboxOrderStatus
                     ]
                 ]
             ];
@@ -1813,7 +1847,6 @@ class Event
                 $bitrixProduct = $bitrixBasket[$lineId];
 
                 if (isset($mindboxBasket[$lineId])) {
-
                     $mindboxAdditional[] = [
                         'PRODUCT_ID'             => $bitrixProduct->getProductId(),
                         'PRICE'                  => floatval($line->getDiscountedPrice()) / floatval($line->getQuantity()),
@@ -1859,6 +1892,7 @@ class Event
         $basketItem = $event;
         $basket = Sale\Basket::loadItemsForFUser(Sale\Fuser::getId(), Main\Context::getCurrent()->getSite());
         $basketItems = $basket->getBasketItems();
+
         if (empty($basketItems)) {
             $_SESSION['MB_CLEAR_CART'] = 'Y';
         } else {
@@ -2077,10 +2111,165 @@ class Event
     /**
      * @return Mindbox
      */
-    private static function mindbox()
+    public static function mindbox()
     {
-        $mindbox = Options::getConfig();
-        return $mindbox;
+        return Options::getConfig();
+    }
+
+    /**
+     * @bitrixModuleId sale
+     * @bitrixEventCode OnSalePropertyValueSetField
+     * @langEventName OnSalePropertyValueSetField
+     * @notCompatible true
+     * @param Main\Event $event
+     * @return bool
+     */
+    public function OnSalePropertyValueSetFieldHandler(Main\Event $event)
+    {
+        if (Helper::isStandardMode()) {
+            $orderMatchList = Helper::getOrderFieldsMatch();
+
+            $getEntity = $event->getParameter('ENTITY');
+            $value = $event->getParameter('VALUE');
+            $order = $getEntity->getCollection()->getOrder();
+            $propertyData = $getEntity->getProperty();
+
+            if (!empty($order) && $order instanceof \Bitrix\Sale\Order) {
+                $additionFields = [
+                    'customFields' => [$orderMatchList[$propertyData['CODE']] => $value],
+                ];
+
+                Helper::updateMindboxOrderItems($order, $additionFields);
+            }
+        }
+    }
+
+    /**
+     * @bitrixModuleId sale
+     * @bitrixEventCode OnSaleBasketItemEntitySaved
+     * @langEventName OnSaleBasketItemEntitySaved
+     * @notCompatible true
+     * @return bool
+     */
+    public static function OnSaleBasketItemEntitySavedHandler(\Bitrix\Main\Event $event)
+    {
+        if (Helper::isStandardMode()) {
+            $entity = $event->getParameter("ENTITY");
+            $order = $entity->getCollection()->getOrder();
+
+            if (!empty($order) && $order instanceof \Bitrix\Sale\Order) {
+                Helper::updateMindboxOrderItems($order);
+            }
+        }
+    }
+
+    /**
+     * @bitrixModuleId sale
+     * @bitrixEventCode OnSaleBasketItemEntityDeleted
+     * @langEventName OnSaleBasketItemEntityDeleted
+     * @notCompatible true
+     * @return bool
+     */
+    public function OnSaleBasketItemDeletedHandler(\Bitrix\Main\Event $event)
+    {
+        if (Helper::isStandardMode()) {
+            $entity = $event->getParameter("ENTITY");
+            $order = $entity->getCollection()->getOrder();
+
+            if (!empty($order) && $order instanceof \Bitrix\Sale\Order) {
+                Helper::updateMindboxOrderItems($order);
+            }
+        } else {
+            if (Helper::isDeleteOrderAdminAction()) {
+                return new Main\EventResult(Main\EventResult::SUCCESS);
+            }
+
+            $entity = $event->getParameter("ENTITY");
+            $order = $entity->getCollection()->getOrder();
+            $orderId = $order->getId();
+            $orderUserId = $order->getField('USER_ID');
+
+            if (!empty($entity)) {
+                $deleteLines[] = [
+                    'lineId' => $entity->getId(),
+                    'quantity' => $entity->getQuantity() + 1,
+                    'status' => 'Cancelled',
+                ];
+
+                $requestData = [
+                    'order' => [
+                        'ids' => [
+                            Options::getModuleOption('TRANSACTION_ID') => $orderId
+                        ],
+                        'lines' => $deleteLines
+                    ]
+                ];
+
+                $request = Helper::mindbox()->getClientV3()->prepareRequest(
+                    'POST',
+                    Options::getOperationName('updateOrderItemsStatus'),
+                    new DTO($requestData)
+                );
+
+                try {
+                    $response = $request->sendRequest();
+                } catch (Exceptions\MindboxClientException $e) {
+                    // return false;
+                }
+            }
+        }
+    }
+
+    /**
+     * @bitrixModuleId sale
+     * @bitrixEventCode OnBeforeSaleShipmentSetField
+     * @langEventName OnBeforeSaleShipmentSetField
+     * @notCompatible true
+     * @param Main\Event $event
+     * @return bool
+     */
+    public function OnBeforeSaleShipmentSetFieldHandler(Main\Event $event)
+    {
+        if (Helper::isStandardMode()) {
+            $orderEntity = $event->getParameter('ENTITY');
+            $orderId = $orderEntity->getField('ORDER_ID');
+            $statusValue = $event->getParameter('VALUE');
+
+            if ($event->getParameter('NAME') === 'STATUS_ID') {
+                Helper::updateMindboxOrderStatus($orderId, $statusValue);
+            }
+        }
+    }
+
+    /**
+     * @bitrixModuleId sale
+     * @bitrixEventCode OnSaleStatusOrder
+     * @langEventName OnSaleStatusOrder
+     * @param Main\Event $event
+     * @return bool
+     */
+    public function OnSaleStatusOrderHandler($orderId, $newOrderStatus)
+    {
+        if (Helper::isStandardMode()) {
+            Helper::updateMindboxOrderStatus($orderId, $newOrderStatus);
+        }
+    }
+
+    /**
+     * @bitrixModuleId sale
+     * @bitrixEventCode OnSaleCancelOrder
+     * @langEventName OnSaleCancelOrder
+     * @param $orderId
+     * @param $cancelFlag
+     * @param $cancelDesc
+     * @return void
+     */
+    public function OnSaleCancelOrderHandler($orderId, $cancelFlag, $cancelDesc)
+    {
+        if (Helper::isStandardMode()) {
+            $statusCodeAlias = ($cancelFlag === 'Y') ? 'CANCEL' : 'CANCEL_ABORT';
+            Helper::updateMindboxOrderStatus($orderId, $statusCodeAlias);
+        }
     }
 
     /**
@@ -2097,54 +2286,6 @@ class Event
 
             if (isset($jsString) && !empty($jsString)) {
                 Asset::getInstance()->addString($jsString, AssetLocation::AFTER_JS);
-            }
-        }
-    }
-
-    /**
-     * @bitrixModuleId sale
-     * @bitrixEventCode OnSaleBasketItemEntityDeleted
-     * @langEventName OnSaleBasketItemEntityDeleted
-     * @notCompatible true
-     * @return bool
-     */
-    public function OnSaleBasketItemDeletedHandler(\Bitrix\Main\Event $event)
-    {
-        if (Helper::isDeleteOrderAdminAction()) {
-            return new Main\EventResult(Main\EventResult::SUCCESS);
-        }
-
-        $entity = $event->getParameter("ENTITY");
-        $order = $entity->getCollection()->getOrder();
-        $orderId = $order->getId();
-        $orderUserId = $order->getField('USER_ID');
-
-        if (!empty($entity)) {
-            $deleteLines[] = [
-                'lineId' => $entity->getId(),
-                'quantity' => $entity->getQuantity() + 1,
-                'status' => 'Cancelled',
-            ];
-
-            $requestData = [
-                'order' => [
-                    'ids' => [
-                        Options::getModuleOption('TRANSACTION_ID') => $orderId
-                    ],
-                'lines' => $deleteLines
-                ]
-            ];
-
-            $request = Helper::mindbox()->getClientV3()->prepareRequest(
-                'POST',
-                Options::getOperationName('updateOrderItemsStatus'),
-                new DTO($requestData)
-            );
-
-            try {
-                $response = $request->sendRequest();
-            } catch (Exceptions\MindboxClientException $e) {
-                // return false;
             }
         }
     }

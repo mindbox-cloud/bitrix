@@ -58,7 +58,9 @@ class Options
         'setWishList'   =>  'SetWishList',
         'clearWishList' =>  'ClearWishList',
         'clearCart'     =>  'ClearCart',
-        'updateOrderItemsStatus' => 'UpdateOrderItemsStatus'
+        'updateOrderItemsStatus' => 'UpdateOrderItemsStatus',
+        'updateOrderStatus' => 'UpdateOrderStatus',
+        'updateOrderItems' => 'UpdateOrderItems',
     ];
 
     private static $sdkOptions = [

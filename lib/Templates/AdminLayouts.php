@@ -45,6 +45,23 @@ trait AdminLayouts
     /**
      * @return string
      */
+    public static function getOrderStatusMatchesTable()
+    {
+        $styles = self::adminTableStyles();
+        $escapeTable = '</td></tr><tr><td colspan="2"><table class="table order-status-table">';
+        $tableHead = '<tr class="tr title"><th class="th">'.getMessage("BITRIX_FIELDS").'</th><th class="th">'.getMessage("MINDBOX_FIELDS").'</th><th class="th-empty"></th></tr>';
+
+        $result = $styles.$escapeTable.$tableHead;
+
+        $bottomPadding = '</table></td></tr><tr><td>&nbsp;</td></tr>';
+        $result .= $bottomPadding;
+        $result .= self::adminOrderStatusTableScripts();
+        return $result;
+    }
+
+    /**
+     * @return string
+     */
     public static function getAddOrderMatchButton($buttonClass)
     {
         return '<a class="module_button module_button_add '.$buttonClass.'" href="javascript:void(0)">'.getMessage("BUTTON_ADD").'</a>';
@@ -153,16 +170,55 @@ HTML;
     /**
      * @return string
      */
+    public static function adminOrderStatusTableScripts()
+    {
+        return <<<HTML
+            <script>
+                document.addEventListener('DOMContentLoaded', function(){
+                    createTableExt('order-status-table', 'MINDBOX_ORDER_STATUS_FIELDS_MATCH');
+                    hideInput('[name="MINDBOX_ORDER_STATUS_FIELDS_MATCH"]');
+                    hideInput('[name="MINDBOX_ORDER_STATUS_MINDBOX_ADDITIONAL"]');
+                    let mindboxStatusSelector = document.querySelector('[name="MINDBOX_ORDER_STATUS_MINDBOX_LIST"]');
+                    let mindboxStatusOptions = mindboxStatusSelector.options;
+                    mindboxStatusOptions[mindboxStatusOptions.length] = new Option('Добавить кастомный', 'ADD_CUSTOM');
+                    
+                    mindboxStatusSelector.addEventListener('change', function (e) {
+                      let selectVal = this.value;
+                      if (selectVal === 'ADD_CUSTOM') {
+                        showInput('[name="MINDBOX_ORDER_STATUS_MINDBOX_ADDITIONAL"]');
+                      } else {
+                        document.querySelector('[name="MINDBOX_ORDER_STATUS_MINDBOX_ADDITIONAL"]').value = '';
+                        hideInput('[name="MINDBOX_ORDER_STATUS_MINDBOX_ADDITIONAL"]');
+                      }
+                    });
+                    document.querySelector('.module_button_add.order_status_module_button_add').onclick = () => {addButtonHandler('MINDBOX_ORDER_STATUS_MINDBOX_LIST', 'MINDBOX_ORDER_STATUS_BITRIX_LIST', 'order-status-table', 'MINDBOX_ORDER_STATUS_FIELDS_MATCH', true)};
+                });
+            </script>
+HTML;
+    }
+
+    /**
+     * @return string
+     */
     public static function adminTableScripts()
     {
         return <<<HTML
             <script>                
-                function addButtonHandler(mindboxName, bitrixName, tableClass, propName) {
+                function addButtonHandler(mindboxName, bitrixName, tableClass, propName, useAdditional = false) {
                     let mindboxKey = document.querySelector('[name="'+mindboxName+'"]').value;
                     let bitrixKey = document.querySelector('[name="'+bitrixName+'"]').value;
+                    let additionalMindboxKey = document.querySelector('[name="MINDBOX_ORDER_STATUS_MINDBOX_ADDITIONAL"]').value;
+                    
+                    if (additionalMindboxKey && useAdditional) {
+                       mindboxKey = additionalMindboxKey;
+                    }
                 
                     if (mindboxKey && bitrixKey) {
-                        setProps(bitrixKey, mindboxKey, propName);
+                        if (propName === 'MINDBOX_ORDER_STATUS_FIELDS_MATCH') {
+                            setPropsExt(bitrixKey, mindboxKey, propName);
+                        } else {
+                            setProps(bitrixKey, mindboxKey, propName);
+                        }
                         reInitTable(tableClass, propName);
                     }
                 }
@@ -176,6 +232,10 @@ HTML;
                     document.querySelector(selector).style.display = 'none';
                 }
                 
+                function showInput(selector) {
+                    document.querySelector(selector).style.display = 'block';
+                }
+                
                 function addRow(bitrixKey, mindboxKey, tableClass, propName) {
                     if (mindboxKey && bitrixKey) {
                         let row = document.querySelector('table.table.'+tableClass+' tbody').insertRow();
@@ -185,6 +245,9 @@ HTML;
                         link.classList.add('module_button_delete');
                         link.innerHTML = '<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 96 96" enable-background="new 0 0 96 96" xml:space="preserve"><polygon fill="#AAAAAB" points="96,14 82,0 48,34 14,0 0,14 34,48 0,82 14,96 48,62 82,96 96,82 62,48 "></polygon></svg>';
                         link.href = 'javascript:void(0)';
+                        if (propName === 'MINDBOX_ORDER_STATUS_FIELDS_MATCH') {
+                          bitrixKey = bitrixKey + '_' + mindboxKey;
+                        }
                         link.onclick = () => {removeButtonHandler(bitrixKey, tableClass, propName)};
                         row.insertCell().appendChild(link);
                     }
@@ -192,7 +255,20 @@ HTML;
                 
                 function reInitTable(tableClass, propName) {
                     removeTable(tableClass);
-                    createTable(tableClass, propName);
+                    if (propName === 'MINDBOX_ORDER_STATUS_FIELDS_MATCH') {
+                        createTableExt(tableClass, propName)
+                    } else {
+                        createTable(tableClass, propName);
+                    }
+                }
+                
+                function createTableExt(tableClass, propName) {
+                    let props = getProps(propName);
+                       console.log(props);
+                    Object.keys(props).map((objectKey, index) => {
+                        let value = props[objectKey];
+                        addRow(value['bitrix'], value['mindbox'], tableClass, propName);
+                    });
                 }
                 
                 function createTable(tableClass, propName) {
@@ -214,6 +290,18 @@ HTML;
                     let currentProps = getProps(propName);
                     if (Object.values(currentProps).indexOf(value) === -1) {
                         currentProps[key] = value;
+                    }
+                    document.querySelector('[name="'+propName+'"]').value = JSON.stringify(currentProps);
+                }
+                
+                 function setPropsExt(key, value, propName) {
+                    let currentProps = getProps(propName);
+                    let rowKey = key + '_' + value;
+                    if (Object.keys(currentProps).indexOf(rowKey) === -1) {
+                        currentProps[rowKey] = {
+                          bitrix: key,
+                          mindbox: value
+                        };
                     }
                     document.querySelector('[name="'+propName+'"]').value = JSON.stringify(currentProps);
                 }

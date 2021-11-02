@@ -287,6 +287,40 @@ $arAllOptions['ORDERS'] = [
         COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'ORDER_FIELDS_MATCH', '{}'),
         ['text']
     ],
+    getMessage('ORDER_STATUS_SETTINGS'),
+
+    [
+        'ORDER_STATUS_FIELDS_MATCH',
+        '',
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'ORDER_STATUS_FIELDS_MATCH', '{}'),
+        ['text']
+    ],
+    ['', '', Helper::getOrderStatusMatchesTable(), ['statichtml']],
+    [
+        'ORDER_STATUS_BITRIX_LIST',
+        getMessage('ORDER_STATUS_BITRIX_LIST'),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'ORDER_STATUS_BITRIX_LIST', ''),
+        [
+            'selectbox',
+            Helper::getBitrixOrderStatusList()
+        ]
+    ],
+    [
+        'ORDER_STATUS_MINDBOX_LIST',
+        getMessage('ORDER_STATUS_MINDBOX_LIST'),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'ORDER_STATUS_MINDBOX_LIST', ''),
+        [
+            'selectbox',
+            Helper::getMindboxOrderStatusList()
+        ]
+    ],
+    [
+        'ORDER_STATUS_MINDBOX_ADDITIONAL',
+        '',
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'ORDER_STATUS_MINDBOX_ADDITIONAL', ''),
+        ['text']
+    ],
+    ['', '', Helper::getAddOrderMatchButton('order_status_module_button_add'), ['statichtml']]
 ];
 
 if (!empty(COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', ''))) {
