@@ -585,46 +585,50 @@ class Helper
         Loader::includeModule("highloadblock");
 
         $result = \Bitrix\Highloadblock\HighloadBlockTable::getList(['filter' => ['=NAME' => "Mindbox"]]);
+
         if ($row = $result->fetch()) {
             $hlbl = $row["ID"];
         }
+
         $hlblock = \Bitrix\Highloadblock\HighloadBlockTable::getById($hlbl)->fetch();
         $entity = \Bitrix\Highloadblock\HighloadBlockTable::compileEntity($hlblock);
         $entityDataClass = $entity->getDataClass();
 
-        if ($mindboxPrice) {
+        if ($mindboxPrice >= 0) {
             $data = [
                 "UF_DISCOUNTED_PRICE" => $mindboxPrice
             ];
 
-            $arFilter = [
+            $params = [
                 "select" => ["*"],
                 "order"  => ["ID" => "ASC"],
                 "filter" => [
                     "UF_BASKET_ID" => $lineId
                 ]
             ];
-            $rsData = $entityDataClass::getList($arFilter);
 
-            if ($arData = $rsData->Fetch()) {
+            $rsData = $entityDataClass::getList($params);
+
+            if ($arData = $rsData->fetch()) {
                 $result = $entityDataClass::update($arData['ID'], $data);
             } else {
                 $data = [
                     'UF_BASKET_ID'        => $lineId,
                     "UF_DISCOUNTED_PRICE" => $mindboxPrice
                 ];
+
                 $result = $entityDataClass::add($data);
             }
         } else {
-            $arFilter = [
-                "select" => ["*"],
-                "order"  => ["ID" => "ASC"],
-                "filter" => [
-                    "UF_BASKET_ID" => $lineId
-                ]
-            ];
-            $rsData = $entityDataClass::getList($arFilter);
-            if ($arData = $rsData->Fetch()) {
+            $rsData = $entityDataClass::getList([
+                    "select" => ["*"],
+                    "order"  => ["ID" => "ASC"],
+                    "filter" => [
+                            "UF_BASKET_ID" => $lineId
+                    ]
+            ]);
+
+            if ($arData = $rsData->fetch()) {
                 $result = $entityDataClass::delete($arData['ID']);
             }
         }
