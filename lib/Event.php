@@ -524,12 +524,25 @@ class Event
             return $arFields;
         }
 
-        $dbUser = UserTable::getList(
-            [
-                'select' => ['EMAIL', 'PERSONAL_PHONE', 'UF_MINDBOX_ID'],
-                'filter' => ['ID' => $arFields['ID']]
-            ]
-        )->fetch();
+        $params = [
+            'select' => ['EMAIL', 'PERSONAL_PHONE', 'UF_MINDBOX_ID'],
+            'filter' => ['ID' => $arFields['ID']]
+        ];
+
+        if (class_exists('\Bitrix\Main\UserPhoneAuthTable')) {
+            $params['runtime'] = [
+                    new \Bitrix\Main\Entity\ReferenceField(
+                            'R_PHONE_AUTH',
+                            '\Bitrix\Main\UserPhoneAuthTable',
+                            ['=this.ID' => 'ref.USER_ID'],
+                            ['join_type' => 'LEFT']
+                    ),
+            ];
+
+            $params['select']['PHONE_NUMBER'] = 'R_PHONE_AUTH.PHONE_NUMBER';
+        }
+
+        $dbUser = UserTable::getList($params)->fetch();
 
         if (!$dbUser) {
             return false;
@@ -537,6 +550,14 @@ class Event
 
         if (!isset($arFields['PERSONAL_PHONE'])) {
             $arFields['PERSONAL_PHONE'] = $arFields['PERSONAL_MOBILE'];
+        }
+
+        if (!isset($arFields['PERSONAL_PHONE']) && !empty($arFields['PHONE_NUMBER'])) {
+            $arFields['PERSONAL_PHONE'] = $arFields['PHONE_NUMBER'];
+        }
+
+        if (!isset($arFields['PERSONAL_PHONE']) && !empty($dbUser['PHONE_NUMBER'])) {
+            $arFields['PERSONAL_PHONE'] = $dbUser['PHONE_NUMBER'];
         }
 
         if (isset($arFields['EMAIL']) && $dbUser['EMAIL'] != $arFields['EMAIL']) {
