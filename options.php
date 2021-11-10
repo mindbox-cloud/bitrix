@@ -397,4 +397,7 @@ $arAllOptions['COMMON'][] = [
         border-color: #ccc !important;
         opacity: 0.4 !important;
     }
+    select option:checked {
+        background-color: rgb(206, 206, 206);
+    }
 </style>
