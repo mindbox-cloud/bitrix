@@ -256,7 +256,7 @@ HTML;
             <script>
                 document.addEventListener('DOMContentLoaded', function(){
                     let propsIds = {$encodeOrderPropertyIds};
-                    let saveButton = "<input style='margin: 0 10px;' type='submit' class='bx-adm-pc-input-submit' value='Применить' onclick='BX.Sale.Admin.OrderEditPage.onRefreshOrderDataAndSave(); return false;'>"
+                    let saveButton = "<input style='margin: 0 10px;' type='submit' class='bx-adm-pc-input-submit' value='Применить' onclick='BX.Sale.Admin.OrderEditPage.tailsLoaded = true; BX.Sale.Admin.OrderEditPage.onRefreshOrderDataAndSave(); return false;'>"
                     let defaultBitrixPromocode = document.querySelector('#sale-admin-order-coupons');
                     
                     if (defaultBitrixPromocode) {
