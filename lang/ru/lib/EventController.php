@@ -18,3 +18,4 @@ $MESS['OnSaleBasketItemEntityDeleted'] = 'Удаление элемента из
 $MESS['OnBeforeSaleShipmentSetField'] = 'Изменение статуса отгрузки';
 $MESS['OnSaleStatusOrder'] = 'Изменение статуса заказа';
 $MESS['OnSaleCancelOrder'] = 'Отмена заказа';
+$MESS['OnBeforeProlog'] = 'Подключение модуля для автозагрузки';

@@ -20,16 +20,14 @@ $(document).ready(function() {
        loader.show($targetForLoadder);
 
 
-       var code = $('#mindbox-cart-promo').val();
+       let promoInput = $('#mindbox-cart-promo');
+       var code = promoInput.val();
 
-       /*
-       if(isEmpty($('#mindbox-cart-promo'))) {
-           console.log('is empty');
-           $error.text('Promo code is empty');
-           $error.show();
+
+       if(isEmpty(promoInput)) {
            return;
        }
-       */
+
 
        var request = BX.ajax.runComponentAction('mindbox:cart', 'applyCode', {
            mode:'class',
@@ -103,6 +101,7 @@ $(document).ready(function() {
     });
 
     $('#mindbox-clear-code').on('click', function () {
+        $error.hide();
         $('#mindbox-promocode-submit').trigger('click');
     })
 

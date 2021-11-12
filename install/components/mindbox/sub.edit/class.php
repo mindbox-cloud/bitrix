@@ -105,13 +105,16 @@ class SubEdit extends CBitrixComponent implements Controllerable
 
         try {
             $response = $request->sendRequest()->getResult();
-            foreach ($response->getCustomer()->getSubscriptions() as $subscription) {
-                $pointOfContact = $subscription->getPointOfContact();
-                $isSubscribed = $subscription->getIsSubscribed();
-                if ($isSubscribed) {
-                    $subscriptions[$pointOfContact] = true;
+            if ($response->getCustomer()) {
+                foreach ($response->getCustomer()->getSubscriptions() as $subscription) {
+                    $pointOfContact = $subscription->getPointOfContact();
+                    $isSubscribed = $subscription->getIsSubscribed();
+                    if ($isSubscribed) {
+                        $subscriptions[$pointOfContact] = true;
+                    }
                 }
             }
+           
         } catch (MindboxClientException $e) {
         }
 

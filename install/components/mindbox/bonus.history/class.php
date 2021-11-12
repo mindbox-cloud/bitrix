@@ -110,36 +110,48 @@ class BonusHistory extends CBitrixComponent implements Controllerable
                 $operation
             )->sendRequest();
         } catch (Exception $e) {
-            throw new MindboxException('Requested page is empty or doesn\'t exist');
+            throw new MindboxException(GetMessage('MB_BH_ERROR_MESSAGE'));
         }
 
         $result = $response->getResult();
 
         if (!$result->getCustomerActions()) {
-            throw new MindboxException('Requested page is empty or doesn\'t exist');
+            throw new MindboxException(GetMessage('MB_BH_ERROR_MESSAGE'));
         }
 
 
         foreach ($result->getCustomerActions() as $action) {
             foreach ($action->getCustomerBalanceChanges() as $customerBalanceChanges) {
                 $comment = $customerBalanceChanges->getField('comment');
+
                 if (empty($comment)) {
                     $type = $customerBalanceChanges->getField('balanceChangeKind')->getField('systemName');
                     $isPositive = (int)$customerBalanceChanges->getField('changeAmount') > 0;
-                    $orderId = array_pop($action->getOrder()->getField('ids'));
+                    $orderData = $action->getOrder();
+
                     $comment = '';
+                    $orderId = false;
+
+                    if (!empty($orderData) && is_object($orderData)) {
+                        $orderId = array_pop($orderData->getField('ids'));
+                    }
+
                     if ($type === 'RetailOrderBonus') {
                         if ($isPositive) {
-                            $comment = GetMessage('MB_EARN_POINTS') . $orderId;
+                            $comment = GetMessage('MB_EARN_POINTS');
                         } else {
-                            $comment = GetMessage('MB_RETURN_POINTS') . $orderId;
+                            $comment = GetMessage('MB_RETURN_POINTS');
                         }
                     } elseif ($type === 'RetailOrderPayment') {
                         if ($isPositive) {
-                            $comment = GetMessage('MB_SPEND_POINTS') . $orderId;
+                            $comment = GetMessage('MB_SPEND_POINTS');
                         } else {
-                            $comment = GetMessage('MB_REFUND_POINTS') . $orderId;
+                            $comment = GetMessage('MB_REFUND_POINTS');
                         }
+                    }
+
+                    if (!empty($comment)) {
+                        $comment .= $orderId;
                     }
                 }
 

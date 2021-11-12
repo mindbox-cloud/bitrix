@@ -577,7 +577,7 @@ class Helper
 
     public static function processHlbBasketRule($lineId, $mindboxPrice)
     {
-        \CModule::IncludeModule('highloadblock');
+        Loader::includeModule("highloadblock");
 
         $result = \Bitrix\Highloadblock\HighloadBlockTable::getList(['filter' => ['=NAME' => "Mindbox"]]);
 
@@ -875,32 +875,32 @@ class Helper
                 'email' => $USER->GetEmail()
             ];
             $customer = Helper::iconvDTO(new CustomerIdentityRequestDTO($fields));
+        }
 
-            if (empty($arAllLines) && count($_SESSION['MB_WISHLIST_COUNT'])) {
-                self::clearWishList();
+        if (empty($arAllLines) && count($_SESSION['MB_WISHLIST_COUNT'])) {
+            self::clearWishList();
+        }
+
+        if (empty($arLines)) {
+            if (!isset($_SESSION['MB_CLEAR_CART'])) {
+                self::clearCart();
             }
 
-            if (empty($arLines)) {
-                if (!isset($_SESSION['MB_CLEAR_CART'])) {
-                    self::clearCart();
-                }
+            return;
+        }
 
-                return;
-            }
-
-            try {
-                $mindbox->productList()->setProductList(
-                    new ProductListItemRequestCollection($lines),
-                    Options::getOperationName('setProductList'),
-                    $customer
-                )->sendRequest();
-            } catch (Exceptions\MindboxClientErrorException $e) {
-            } catch (Exceptions\MindboxClientException $e) {
-                $lastResponse = $mindbox->productList()->getLastResponse();
-                if ($lastResponse) {
-                    $request = $lastResponse->getRequest();
-                    QueueTable::push($request);
-                }
+        try {
+            $mindbox->productList()->setProductList(
+                new ProductListItemRequestCollection($lines),
+                Options::getOperationName('setProductList'),
+                $customer
+            )->sendRequest();
+        } catch (Exceptions\MindboxClientErrorException $e) {
+        } catch (Exceptions\MindboxClientException $e) {
+            $lastResponse = $mindbox->productList()->getLastResponse();
+            if ($lastResponse) {
+                $request = $lastResponse->getRequest();
+                QueueTable::push($request);
             }
         }
     }
@@ -1394,7 +1394,7 @@ class Helper
             && isset($_REQUEST['ID'])
         );
     }
-    
+
     /**
      * @param $orderId
      *
@@ -1405,7 +1405,7 @@ class Helper
         if (empty($orderId)) {
             return false;
         }
-        
+
         $request = self::mindbox()->getClientV3()->prepareRequest(
             'POST',
             'Offline.GetOrder',
@@ -1417,18 +1417,18 @@ class Helper
                     ]
                 ])
         );
-    
+
         try {
             $response = $request->sendRequest();
-            
+
             return $response->getResult()->getOrder();
         } catch (Exceptions\MindboxClientException $e) {
-        
+
         }
-        
+
         return false;
     }
-    
+
     /**
      * @param $orderId
      *
@@ -1437,11 +1437,11 @@ class Helper
     public static function isMindboxOrder($orderId)
     {
         $order = self::getMindboxOrder($orderId);
-        
+
         if ($order && $order->getField('processingStatus') === 'Found') {
             return true;
         }
-        
+
         return false;
     }
 
