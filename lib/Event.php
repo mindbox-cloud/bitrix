@@ -955,7 +955,7 @@ class Event
                 unset($_SESSION['PROMO_CODE']);
                 unset($_SESSION['PAY_BONUSES']);
                 unset($_SESSION['TOTAL_PRICE']);
-                echo '<pre>'; print_r($_SESSION); echo '</pre>';
+
 
                 return new \Bitrix\Main\EventResult(
                     \Bitrix\Main\EventResult::ERROR,
