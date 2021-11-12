@@ -951,6 +951,11 @@ class Event
                 }
 
                 Transaction::getInstance()->clear();
+                unset($_SESSION['PROMO_CODE_AMOUNT']);
+                unset($_SESSION['PROMO_CODE']);
+                unset($_SESSION['PAY_BONUSES']);
+                unset($_SESSION['TOTAL_PRICE']);
+                echo '<pre>'; print_r($_SESSION); echo '</pre>';
 
                 return new \Bitrix\Main\EventResult(
                     \Bitrix\Main\EventResult::ERROR,
@@ -959,7 +964,7 @@ class Event
                 );
             } else {
                 $createOrderResult = $createOrderResult->getResult()->getField('order');
-                $_SESSION[ 'MINDBOX_ORDER' ] = $createOrderResult ? $createOrderResult->getId('mindboxId') : false;
+                $_SESSION['MINDBOX_ORDER'] = $createOrderResult ? $createOrderResult->getId('mindboxId') : false;
 
                 return new Main\EventResult(Main\EventResult::SUCCESS);
             }
