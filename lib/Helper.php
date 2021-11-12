@@ -1296,7 +1296,7 @@ class Helper
     public function getAvailableBonusForCurrentOrder($orderId)
     {
         $return = 0;
-        $getCalcOrderData =  self::calculateAuthorizedCartByOrderId($orderId);
+        $getCalcOrderData = self::calculateAuthorizedCartByOrderId($orderId);
 
         if (!empty($getCalcOrderData) && is_object($getCalcOrderData)) {
             $totalBonusPointsInfo = $getCalcOrderData->getField('totalBonusPointsInfo');

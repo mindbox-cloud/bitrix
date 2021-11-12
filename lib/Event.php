@@ -695,7 +695,13 @@ class Event
             if (!empty($_SESSION['SET_COUPON_ERROR'])) {
                 $setPromoCodeError = $_SESSION['SET_COUPON_ERROR'];
                 unset($_SESSION['SET_COUPON_ERROR']);
+
                 Transaction::getInstance()->clear();
+
+                unset($_SESSION['PROMO_CODE_AMOUNT']);
+                unset($_SESSION['PROMO_CODE']);
+                unset($_SESSION['PAY_BONUSES']);
+                unset($_SESSION['TOTAL_PRICE']);
 
                 return new \Bitrix\Main\EventResult(
                     \Bitrix\Main\EventResult::ERROR,
@@ -951,6 +957,7 @@ class Event
                 }
 
                 Transaction::getInstance()->clear();
+
                 unset($_SESSION['PROMO_CODE_AMOUNT']);
                 unset($_SESSION['PROMO_CODE']);
                 unset($_SESSION['PAY_BONUSES']);
