@@ -682,7 +682,7 @@ class Event
 
         if (Helper::isAdminSection()) {
             // @todo: временно убрал ограничение оплаченного заказа
-            if ($order->isPaid() && strtotime($order->getField('DATE_PAYED')) < time()) {
+            /*if ($order->isPaid() && strtotime($order->getField('DATE_PAYED')) < time()) {
                 Transaction::getInstance()->clear();
 
                 return new \Bitrix\Main\EventResult(
@@ -690,12 +690,18 @@ class Event
                     new \Bitrix\Sale\ResultError(Loc::getMessage("MB_ORDER_CANNOT_BE_CHANGED"), 'SALE_EVENT_WRONG_ORDER'),
                     'sale'
                 );
-            }
+            }*/
 
             if (!empty($_SESSION['SET_COUPON_ERROR'])) {
                 $setPromoCodeError = $_SESSION['SET_COUPON_ERROR'];
                 unset($_SESSION['SET_COUPON_ERROR']);
+
                 Transaction::getInstance()->clear();
+
+                unset($_SESSION['PROMO_CODE_AMOUNT']);
+                unset($_SESSION['PROMO_CODE']);
+                unset($_SESSION['PAY_BONUSES']);
+                unset($_SESSION['TOTAL_PRICE']);
 
                 return new \Bitrix\Main\EventResult(
                     \Bitrix\Main\EventResult::ERROR,
@@ -962,6 +968,12 @@ class Event
 
                 Transaction::getInstance()->clear();
 
+                unset($_SESSION['PROMO_CODE_AMOUNT']);
+                unset($_SESSION['PROMO_CODE']);
+                unset($_SESSION['PAY_BONUSES']);
+                unset($_SESSION['TOTAL_PRICE']);
+
+
                 return new \Bitrix\Main\EventResult(
                     \Bitrix\Main\EventResult::ERROR,
                     new \Bitrix\Sale\ResultError($errorMessage, 'SALE_EVENT_WRONG_ORDER'),
@@ -969,25 +981,35 @@ class Event
                 );
             } else {
                 $createOrderResult = $createOrderResult->getResult()->getField('order');
-                $_SESSION[ 'MINDBOX_ORDER' ] = $createOrderResult ? $createOrderResult->getId('mindboxId') : false;
+                $_SESSION['MINDBOX_ORDER'] = $createOrderResult ? $createOrderResult->getId('mindboxId') : false;
 
                 return new Main\EventResult(Main\EventResult::SUCCESS);
             }
             $createOrderResult = $createOrderResult->getResult()->getField('order');
             $_SESSION['MINDBOX_ORDER'] = $createOrderResult ? $createOrderResult->getId('mindboxId') : false;
         } catch (Exceptions\MindboxClientErrorException $e) {
-            $orderDTO = new OrderCreateRequestDTO();
-            $orderDTO->setField('order', [
-                'transaction' => [
-                    'ids' => [
-                        'externalId' => Helper::getTransactionId()
+
+            try {
+                $orderDTO = new OrderCreateRequestDTO();
+                $orderDTO->setField('order', [
+                    'transaction' => [
+                        'ids' => [
+                            'externalId' => Helper::getTransactionId()
+                        ]
                     ]
-                ]
-            ]);
-            $mindbox->order()->rollbackOrderTransaction(
-                $orderDTO,
-                Options::getOperationName('rollbackOrderTransaction' . (Helper::isAdminSection()? 'Admin':''))
-            )->sendRequest();
+                ]);
+
+                $mindbox->order()->rollbackOrderTransaction(
+                    $orderDTO,
+                    Options::getOperationName('rollbackOrderTransaction' . (Helper::isAdminSection()? 'Admin':''))
+                )->sendRequest();
+            } catch (Exceptions\MindboxClientException $e) {
+                $request = $mindbox->order()->getRequest();
+
+                if ($request) {
+                    QueueTable::push($request);
+                }
+            }
 
             unset($_SESSION['TOTAL_PRICE']);
 
