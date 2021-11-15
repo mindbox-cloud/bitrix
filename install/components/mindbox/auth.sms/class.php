@@ -300,6 +300,14 @@ class AuthSms extends CBitrixComponent implements Controllerable
         );
 
         $mindboxId = $_SESSION['NEW_USER_MB_ID'];
+
+        if (!$mindboxId) {
+            return [
+                'type'   => 'validation errors',
+                'errors' => GetMessage('MB_AUS_USER_NOT_FOUND')
+            ];
+        }
+
         $customer->setId('mindboxId', $mindboxId);
 
         $_SESSION['OFFLINE_REGISTER'] = true;
