@@ -3,8 +3,6 @@
 use Bitrix\Main\Engine\Contract\Controllerable;
 use Bitrix\Main\Loader;
 use Bitrix\Main\LoaderException;
-use Bitrix\Main\PhoneNumber\Format;
-use Bitrix\Main\PhoneNumber\Parser;
 use Mindbox\DTO\V3\Requests\CustomerRequestDTO;
 use Mindbox\Exceptions\MindboxClientException;
 use Mindbox\Helper;
@@ -172,23 +170,33 @@ class AuthSms extends CBitrixComponent implements Controllerable
                     [
                         'UF_MINDBOX_ID' => $user->getId('mindboxId')
                     ],
-                    [
-                        "PERSONAL_PHONE" => $user->getField('mobilePhone')
-                    ],
-                    [
-                        "PERSONAL_PHONE" => $this->preparePhoneNumber($user->getField('mobilePhone'))
-                    ],
-                    [
-                        'PERSONAL_MOBILE' => $user->getField('mobilePhone')
-                    ],
-                    [
-                        'PERSONAL_MOBILE' => $this->preparePhoneNumber($user->getField('mobilePhone'))
-                    ],
-                    [
-                        'EMAIL' => $user->getField('email')
-                    ]
                 ]
             ];
+
+            if (isset($getMobilePhone) && !empty($getMobilePhone)) {
+                $arFilter = array_merge($arFilter, [
+                    [
+                        "PERSONAL_PHONE" => $getMobilePhone
+                    ],
+                    [
+                        "PERSONAL_PHONE" => $this->preparePhoneNumber($getMobilePhone)
+                    ],
+                    [
+                        'PERSONAL_MOBILE' => $getMobilePhone
+                    ],
+                    [
+                        'PERSONAL_MOBILE' => $this->preparePhoneNumber($getMobilePhone)
+                    ],
+                ]);
+            }
+
+            if (!empty($getEmail)) {
+                $arFilter = array_merge($arFilter, [
+                    [
+                        'EMAIL' => $getEmail
+                    ]
+                ]);
+            }
 
             $dbUser = Bitrix\Main\UserTable::getList(
                 [

@@ -2,7 +2,7 @@
 /**
  * Created by @copyright QSOFT.
  */
-if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) {
+if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) {
     die();
 }
 
@@ -13,21 +13,21 @@ Asset::getInstance()->addJs("/bitrix/js/mindbox/jquery.inputmask.bundle.js");
 Asset::getInstance()->addJs("/bitrix/js/mindbox/script.js");
 Asset::getInstance()->addCss("/bitrix/css/mindbox/style.css");
 ?>
-<?php if ($USER->isAuthorized()) : ?>
-    <?php $url = $arParams["PERSONAL_PAGE_URL"] ? $arParams["PERSONAL_PAGE_URL"] : SITE_DIR . "/"; ?>
-    <?php LocalRedirect($url); ?>
-<?php else : ?>
-    <div class="mindbox">
-        <div class="row">
-            <div id="mindbox-auth-sms-error" class="col col-md-12 alert alert-danger" style="display: none"></div>
-        </div>
-        <div class="row">
-            <div id="mindbox-auth-sms-success" class="col col-md-12 alert alert-info" style="display: none"></div>
-        </div>
-        <form id="mindbox-input-phone" action="" class="form form-default">
-            <div class="row form-group">
-                <div class="col col-md-12">
-                    <label for="mindbox-num"><?= GetMessage('MB_AUS_INPUT_PHONE') ?></label>
+<?php if ($USER->isAuthorized()) :?>
+    <?php $url = $arParams['PERSONAL_PAGE_URL'] ? $arParams["PERSONAL_PAGE_URL"] :  '/';?>
+    <?php LocalRedirect($url);?>
+<?php else :?>
+<div class="mindbox">
+    <div class="row">
+        <div id="mindbox-auth-sms-error" class="col col-md-12 alert alert-danger" style="display: none"></div>
+    </div>
+    <div class="row">
+        <div id="mindbox-auth-sms-success" class="col col-md-12 alert alert-info" style="display: none"></div>
+    </div>
+    <form id="mindbox-input-phone" action="" class="form form-default">
+        <div class="row form-group">
+            <div class="col col-md-12">
+                <label for="mindbox-num"><?=GetMessage('MB_AUS_INPUT_PHONE')?></label>
 
                     <div>
                         <input type="text" class="form-control js-mask" name="mindbox-num" id="mindbox-num"
@@ -209,12 +209,11 @@ Asset::getInstance()->addCss("/bitrix/css/mindbox/style.css");
             </div>
     <?php endif; ?>
 
-            <?php if ($arResult["USE_CAPTCHA"] == "Y") : ?>
-                <div class="form-group">
-                    <div class="col col-md-4">
-                        <label for="mindbox--captcha_sid"
-                               class="control-label"><?= GetMessage('MB_AUS_CAPTCHA_TITLE') ?></label>
-                    </div>
+        <?php if ($arResult["USE_CAPTCHA"] == "Y") : ?>
+            <div class="form-group">
+                <div class="col col-md-4">
+                    <label for="mindbox--captcha_sid" class="control-label"><?=GetMessage('MB_AUS_CAPTCHA_TITLE')?></label>
+                </div>
 
                     <div class="col col-md-8">
                         <input type="hidden" name="captcha_sid" id="mindbox--captcha_sid"
@@ -234,7 +233,7 @@ Asset::getInstance()->addCss("/bitrix/css/mindbox/style.css");
                         <input type="text" name="captcha_word" id="mindbox--captcha_word" value=""/>
                     </div>
                 </div>
-            <?php endif; ?>
+        <?php endif; ?>
 
             <div class="form-group">
                 <div class="col col-md-12">

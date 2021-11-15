@@ -5,7 +5,7 @@ namespace Mindbox;
 
 use Bitrix\Main\Localization\Loc;
 
-defined('ADMIN_MODULE_NAME') or define('ADMIN_MODULE_NAME', 'mindbox.marketing');
+defined('MINDBOX_ADMIN_MODULE_NAME') or define('MINDBOX_ADMIN_MODULE_NAME', 'mindbox.marketing');
 /**
  * Class EventController
  * @package Mindbox
@@ -28,6 +28,10 @@ class EventController
      * @var string
      */
     protected $langEventName = 'langEventName';
+    /**
+     * @var string
+     */
+    protected $eventSystemCode = 'isSystem';
 
     protected $eventManager = null;
 
@@ -79,7 +83,8 @@ class EventController
                         'notCompatible' => $methodDocsParams[$this->notCompatibleCode],
                         'method' => $method->getName(),
                         'class' => $fullClassName,
-                        'name' => $this->getHumanEventName($methodDocsParams[$this->langEventName])
+                        'name' => $this->getHumanEventName($methodDocsParams[$this->langEventName]),
+                        'system' =>  $methodDocsParams[$this->eventSystemCode],
                     ];
                 }
             }
@@ -107,6 +112,10 @@ class EventController
 
         if (!empty($listEvents) && is_array($listEvents)) {
             foreach ($listEvents as $item) {
+                if ($item['system']) {
+                    continue;
+                }
+                
                 $return[$item['bitrixEvent']] = $item['name'];
             }
         }
@@ -144,7 +153,7 @@ class EventController
 
         if (!empty($eventHandlers) && is_array($eventHandlers)) {
             foreach ($eventHandlers as $handler) {
-                if ($handler['TO_MODULE_ID'] === ADMIN_MODULE_NAME) {
+                if ($handler['TO_MODULE_ID'] === MINDBOX_ADMIN_MODULE_NAME) {
                     $return = $handler;
                     break;
                 }
@@ -191,7 +200,7 @@ class EventController
         $this->eventManager->{$method}(
             $params['bitrixModule'],
             $params['bitrixEvent'],
-            ADMIN_MODULE_NAME,
+            MINDBOX_ADMIN_MODULE_NAME,
             $params['class'],
             $params['method'],
             1000
@@ -207,7 +216,7 @@ class EventController
         $this->eventManager->unRegisterEventHandler(
             $params['bitrixModule'],
             $params['bitrixEvent'],
-            ADMIN_MODULE_NAME,
+            MINDBOX_ADMIN_MODULE_NAME,
             $params['class'],
             $params['method']
         );
@@ -274,6 +283,10 @@ class EventController
         foreach ($allRegisteredEvent as $eventCode => $value) {
             $moduleEventData = $eventList[$eventCode];
             if (!empty($moduleEventData)) {
+                if ($moduleEventData['system']) {
+                    continue;
+                }
+
                 if (!in_array($eventCode, $activeEventList) && $value !== false) {
                     $this->unRegisterEventHandler($moduleEventData);
                 } elseif (in_array($eventCode, $activeEventList) && $value === false) {
@@ -334,7 +347,7 @@ class EventController
      */
     public function setOptionValue($stringValue)
     {
-        \COption::SetOptionString(ADMIN_MODULE_NAME, self::getOptionEventCode(), $stringValue);
+        \COption::SetOptionString(MINDBOX_ADMIN_MODULE_NAME, self::getOptionEventCode(), $stringValue);
     }
 
     /**
@@ -355,11 +368,10 @@ class EventController
      */
     protected function getAllRegisteredEvents()
     {
-        $adminModuleName = ADMIN_MODULE_NAME;
+        $adminModuleName = MINDBOX_ADMIN_MODULE_NAME;
         $return = [];
 
         if (!empty($adminModuleName)) {
-
             $getActiveModuleEvents = \Mindbox\DataBase\ModuleToModuleTable::getList(
                 [
                     'filter' => [
@@ -373,7 +385,6 @@ class EventController
                     $return[] = $row;
                 }
             }
-
         }
 
         return $return;
@@ -391,9 +402,7 @@ class EventController
 
         if (!empty($dataBaseEventList) && is_array($dataBaseEventList)) {
             foreach ($dataBaseEventList as $item) {
-
                 if ($item['TO_CLASS'] === '\Mindbox\Event') {
-
                     $exist = false;
 
                     foreach ($declareEventList as $declareEvent) {
