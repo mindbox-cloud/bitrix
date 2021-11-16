@@ -3,6 +3,33 @@
 
 Для корректной работы модуля рекомендуем использовать ядро D7 при изменении объектов корзины и заказа.
 
+Также при интеграции модуля Mindbox с сайтами, на которых используются кастомные системные компоненты вместо стандартных, могут потребоваться доработки. Список компонентов, с которыми проверена корректная работа модуля:
+
+- Системные компоненты авторизации ***bitrix:system.auth.form***, ***bitrix:system.auth.authorize***
+- Системный компонент регистрации ***bitrix.system.auth.registration***
+- Системный компонент профиля пользователя ***bitrix:main.profile*** 
+- Системный компонент корзины ***bitrix:sale.basket.basket***
+- Системный компонент оформления заказа ***bitrix:sale.order.ajax***
+
+Все операции в модуле реализованы через следующие системные события 1С-Битрикс:
+
+| Событие                | Операция в модуле                     |
+| :--------------------: | :----------------------------: |
+| [OnAfterUserAuthorize](https://dev.1c-bitrix.ru/api_help/main/events/onafteruserauthorize.php) | AuthorizeCustomer |  |
+| [OnBeforeUserRegister](https://dev.1c-bitrix.ru/api_help/main/events/onbeforeuserregister.php) | RegisterCustomer |
+| [OnAfterUserRegister](https://dev.1c-bitrix.ru/api_help/main/events/onafteruserregister.php) | RegisterCustomer |
+| [OnBeforeUserUpdate](https://dev.1c-bitrix.ru/api_help/main/events/onbeforeuserupdate.php) | EditCustomer |
+| [OnSaleOrderBeforeSaved](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/order_saved.php) | BeginUnauthorizedOrderTransaction, BeginAuthorizedOrderTransaction, RollbackOrderTransaction |
+| [OnSaleOrderSaved](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/order_saved.php) | CommitOrderTransaction, SaveOfflineOrder, CreateAuthorizedOrder, CreateUnauthorizedOrder |
+| [OnSaleBasketSaved](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/basket_saved.php) | SetCart |
+| [OnBeforeSaleOrderFinalAction](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/order_final_action.php) | CalculateAuthorizedCart, CalculateUnauthorizedCart |
+| [OnSaleBasketItemRefreshData](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/basket_updated.php) | SetWishList |
+| [OnBeforeUserAdd](https://dev.1c-bitrix.ru/api_help/main/events/onbeforeuseradd.php) | RegisterCustomer |
+| [OnAfterUserAdd](https://dev.1c-bitrix.ru/api_help/main/events/onafteruseradd.php) | RegisterCustomer |
+| [OnProlog](https://dev.1c-bitrix.ru/api_help/main/events/onprolog.php) | Подключение кода трекера |
+| [OnBeforeProlog](https://dev.1c-bitrix.ru/api_help/main/events/onbeforeprolog.php) | Подключение кода модуля глобально |
+
+
 ### [Описание установки модуля](https://developers.mindbox.ru/docs/module-bitrix)
 
 
