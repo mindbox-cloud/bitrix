@@ -190,9 +190,9 @@ class YmlFeedMindbox
                     $offerName = $dom->createElement("name", $name);
                     $offer->appendChild($offerName);
                     if (!empty($ofr["PREVIEW_TEXT"])) {
-                        $description = htmlspecialchars($ofr["PREVIEW_TEXT"], ENT_XML1 | ENT_QUOTES);
+                        $description = self::yandexText2xml($ofr["PREVIEW_TEXT"]);
                     } else {
-                        $description = htmlspecialchars($prods[$prodId]["PREVIEW_TEXT"], ENT_XML1 | ENT_QUOTES);
+                        $description = self::yandexText2xml($prods[$prodId]["PREVIEW_TEXT"]);
                     }
                     if (!empty($description)) {
                         $offerDescription = $dom->createElement("description", $description);
@@ -610,5 +610,24 @@ class YmlFeedMindbox
             $siteName = $siteInfo['SITE_NAME'];
         }
         return !empty($siteName) ? $siteName : 'sitename';
+    }
+
+    private static function yandexText2xml($text, $bHSC = true, $bDblQuote = false)
+    {
+        global $APPLICATION;
+
+        $bHSC = (true == $bHSC ? true : false);
+        $bDblQuote = (true == $bDblQuote ? true: false);
+
+        if ($bHSC) {
+            $text = htmlspecialcharsbx($text);
+            if ($bDblQuote) {
+                $text = str_replace('&quot;', '"', $text);
+            }
+        }
+        $text = preg_replace("/[\x1-\x8\xB-\xC\xE-\x1F]/", "", $text);
+        $text = str_replace("'", "&apos;", $text);
+        $text = $APPLICATION->ConvertCharset($text, LANG_CHARSET, 'UTF-8');
+        return $text;
     }
 }
