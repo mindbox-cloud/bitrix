@@ -1144,7 +1144,33 @@ class Event
             }
 
             if (empty($lines)) {
+
+                if (Helper::isAdminSection()) {
+
+                    try {
+                        $orderDTO = new OrderCreateRequestDTO();
+                        $orderDTO->setField('order', [
+                            'transaction' => [
+                                'ids' => [
+                                    'externalId' => Helper::getTransactionId()
+                                ]
+                            ]
+                        ]);
+
+                        $mindbox->order()->rollbackOrderTransaction(
+                            $orderDTO,
+                            Options::getOperationName('rollbackOrderTransaction' . (Helper::isAdminSection()? 'Admin':''))
+                        )->sendRequest();
+                    } catch (Exceptions\MindboxClientException $e) {
+                        $request = $mindbox->order()->getRequest();
+                        if ($request) {
+                            QueueTable::push($request);
+                        }
+                    }
+                }
+
                 Transaction::getInstance()->clear();
+
                 return new Main\EventResult(Main\EventResult::SUCCESS);
             }
 
