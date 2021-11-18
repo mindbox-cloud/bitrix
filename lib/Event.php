@@ -1144,9 +1144,7 @@ class Event
             }
 
             if (empty($lines)) {
-
                 if (Helper::isAdminSection()) {
-
                     try {
                         $orderDTO = new OrderCreateRequestDTO();
                         $orderDTO->setField('order', [
