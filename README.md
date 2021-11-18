@@ -11,42 +11,29 @@
 - Системный компонент корзины ***bitrix:sale.basket.basket***
 - Системный компонент оформления заказа ***bitrix:sale.order.ajax***
 
-Все операции в модуле реализованы через следующие системные события 1С-Битрикс:
-
-| Событие                | Операция в модуле                     |
-| :--------------------: | :----------------------------: |
-| [OnAfterUserAuthorize](https://dev.1c-bitrix.ru/api_help/main/events/onafteruserauthorize.php) | AuthorizeCustomer |  |
-| [OnBeforeUserRegister](https://dev.1c-bitrix.ru/api_help/main/events/onbeforeuserregister.php) | RegisterCustomer |
-| [OnAfterUserRegister](https://dev.1c-bitrix.ru/api_help/main/events/onafteruserregister.php) | RegisterCustomer |
-| [OnBeforeUserUpdate](https://dev.1c-bitrix.ru/api_help/main/events/onbeforeuserupdate.php) | EditCustomer |
-| [OnSaleOrderBeforeSaved](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/order_saved.php) | BeginUnauthorizedOrderTransaction, BeginAuthorizedOrderTransaction, RollbackOrderTransaction |
-| [OnSaleOrderSaved](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/order_saved.php) | CommitOrderTransaction, SaveOfflineOrder, CreateAuthorizedOrder, CreateUnauthorizedOrder |
-| [OnSaleBasketSaved](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/basket_saved.php) | SetCart |
-| [OnBeforeSaleOrderFinalAction](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/order_final_action.php) | CalculateAuthorizedCart, CalculateUnauthorizedCart |
-| [OnSaleBasketItemRefreshData](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/basket_updated.php) | SetWishList |
-| [OnBeforeUserAdd](https://dev.1c-bitrix.ru/api_help/main/events/onbeforeuseradd.php) | RegisterCustomer |
-| [OnAfterUserAdd](https://dev.1c-bitrix.ru/api_help/main/events/onafteruseradd.php) | RegisterCustomer |
-| [OnProlog](https://dev.1c-bitrix.ru/api_help/main/events/onprolog.php) | Подключение кода трекера |
-| [OnBeforeProlog](https://dev.1c-bitrix.ru/api_help/main/events/onbeforeprolog.php) | Подключение кода модуля глобально |
-
 
 ### [Описание установки модуля](https://developers.mindbox.ru/docs/module-bitrix)
 
 
 ### В процессе установки:
 
-* Будут навешаны обработчики на следующие события
+* Операции реализованы через системные события 1С-Битрикс. На следующие события будут навешаны обработчики:
 
-| Событие                | Обработчик                     |
-| :--------------------: | :----------------------------: |
-| [OnAfterUserAuthorize](https://dev.1c-bitrix.ru/api_help/main/events/onafteruserauthorize.php) | OnAfterUserAuthorizeHandler |  |
-| [OnBeforeUserRegister](https://dev.1c-bitrix.ru/api_help/main/events/onbeforeuserregister.php) | OnBeforeUserRegisterHandler |
-| [OnAfterUserRegister](https://dev.1c-bitrix.ru/api_help/main/events/onafteruserregister.php) | OnAfterUserRegisterHandler |
-| [OnBeforeUserUpdate](https://dev.1c-bitrix.ru/api_help/main/events/onbeforeuserupdate.php) | OnBeforeUserUpdateHandler |
-| [OnAfterUserUpdate](https://dev.1c-bitrix.ru/api_help/main/events/onafteruserupdate.php) | OnAfterUserUpdateHandler |
-| [OnSaleBasketBeforeSaved](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/basket_saved.php) | OnSaleBasketBeforeSavedHadler |
-| [OnSaleOrderBeforeSaved](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/order_saved.php) | OnSaleOrderBeforeSavedHandler |
-| [OnSaleOrderSaved](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/order_saved.php) | OnSaleOrderSavedHandler |
+| Операция | Событие                | Обработчик                   |
+| :--------------------: | :--------------------: | :----------------------------: |
+| AuthorizeCustomer | [OnAfterUserAuthorize](https://dev.1c-bitrix.ru/api_help/main/events/onafteruserauthorize.php) | OnAfterUserAuthorizeHandler |  |
+| RegisterCustomer | [OnBeforeUserRegister](https://dev.1c-bitrix.ru/api_help/main/events/onbeforeuserregister.php) | OnBeforeUserRegisterHandler |
+| RegisterCustomer | [OnAfterUserRegister](https://dev.1c-bitrix.ru/api_help/main/events/onafteruserregister.php) | OnAfterUserRegisterHandler |
+| EditCustomer | [OnBeforeUserUpdate](https://dev.1c-bitrix.ru/api_help/main/events/onbeforeuserupdate.php) | OnBeforeUserUpdateHandler |
+| BeginUnauthorizedOrderTransaction, BeginAuthorizedOrderTransaction, RollbackOrderTransaction | [OnSaleOrderBeforeSaved](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/order_saved.php) | OnSaleOrderBeforeSavedHandler |
+| CommitOrderTransaction, SaveOfflineOrder, CreateAuthorizedOrder, CreateUnauthorizedOrder | [OnSaleOrderSaved](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/order_saved.php) | OnSaleOrderSavedHandler |
+| SetCart | [OnSaleBasketSaved](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/basket_saved.php) | OnSaleBasketSavedHandler |
+| CalculateAuthorizedCart, CalculateUnauthorizedCart | [OnBeforeSaleOrderFinalAction](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/order_final_action.php) | OnBeforeSaleOrderFinalActionHandler |
+| SetWishList | [OnSaleBasketItemRefreshData](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/basket_updated.php) | OnSaleBasketItemRefreshDataHandler |
+| RegisterCustomer | [OnBeforeUserAdd](https://dev.1c-bitrix.ru/api_help/main/events/onbeforeuseradd.php) | OnAfterUserAddHandler |
+| RegisterCustomer | [OnAfterUserAdd](https://dev.1c-bitrix.ru/api_help/main/events/onafteruseradd.php) | OnAfterUserAddHandler |
+| Подключение кода трекера | [OnProlog](https://dev.1c-bitrix.ru/api_help/main/events/onprolog.php) | OnPrologHandler |
+| Подключение кода модуля глобально | [OnBeforeProlog](https://dev.1c-bitrix.ru/api_help/main/events/onbeforeprolog.php) | OnBeforePrologHandler |
 
 Исходный код всех обработчиков можно посмотреть в этом файле: ```/bitrix/modules/mindbox/lib/Event.php```
 
