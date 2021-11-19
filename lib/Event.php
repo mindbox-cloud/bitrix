@@ -1142,7 +1142,7 @@ class Event
 
                 $lines[] = $arLine;
             }
-
+            //$lines = [];
             if (empty($lines)) {
                 if (Helper::isAdminSection()) {
                     try {
@@ -1876,8 +1876,10 @@ class Event
 
             $totalBonusPointInfo = $preorderInfo->getField('totalBonusPointsInfo');
 
-            if (!empty($totalBonusPointInfo) && $totalBonusPointInfo['availableAmountForCurrentOrder'] < $_SESSION['PAY_BONUSES']) {
-                $_SESSION['PAY_BONUSES'] = $totalBonusPointInfo['availableAmountForCurrentOrder'];
+            if (!Helper::isAdminSection()) {
+                if (!empty($totalBonusPointInfo) && $totalBonusPointInfo['availableAmountForCurrentOrder'] < $_SESSION['PAY_BONUSES']) {
+                    $_SESSION['PAY_BONUSES'] = $totalBonusPointInfo['availableAmountForCurrentOrder'];
+                }
             }
 
             $discounts = $preorderInfo->getDiscountsInfo();
@@ -2326,49 +2328,51 @@ class Event
      */
     public function OnSaleBasketItemDeletedHandler(\Bitrix\Main\Event $event)
     {
-        if (Helper::isStandardMode()) {
-            $entity = $event->getParameter("ENTITY");
-            $order = $entity->getCollection()->getOrder();
+        if (Helper::isAdminSection()) {
+            if (Helper::isStandardMode()) {
+                $entity = $event->getParameter("ENTITY");
+                $order = $entity->getCollection()->getOrder();
 
-            if (!empty($order) && $order instanceof \Bitrix\Sale\Order) {
-                Helper::updateMindboxOrderItems($order);
-            }
-        } else {
-            if (Helper::isDeleteOrderAdminAction()) {
-                return new Main\EventResult(Main\EventResult::SUCCESS);
-            }
+                if (!empty($order) && $order instanceof \Bitrix\Sale\Order) {
+                    Helper::updateMindboxOrderItems($order);
+                }
+            } else {
+                if (Helper::isDeleteOrderAdminAction()) {
+                    return new Main\EventResult(Main\EventResult::SUCCESS);
+                }
 
-            $entity = $event->getParameter("ENTITY");
-            $order = $entity->getCollection()->getOrder();
-            $orderId = $order->getId();
-            $orderUserId = $order->getField('USER_ID');
+                $entity = $event->getParameter("ENTITY");
+                $order = $entity->getCollection()->getOrder();
+                $orderId = $order->getId();
+                $orderUserId = $order->getField('USER_ID');
 
-            if (!empty($entity)) {
-                $deleteLines[] = [
-                    'lineId' => $entity->getId(),
-                    'quantity' => $entity->getQuantity() + 1,
-                    'status' => 'Cancelled',
-                ];
+                if (!empty($entity)) {
+                    $deleteLines[] = [
+                        'lineId' => $entity->getId(),
+                        'quantity' => $entity->getQuantity() + 1,
+                        'status' => 'Cancelled',
+                    ];
 
-                $requestData = [
-                    'order' => [
-                        'ids' => [
-                            Options::getModuleOption('TRANSACTION_ID') => $orderId
-                        ],
-                        'lines' => $deleteLines
-                    ]
-                ];
+                    $requestData = [
+                        'order' => [
+                            'ids' => [
+                                Options::getModuleOption('TRANSACTION_ID') => $orderId
+                            ],
+                            'lines' => $deleteLines
+                        ]
+                    ];
 
-                $request = Helper::mindbox()->getClientV3()->prepareRequest(
-                    'POST',
-                    Options::getOperationName('updateOrderItemsStatus'),
-                    new DTO($requestData)
-                );
+                    $request = Helper::mindbox()->getClientV3()->prepareRequest(
+                        'POST',
+                        Options::getOperationName('updateOrderItemsStatus'),
+                        new DTO($requestData)
+                    );
 
-                try {
-                    $response = $request->sendRequest();
-                } catch (Exceptions\MindboxClientException $e) {
-                    // return false;
+                    try {
+                        $response = $request->sendRequest();
+                    } catch (Exceptions\MindboxClientException $e) {
+                        // return false;
+                    }
                 }
             }
         }
