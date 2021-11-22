@@ -615,10 +615,8 @@ class YmlFeedMindbox
     private static function yandexText2xml($text, $bHSC = true, $bDblQuote = false)
     {
         global $APPLICATION;
-
         $bHSC = (true == $bHSC ? true : false);
         $bDblQuote = (true == $bDblQuote ? true: false);
-
         if ($bHSC) {
             $text = htmlspecialcharsbx($text);
             if ($bDblQuote) {
