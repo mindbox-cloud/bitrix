@@ -17,6 +17,4 @@ if (IsModuleInstalled('mindbox.marketing')) {
 
     $objInstallerOrderProperty = new \Mindbox\Installer\OrderPropertiesInstaller();
     $objInstallerOrderProperty->install();
-
-
 }

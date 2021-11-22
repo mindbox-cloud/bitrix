@@ -708,10 +708,6 @@ class Event
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
-        if (Helper::isInternalOrder($order->getId())) {
-            return new Main\EventResult(Main\EventResult::SUCCESS);
-        }
-
         if (Helper::isAdminSection()) {
             // @todo: временно убрал ограничение оплаченного заказа
             /*if ($order->isPaid() && strtotime($order->getField('DATE_PAYED')) < time()) {
@@ -833,7 +829,6 @@ class Event
 
         $arCoupons = [];
         if ($_SESSION['PROMO_CODE'] && !empty($_SESSION['PROMO_CODE'])) {
-
             if (strpos($_SESSION['PROMO_CODE'], ',') !== false) {
                 $applyCouponsList = explode(',', $_SESSION['PROMO_CODE']);
 
@@ -842,7 +837,6 @@ class Event
                         $arCoupons[]['ids']['code'] = trim($couponItem);
                     }
                 }
-
             } else {
                 $arCoupons[]['ids']['code'] = $_SESSION['PROMO_CODE'];
             }
@@ -985,7 +979,6 @@ class Event
                     }
                 }
             } elseif ($createOrderResult->getResult()->getOrder()->getField('processingStatus') === 'PriceHasBeenChanged') {
-
                 if (Helper::isAdminSection()) {
                     $errorMessage = $createOrderResult->getResult()->getOrder()->getField('statusDescription');
                 } else {
@@ -1086,10 +1079,6 @@ class Event
         }
 
         if (Helper::isInternalOrderUser($order->getUserId())) {
-            return new Main\EventResult(Main\EventResult::SUCCESS);
-        }
-
-        if (Helper::isInternalOrder($order->getId())) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
@@ -1307,14 +1296,14 @@ class Event
                     foreach ($setPropertiesList as $propCode => $propValue) {
                          $orderPropertyData = Helper::getOrderPropertyByCode($propCode, $orderPersonType);
 
-                         if (!empty($orderPropertyData)) {
-                             $propertyItemObj = $orderPropertyCollection->getItemByOrderPropertyId($orderPropertyData['ID']);
+                        if (!empty($orderPropertyData)) {
+                            $propertyItemObj = $orderPropertyCollection->getItemByOrderPropertyId($orderPropertyData['ID']);
 
-                             if (!empty($propertyItemObj) && is_object($propertyItemObj)) {
-                                 $propertyItemObj->setValue($propValue);
-                                 $propertyItemObj->save();
-                             }
-                         }
+                            if (!empty($propertyItemObj) && is_object($propertyItemObj)) {
+                                $propertyItemObj->setValue($propValue);
+                                $propertyItemObj->save();
+                            }
+                        }
                     }
                 }
 
@@ -1881,11 +1870,9 @@ class Event
 
                 if ($couponsInfo['coupon']['status'] == 'NotFound') {
                     $setCouponError = Loc::getMessage('MB_CART_PROMOCODE_NOT_FOUND');
-                }
-                elseif ($couponsInfo['coupon']['status'] == 'CanNotBeUsedForCurrentOrder') {
+                } elseif ($couponsInfo['coupon']['status'] == 'CanNotBeUsedForCurrentOrder') {
                     $setCouponError = Loc::getMessage('MB_CART_PROMOCODE_ERR');
-                }
-                elseif ($couponsInfo['coupon']['status'] == 'Used') {
+                } elseif ($couponsInfo['coupon']['status'] == 'Used') {
                     $setCouponError = Loc::getMessage('MB_CART_PROMO_USED');
                 }
 
