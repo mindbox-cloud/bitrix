@@ -1,11 +1,11 @@
 <?php
 
-if(IsModuleInstalled('mindbox.marketing'))
-{
+if (IsModuleInstalled('mindbox.marketing')) {
     \CModule::IncludeModule('mindbox.marketing');
 
-    if (is_dir(dirname(__FILE__).'/install/components'))
+    if (is_dir(dirname(__FILE__).'/install/components')) {
         $updater->CopyFiles("install/components", "components/");
+    }
 
     $eventManager = \Bitrix\Main\EventManager::getInstance();
     $eventManager->registerEventHandler(

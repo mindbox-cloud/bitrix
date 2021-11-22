@@ -192,6 +192,14 @@ class Event
             return $arFields;
         }
 
+        if (isset($_REQUEST['c']) &&
+            $_REQUEST['c'] === 'mindbox:auth.sms' &&
+            isset($_REQUEST['action']) &&
+            $_REQUEST['action'] === 'fillup'
+        ) {
+            return $arFields;
+        }
+
         global $APPLICATION, $USER;
 
         $mindbox = static::mindbox();
@@ -487,7 +495,6 @@ class Event
                         $arFields['USER_ID'],
                         $fields
                     );
-                    unset($_SESSION['NEW_USER_MB_ID']);
                 } else {
                     return true;
                 }
@@ -1720,6 +1727,10 @@ class Event
             return $arFields;
         }
 
+        if ($_REQUEST['mode'] == 'class' && $_REQUEST['c'] == 'mindbox:auth.sms' && $_REQUEST['action'] == 'fillup') {
+            return $arFields;
+        }
+
         global $APPLICATION, $USER;
 
         if (!$USER || is_string($USER)) {
@@ -1891,7 +1902,6 @@ class Event
                     $arFields['ID'],
                     $fields
                 );
-                unset($_SESSION['NEW_USER_MB_ID']);
             }
         } else {
             global $USER;
