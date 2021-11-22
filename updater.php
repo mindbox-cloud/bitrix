@@ -7,13 +7,16 @@ if (IsModuleInstalled('mindbox.marketing')) {
         $updater->CopyFiles("install/components", "components/");
     }
 
-    $eventManager = \Bitrix\Main\EventManager::getInstance();
-    $eventManager->registerEventHandler(
-        'main',
-        'OnBeforeProlog',
-        'mindbox.marketing',
-        '\Mindbox\Event',
-        'OnBeforePrologHandler',
-        1000
-    );
+    $objEventController = new \Mindbox\EventController();
+    $objEventController->installEvents();
+    $objEventController->revisionHandlers();
+
+    if (!class_exists('\Mindbox\Installer\OrderPropertiesInstaller')) {
+        require_once __DIR__ . '/lib/Installer/OrderPropertiesInstaller.php';
+    }
+
+    $objInstallerOrderProperty = new \Mindbox\Installer\OrderPropertiesInstaller();
+    $objInstallerOrderProperty->install();
+
+
 }
