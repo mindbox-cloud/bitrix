@@ -2296,7 +2296,7 @@ class Event
      */
     public function OnSalePropertyValueSetFieldHandler(Main\Event $event)
     {
-        if (Helper::isStandardMode()) {
+        if (Helper::isStandardMode() && Helper::isAdminSection()) {
             $orderMatchList = Helper::getOrderFieldsMatch();
 
             $getEntity = $event->getParameter('ENTITY');
@@ -2323,7 +2323,7 @@ class Event
      */
     public static function OnSaleBasketItemEntitySavedHandler(\Bitrix\Main\Event $event)
     {
-        if (Helper::isStandardMode()) {
+        if (Helper::isStandardMode() && Helper::isAdminSection()) {
             $entity = $event->getParameter("ENTITY");
             $order = $entity->getCollection()->getOrder();
 
@@ -2402,7 +2402,7 @@ class Event
      */
     public function OnBeforeSaleShipmentSetFieldHandler(Main\Event $event)
     {
-        if (Helper::isStandardMode()) {
+        if (Helper::isStandardMode() && Helper::isAdminSection()) {
             $orderEntity = $event->getParameter('ENTITY');
             $orderId = $orderEntity->getField('ORDER_ID');
             $statusValue = $event->getParameter('VALUE');
@@ -2448,7 +2448,6 @@ class Event
      * @bitrixModuleId main
      * @bitrixEventCode OnAdminSaleOrderEdit
      * @langEventName OnAdminSaleOrderEdit
-     * @param $arFields
      * @return false
      */
     public function OnAdminSaleOrderEditHandler()
