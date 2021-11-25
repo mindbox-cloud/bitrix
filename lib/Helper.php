@@ -1512,6 +1512,10 @@ class Helper
 
         $mindboxStatusCode = self::getMindboxStatusByShopStatus($orderStatus);
 
+        if (empty($mindboxStatusCode)) {
+            return false;
+        }
+
         $orderBasket = $order->getBasket();
 
         if ($orderBasket) {
