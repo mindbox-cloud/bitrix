@@ -47,3 +47,7 @@ $MESS['ORDERS'] = 'Настройки заказов';
 $MESS['ADDITIONAL_FIELDS_SETTINGS'] = 'Настройка дополнительных полей';
 $MESS['CONTINUE_USER_GROUPS'] = 'Отключить процессинг заказов для группы пользователей';
 $MESS['CONTINUE_USER_GROUPS_TOOLTIP'] = 'Пользователи данных груп не будут учавствовать в процессинге ';
+$MESS['ORDER_STATUS_SETTINGS'] = 'Настройка статусов заказа';
+$MESS['ORDER_STATUS_BITRIX_LIST'] = 'Статус в Bitrix';
+$MESS['ORDER_STATUS_MINDBOX_LIST'] = 'Статус в Mindbox';
+
