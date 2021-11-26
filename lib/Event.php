@@ -2037,6 +2037,10 @@ class Event
             $arFields['PERSONAL_PHONE'] = $arFields['PERSONAL_MOBILE'];
         }
 
+        if (empty($arFields['PERSONAL_PHONE']) && !empty($arFields['PHONE_NUMBER'])) {
+            $arFields['PERSONAL_PHONE'] = $arFields['PHONE_NUMBER'];
+        }
+
         if (isset($arFields['PERSONAL_PHONE'])) {
             $arFields['PERSONAL_PHONE'] = Helper::formatPhone($arFields['PERSONAL_PHONE']);
         }
