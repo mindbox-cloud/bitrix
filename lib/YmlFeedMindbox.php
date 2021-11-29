@@ -10,6 +10,8 @@ class YmlFeedMindbox
 
     private static $stepSize = 1000;
 
+    const DESCRIPTION_TEXT_LENGTH = 3000;
+
     public static function start($step = 1)
     {
         $step = (int) $step;
@@ -189,13 +191,15 @@ class YmlFeedMindbox
                     }
                     $offerName = $dom->createElement("name", $name);
                     $offer->appendChild($offerName);
-                    if (!empty($ofr["PREVIEW_TEXT"])) {
-                        $description = self::yandexText2xml($ofr["PREVIEW_TEXT"]);
+                    if (!empty($ofr["~DETAIL_TEXT"])) {
+                        $description = TruncateText($ofr["~DETAIL_TEXT"], self::DESCRIPTION_TEXT_LENGTH);
                     } else {
-                        $description = self::yandexText2xml($prods[$prodId]["PREVIEW_TEXT"]);
+                        $description = TruncateText($prods[$prodId]["~DETAIL_TEXT"], self::DESCRIPTION_TEXT_LENGTH);
                     }
                     if (!empty($description)) {
-                        $offerDescription = $dom->createElement("description", $description);
+                        $cdataDescription = $dom->createCDATASection($description);
+                        $offerDescription = $dom->createElement("description");
+                        $offerDescription->appendChild($cdataDescription);
                         $offer->appendChild($offerDescription);
                     }
                     if ($prods[$prodId]["DETAIL_PAGE_URL"]) {
@@ -480,6 +484,7 @@ class YmlFeedMindbox
             "CATALOG_GROUP_" . $basePriceId,
             "NAME",
             "DETAIL_PICTURE",
+            "DETAIL_TEXT",
             "PREVIEW_PICTURE",
             "PREVIEW_TEXT",
             "XML_ID",
