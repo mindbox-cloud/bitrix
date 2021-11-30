@@ -196,6 +196,13 @@ class YmlFeedMindbox
                     } else {
                         $description = TruncateText($prods[$prodId]["~DETAIL_TEXT"], self::DESCRIPTION_TEXT_LENGTH);
                     }
+                    if(empty($description)) {
+                        if (!empty($ofr["~PREVIEW_TEXT"])) {
+                            $description = TruncateText($ofr["~PREVIEW_TEXT"], self::DESCRIPTION_TEXT_LENGTH);
+                        } else {
+                            $description = TruncateText($prods[$prodId]["~PREVIEW_TEXT"], self::DESCRIPTION_TEXT_LENGTH);
+                        }
+                    }
                     if (!empty($description)) {
                         $cdataDescription = $dom->createCDATASection($description);
                         $offerDescription = $dom->createElement("description");
