@@ -196,7 +196,7 @@ class YmlFeedMindbox
                     } else {
                         $description = TruncateText($prods[$prodId]["~DETAIL_TEXT"], self::DESCRIPTION_TEXT_LENGTH);
                     }
-                    if(empty($description)) {
+                    if (empty($description)) {
                         if (!empty($ofr["~PREVIEW_TEXT"])) {
                             $description = TruncateText($ofr["~PREVIEW_TEXT"], self::DESCRIPTION_TEXT_LENGTH);
                         } else {
