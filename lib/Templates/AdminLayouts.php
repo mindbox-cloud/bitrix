@@ -180,7 +180,7 @@ HTML;
                     hideInput('[name="MINDBOX_ORDER_STATUS_MINDBOX_ADDITIONAL"]');
                     let mindboxStatusSelector = document.querySelector('[name="MINDBOX_ORDER_STATUS_MINDBOX_LIST"]');
                     let mindboxStatusOptions = mindboxStatusSelector.options;
-                    mindboxStatusOptions[mindboxStatusOptions.length] = new Option('Добавить кастомный', 'ADD_CUSTOM');
+                    mindboxStatusOptions[mindboxStatusOptions.length] = new Option('Add custom status', 'ADD_CUSTOM');
                     
                     mindboxStatusSelector.addEventListener('change', function (e) {
                       let selectVal = this.value;
@@ -331,6 +331,7 @@ HTML;
         $bonusPropertyCode = OrderPropertiesInstaller::PROPERTY_BONUS;
 
         $orderId = (int)$_REQUEST['ID'];
+        $saveButtonText = Loc::getMessage('MB_BONUS_BUTTON_TEXT');
 
         if (!empty($orderId)) {
             $bonusAvailableDescription = Loc::getMessage('MB_BONUS_AVAILABLE');
@@ -344,7 +345,7 @@ HTML;
             <script>
                 document.addEventListener('DOMContentLoaded', function(){
                     let propsIds = {$encodeOrderPropertyIds};
-                    let saveButton = "<input style='margin: 0 10px;' type='submit' class='bx-adm-pc-input-submit' value='Применить' onclick='BX.Sale.Admin.OrderEditPage.tailsLoaded = true; BX.Sale.Admin.OrderEditPage.onRefreshOrderDataAndSave(); return false;'>"
+                    let saveButton = "<input style='margin: 0 10px;' type='submit' class='bx-adm-pc-input-submit' value='{$saveButtonText}' onclick='BX.Sale.Admin.OrderEditPage.tailsLoaded = true; BX.Sale.Admin.OrderEditPage.onRefreshOrderDataAndSave(); return false;'>"
                     let defaultBitrixPromocode = document.querySelector('#sale-admin-order-coupons');
                     
                     if (defaultBitrixPromocode) {

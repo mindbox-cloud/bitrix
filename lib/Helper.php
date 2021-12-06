@@ -1454,8 +1454,8 @@ class Helper
     public static function getBitrixOrderStatusList()
     {
         $statusList = [
-            'CANCEL' => 'Отмена заказа',
-            'CANCEL_ABORT' => 'Отменить отмену заказа'
+            'CANCEL' => Loc::getMessage('CANCEL_ORDER_LABEL'),
+            //'CANCEL_ABORT' => 'Отменить отмену заказа'
         ];
 
         $statusResult = \Bitrix\Sale\Internals\StatusTable::getList([
