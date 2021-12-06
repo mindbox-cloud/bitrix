@@ -8,6 +8,8 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) {
 
 use Bitrix\Main\Page\Asset;
 
+global $USER;
+
 CJSCore::Init(['jquery', 'ajax']);
 Asset::getInstance()->addJs("/bitrix/js/mindbox/jquery.inputmask.bundle.js");
 Asset::getInstance()->addJs("/bitrix/js/mindbox/script.js");
@@ -83,6 +85,7 @@ Asset::getInstance()->addCss("/bitrix/css/mindbox/style.css");
             </div>
         </form>
 
+        <?php if (!empty($arParams['FILLUP_FORM_FIELDS']) && is_array($arParams['FILLUP_FORM_FIELDS'])):?>
         <form id="mindbox-fillup-profile" action="" class="form-horizontal form-default" style="display: none">
 
             <?php if (in_array('NAME', $arParams['FILLUP_FORM_FIELDS'])) : ?>
@@ -241,5 +244,6 @@ Asset::getInstance()->addCss("/bitrix/css/mindbox/style.css");
                 </div>
             </div>
         </form>
+        <?php endif;?>
     </div>
 <?php endif ?>

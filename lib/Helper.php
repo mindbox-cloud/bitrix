@@ -1283,9 +1283,9 @@ class Helper
                 $orderUserId = $order->getUserId();
                 $mindboxId = Helper::getMindboxId($orderUserId);
 
-                if (!$mindboxId) {
+                /*if (!$mindboxId) {
                     return new Main\EventResult(Main\EventResult::SUCCESS);
-                }
+                }*/
 
                 $customer->setId('mindboxId', $mindboxId);
                 $preorder->setCustomer($customer);
@@ -1442,6 +1442,7 @@ class Helper
      */
     public static function isMindboxOrder($orderId)
     {
+        //return true;
         $order = self::getMindboxOrder($orderId);
 
         if ($order && $order->getField('processingStatus') === 'Found') {

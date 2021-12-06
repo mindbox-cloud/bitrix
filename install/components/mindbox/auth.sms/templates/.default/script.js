@@ -37,6 +37,7 @@ $(document).ready(function() {
 
         phone = $('#mindbox-num').val();
         localStorage.setItem('phone', phone);
+
         var request = BX.ajax.runComponentAction('mindbox:auth.sms', 'sendCode', {
             mode:'class',
             data: {
@@ -95,29 +96,30 @@ $(document).ready(function() {
         request.then(function (response) {
             loader.hide($targetForLoader);
 
-            if(response.data.type === 'success') {
+            if (response.data.type === 'success') {
                 localStorage.setItem('phone', '');
                 window.location.reload()
-            }
-
-            else if (response.data.type === 'error') {
+            } else if (response.data.type === 'error') {
                 $error.text(response.data.message);
                 $error.show();
-            }
+            } else if(response.data.type === 'fillup') {
 
-            else if(response.data.type === 'fillup') {
+                if ($('#mindbox-fillup-profile').length) {
+                    let $genderId = (response.data.sex === 'male')? 1:2;
 
-                let $genderId = (response.data.sex === 'male')? 1:2;
+                    $('#mindbox-input-code').hide();
+                    $('#mindbox-fillup-profile').show();
 
-                $('#mindbox-input-code').hide();
-                $('#mindbox-fillup-profile').show();
-
-                $('#mindbox-fillup-phone').val(response.data.mobilePhone);
-                $('#mindbox-fillup-email').val(response.data.email);
-                $('#mindbox-fillup-name').val(response.data.firstName);
-                $('#mindbox-fillup-last-name').val(response.data.lastName);
-                $('#mindbox-fillup-date').val(response.data.birthDate);
-                $('#mindbox-gender_' + $genderId).attr('checked', 'checked');
+                    $('#mindbox-fillup-phone').val(response.data.mobilePhone);
+                    $('#mindbox-fillup-email').val(response.data.email);
+                    $('#mindbox-fillup-name').val(response.data.firstName);
+                    $('#mindbox-fillup-last-name').val(response.data.lastName);
+                    $('#mindbox-fillup-date').val(response.data.birthDate);
+                    $('#mindbox-gender_' + $genderId).attr('checked', 'checked');
+                } else {
+                    localStorage.setItem('phone', '');
+                    window.location.reload()
+                }
 
             }
         });
@@ -125,27 +127,33 @@ $(document).ready(function() {
 
     $('#mindbox-fillup-profile').on('submit', function (e) {
         e.preventDefault();
-        var $targetForLoader = $(this);
+        let $targetForLoader = $(this);
         loader.show($targetForLoader);
 
-        var fields = [];
+        let fields = {
+            'NAME': $('#mindbox-fillup-name').val(),
+            'EMAIL': $('#mindbox-fillup-email').val(),
+            'LAST_NAME': $('#mindbox-fillup-last-name').val(),
+            'PERSONAL_PHONE': $('#mindbox-fillup-phone').val(),
+            'PERSONAL_BIRTHDAY': $('#mindbox-fillup-date').val(),
+            'PASSWORD': $('#mindbox-fillup-password').val(),
+            'CONFIRM_PASSWORD': $('#mindbox-fillup-password').val(),
+            'PERSONAL_GENDER': $("input[name='mindbox-fillup-gender']:checked").val()
+        };
 
-        fields['NAME'] = $('#mindbox-fillup-name').val();
-        fields['EMAIL'] = $('#mindbox-fillup-email').val();
-        fields['LAST_NAME'] = $('#mindbox-fillup-last-name').val();
-        fields['PERSONAL_PHONE'] = $('#mindbox-fillup-phone').val();
-        fields['PERSONAL_BIRTHDAY'] = $('#mindbox-fillup-date').val();
-        fields['PASSWORD'] = $('#mindbox-fillup-password').val();
-        fields['CONFIRM_PASSWORD'] = $('#mindbox-fillup-password').val();
-        fields['PERSONAL_GENDER'] =  $("input[name='mindbox-fillup-gender']:checked"). val();
-        if ($('#mindbox--captcha_sid').val() != undefined && $('#mindbox--captcha_word').val() != undefined) {
+        for (let fieldKey in fields) {
+            if (fields[fieldKey] === null || fields[fieldKey] === undefined) {
+                delete fields[fieldKey];
+            }
+        }
+
+        if ($('#mindbox--captcha_sid').val() !== undefined && $('#mindbox--captcha_word').val() !== undefined) {
             fields['captcha_word'] = $('#mindbox--captcha_word').val();
             fields['captcha_sid'] = $('#mindbox--captcha_sid').val();
         } else {
             fields['captcha_word'] = '';
             fields['captcha_sid'] = 0;
         }
-
 
         var request = BX.ajax.runComponentAction('mindbox:auth.sms', 'fillup', {
             mode:'class',
@@ -154,19 +162,16 @@ $(document).ready(function() {
             }
         });
 
-
         request.then(function (response) {
             loader.hide($targetForLoader);
             var data = response.data;
 
-            if(data.type === 'error') {
+            if (data.type === 'error') {
                 $error.html(data.message);
                 $error.show();
                 
                 captchaReload();
-            }
-
-            else if(data.type === 'validation errors') {
+            } else if (data.type === 'validation errors') {
                 for (var error of data.errors) {
                     var $field = validationMap[error.location];
                     $field.text(error.message);
@@ -174,9 +179,7 @@ $(document).ready(function() {
                 }
                 
                 captchaReload();
-            }
-
-            else if(data.type === 'success') {
+            } else if (data.type === 'success') {
                window.location.reload()
             }
         });
