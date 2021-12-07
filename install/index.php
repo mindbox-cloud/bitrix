@@ -102,7 +102,6 @@ class mindbox_marketing extends CModule
             UnRegisterModule($this->MODULE_ID);
             $APPLICATION->IncludeAdminFile(GetMessage("MINDBOX_UNINSTALL_TITLE"), __DIR__ . "/unstep2.php");
         } else {
-            var_dump($request['step']);
             die();
         }
     }

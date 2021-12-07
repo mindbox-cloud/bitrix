@@ -1208,7 +1208,7 @@ class Helper
                     continue;
                 }
 
-                if ($basketItem->getField('CAN_BUY') == 'N') {
+                if ($basketItem->getQuantity() < 1) {
                     continue;
                 }
 

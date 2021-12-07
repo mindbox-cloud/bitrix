@@ -20,6 +20,7 @@ use DateTime;
 use DateTimeZone;
 use Mindbox\DTO\DTO;
 use Mindbox\DTO\V2\Requests\DiscountRequestDTO;
+use Mindbox\DTO\V3\Requests\CustomerRequestDTO;
 use Mindbox\DTO\V2\Requests\CustomerRequestDTO as CustomerRequestV2DTO;
 use Mindbox\DTO\V2\Requests\LineRequestDTO;
 use Mindbox\DTO\V2\Requests\OrderCreateRequestDTO;
@@ -125,7 +126,7 @@ class Event
             }
         }
 
-        $customer = new CustomerRequestV2DTO([
+        $customer = new CustomerRequestDTO([
             'ids' => [
                 Options::getModuleOption('WEBSITE_ID') => $arUser['user_fields']['ID']
             ]
@@ -260,7 +261,7 @@ class Event
                 'isSubscribed' => $isSubscribed
             ]
         ];
-        $customer = Helper::iconvDTO(new CustomerRequestV2DTO($fields));
+        $customer = Helper::iconvDTO(new CustomerRequestDTO($fields));
         $customer->setSubscriptions($subscriptions);
 
         unset($fields);
@@ -293,7 +294,7 @@ class Event
                         'email'       => $arFields['EMAIL'],
                         'mobilePhone' => $arFields['PERSONAL_PHONE'],
                     ];
-                    $customer = Helper::iconvDTO(new CustomerRequestV2DTO($fields));
+                    $customer = Helper::iconvDTO(new CustomerRequestDTO($fields));
 
                     $checkCustomerResponse = $mindbox->customer()->CheckCustomer(
                         $customer,
@@ -434,7 +435,7 @@ class Event
                     $fields['customFields'] = $customFields;
                 }
 
-                $customer = new CustomerRequestV2DTO($fields);
+                $customer = new CustomerRequestDTO($fields);
 
                 unset($fields);
 
@@ -642,7 +643,7 @@ class Event
                 $fields['ids']['mindboxId'] = $mindboxId;
             }
 
-            $customer = new CustomerRequestV2DTO($fields);
+            $customer = new CustomerRequestDTO($fields);
             $customer = Helper::iconvDTO($customer);
             unset($fields);
 
@@ -1560,7 +1561,7 @@ class Event
                 $now = $now->setTimezone(new DateTimeZone("UTC"))->format("Y-m-d H:i:s");
                 $orderDTO->setUpdatedDateTimeUtc($now);
 
-                $customer = new CustomerRequestV2DTO();
+                $customer = new CustomerRequestDTO();
                 $mindboxId = Helper::getMindboxId($order->getUserId());
 
                 if ($mindboxId) {
@@ -1830,7 +1831,7 @@ class Event
 
         $preorder->setField('order', $arOrder);
 
-        $customer = new CustomerRequestV2DTO();
+        $customer = new CustomerRequestDTO();
         if ($USER->IsAuthorized()) {
             // @info тут берем пользователя из заказа, если прецессинг админки
             $orderUserId = (Helper::isAdminSection() && !empty($order->getUserId())) ? $order->getUserId() :  $USER->GetID();
@@ -2087,7 +2088,7 @@ class Event
             ]
         ];
 
-        $customer = Helper::iconvDTO(new CustomerRequestV2DTO($fields));
+        $customer = Helper::iconvDTO(new CustomerRequestDTO($fields));
 
         unset($fields);
 
@@ -2234,7 +2235,7 @@ class Event
                 ]
             ];
 
-            $customer = Helper::iconvDTO(new CustomerRequestV2DTO($fields));
+            $customer = Helper::iconvDTO(new CustomerRequestDTO($fields));
 
             if (is_object($USER) && $USER->IsAuthorized()) {
                 $customer->setId(Options::getModuleOption('WEBSITE_ID'), $arFields['ID']);
