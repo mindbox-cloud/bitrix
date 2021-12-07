@@ -787,6 +787,7 @@ class Event
         $basketItems = $basket->getBasketItems();
         $lines = [];
         $i = 1;
+
         foreach ($basketItems as $basketItem) {
             $propertyCollection = $order->getPropertyCollection();
             $ar = $propertyCollection->getArray();
@@ -829,6 +830,7 @@ class Event
         }
 
         $arCoupons = [];
+
         if ($_SESSION['PROMO_CODE'] && !empty($_SESSION['PROMO_CODE'])) {
             if (strpos($_SESSION['PROMO_CODE'], ',') !== false) {
                 $applyCouponsList = explode(',', $_SESSION['PROMO_CODE']);
@@ -844,6 +846,7 @@ class Event
         }
 
         $shopOrderId = $order->getId();
+
         $arOrder = [
             'ids'          => [
                 Options::getModuleOption('TRANSACTION_ID') => ($shopOrderId > 0) ? $shopOrderId : '',
@@ -854,10 +857,13 @@ class Event
                     'externalId' => Helper::getTransactionId()
                 ]
             ],
-            'payments'     => $payments,
             'deliveryCost' => $order->getDeliveryPrice(),
             'totalPrice'   => $_SESSION['TOTAL_PRICE'] + $order->getDeliveryPrice()
         ];
+
+        if ($mindboxOrderStatus !== 'Cancelled') {
+            $arOrder['payments'] = $payments;
+        }
 
         if (!empty($arCoupons)) {
             $arOrder['coupons'] = $arCoupons;
