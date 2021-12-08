@@ -40,7 +40,6 @@ class Event
     protected $mindbox;
 
     const TRACKER_JS_FILENAME = "https://api.mindbox.ru/scripts/v1/tracker.js";
-
     /**
      * @bitrixModuleId main
      * @bitrixEventCode OnAfterUserAuthorize
@@ -1667,6 +1666,10 @@ class Event
 
     public static function finalAction($order, $basket)
     {
+        if (Helper::isDeleteOrderAdminAction()) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+
         if (Helper::isStandardMode()) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
@@ -1747,7 +1750,12 @@ class Event
         $preorder = new \Mindbox\DTO\V3\Requests\PreorderRequestDTO();
 
         foreach ($basketItems as $basketItem) {
+
             if (!$basketItem->getId()) {
+                continue;
+            }
+
+            if ($basketItem->getQuantity() < 1) {
                 continue;
             }
 
@@ -2362,7 +2370,8 @@ class Event
                     Helper::updateMindboxOrderItems($order);
                 }
             } else {
-                if (Helper::isDeleteOrderAdminAction()) {
+
+                if (Helper::isDeleteOrderAdminAction() || Helper::isDeleteOrderItemAdminAction()) {
                     return new Main\EventResult(Main\EventResult::SUCCESS);
                 }
 

@@ -1401,6 +1401,11 @@ class Helper
         );
     }
 
+    public static function isDeleteOrderItemAdminAction()
+    {
+        return (self::isAdminSection() && $_REQUEST['additional']['operation'] === 'PRODUCT_DELETE');
+    }
+
     /**
      * @param $orderId
      *
