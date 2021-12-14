@@ -46,3 +46,5 @@ $MESS['FEED'] = 'Yml-feed settings';
 $MESS['CLIENTS'] = 'Clients settings';
 $MESS['ORDERS'] = 'Orders settings';
 $MESS['ADDITIONAL_FIELDS_SETTINGS'] = 'Additional fields settings';
+$MESS['CONTINUE_USER_GROUPS'] = 'Disable order processing for a group of users';
+$MESS['CONTINUE_USER_GROUPS_TOOLTIP'] = 'Users of these groups will not participate in processing ';

@@ -100,8 +100,11 @@ class SubEdit extends CBitrixComponent implements Controllerable
     {
         $subscriptions = ['Email' => false, 'Sms' => false];
 
-        $request = $this->mindbox->getClientV3()->prepareRequest('POST', Options::getOperationName('getSubscriptions'),
-            new DTO(['customer' => ['email' => $this->userInfo['EMAIL']]]));
+        $request = $this->mindbox->getClientV3()->prepareRequest(
+            'POST',
+            Options::getOperationName('getSubscriptions'),
+            new DTO(['customer' => ['email' => $this->userInfo['EMAIL']]])
+        );
 
         try {
             $response = $request->sendRequest()->getResult();
@@ -114,7 +117,6 @@ class SubEdit extends CBitrixComponent implements Controllerable
                     }
                 }
             }
-           
         } catch (MindboxClientException $e) {
         }
 
