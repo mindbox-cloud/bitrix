@@ -296,7 +296,7 @@ HTML;
                 
                  function setPropsExt(key, value, propName) {
                     let currentProps = getProps(propName);
-                    let rowKey = key + '_' + value;
+                    let rowKey = key;
                     if (Object.keys(currentProps).indexOf(rowKey) === -1) {
                         currentProps[rowKey] = {
                           bitrix: key,
