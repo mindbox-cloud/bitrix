@@ -411,6 +411,7 @@ class YmlFeedMindbox
         foreach ($offersByProducts as &$offers) {
             foreach ($offers as $offerId => &$offer) {
                 $offer['prices'] = \CCatalogProduct::GetOptimalPrice($offer['ID']);
+                $offer['props'] = [];
                 if ($offer['prices']['RESULT_PRICE']['PRICE_TYPE_ID'] !== $basePriceId) {
                     $offer['prices']['RESULT_PRICE'] = Helper::getPriceByType($offer);
                 }
@@ -511,6 +512,10 @@ class YmlFeedMindbox
             $props = self::getProps($addProps, Options::getModuleOption("CATALOG_IBLOCK_ID"), self::getProdsIds($prodsInfo));
             foreach ($props as $elementId => $prop) {
                 $prodsInfo[$elementId]['props'] = $prop;
+            }
+        } else {
+            foreach ($prodsInfo as $elementId => $product) {
+                $prodsInfo[$elementId]['props'] = [];
             }
         }
 
