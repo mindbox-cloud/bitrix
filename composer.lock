@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0b97d4b57996c5933d0c8df43f75a11c",
+    "content-hash": "4dbf5a7dec0af61b7b033afaf021a5b3",
     "packages": [
         {
             "name": "mindbox/sdk",
