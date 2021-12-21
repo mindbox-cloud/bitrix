@@ -745,6 +745,35 @@ class Event
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
+        if (!$isNewOrder) {
+            $existTransaction = Transaction::existOpenTransaction($order->getId());
+
+            if (!empty($existTransaction)) {
+                try {
+                    $orderDTO = new OrderCreateRequestDTO();
+                    $orderDTO->setField('order', [
+                        'transaction' => [
+                            'ids' => [
+                                'externalId' => $existTransaction['transaction']
+                            ]
+                        ]
+                    ]);
+
+                    $mindbox->order()->rollbackOrderTransaction(
+                        $orderDTO,
+                        Options::getOperationName('rollbackOrderTransactionAdmin')
+                    )->sendRequest();
+
+                    $request = $mindbox->order()->getRequest();
+                    // закрываем транзакцию
+                    Transaction::closeTransaction($existTransaction['id']);
+
+                } catch (\Exception $exception) {
+
+                }
+            }
+        }
+
         if (!$isNewOrder && !Helper::isMindboxOrder($order->getId())) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
@@ -1313,7 +1342,7 @@ class Event
                     }
                 }
 
-                Transaction::getInstance()->clear();
+                Transaction::getInstance()->close();
 
                 unset($_SESSION['PROMO_CODE_AMOUNT']);
                 unset($_SESSION['PROMO_CODE']);
