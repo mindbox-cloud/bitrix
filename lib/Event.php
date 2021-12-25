@@ -882,7 +882,7 @@ class Event
             'lines'        => $lines,
             'transaction'  => [
                 'ids' => [
-                    'externalId' => Helper::getTransactionId()
+                    'externalId' => Helper::getTransactionId($shopOrderId)
                 ]
             ],
             'deliveryCost' => $order->getDeliveryPrice(),
@@ -984,7 +984,7 @@ class Event
                     $orderDTO->setField('order', [
                         'transaction' => [
                             'ids' => [
-                                'externalId' => Helper::getTransactionId()
+                                'externalId' => Helper::getTransactionId($shopOrderId)
                             ]
                         ]
                     ]);
@@ -1048,7 +1048,7 @@ class Event
                 $orderDTO->setField('order', [
                     'transaction' => [
                         'ids' => [
-                            'externalId' => Helper::getTransactionId()
+                            'externalId' => Helper::getTransactionId($shopOrderId)
                         ]
                     ]
                 ]);
@@ -1198,7 +1198,7 @@ class Event
                         $orderDTO->setField('order', [
                             'transaction' => [
                                 'ids' => [
-                                    'externalId' => Helper::getTransactionId()
+                                    'externalId' => Helper::getTransactionId($order->getId())
                                 ]
                             ]
                         ]);
@@ -1304,7 +1304,7 @@ class Event
                     ],
                     'transaction' => [
                         'ids' => [
-                            "externalId" => Helper::getTransactionId()
+                            "externalId" => Helper::getTransactionId($order->getId())
                         ]
                     ]
                 ]);
