@@ -12,7 +12,7 @@ use \Bitrix\Main\Data\Cache;
 
 class CalculateProductData
 {
-    const CACHE_TIME = 0;
+    const CACHE_TIME = 600;
     const CACHE_PREFIX = '';
     const MAX_CHUNK_VALUE = 50;
     protected $mindbox = null;
