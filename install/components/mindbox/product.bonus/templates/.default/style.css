@@ -1,0 +1,9 @@
+.mindbox-product-bonus {
+    font-size: 13px;
+    text-align: center;
+}
+
+.mindbox-product-bonus__value {
+    font-weight: bold;
+    color: #62be1f;
+}

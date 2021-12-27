@@ -26,6 +26,7 @@ use Mindbox\DTO\V2\Requests\LineRequestDTO;
 use Mindbox\DTO\V2\Requests\OrderCreateRequestDTO;
 use Mindbox\DTO\V2\Requests\OrderUpdateRequestDTO;
 use MongoDB\Driver\Exception\Exception;
+use Mindbox\Components\CalculateProductData;
 
 Loader::includeModule('catalog');
 Loader::includeModule('sale');
@@ -2479,5 +2480,22 @@ class Event
                 Asset::getInstance()->addString($jsString, AssetLocation::AFTER_JS);
             }
         }
+    }
+
+    /**
+     * @bitrixModuleId main
+     * @bitrixEventCode OnEndBufferContent
+     * @langEventName OnEndBufferContent
+     * @param $content
+     */
+    public function OnEndBufferContentHandler(&$content)
+    {
+        if (\CModule::IncludeModule('intensa.logger')) {
+            $logger = new \Intensa\Logger\ILog('OnEndBufferContentHandler');
+        }
+
+        //$logger->log('content', $content);
+        $calc = new CalculateProductData();
+        $calc->handle($content);
     }
 }

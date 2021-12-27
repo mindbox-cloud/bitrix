@@ -133,3 +133,18 @@ $(document).ready(function () {
     func.jsTimer();
     func.jsClearField();
 });
+
+BX.ready(function(){
+    let productPriceItems = document.querySelectorAll('.mindbox-product-price');
+
+    if (productPriceItems.length > 0) {
+        productPriceItems.forEach(function (item) {
+            item.addEventListener("changeProductPrice", function(event) { // (1)
+                console.log(event.target)
+                console.log('1111111')
+                console.log(event.detail)
+            });
+        });
+    }
+
+});
