@@ -134,8 +134,8 @@ class AuthSms extends CBitrixComponent implements Controllerable
                 $errors = $this->parseValidtaionErrors($errors);
 
                 return [
-                        'type'   => 'validation errors',
-                        'errors' => $errors
+                        'type'   => 'error',
+                        'errors' => implode(',', array_column($errors, 'message'))
                 ];
             }
 
