@@ -705,9 +705,9 @@ class Helper
                     if ($arDiscount['MODULE_ID'] === 'sale') {
                         if (isset($arActionDescrData['VALUE_TYPE'])) {
                             switch ($arActionDescrData['VALUE_TYPE']) {
-                                case \Bitrix\Sale\Discount\Actions::VALUE_TYPE_PERCENT:
+                                case 'P':
                                     // процент скидки на товар
-                                    $percent = $arActionDescrData['VALUE_ACTION'] == \Bitrix\Sale\Discount\Actions::ACTION_TYPE_DISCOUNT
+                                    $percent = $arActionDescrData['VALUE_ACTION'] == 'D'
                                             ? $arActionDescrData['VALUE']
                                             : 100 + $arActionDescrData['VALUE'];
 
@@ -719,17 +719,17 @@ class Helper
                                     );
 
                                     break;
-                                case \Bitrix\Sale\Discount\Actions::VALUE_TYPE_FIX:
+                                case 'F':
                                     // фиксированная скидка на товар
                                     $discountPrice = (float) $arActionDescrData['VALUE'];
                                     break;
-                                case \Bitrix\Sale\Discount\Actions::VALUE_TYPE_SUMM:
+                                case 'S':
                                     // установка стоимости на общую сумму товаров
                                     $discountPrice = \Bitrix\Catalog\Product\Price\Calculation::roundPrecision(
                                             $arActionDescrData['VALUE'] / $basketItem->getQuantity()
                                     );
                                     break;
-                                case \Bitrix\Sale\Discount\Actions::VALUE_TYPE_CLOSEOUT:
+                                case 'C':
                                     // установка стоимости на каждый товар
                                     $discountPrice = (float) $arActionDescrData['VALUE'];
                                     break;
