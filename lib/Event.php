@@ -18,6 +18,7 @@ use Bitrix\Sale;
 use CUser;
 use DateTime;
 use DateTimeZone;
+use Mindbox\Discount\DeliveryDiscountEntity;
 use Mindbox\DTO\DTO;
 use Mindbox\DTO\V2\Requests\DiscountRequestDTO;
 use Mindbox\DTO\V3\Requests\CustomerRequestDTO;
@@ -1664,6 +1665,14 @@ class Event
         self::finalAction($order, $basket);
     }
 
+    /**
+     * @param \Bitrix\Sale\Order $order
+     * @param $basket
+     * @return Main\EventResult|false
+     * @throws Main\ArgumentException
+     * @throws Main\ObjectPropertyException
+     * @throws Main\SystemException
+     */
     public static function finalAction($order, $basket)
     {
         if (Helper::isDeleteOrderAdminAction()) {
@@ -1843,6 +1852,28 @@ class Event
             ];
         }
 
+        $deliveryId = 0;
+        /** @var \Bitrix\Sale\Shipment $shipment */
+        foreach ($order->getShipmentCollection() as $shipment) {
+            if ($shipment->isSystem()) {
+                continue;
+            }
+            $deliveryPrice = $shipment->getField('BASE_PRICE_DELIVERY');
+            $deliveryId = $shipment->getDeliveryId();
+            break;
+        }
+
+        if ($deliveryPrice) {
+            $arOrder['deliveryCost']  = $deliveryPrice;
+        }
+
+        $arDelivery = \Bitrix\Sale\Delivery\Services\Table::getById($deliveryId)->fetch();
+        if (is_array($arDelivery) && !empty($arDelivery['NAME'])) {
+            $arOrder['customFields'] = [
+                    'deliveryType'  =>  $arDelivery['NAME']
+            ];
+        }
+
         $preorder->setField('order', $arOrder);
 
         $customer = new CustomerRequestDTO();
@@ -1877,7 +1908,6 @@ class Event
                 return new Main\EventResult(Main\EventResult::SUCCESS);
             }
 
-
             if (Helper::isAdminSection()) {
                 // @info функционал для процессинга в админке. Передаем OnBeforeOrderSaved ошибку применения купона
                 $couponsInfo = reset($preorderInfo->getField('couponsInfo'));
@@ -1896,8 +1926,6 @@ class Event
                 }
             }
 
-
-
             $_SESSION['TOTAL_PRICE'] = $preorderInfo->getField('totalPrice');
 
             $totalBonusPointInfo = $preorderInfo->getField('totalBonusPointsInfo');
@@ -1906,6 +1934,35 @@ class Event
                 if (!empty($totalBonusPointInfo) && $totalBonusPointInfo['availableAmountForCurrentOrder'] < $_SESSION['PAY_BONUSES']) {
                     $_SESSION['PAY_BONUSES'] = $totalBonusPointInfo['availableAmountForCurrentOrder'];
                 }
+            }
+
+            $mindboxDeliveryPrice = $preorderInfo->getField('deliveryCost');
+
+            if ($USER->IsAuthorized() && (int)$order->getField('USER_ID') > 0) {
+                $fUserId = \Bitrix\Sale\Fuser::getIdByUserId((int)$order->getField('USER_ID'));
+            } elseif (!$USER->IsAuthorized()) {
+                $fUserId = \Bitrix\Sale\Fuser::getId();
+            }
+
+            $mindboxDiscountParams = [];
+            $mindboxDiscountParams['UF_FUSER_ID'] = $fUserId ? $fUserId : null;
+            $mindboxDiscountParams['UF_DELIVERY_ID'] = $deliveryId ? $deliveryId : null;
+            $mindboxDiscountParams['UF_ORDER_ID'] = $order->getId() > 0 ? $order->getId() : null;
+
+            $deliveryDiscountEntity = new DeliveryDiscountEntity();
+
+            if (isset($mindboxDeliveryPrice)
+                    && ($findRow = $deliveryDiscountEntity->getRowByFilter($mindboxDiscountParams))
+            ) {
+                $deliveryDiscountEntity->update((int)$findRow['ID'], [
+                    'UF_DISCOUNTED_PRICE' => $mindboxDeliveryPrice
+                ]);
+            } elseif (isset($mindboxDeliveryPrice)) {
+                $deliveryDiscountEntity->add(array_merge([
+                    'UF_DISCOUNTED_PRICE' => $mindboxDeliveryPrice
+                ], $mindboxDiscountParams));
+            } else {
+                $deliveryDiscountEntity->deleteByFilter($mindboxDiscountParams);
             }
 
             $discounts = $preorderInfo->getDiscountsInfo();
