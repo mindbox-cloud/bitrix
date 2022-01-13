@@ -33,7 +33,7 @@ class CalculateProductData
         $searchItems = $this->searchPlaceholder($content);
 
         if (\CModule::IncludeModule('intensa.logger')) {
-            $logger = new ILog('mb_matches3');
+            $logger = new ILog('mb_matches4');
         }
 
         //$logger->log('$matches', $searchItems);
@@ -48,7 +48,7 @@ class CalculateProductData
             }
 
             $requestProductList = $this->getCalculateProductsData($requestProductList);
-            //$logger->log('$requestProductList', $requestProductList);
+            $logger->log('$requestProductList', $requestProductList);
 
             // получили данные и делаем замену в контенте
             $logger->log('$replaceValue', $requestProductList);
@@ -81,6 +81,12 @@ class CalculateProductData
         } else {
             $mindboxResponse = $this->requestOperation($productsList);
         }
+
+        if (\CModule::IncludeModule('intensa.logger')) {
+            $logger = new ILog('qwe-qwe');
+        }
+
+        $logger->log('$mindboxResponse', $mindboxResponse);
 
         if (!empty($mindboxResponse)) {
             foreach ($mindboxResponse as $productId => $responseItem) {
