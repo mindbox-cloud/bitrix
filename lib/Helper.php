@@ -945,8 +945,10 @@ class Helper
         $lines = [];
         foreach ($arLines as $arLine) {
             $product = new ProductRequestDTO();
-            $product->setId(Options::getModuleOption('EXTERNAL_SYSTEM'),
-                Helper::getElementCode($arLine['basketItem']->getProductId()));
+            $product->setId(
+                Options::getModuleOption('EXTERNAL_SYSTEM'),
+                Helper::getElementCode($arLine['basketItem']->getProductId())
+            );
             $line = new ProductListItemRequestDTO();
             $line->setProduct($product);
             $line->setCount($arLine['quantity']);
@@ -1093,8 +1095,10 @@ class Helper
         $currentPage = $APPLICATION->GetCurPage();
         $request = \Bitrix\Main\Context::getCurrent()->getRequest();
 
-        return ($request->isAdminSection() || strpos($currentPage,
-                '/bitrix/admin') !== false || strpos($_SERVER['HTTP_REFERER'], '/bitrix/admin') !== false);
+        return ($request->isAdminSection() || strpos(
+            $currentPage,
+            '/bitrix/admin'
+        ) !== false || strpos($_SERVER['HTTP_REFERER'], '/bitrix/admin') !== false);
     }
 
     public static function checkBasketItem($basketItem)
@@ -1436,7 +1440,6 @@ class Helper
 
             return $response->getResult()->getOrder();
         } catch (Exceptions\MindboxClientException $e) {
-
         }
 
         return false;
