@@ -1096,9 +1096,9 @@ class Helper
         $request = \Bitrix\Main\Context::getCurrent()->getRequest();
 
         return ($request->isAdminSection() || strpos(
-            $currentPage,
-            '/bitrix/admin'
-        ) !== false || strpos($_SERVER['HTTP_REFERER'], '/bitrix/admin') !== false);
+                $currentPage,
+                '/bitrix/admin'
+            ) !== false || strpos($_SERVER['HTTP_REFERER'], '/bitrix/admin') !== false);
     }
 
     public static function checkBasketItem($basketItem)
@@ -1619,15 +1619,15 @@ class Helper
             return;
         }
         $arStructure = Helper::dirToArray($defaultOptions['LOG_PATH'] . DIRECTORY_SEPARATOR . 'mindbox');
-        $logAccessFilesDir = array_merge(
-            glob(__DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . '.htaccess'),
-            glob(__DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . 'index.php')
-        );
-        if (!empty($arStructure) && !empty($logAccessFilesDir)) {
+        $logAccessFiles = [
+            __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . '.htaccess',
+            __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . 'index.php'
+        ];
+        if (!empty($arStructure) && !empty($logAccessFiles)) {
             foreach ($arStructure as $dirYear) {
                 foreach ($dirYear as $dirMonth) {
                     foreach ($dirMonth as $dirDay => $value) {
-                        foreach ($logAccessFilesDir as $file) {
+                        foreach ($logAccessFiles as $file) {
                             copy($file, $dirDay . DIRECTORY_SEPARATOR . pathinfo($file)['basename']);
                         }
                     }
