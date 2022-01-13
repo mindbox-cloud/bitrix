@@ -60,6 +60,8 @@ if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
             )
         );
     }
+
+    Helper::setLogAccess($defaultOptions);
 }
 
 IncludeModuleLangFile($_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/options.php');

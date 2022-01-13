@@ -189,8 +189,8 @@ class Helper
 
         $fields['subscriptions'] = [
             [
-                'brand' => Options::getModuleOption('BRAND'),
-                'isSubscribed'   => true,
+                'brand'        => Options::getModuleOption('BRAND'),
+                'isSubscribed' => true,
             ]
         ];
 
@@ -410,23 +410,23 @@ class Helper
 
         return $offerProps;
     }
-    
+
     public static function getGroups()
     {
         $arGroup = [];
-        
+
         $iterator = \Bitrix\Main\GroupTable::getList([
             'filter' => ['ACTIVE' => 'Y'],
             'select' => ['ID', 'NAME']
         ]);
-        
+
         while ($group = $iterator->fetch()) {
             $arGroup[$group['ID']] = $group['NAME'] . ' [' . $group['ID'] . ']';
         }
-        
+
         return $arGroup;
     }
-    
+
     /**
      * @return array
      */
@@ -632,11 +632,11 @@ class Helper
             }
         } else {
             $rsData = $entityDataClass::getList([
-                    "select" => ["*"],
-                    "order"  => ["ID" => "ASC"],
-                    "filter" => [
-                            "UF_BASKET_ID" => $lineId
-                    ]
+                "select" => ["*"],
+                "order"  => ["ID" => "ASC"],
+                "filter" => [
+                    "UF_BASKET_ID" => $lineId
+                ]
             ]);
 
             if ($arData = $rsData->fetch()) {
@@ -937,15 +937,16 @@ class Helper
                 continue;
             }
             $productId = $basketItem->getProductId();
-            $arLines[ $productId ]['basketItem'] = $basketItem;
-            $arLines[ $productId ]['quantity'] += $basketItem->getQuantity();
-            $arLines[ $productId ]['priceOfLine'] += $basketItem->getPrice();
+            $arLines[$productId]['basketItem'] = $basketItem;
+            $arLines[$productId]['quantity'] += $basketItem->getQuantity();
+            $arLines[$productId]['priceOfLine'] += $basketItem->getPrice();
         }
 
         $lines = [];
         foreach ($arLines as $arLine) {
             $product = new ProductRequestDTO();
-            $product->setId(Options::getModuleOption('EXTERNAL_SYSTEM'), Helper::getElementCode($arLine['basketItem']->getProductId()));
+            $product->setId(Options::getModuleOption('EXTERNAL_SYSTEM'),
+                Helper::getElementCode($arLine['basketItem']->getProductId()));
             $line = new ProductListItemRequestDTO();
             $line->setProduct($product);
             $line->setCount($arLine['quantity']);
@@ -1069,10 +1070,10 @@ class Helper
     public static function isNewOrder($values)
     {
         $isNewOrder = false;
-        if (array_key_exists('LID', $values) && empty($values['LID'])                       &&
-            array_key_exists('USER_ID', $values) && empty($values['USER_ID'])               &&
-            array_key_exists('PRICE', $values) && empty($values['PRICE'])                   &&
-            array_key_exists('DELIVERY_ID', $values) && empty($values['DELIVERY_ID'])       &&
+        if (array_key_exists('LID', $values) && empty($values['LID']) &&
+            array_key_exists('USER_ID', $values) && empty($values['USER_ID']) &&
+            array_key_exists('PRICE', $values) && empty($values['PRICE']) &&
+            array_key_exists('DELIVERY_ID', $values) && empty($values['DELIVERY_ID']) &&
             array_key_exists('PAY_SYSTEM_ID', $values) && empty($values['PAY_SYSTEM_ID'])
         ) {
             $isNewOrder = true;
@@ -1092,7 +1093,8 @@ class Helper
         $currentPage = $APPLICATION->GetCurPage();
         $request = \Bitrix\Main\Context::getCurrent()->getRequest();
 
-        return  ($request->isAdminSection() || strpos($currentPage, '/bitrix/admin') !== false || strpos($_SERVER['HTTP_REFERER'], '/bitrix/admin') !== false);
+        return ($request->isAdminSection() || strpos($currentPage,
+                '/bitrix/admin') !== false || strpos($_SERVER['HTTP_REFERER'], '/bitrix/admin') !== false);
     }
 
     public static function checkBasketItem($basketItem)
@@ -1176,7 +1178,7 @@ class Helper
         if ((int)$orderId > 0) {
             $mindbox = static::mindbox();
 
-            $order =  \Bitrix\Sale\Order::load($orderId);
+            $order = \Bitrix\Sale\Order::load($orderId);
             $basket = $order->getBasket();
             $basketItems = $basket->getBasketItems();
             $orderPersonType = $order->getPersonTypeId();
@@ -1293,7 +1295,7 @@ class Helper
                 try {
                     $preorderInfo = $mindbox->order()->calculateAuthorizedCart(
                         $preorder,
-                        Options::getOperationName('calculateAuthorizedCart' . (Helper::isAdminSection()? 'Admin':''))
+                        Options::getOperationName('calculateAuthorizedCart' . (Helper::isAdminSection() ? 'Admin' : ''))
                     )->sendRequest()->getResult()->getField('order');
                     if (!empty($preorderInfo) && is_object($preorderInfo)) {
                         return $preorderInfo;
@@ -1321,7 +1323,7 @@ class Helper
 
         return $return;
     }
-    
+
     /**
      * Получение значение свойства заказа по коду.
      * Функция с поддержкой версии Битрикс < 20.5
@@ -1352,7 +1354,7 @@ class Helper
 
         return $return;
     }
-    
+
     /**
      * Проверка, доступен ли данному пользователю процессинг
      *
@@ -1364,10 +1366,10 @@ class Helper
     {
         $return = false;
         $internalUserGroups = self::getInternalGroups();
-        
+
         if (!empty($userId) && (int)$userId > 0 && !empty($internalUserGroups)) {
             $userGroup = \Bitrix\Main\UserTable::getUserGroupIds($userId);
-            
+
             if (count(array_diff($userGroup, $internalUserGroups)) !== count($userGroup)) {
                 $return = true;
             }
@@ -1375,7 +1377,7 @@ class Helper
 
         return $return;
     }
-    
+
     /**
      * Возвращает группы пользователей, для которых процессинг не доступен
      * @return array|false|string[]
@@ -1384,11 +1386,11 @@ class Helper
     {
         $groups = [];
         $stringGroup = Options::getModuleOption('CONTINUE_USER_GROUPS');
-        
+
         if (!empty($stringGroup)) {
             $groups = explode(',', $stringGroup);
         }
-        
+
         return $groups;
     }
 
@@ -1420,13 +1422,13 @@ class Helper
         $request = self::mindbox()->getClientV3()->prepareRequest(
             'POST',
             'Offline.GetOrder',
-                new DTO([
-                    'order' => [
-                        'ids' => [
-                            Options::getModuleOption('TRANSACTION_ID') => $orderId
-                        ],
-                    ]
-                ])
+            new DTO([
+                'order' => [
+                    'ids' => [
+                        Options::getModuleOption('TRANSACTION_ID') => $orderId
+                    ],
+                ]
+            ])
         );
 
         try {
@@ -1465,7 +1467,7 @@ class Helper
         ];
 
         $statusResult = \Bitrix\Sale\Internals\StatusTable::getList([
-            'order' => ['SORT'=>'ASC'],
+            'order'  => ['SORT' => 'ASC'],
             'select' => ['ID'],
             'filter' => ['TYPE' => 'O']
         ]);
@@ -1482,10 +1484,10 @@ class Helper
     {
         return [
             'CheckedOut' => 'CheckedOut',
-            'Delivered' => 'Delivered',
-            'Paid' => 'Paid',
-            'Cancelled' => 'Cancelled',
-            'Returned' => 'Returned'
+            'Delivered'  => 'Delivered',
+            'Paid'       => 'Paid',
+            'Cancelled'  => 'Cancelled',
+            'Returned'   => 'Returned'
         ];
     }
 
@@ -1530,11 +1532,11 @@ class Helper
 
             foreach ($basketItems as $basketItem) {
                 $lines[] = [
-                    'lineId' => $basketItem->getId(),
-                    'quantity' => $basketItem->getQuantity(),
+                    'lineId'           => $basketItem->getId(),
+                    'quantity'         => $basketItem->getQuantity(),
                     'basePricePerItem' => $basketItem->getPrice(),
-                    'status' => $mindboxStatusCode,
-                    'product' => [
+                    'status'           => $mindboxStatusCode,
+                    'product'          => [
                         'ids' => [
                             Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getElementCode($basketItem->getProductId())
                         ]
@@ -1546,7 +1548,7 @@ class Helper
 
         $mindbox = Options::getConfig();
         $requestFields = [
-            'ids' => [
+            'ids'   => [
                 Options::getModuleOption('TRANSACTION_ID') => $orderId
             ],
             'lines' => $lines
@@ -1562,7 +1564,7 @@ class Helper
                     Options::getModuleOption('WEBSITE_ID') => $orderUserId
                 ],
             ],
-            'order' => $requestFields
+            'order'    => $requestFields
         ];
 
         $request = $mindbox->getClientV3()->prepareRequest(
@@ -1591,7 +1593,7 @@ class Helper
                     Options::getOperationName('updateOrderStatus'),
                     new DTO([
                         'orderLinesStatus' => $mindboxStatusCode,
-                        'order' => [
+                        'order'            => [
                             'ids' => [
                                 'websiteId' => $orderId
                             ]
@@ -1606,5 +1608,43 @@ class Helper
                 }
             }
         }
+    }
+
+    public static function setLogAccess($defaultOptions)
+    {
+        if (empty($defaultOptions['LOG_PATH'])) {
+            return;
+        }
+        $arStructure = Helper::dirToArray($defaultOptions['LOG_PATH'] . DIRECTORY_SEPARATOR . 'mindbox');
+        $logAccessFilesDir = array_merge(
+            glob(__DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . '.htaccess'),
+            glob(__DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . 'index.php')
+        );
+        if (!empty($arStructure) && !empty($logAccessFilesDir)) {
+            foreach ($arStructure as $dirYear) {
+                foreach ($dirYear as $dirMonth) {
+                    foreach ($dirMonth as $dirDay => $value) {
+                        foreach ($logAccessFilesDir as $file) {
+                            copy($file, $dirDay . DIRECTORY_SEPARATOR . pathinfo($file)['basename']);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public static function dirToArray($dir)
+    {
+        $result = [];
+        $cdir = scandir($dir);
+        foreach ($cdir as $value) {
+            if (!in_array($value, [".", ".."])) {
+                if (is_dir($dir . DIRECTORY_SEPARATOR . $value)) {
+                    $result[$dir . DIRECTORY_SEPARATOR . $value] = Helper::dirToArray($dir . DIRECTORY_SEPARATOR . $value);
+                }
+            }
+        }
+
+        return $result;
     }
 }
