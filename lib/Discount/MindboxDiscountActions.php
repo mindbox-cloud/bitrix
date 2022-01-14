@@ -36,9 +36,9 @@ class MindboxDiscountActions extends \Bitrix\Sale\Discount\Actions
         $entityClass = $entity->getDataClass();
 
         $filter = [];
-        $filter['UF_DELIVERY_ID'] = (int) $arOrder['DELIVERY_ID'];
+        $filter['UF_DELIVERY_ID'] = (int)$arOrder['DELIVERY_ID'];
 
-        if ((int)$arOrder['ID'] >= 0) {
+        if ((int)$arOrder['ID'] > 0) {
             $filter['UF_ORDER_ID'] = (int)$arOrder['ID'];
         } else {
             if ((int)$arOrder['USER_ID'] > 0) {
