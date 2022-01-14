@@ -1936,6 +1936,7 @@ class Event
                 }
             }
 
+            /** функционал применения скидки на доставку Mindbox  */
             $mindboxDeliveryPrice = $preorderInfo->getField('deliveryCost');
 
             if ($USER->IsAuthorized() && (int)$order->getField('USER_ID') > 0) {

@@ -3,6 +3,7 @@
 namespace Mindbox\Discount;
 
 use Bitrix\Main\Loader;
+use Bitrix\Main\ObjectNotFoundException;
 use Bitrix\Main\SystemException;
 
 class DeliveryDiscountEntity
@@ -30,7 +31,7 @@ class DeliveryDiscountEntity
             if ($hlblock) {
                 $this->entity = \Bitrix\Highloadblock\HighloadBlockTable::compileEntity($hlblock);
             } else {
-                // exception
+                throw new ObjectNotFoundException("Object DeliveryDiscountEntity not found");
             }
         }
 
@@ -47,7 +48,6 @@ class DeliveryDiscountEntity
         return  new \Bitrix\Main\Entity\Query($this->entity);
     }
 
-
     public function add(array $arFields)
     {
         return $this->getDataClass()::add($arFields);
@@ -61,7 +61,7 @@ class DeliveryDiscountEntity
     public function getRowByFilter(array $filter)
     {
         if (empty(array_values($filter))) {
-            return;
+            return false;
         }
 
         $iterator = $this->getDataClass()::getList([
