@@ -47,7 +47,7 @@ if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
         }
     }
 
-    $defaultOptions = \Bitrix\Main\Config\Option::getDefaults("mindbox.marketing");
+
     $trackerJsFilename = $_SERVER["DOCUMENT_ROOT"] . $defaultOptions['TRACKER_JS_FILENAME'];
     $trackerJsFilenameOrig = $_SERVER["DOCUMENT_ROOT"] . $defaultOptions['TRACKER_JS_FILENAME_ORIGINAL'];
     if (file_exists($trackerJsFilenameOrig)) {
@@ -61,7 +61,7 @@ if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
         );
     }
 
-    Helper::setLogAccess($defaultOptions);
+    Helper::setLogAccess();
 }
 
 IncludeModuleLangFile($_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/options.php');

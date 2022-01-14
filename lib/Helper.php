@@ -1613,27 +1613,39 @@ class Helper
         }
     }
 
-    public static function setLogAccess($defaultOptions)
+    public static function setLogAccess()
     {
-        if (empty($defaultOptions['LOG_PATH'])) {
-            return;
-        }
-        $arStructure = Helper::dirToArray($defaultOptions['LOG_PATH'] . DIRECTORY_SEPARATOR . 'mindbox');
+        $logPath = Options::getModuleOption('LOG_PATH');
+
         $logAccessFiles = [
             __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . '.htaccess',
             __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . 'index.php'
         ];
-        if (!empty($arStructure) && !empty($logAccessFiles)) {
+
+        if (empty($logPath)) {
+            return "\Mindbox\Helper::setLogAccess();";
+        }
+
+        $arStructure = Helper::dirToArray($logPath . DIRECTORY_SEPARATOR . 'mindbox');
+
+        if (!empty($arStructure)) {
             foreach ($arStructure as $dirYear) {
                 foreach ($dirYear as $dirMonth) {
                     foreach ($dirMonth as $dirDay => $value) {
                         foreach ($logAccessFiles as $file) {
-                            copy($file, $dirDay . DIRECTORY_SEPARATOR . pathinfo($file)['basename']);
+                            $sourceFileName = $file;
+                            $destinationFileName = $dirDay . DIRECTORY_SEPARATOR . pathinfo($file)['basename'];
+
+                            if (!file_exists($destinationFileName)) {
+                                copy($sourceFileName, $destinationFileName);
+                            }
                         }
                     }
                 }
             }
         }
+
+        return "\Mindbox\Helper::setLogAccess();";
     }
 
     public static function dirToArray($dir)
