@@ -14,6 +14,8 @@ class MindboxDiscountActions extends \Bitrix\Sale\Discount\Actions
      */
     public static function applyToDelivery(array &$arOrder, array $action)
     {
+        global $USER;
+
         if (!Loader::includeModule('highloadblock')) {
             return;
         }
@@ -41,8 +43,10 @@ class MindboxDiscountActions extends \Bitrix\Sale\Discount\Actions
         if ((int)$arOrder['ID'] > 0) {
             $filter['UF_ORDER_ID'] = (int)$arOrder['ID'];
         } else {
-            if ((int)$arOrder['USER_ID'] > 0) {
+            if ($USER->IsAuthorized() && (int)$arOrder['USER_ID'] > 0) {
                 $fuserId = Fuser::getIdByUserId((int)$arOrder['USER_ID']);
+            } elseif ($USER->IsAuthorized() && (int)$USER->GetID() > 0) {
+                $fuserId = Fuser::getIdByUserId((int)$USER->GetID());
             } else {
                 $fuserId = Fuser::getId();
             }
@@ -56,7 +60,7 @@ class MindboxDiscountActions extends \Bitrix\Sale\Discount\Actions
 
         $discount = $entityClass::getList([
                 'filter' => $filter,
-                'select' => ['*'],
+                'select' => ['UF_DISCOUNTED_PRICE'],
                 'limit' => 1
         ])->fetch();
 
