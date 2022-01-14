@@ -696,6 +696,8 @@ class Helper
             foreach ($arActualAction[$basketItem->getId()] as $discountId) {
                 $discountPrice = 0;
                 $externalId = '';
+                $quantity = $basketItem->getQuantity();
+
                 if (array_key_exists($discountId, $arDiscountList)) {
                     $arDiscount = $arDiscountList[$discountId];
                     $arActionDescrData = $arDiscount['ACTIONS_DESCR_DATA']['BASKET'][0];
@@ -726,10 +728,12 @@ class Helper
                                 case \Bitrix\Sale\Discount\Actions::VALUE_TYPE_SUMM:
                                     // установка стоимости на общую сумму товаров
                                     $discountPrice = \Bitrix\Catalog\Product\Price\Calculation::roundPrecision(
-                                            $arActionDescrData['VALUE'] / $basketItem->getQuantity()
+                                            $arActionDescrData['VALUE']
                                     );
+
+                                    $quantity = 1;
                                     break;
-                                case \Bitrix\Sale\Discount\Actions::VALUE_TYPE_CLOSEOUT:
+                                case 'C':
                                     // установка стоимости на каждый товар
                                     $discountPrice = (float) $arActionDescrData['VALUE'];
                                     break;
@@ -816,7 +820,7 @@ class Helper
                                     'externalId' => $externalId
                                 ],
                             ],
-                            'amount'    => roundEx($discountPrice * $basketItem->getQuantity(), 2)
+                            'amount'    => roundEx($discountPrice * $quantity, 2)
                         ];
                     }
                 }
