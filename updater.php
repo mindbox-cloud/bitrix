@@ -7,14 +7,12 @@ if (IsModuleInstalled('mindbox.marketing')) {
         $updater->CopyFiles("install/components", "components/");
     }
 
-    $objEventController = new \Mindbox\EventController();
-    $objEventController->installEvents();
-    $objEventController->revisionHandlers();
+    $updater->CopyFiles("lib", "modules/mindbox.marketing/lib");
 
-    if (!class_exists('\Mindbox\Installer\OrderPropertiesInstaller')) {
-        require_once __DIR__ . '/lib/Installer/OrderPropertiesInstaller.php';
+    try {
+        $transactionTable = new \Mindbox\DataBase\MindboxTransactionTable();
+        $transactionTable->createTable();
+    } catch (\Exception $e) {
+
     }
-
-    $objInstallerOrderProperty = new \Mindbox\Installer\OrderPropertiesInstaller();
-    $objInstallerOrderProperty->install();
 }
