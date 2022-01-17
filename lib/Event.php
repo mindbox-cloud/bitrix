@@ -2471,9 +2471,7 @@ class Event
      */
     public function OnSaleStatusOrderHandler($orderId, $newOrderStatus)
     {
-        if (Helper::isStandardMode()) {
-            Helper::updateMindboxOrderStatus($orderId, $newOrderStatus);
-        }
+        Helper::updateMindboxOrderStatus($orderId, $newOrderStatus);
     }
 
     /**
