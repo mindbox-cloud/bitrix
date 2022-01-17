@@ -14,6 +14,9 @@ class ProductPrice extends CBitrixComponent implements Controllerable
 {
     const PLACEHOLDER_PRICE_PREFIX = 'MINDBOX_PRICE';
     const PLACEHOLDER_OLD_PRICE_PREFIX = 'MINDBOX_OLD_PRICE';
+    protected $actions = [
+        'changeProduct'
+    ];
 
     public function __construct(CBitrixComponent $component = null)
     {
@@ -32,7 +35,7 @@ class ProductPrice extends CBitrixComponent implements Controllerable
 
     public function configureActions()
     {
-        //return Ajax::configureActions($this->actions);
+        return Ajax::configureActions($this->actions);
     }
 
     public function onPrepareComponentParams($arParams)

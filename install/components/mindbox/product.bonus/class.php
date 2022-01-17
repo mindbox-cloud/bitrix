@@ -13,6 +13,9 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) {
 class ProductBonus extends CBitrixComponent implements Controllerable
 {
     const PLACEHOLDER_PREFIX = 'MINDBOX_BONUS';
+    protected $actions = [
+        'changeProduct'
+    ];
 
     public function __construct(CBitrixComponent $component = null)
     {
