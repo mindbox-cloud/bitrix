@@ -858,7 +858,7 @@ class Event
                 ]
             ],
             'deliveryCost' => $order->getDeliveryPrice(),
-            'totalPrice'   => $_SESSION['TOTAL_PRICE'] + $order->getDeliveryPrice()
+            'totalPrice'   => $_SESSION['TOTAL_PRICE']
         ];
 
         if ($mindboxOrderStatus !== 'Cancelled') {
@@ -1102,6 +1102,36 @@ class Event
 
             if (!$isNew && !Helper::isMindboxOrder($order->getId())) {
                 return new Main\EventResult(Main\EventResult::SUCCESS);
+            }
+
+            // data update in HL for shipping discount
+            if ($isNew) {
+                $deliveryId = 0;
+                /** @var \Bitrix\Sale\Shipment $shipment */
+                foreach ($order->getShipmentCollection() as $shipment) {
+                    if ($shipment->isSystem()) {
+                        continue;
+                    }
+
+                    $deliveryId = $shipment->getDeliveryId();
+                    break;
+                }
+
+                $fUserId = \Bitrix\Sale\Fuser::getIdByUserId((int)$order->getField('USER_ID'));
+
+                $mindboxDiscountParams = [];
+                $mindboxDiscountParams['UF_DELIVERY_ID'] = $deliveryId;
+                $mindboxDiscountParams['UF_ORDER_ID'] = null;
+
+                $deliveryDiscountEntity = new DeliveryDiscountEntity();
+
+                if ($findRow = $deliveryDiscountEntity->getRowByFilter($mindboxDiscountParams)) {
+                    $deliveryDiscountEntity->update((int)$findRow['ID'], [
+                            'UF_ORDER_ID' => $order->getId()
+                    ]);
+                }
+
+                $deliveryDiscountEntity->deleteByFilter(array_merge($mindboxDiscountParams, ['UF_FUSER_ID' => $fUserId]));
             }
 
             /** @var \Bitrix\Sale\Basket $basket */
