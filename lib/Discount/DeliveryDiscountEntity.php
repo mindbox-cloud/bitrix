@@ -2,6 +2,7 @@
 
 namespace Mindbox\Discount;
 
+use Bitrix\Highloadblock\HighloadBlockTable;
 use Bitrix\Main\Loader;
 use Bitrix\Main\ObjectNotFoundException;
 use Bitrix\Main\SystemException;
@@ -22,14 +23,13 @@ class DeliveryDiscountEntity
         $this->setEntity();
     }
 
-
     protected function setEntity()
     {
         if ($this->entity === null) {
-            $hlblock = \Bitrix\Highloadblock\HighloadBlockTable::getList(['filter' => ['=NAME' => self::HL_NAME], 'limit' => 1])->fetch();
+            $hlblock = HighloadBlockTable::getList(['filter' => ['=NAME' => self::HL_NAME], 'limit' => 1])->fetch();
 
             if ($hlblock) {
-                $this->entity = \Bitrix\Highloadblock\HighloadBlockTable::compileEntity($hlblock);
+                $this->entity = HighloadBlockTable::compileEntity($hlblock);
             } else {
                 throw new ObjectNotFoundException("Object DeliveryDiscountEntity not found");
             }

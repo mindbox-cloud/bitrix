@@ -2553,6 +2553,24 @@ class Event
     }
 
     /**
+     * @bitrixModuleId sale
+     * @bitrixEventCode OnSaleUserDelete
+     * @langEventName OnSaleUserDelete
+     * @isSystem true
+     * @return void
+     */
+    public static function OnSaleUserDeleteHandler($id)
+    {
+        if (class_exists('\\Mindbox\\Discount\\DeliveryDiscountEntity')) {
+            $deliveryDiscountEntity = new \Mindbox\Discount\DeliveryDiscountEntity();
+            $deliveryDiscountEntity->deleteByFilter([
+                'UF_FUSER_ID' => $id,
+                'UF_ORDER_ID' => null
+            ]);
+        }
+    }
+
+    /**
      * @bitrixModuleId main
      * @bitrixEventCode OnAdminSaleOrderEdit
      * @langEventName OnAdminSaleOrderEdit
