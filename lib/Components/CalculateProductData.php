@@ -82,49 +82,55 @@ class CalculateProductData
             $mindboxResponse = $this->requestOperation($productsList);
         }
 
+        //echo '<pre>'; print_r($mindboxResponse); echo '</pre>';
         if (\CModule::IncludeModule('intensa.logger')) {
             $logger = new ILog('qwe-qwe');
         }
 
         $logger->log('$mindboxResponse', $mindboxResponse);
+        $result = [];
 
         if (!empty($mindboxResponse)) {
             foreach ($mindboxResponse as $productId => $responseItem) {
+                $productResponseData = [];
 
                 if (
                     !empty($responseItem['priceForCustomer'])
                     && $responseItem['priceForCustomer'] < $responseItem['basePricePerItem']
                 ) {
-                    $productsList[$productId]['MINDBOX_PRICE'] = $responseItem['priceForCustomer'];
-                    $productsList[$productId]['MINDBOX_OLD_PRICE'] = $responseItem['basePricePerItem'];
+                    $productResponseData['MINDBOX_PRICE'] = $responseItem['priceForCustomer'];
+                    $productResponseData['MINDBOX_OLD_PRICE'] = $responseItem['basePricePerItem'];
                 } else {
-                    $productsList[$productId]['MINDBOX_PRICE'] = $responseItem['basePricePerItem'];
+                    $productResponseData['MINDBOX_PRICE'] = $responseItem['basePricePerItem'];
                 }
 
                 if (!empty($responseItem['appliedPromotions'])) {
                     foreach ($responseItem['appliedPromotions'] as $promotion) {
+
                         if ($promotion['type'] === 'earnedBonusPoints' && !empty($promotion['amount'])) {
-                            $productsList[$productId]['MINDBOX_BONUS'] = $promotion['amount'];
+                            $productResponseData['MINDBOX_BONUS'] = $promotion['amount'];
                         }
                     }
                 }
 
-
-                $this->createProductCache($productId, $productsList[$productId]);
+                if (!empty($productResponseData)) {
+                    $this->createProductCache($productId, $productResponseData);
+                    $result[$productId] = $productResponseData;
+                }
             }
         }
 
-        return $productsList;
+        return $result;
     }
 
 
     protected static function getCacheId($productId)
     {
-        return self::CACHE_PREFIX . $productId . '1asswd';
+        return self::CACHE_PREFIX . $productId;
     }
 
     public function createProductCache($productId, $data)
-    {
+    {   //var_dump(self::getCacheId($productId));
         $cache = Cache::createInstance();
         $cache->initCache(self::CACHE_TIME, self::getCacheId($productId));
         $cache->startDataCache();
@@ -135,10 +141,10 @@ class CalculateProductData
     {
         $return = false;
         $cache = Cache::createInstance();
-
+        //var_dump(self::getCacheId($productId));
         if ($cache->initCache(self::CACHE_TIME, self::getCacheId($productId))) {
             $cacheVars = $cache->getVars();
-
+            //var_dump($cacheVars);
             if (!empty($cacheVars['data'])) {
                 $return = $cacheVars['data'];
             }
@@ -221,7 +227,7 @@ class CalculateProductData
 
             return $return;
         } catch (\Exception $e) {
-            //var_dump($e->getMessage());
+            var_dump($e->getMessage());
         }
     }
 

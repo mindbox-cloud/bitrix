@@ -80,6 +80,7 @@ class ProductBonus extends CBitrixComponent implements Controllerable
     public function executeComponent()
     {
         $productCache = \Mindbox\Components\CalculateProductData::getProductCache($this->arParams['ID']);
+
         if (!empty($productCache)) {
             $this->arResult['MINDBOX_BONUS'] = $productCache['MINDBOX_BONUS'];
         } else {
