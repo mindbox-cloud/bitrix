@@ -429,7 +429,7 @@ class YmlFeedMindbox
                     $offer['prices']['RESULT_PRICE'] = Helper::getPriceByType($offer);
                 }
 
-                if(array_key_exists($productId, self::$prodsInfo)) {
+                if (array_key_exists($productId, self::$prodsInfo)) {
                     $offer['ACTIVE'] = (self::$prodsInfo[$productId]['ACTIVE'] == 'N')? self::$prodsInfo[$productId]['ACTIVE']:$offer['ACTIVE'];
                     $offer['CATALOG_AVAILABLE'] = (self::$prodsInfo[$productId]['CATALOG_AVAILABLE'] == 'N')? self::$prodsInfo[$productId]['CATALOG_AVAILABLE']:$offer['CATALOG_AVAILABLE'];
                 }
