@@ -395,14 +395,6 @@ $arAllOptions['COMMON'][] = [
                 \Mindbox\Helper::getGroups(),
         ]
 ];
-
-// установка правила работы с корзиной для расчета скидки на товар
-$productCartRuleInstaller = new \Mindbox\Installer\ProductCartRuleInstaller();
-$productCartRuleInstaller->install();
-
-// установка правила работы с корзиной для расчета скидки на доставку
-$deliveryCartRuleInstaller = new \Mindbox\Installer\DeliveryCartRuleInstaller();
-$deliveryCartRuleInstaller->install();
 ?>
 
 <form name='minboxoptions' method='POST'
