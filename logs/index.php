@@ -9,6 +9,6 @@ if ($USER->IsAuthorized() && in_array(1, $arGroups)) {
     echo "<pre>".htmlspecialchars(file_get_contents($mindboxFilename)) . "</pre>";
     exit;
 } else {
-    ShowError("У вас нет прав для доступа к данному разделу.");
+    ShowMessage("РЈ РІР°СЃ РЅРµС‚ РїСЂР°РІ РґР»СЏ РґРѕСЃС‚СѓРїР° Рє РґР°РЅРЅРѕРјСѓ СЂР°Р·РґРµР»Сѓ.");
 }
 require $_SERVER['DOCUMENT_ROOT'] . '/bitrix/footer.php';
