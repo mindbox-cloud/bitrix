@@ -8,5 +8,7 @@ if ($USER->IsAuthorized() && in_array(1, $arGroups)) {
     $APPLICATION->RestartBuffer();
     echo "<pre>".htmlspecialchars(file_get_contents($mindboxFilename)) . "</pre>";
     exit;
+} else {
+    ShowError("” вас нет прав дл€ доступа к данному разделу.");
 }
 require $_SERVER['DOCUMENT_ROOT'] . '/bitrix/footer.php';
