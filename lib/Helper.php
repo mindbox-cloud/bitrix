@@ -1635,10 +1635,7 @@ class Helper
                         foreach ($logAccessFiles as $file) {
                             $sourceFileName = $file;
                             $destinationFileName = $dirDay . DIRECTORY_SEPARATOR . pathinfo($file)['basename'];
-
-                            if (!file_exists($destinationFileName)) {
-                                copy($sourceFileName, $destinationFileName);
-                            }
+                                @copy($sourceFileName, $destinationFileName);
                         }
                     }
                 }
