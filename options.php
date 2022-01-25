@@ -395,6 +395,15 @@ $arAllOptions['COMMON'][] = [
                 \Mindbox\Helper::getGroups(),
         ]
 ];
+
+if (isset($_REQUEST['test_install'])) {
+    $new = new \Mindbox\Installer\DeliveryCartRuleInstaller();
+    if ($_REQUEST['test_install'] === 'install') {
+        $new->install();
+    } elseif ($_REQUEST['test_install'] === 'uninstall') {
+        $new->unInstall();
+    }
+}
 ?>
 
 <form name='minboxoptions' method='POST'
