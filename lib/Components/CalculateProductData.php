@@ -18,7 +18,8 @@ class CalculateProductData
     protected $mindbox = null;
     protected $optionExternalSystem = '';
     protected $operationUnauthorized = '';
-    protected $placeholderRegEx = '/{{(MINDBOX_BONUS|MINDBOX_PRICE|MINDBOX_OLD_PRICE)\|(\d+)\|(\d+)}}/m';
+    //protected $placeholderRegEx = '/{{(MINDBOX_BONUS|MINDBOX_PRICE|MINDBOX_OLD_PRICE)\|(\d+)\|(\d+)}}/m';
+    protected $placeholderRegEx = '/{{(MINDBOX_BONUS|MINDBOX_PRICE|MINDBOX_OLD_PRICE)\|(.*)\|(.*)}}/m';
     protected $placeholdersList = [];
 
     public function __construct()
@@ -32,11 +33,6 @@ class CalculateProductData
     {
         $searchItems = $this->searchPlaceholder($content);
 
-        if (\CModule::IncludeModule('intensa.logger')) {
-            $logger = new ILog('mb_matches4');
-        }
-
-        //$logger->log('$matches', $searchItems);
         if (!empty($searchItems) && is_array($searchItems)) {
             $requestProductList = [];
 
@@ -48,10 +44,8 @@ class CalculateProductData
             }
 
             $requestProductList = $this->getCalculateProductsData($requestProductList);
-            $logger->log('$requestProductList', $requestProductList);
 
             // получили данные и делаем замену в контенте
-            $logger->log('$replaceValue', $requestProductList);
             foreach ($searchItems as $placeholderKey => $replaceItem) {
                 $replaceValue = '';
 
@@ -61,8 +55,7 @@ class CalculateProductData
                 ) {
                     $replaceValue = $requestProductList[$replaceItem['id']][$replaceItem['type']];
                 }
-                $logger->log('$placeholderKey', $placeholderKey);
-                $logger->log('$replaceValue', $replaceValue);
+
                 $content = str_replace($placeholderKey, $replaceValue, $content);
             }
         }
@@ -82,12 +75,6 @@ class CalculateProductData
             $mindboxResponse = $this->requestOperation($productsList);
         }
 
-        //echo '<pre>'; print_r($mindboxResponse); echo '</pre>';
-        if (\CModule::IncludeModule('intensa.logger')) {
-            $logger = new ILog('qwe-qwe');
-        }
-
-        $logger->log('$mindboxResponse', $mindboxResponse);
         $result = [];
 
         if (!empty($mindboxResponse)) {
@@ -130,7 +117,7 @@ class CalculateProductData
     }
 
     public function createProductCache($productId, $data)
-    {   //var_dump(self::getCacheId($productId));
+    {
         $cache = Cache::createInstance();
         $cache->initCache(self::CACHE_TIME, self::getCacheId($productId));
         $cache->startDataCache();
@@ -141,10 +128,10 @@ class CalculateProductData
     {
         $return = false;
         $cache = Cache::createInstance();
-        //var_dump(self::getCacheId($productId));
+
         if ($cache->initCache(self::CACHE_TIME, self::getCacheId($productId))) {
             $cacheVars = $cache->getVars();
-            //var_dump($cacheVars);
+
             if (!empty($cacheVars['data'])) {
                 $return = $cacheVars['data'];
             }
@@ -227,7 +214,6 @@ class CalculateProductData
 
             return $return;
         } catch (\Exception $e) {
-            var_dump($e->getMessage());
         }
     }
 

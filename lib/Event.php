@@ -2490,11 +2490,6 @@ class Event
      */
     public function OnEndBufferContentHandler(&$content)
     {
-        if (\CModule::IncludeModule('intensa.logger')) {
-            $logger = new \Intensa\Logger\ILog('OnEndBufferContentHandler');
-        }
-
-        //$logger->log('content', $content);
         $calc = new CalculateProductData();
         $calc->handle($content);
     }
