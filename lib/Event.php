@@ -1739,13 +1739,6 @@ class Event
             return $arFields;
         }
 
-        if (isset($_REQUEST['REGISTER']) ||
-                $_REQUEST['register'] == 'yes' ||
-                $_REQUEST['TYPE'] == 'REGISTRATION'
-        ) {
-            return $arFields;
-        }
-
         global $APPLICATION, $USER;
 
         if (!$USER || is_string($USER)) {
@@ -1883,8 +1876,6 @@ class Event
             return $arFields;
         }
 
-        $mindBoxId = $_SESSION['NEW_USER_MB_ID'];
-
         global $APPLICATION;
 
         if (Helper::isStandardMode()) {
@@ -1960,6 +1951,8 @@ class Event
                 return;
             }
         } else {
+            $mindBoxId = $arFields['UF_MINDBOX_ID'];
+
             if (!$mindBoxId) {
                 return;
             }
