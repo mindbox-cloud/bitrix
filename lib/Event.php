@@ -2306,12 +2306,12 @@ class Event
      * @param $arFields
      * @return false
      */
-    public function OnPrologHandler()
+    public static function OnPrologHandler()
     {
         $defaultOptions = \Bitrix\Main\Config\Option::getDefaults("mindbox.marketing");
         $jsString = "<script data-skip-moving=\"true\">\r\n" . file_get_contents($_SERVER['DOCUMENT_ROOT'] . $defaultOptions['TRACKER_JS_FILENAME']) . "</script>\r\n";
         $jsString .= '<script data-skip-moving="true" src="' . self::TRACKER_JS_FILENAME . '" async></script>';
-        Asset::getInstance()->addString($jsString);
+        Asset::getInstance()->addString($jsString, true);
     }
 
     /**
@@ -2497,13 +2497,13 @@ class Event
      * @langEventName OnAdminSaleOrderEdit
      * @return false
      */
-    public function OnAdminSaleOrderEditHandler()
+    public static function OnAdminSaleOrderEditHandler()
     {
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'loyalty') {
             $jsString = Helper::getAdditionalScriptForOrderEditPage();
 
             if (isset($jsString) && !empty($jsString)) {
-                Asset::getInstance()->addString($jsString, AssetLocation::AFTER_JS);
+                Asset::getInstance()->addString($jsString, true,AssetLocation::AFTER_JS);
             }
         }
     }
