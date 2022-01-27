@@ -67,6 +67,12 @@ class mindbox_marketing extends CModule
         $cartRuleInstaller = new \Mindbox\Installer\CartRulesInstaller();
         $cartRuleInstaller->install();
 
+        $orderPropertyInstaller = new \Mindbox\Installer\OrderPropertiesInstaller();
+        $orderPropertyInstaller->install();
+
+        $transactionTable = new \Mindbox\DataBase\MindboxTransactionTable();
+        $transactionTable->createTable();
+
         $GLOBALS["APPLICATION"]->IncludeAdminFile(GetMessage("MINDBOX_INSTALL_TITLE"), __DIR__ . "/step1.php");
     }
 
@@ -92,12 +98,13 @@ class mindbox_marketing extends CModule
                 $this->UnInstallDB();
                 $cartRuleInstaller = new \Mindbox\Installer\CartRulesInstaller();
                 $cartRuleInstaller->unInstall();
+                $orderPropertyInstaller = new \Mindbox\Installer\OrderPropertiesInstaller();
+                $orderPropertyInstaller->uninstall();
             }
 
             UnRegisterModule($this->MODULE_ID);
             $APPLICATION->IncludeAdminFile(GetMessage("MINDBOX_UNINSTALL_TITLE"), __DIR__ . "/unstep2.php");
         } else {
-            var_dump($request['step']);
             die();
         }
     }

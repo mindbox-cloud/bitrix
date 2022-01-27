@@ -25,7 +25,7 @@ function ShowParamsHTMLByarray($arParams)
     }
 }
 
-$mayEmptyProps = ['MINDBOX_CATALOG_PROPS', 'MINDBOX_CATALOG_OFFER_PROPS', 'MINDBOX_ENABLE_EVENT_LIST'];
+$mayEmptyProps = ['MINDBOX_CATALOG_PROPS', 'MINDBOX_CATALOG_OFFER_PROPS', 'MINDBOX_ENABLE_EVENT_LIST', 'MINDBOX_CONTINUE_USER_GROUPS'];
 
 if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
     if (empty($_POST['MINDBOX_PROTOCOL']) || $_POST['MINDBOX_PROTOCOL'] !== 'Y') {
@@ -287,6 +287,40 @@ $arAllOptions['ORDERS'] = [
         COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'ORDER_FIELDS_MATCH', '{}'),
         ['text']
     ],
+    getMessage('ORDER_STATUS_SETTINGS'),
+    [
+        'ORDER_STATUS_BITRIX_LIST',
+        getMessage('ORDER_STATUS_BITRIX_LIST'),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'ORDER_STATUS_BITRIX_LIST', ''),
+        [
+            'selectbox',
+            Helper::getBitrixOrderStatusList()
+        ]
+    ],
+    [
+        'ORDER_STATUS_MINDBOX_LIST',
+        getMessage('ORDER_STATUS_MINDBOX_LIST'),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'ORDER_STATUS_MINDBOX_LIST', ''),
+        [
+            'selectbox',
+            Helper::getMindboxOrderStatusList()
+        ]
+    ],
+    [
+        'ORDER_STATUS_MINDBOX_ADDITIONAL',
+        '',
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'ORDER_STATUS_MINDBOX_ADDITIONAL', ''),
+        ['text']
+    ],
+    ['', '', Helper::getAddOrderMatchButton('order_status_module_button_add'), ['statichtml']],
+    [
+        'ORDER_STATUS_FIELDS_MATCH',
+        '',
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'ORDER_STATUS_FIELDS_MATCH', '{}'),
+        ['text']
+    ],
+    ['', '', Helper::getOrderStatusMatchesTable(), ['statichtml']],
+
 ];
 
 if (!empty(COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', ''))) {
@@ -350,6 +384,17 @@ $arAllOptions['COMMON'][] = [
         $eventList,
     ]
 ];
+
+
+$arAllOptions['COMMON'][] = [
+        'CONTINUE_USER_GROUPS',
+        getMessage('CONTINUE_USER_GROUPS'),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'CONTINUE_USER_GROUPS', ''),
+        [
+                'multiselectbox',
+                \Mindbox\Helper::getGroups(),
+        ]
+];
 ?>
 
 <form name='minboxoptions' method='POST'
@@ -397,4 +442,81 @@ $arAllOptions['COMMON'][] = [
         border-color: #ccc !important;
         opacity: 0.4 !important;
     }
+    .mindbox-help--icon:before {
+        cursor: help;
+        content: url("/bitrix/js/main/core/images/hint.gif");
+        display: inline-block;
+        margin-right: 10px;
+        width: 5px;
+        height: 5px;
+    }
+    .mindbox-help--tooltip {
+        position: fixed;
+        padding: 10px 20px;
+        border: 1px solid #b3c9ce;
+        border-radius: 4px;
+        text-align: center;
+        font: italic 14px/1.3 sans-serif;
+        color: #333;
+        background: #fff;
+        max-width: 600px;
+        box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
+        display: none;
+    }
+    .mindbox-help--icon:hover ~ .mindbox-help--tooltip{
+        display: block;
+    }
+    select option:checked {
+        background-color: rgb(206, 206, 206);
+    }
 </style>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const settingForm = document.querySelector('form[name="minboxoptions"]');
+        const selectSettingGroup = settingForm.querySelector('select[name="MINDBOX_CONTINUE_USER_GROUPS[]"]');
+        const parrent_tr = selectSettingGroup.closest("tr");
+        const label = parrent_tr.firstElementChild;
+
+        label.classList.add('mindbox-help');
+
+        // Добавили иконку для тултипа
+        iconNode = document.createElement('span');
+        iconNode.className = 'mindbox-help--icon ';
+        label.prepend(iconNode);
+
+        iconNode.onmouseover =  function (event) {
+            const iconNode = event.target;
+            const label = iconNode.parentNode;
+
+            // Добавляем тултип
+            tooltipElem = document.createElement('div');
+            tooltipElem.className = 'mindbox-help--tooltip ';
+            tooltipElem.innerHTML = "<?= getMessage('CONTINUE_USER_GROUPS_TOOLTIP')?>";
+            label.append(tooltipElem);
+
+            // спозиционируем его сверху от аннотируемого элемента (top-center)
+            let coords = label.getBoundingClientRect();
+            let left = coords.left + (label.offsetWidth - tooltipElem.offsetWidth) / 2;
+            let top = coords.top - tooltipElem.offsetHeight - 5;
+
+            if (left < 0) {
+                left = 0; // не заезжать за левый край окна
+            }
+
+            if (top < 0) {
+                // если подсказка не помещается сверху, то отображать её снизу
+                top = coords.top + label.offsetHeight + 5;
+            }
+
+            tooltipElem.style.left = left + 'px';
+            tooltipElem.style.top = top + 'px';
+            tooltipElem.style.display = 'block';
+        }
+
+        iconNode.onmouseout = function (event) {
+            const iconNode = event.target;
+            const tooltipElem = iconNode.parentNode.querySelector('.mindbox-help--tooltip');
+            tooltipElem.remove();
+        }
+    });
+</script>

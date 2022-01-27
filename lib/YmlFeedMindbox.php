@@ -10,6 +10,8 @@ class YmlFeedMindbox
 
     private static $stepSize = 1000;
 
+    const DESCRIPTION_TEXT_LENGTH = 3000;
+
     public static function start($step = 1)
     {
         $step = (int) $step;
@@ -121,14 +123,14 @@ class YmlFeedMindbox
             $shop = $dom->createElement("shop");
             $shop = $root->appendChild($shop);
 
-            $name = htmlspecialchars(self::getSiteName(), ENT_XML1 | ENT_QUOTES);
+            $name = self::yandexText2xml(self::getSiteName());
             $siteName = $dom->createElement("name", $name);
             $shop->appendChild($siteName);
 
             $companyName = $dom->createElement("company", $name);
             $shop->appendChild($companyName);
 
-            $siteUrl = $dom->createElement("url", htmlspecialchars(self::getProtocol() . $_SERVER["SERVER_NAME"], ENT_XML1 | ENT_QUOTES));
+            $siteUrl = $dom->createElement("url", self::yandexText2xml(self::getProtocol() . $_SERVER["SERVER_NAME"]));
             $shop->appendChild($siteUrl);
 
             $currencies = $dom->createElement("currencies");
@@ -136,8 +138,8 @@ class YmlFeedMindbox
             $crncs = self::getCurrencies();
             while ($crnc = $crncs->Fetch()) {
                 $currencie = $dom->createElement("currency");
-                $currencie->setAttribute("id", htmlspecialchars($crnc["CURRENCY"], ENT_XML1 | ENT_QUOTES));
-                $currencie->setAttribute("rate", htmlspecialchars((int)$crnc["AMOUNT"], ENT_XML1 | ENT_QUOTES));
+                $currencie->setAttribute("id", self::yandexText2xml($crnc["CURRENCY"]));
+                $currencie->setAttribute("rate", self::yandexText2xml((int)$crnc["AMOUNT"]));
                 $currencies->appendChild($currencie);
             }
 
@@ -149,7 +151,7 @@ class YmlFeedMindbox
                 $cats[] = $cat;
             }
             foreach ($cats as $cat) {
-                $category = $dom->createElement("category", htmlspecialchars($cat["NAME"], ENT_XML1 | ENT_QUOTES));
+                $category = $dom->createElement("category", self::yandexText2xml($cat["NAME"]));
                 $category->setAttribute("id", Helper::getSectionCode($cat['ID']));
                 if (isset($cat["IBLOCK_SECTION_ID"]) && !empty($cat["IBLOCK_SECTION_ID"])) {
                     $parentId = (!empty($catId[$cat['IBLOCK_SECTION_ID']]) ? $catId[$cat['IBLOCK_SECTION_ID']] : $cat["IBLOCK_SECTION_ID"]);
@@ -183,23 +185,32 @@ class YmlFeedMindbox
                     unset($available);
                     $offer = $offers->appendChild($offer);
                     if (!empty($ofr["NAME"])) {
-                        $name = htmlspecialchars($ofr["NAME"], ENT_XML1 | ENT_QUOTES);
+                        $name = self::yandexText2xml($ofr["NAME"]);
                     } else {
-                        $name = htmlspecialchars($prods[$prodId]["NAME"], ENT_XML1 | ENT_QUOTES);
+                        $name = self::yandexText2xml($prods[$prodId]["NAME"]);
                     }
                     $offerName = $dom->createElement("name", $name);
                     $offer->appendChild($offerName);
-                    if (!empty($ofr["PREVIEW_TEXT"])) {
-                        $description = htmlspecialchars($ofr["PREVIEW_TEXT"], ENT_XML1 | ENT_QUOTES);
+                    if (!empty($ofr["~DETAIL_TEXT"])) {
+                        $description = TruncateText($ofr["~DETAIL_TEXT"], self::DESCRIPTION_TEXT_LENGTH);
                     } else {
-                        $description = htmlspecialchars($prods[$prodId]["PREVIEW_TEXT"], ENT_XML1 | ENT_QUOTES);
+                        $description = TruncateText($prods[$prodId]["~DETAIL_TEXT"], self::DESCRIPTION_TEXT_LENGTH);
+                    }
+                    if (empty($description)) {
+                        if (!empty($ofr["~PREVIEW_TEXT"])) {
+                            $description = TruncateText($ofr["~PREVIEW_TEXT"], self::DESCRIPTION_TEXT_LENGTH);
+                        } else {
+                            $description = TruncateText($prods[$prodId]["~PREVIEW_TEXT"], self::DESCRIPTION_TEXT_LENGTH);
+                        }
                     }
                     if (!empty($description)) {
-                        $offerDescription = $dom->createElement("description", $description);
+                        $cdataDescription = $dom->createCDATASection($description);
+                        $offerDescription = $dom->createElement("description");
+                        $offerDescription->appendChild($cdataDescription);
                         $offer->appendChild($offerDescription);
                     }
                     if ($prods[$prodId]["DETAIL_PAGE_URL"]) {
-                        $offerUrl = $dom->createElement("url", htmlspecialchars(self::getProtocol() . $_SERVER["SERVER_NAME"] . $prods[$prodId]["DETAIL_PAGE_URL"], ENT_XML1 | ENT_QUOTES));
+                        $offerUrl = $dom->createElement("url", self::yandexText2xml(self::getProtocol() . $_SERVER["SERVER_NAME"] . $prods[$prodId]["DETAIL_PAGE_URL"]));
                         $offer->appendChild($offerUrl);
                     }
 
@@ -212,7 +223,7 @@ class YmlFeedMindbox
                         $offerPrice = $dom->createElement("price", $ofr["CATALOG_PRICE_" . $basePriceId]);
                         $offer->appendChild($offerPrice);
                     }
-                    $offerCurrencyId = $dom->createElement("currencyId", htmlspecialchars($ofr["CATALOG_CURRENCY_" . $basePriceId], ENT_XML1 | ENT_QUOTES));
+                    $offerCurrencyId = $dom->createElement("currencyId", self::yandexText2xml($ofr["CATALOG_CURRENCY_" . $basePriceId]));
                     $offer->appendChild($offerCurrencyId);
 
                     // установка категорий у товара
@@ -232,7 +243,7 @@ class YmlFeedMindbox
                         $url = self::getPictureUrl($img);
                     }
                     if ($url) {
-                        $offerPicture = $dom->createElement("picture", htmlspecialchars(self::getProtocol() . $url, ENT_XML1 | ENT_QUOTES));
+                        $offerPicture = $dom->createElement("picture", self::yandexText2xml(self::getProtocol() . $url));
                         $offer->appendChild($offerPicture);
                     }
                     $ofr['props'] = array_merge($ofr['props'], $prods[$prodId]["props"]);
@@ -246,7 +257,7 @@ class YmlFeedMindbox
                                     $prop['CODE'] = $prop['XML_ID'];
                                 }
                                 $prop['CODE'] = str_replace('_', '', $prop['CODE']);
-                                $param = $dom->createElement('param', htmlspecialchars($prop['VALUE'], ENT_XML1 | ENT_QUOTES));
+                                $param = $dom->createElement('param', self::yandexText2xml($prop['VALUE']));
                                 $param->setAttribute("name", $prop["CODE"]);
 
                                 $offer->appendChild($param);
@@ -268,14 +279,14 @@ class YmlFeedMindbox
                 $offer->setAttribute("available", $available);
                 unset($available);
                 $offer = $offers->appendChild($offer);
-                $offerName = $dom->createElement("name", htmlspecialchars($prod["NAME"], ENT_XML1 | ENT_QUOTES));
+                $offerName = $dom->createElement("name", self::yandexText2xml($prod["NAME"]));
                 $offer->appendChild($offerName);
                 if (!empty($prod["PREVIEW_TEXT"])) {
-                    $offerDescription = $dom->createElement("description", htmlspecialchars($prod["PREVIEW_TEXT"], ENT_XML1 | ENT_QUOTES));
+                    $offerDescription = $dom->createElement("description", self::yandexText2xml($prod["PREVIEW_TEXT"]));
                     $offer->appendChild($offerDescription);
                 }
                 if ($prod["DETAIL_PAGE_URL"]) {
-                    $offerUrl = $dom->createElement("url", htmlspecialchars(self::getProtocol() . $_SERVER["SERVER_NAME"] . $prod["DETAIL_PAGE_URL"], ENT_XML1 | ENT_QUOTES));
+                    $offerUrl = $dom->createElement("url", self::yandexText2xml(self::getProtocol() . $_SERVER["SERVER_NAME"] . $prod["DETAIL_PAGE_URL"]));
                     $offer->appendChild($offerUrl);
                 }
 
@@ -288,7 +299,7 @@ class YmlFeedMindbox
                     $offerPrice = $dom->createElement("price", $prod["CATALOG_PRICE_" . $basePriceId]);
                     $offer->appendChild($offerPrice);
                 }
-                $offerCurrencyId = $dom->createElement("currencyId", htmlspecialchars($prod["CATALOG_CURRENCY_" . $basePriceId], ENT_XML1 | ENT_QUOTES));
+                $offerCurrencyId = $dom->createElement("currencyId", self::yandexText2xml($prod["CATALOG_CURRENCY_" . $basePriceId]));
                 $offer->appendChild($offerCurrencyId);
 
                 // установка категорий у товара
@@ -302,7 +313,7 @@ class YmlFeedMindbox
                 $img = $prod['DETAIL_PICTURE'] ?: $prod['PREVIEW_PICTURE'];
                 $url = self::getPictureUrl($img);
                 if ($url) {
-                    $offerPicture = $dom->createElement("picture", htmlspecialchars(self::getProtocol() . $url, ENT_XML1 | ENT_QUOTES));
+                    $offerPicture = $dom->createElement("picture", self::yandexText2xml(self::getProtocol() . $url));
                     $offer->appendChild($offerPicture);
                 }
                 if (!empty($prod['props'])) {
@@ -315,7 +326,7 @@ class YmlFeedMindbox
                                 $prop['CODE'] = $prop['XML_ID'];
                             }
                             $prop['CODE'] = str_replace('_', '', $prop['CODE']);
-                            $param = $dom->createElement('param', htmlspecialchars($prop['VALUE'], ENT_XML1 | ENT_QUOTES));
+                            $param = $dom->createElement('param', self::yandexText2xml($prop['VALUE']));
                             $param->setAttribute("name", $prop["CODE"]);
 
                             $offer->appendChild($param);
@@ -411,6 +422,7 @@ class YmlFeedMindbox
         foreach ($offersByProducts as &$offers) {
             foreach ($offers as $offerId => &$offer) {
                 $offer['prices'] = \CCatalogProduct::GetOptimalPrice($offer['ID']);
+                $offer['props'] = [];
                 if ($offer['prices']['RESULT_PRICE']['PRICE_TYPE_ID'] !== $basePriceId) {
                     $offer['prices']['RESULT_PRICE'] = Helper::getPriceByType($offer);
                 }
@@ -480,6 +492,7 @@ class YmlFeedMindbox
             "CATALOG_GROUP_" . $basePriceId,
             "NAME",
             "DETAIL_PICTURE",
+            "DETAIL_TEXT",
             "PREVIEW_PICTURE",
             "PREVIEW_TEXT",
             "XML_ID",
@@ -511,6 +524,10 @@ class YmlFeedMindbox
             $props = self::getProps($addProps, Options::getModuleOption("CATALOG_IBLOCK_ID"), self::getProdsIds($prodsInfo));
             foreach ($props as $elementId => $prop) {
                 $prodsInfo[$elementId]['props'] = $prop;
+            }
+        } else {
+            foreach ($prodsInfo as $elementId => $product) {
+                $prodsInfo[$elementId]['props'] = [];
             }
         }
 
@@ -610,5 +627,22 @@ class YmlFeedMindbox
             $siteName = $siteInfo['SITE_NAME'];
         }
         return !empty($siteName) ? $siteName : 'sitename';
+    }
+
+    private static function yandexText2xml($text, $bHSC = true, $bDblQuote = false)
+    {
+        global $APPLICATION;
+        $bHSC = (true == $bHSC ? true : false);
+        $bDblQuote = (true == $bDblQuote ? true: false);
+        if ($bHSC) {
+            $text = htmlspecialcharsbx($text);
+            if ($bDblQuote) {
+                $text = str_replace('&quot;', '"', $text);
+            }
+        }
+        $text = preg_replace("/[\x1-\x8\xB-\xC\xE-\x1F]/", "", $text);
+        $text = str_replace("'", "&apos;", $text);
+        $text = $APPLICATION->ConvertCharset($text, LANG_CHARSET, 'UTF-8');
+        return $text;
     }
 }

@@ -6,6 +6,7 @@ use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\UserTable;
 use Bitrix\Sale;
+use Bitrix\Sale\Order;
 use Bitrix\Main;
 use CCatalog;
 use CIBlock;
@@ -15,6 +16,7 @@ use CSaleOrderProps;
 use Mindbox\DTO\DTO;
 use Mindbox\DTO\DTOCollection;
 use Mindbox\DTO\V3\Requests\CustomerIdentityRequestDTO;
+use Mindbox\Installer\OrderPropertiesInstaller;
 use Mindbox\Options;
 use Mindbox\Templates\AdminLayouts;
 use Psr\Log\LoggerInterface;
@@ -408,7 +410,23 @@ class Helper
 
         return $offerProps;
     }
-
+    
+    public static function getGroups()
+    {
+        $arGroup = [];
+        
+        $iterator = \Bitrix\Main\GroupTable::getList([
+            'filter' => ['ACTIVE' => 'Y'],
+            'select' => ['ID', 'NAME']
+        ]);
+        
+        while ($group = $iterator->fetch()) {
+            $arGroup[$group['ID']] = $group['NAME'] . ' [' . $group['ID'] . ']';
+        }
+        
+        return $arGroup;
+    }
+    
     /**
      * @return array
      */
@@ -568,16 +586,9 @@ class Helper
      *
      * @return int
      */
-    public static function getTransactionId()
+    public static function getTransactionId($orderId = false)
     {
-        $transactionId = \Bitrix\Sale\Fuser::getId() . date('dmYHi');
-        if (!$_SESSION['MINDBOX_TRANSACTION_ID']) {
-            $_SESSION['MINDBOX_TRANSACTION_ID'] = $transactionId;
-
-            return $transactionId;
-        } else {
-            return $_SESSION['MINDBOX_TRANSACTION_ID'];
-        }
+        return Transaction::getInstance($orderId)->get();
     }
 
     public static function processHlbBasketRule($lineId, $mindboxPrice)
@@ -585,46 +596,50 @@ class Helper
         Loader::includeModule("highloadblock");
 
         $result = \Bitrix\Highloadblock\HighloadBlockTable::getList(['filter' => ['=NAME' => "Mindbox"]]);
+
         if ($row = $result->fetch()) {
             $hlbl = $row["ID"];
         }
+
         $hlblock = \Bitrix\Highloadblock\HighloadBlockTable::getById($hlbl)->fetch();
         $entity = \Bitrix\Highloadblock\HighloadBlockTable::compileEntity($hlblock);
         $entityDataClass = $entity->getDataClass();
 
-        if ($mindboxPrice) {
+        if ($mindboxPrice >= 0) {
             $data = [
                 "UF_DISCOUNTED_PRICE" => $mindboxPrice
             ];
 
-            $arFilter = [
+            $params = [
                 "select" => ["*"],
                 "order"  => ["ID" => "ASC"],
                 "filter" => [
                     "UF_BASKET_ID" => $lineId
                 ]
             ];
-            $rsData = $entityDataClass::getList($arFilter);
 
-            if ($arData = $rsData->Fetch()) {
+            $rsData = $entityDataClass::getList($params);
+
+            if ($arData = $rsData->fetch()) {
                 $result = $entityDataClass::update($arData['ID'], $data);
             } else {
                 $data = [
                     'UF_BASKET_ID'        => $lineId,
-                    "UF_DISCOUNTED_PRICE" => $mindboxPrice
+                    'UF_DISCOUNTED_PRICE' => $mindboxPrice
                 ];
+
                 $result = $entityDataClass::add($data);
             }
         } else {
-            $arFilter = [
-                "select" => ["*"],
-                "order"  => ["ID" => "ASC"],
-                "filter" => [
-                    "UF_BASKET_ID" => $lineId
-                ]
-            ];
-            $rsData = $entityDataClass::getList($arFilter);
-            if ($arData = $rsData->Fetch()) {
+            $rsData = $entityDataClass::getList([
+                    "select" => ["*"],
+                    "order"  => ["ID" => "ASC"],
+                    "filter" => [
+                            "UF_BASKET_ID" => $lineId
+                    ]
+            ]);
+
+            if ($arData = $rsData->fetch()) {
                 $result = $entityDataClass::delete($arData['ID']);
             }
         }
@@ -1041,11 +1056,9 @@ class Helper
     /**
      * @return Mindbox
      */
-    private static function mindbox()
+    public static function mindbox()
     {
-        $mindbox = Options::getConfig();
-
-        return $mindbox;
+        return Options::getConfig();
     }
 
     /**
@@ -1066,5 +1079,532 @@ class Helper
         }
 
         return $isNewOrder;
+    }
+
+    /**
+     * Check if is admin section
+     *
+     * @return boolean
+     */
+    public static function isAdminSection()
+    {
+        global $APPLICATION;
+        $currentPage = $APPLICATION->GetCurPage();
+        $request = \Bitrix\Main\Context::getCurrent()->getRequest();
+
+        return  ($request->isAdminSection() || strpos($currentPage, '/bitrix/admin') !== false || strpos($_SERVER['HTTP_REFERER'], '/bitrix/admin') !== false);
+    }
+
+    public static function checkBasketItem($basketItem)
+    {
+        if (Helper::isAdminSection()) {
+            if (!$basketItem->getProductId()) {
+                return false;
+            }
+        } else {
+            if (!$basketItem->getId()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static function getOrderPropertyByCode($code, $personType = false)
+    {
+        $return = [];
+        $filter = ['CODE' => $code];
+
+        if (!empty($personType)) {
+            $filter['PERSON_TYPE_ID'] = $personType;
+        }
+
+        $orderProps = \CSaleOrderProps::GetList(
+            ['SORT' => 'ASC'],
+            $filter
+        );
+
+        if ($arProps = $orderProps->Fetch()) {
+            $return = $arProps;
+        }
+
+        return $return;
+    }
+
+    public static function getSiteList($onlyActive = false): array
+    {
+        $return = [];
+        $queryParams = [
+            'select' => ['LID']
+        ];
+
+        if ($onlyActive === true) {
+            $queryParams['filter'] = ['ACTIVE' => 'Y'];
+        }
+
+        $getSites = \Bitrix\Main\SiteTable::getList($queryParams);
+
+        while ($siteItem = $getSites->fetch()) {
+            $return[] = $siteItem['LID'];
+        }
+
+        return $return;
+    }
+
+    public static function getAdditionLoyaltyOrderPropsIds()
+    {
+        $return = [];
+        $additionalPropertiesCode = [
+            OrderPropertiesInstaller::PROPERTY_BONUS,
+            OrderPropertiesInstaller::PROPERTY_PROMO_CODE
+        ];
+
+        $getOrderProps = \CSaleOrderProps::GetList([], ['CODE' => $additionalPropertiesCode]);
+
+        while ($item = $getOrderProps->Fetch()) {
+            $return[$item['ID']] = $item['CODE'];
+        }
+
+        return $return;
+    }
+
+    public static function calculateAuthorizedCartByOrderId($orderId)
+    {
+        global $USER;
+        $return = null;
+
+        if ((int)$orderId > 0) {
+            $mindbox = static::mindbox();
+
+            $order =  \Bitrix\Sale\Order::load($orderId);
+            $basket = $order->getBasket();
+            $basketItems = $basket->getBasketItems();
+            $orderPersonType = $order->getPersonTypeId();
+
+            $lines = [];
+            $bitrixBasket = [];
+
+            $propertyCollection = $order->getPropertyCollection();
+
+            if (is_object($propertyCollection)) {
+                $setOrderPromoCodeValue = self::getOrderPropertyValueByCode(
+                    $propertyCollection,
+                    'MINDBOX_PROMO_CODE',
+                    $orderPersonType
+                );
+
+                $setBonusValue = self::getOrderPropertyValueByCode(
+                    $propertyCollection,
+                    'MINDBOX_BONUS',
+                    $orderPersonType
+                );
+            }
+
+
+            $preorder = new \Mindbox\DTO\V3\Requests\PreorderRequestDTO();
+
+            foreach ($basketItems as $basketItem) {
+                if (!Helper::checkBasketItem($basketItem)) {
+                    continue;
+                }
+
+                if ($basketItem->getQuantity() < 1) {
+                    continue;
+                }
+
+                $requestedPromotions = Helper::getRequestedPromotions($basketItem, $order);
+                $bitrixBasket[$basketItem->getId()] = $basketItem;
+                $catalogPrice = Helper::getBasePrice($basketItem);
+
+                $arLine = [
+                    'basePricePerItem' => $catalogPrice,
+                    'quantity'         => $basketItem->getQuantity(),
+                    'lineId'           => $basketItem->getId(),
+                    'product'          => [
+                        'ids' => [
+                            Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getElementCode($basketItem->getProductId())
+                        ]
+                    ],
+                    'status'           => [
+                        'ids' => [
+                            'externalId' => 'CheckedOut'
+                        ]
+                    ]
+                ];
+
+                if (!empty($requestedPromotions)) {
+                    $arLine['requestedPromotions'] = $requestedPromotions;
+                }
+
+                $lines[] = $arLine;
+            }
+
+            $orderId = $order->getId();
+            $arOrder = [
+                'ids'   => [
+                    Options::getModuleOption('TRANSACTION_ID') => $orderId,
+                ],
+                'lines' => $lines
+            ];
+
+            $arCoupons = [];
+
+            if (!empty($setOrderPromoCodeValue)) {
+                if (strpos($setOrderPromoCodeValue, ',') !== false) {
+                    $applyCouponsList = explode(',', $setOrderPromoCodeValue);
+
+                    if (is_array($applyCouponsList) && !empty($applyCouponsList)) {
+                        foreach ($applyCouponsList as $couponItem) {
+                            $arCoupons[]['ids']['code'] = trim($couponItem);
+                        }
+                    }
+                } else {
+                    $arCoupons[]['ids']['code'] = $setOrderPromoCodeValue;
+                }
+            }
+
+            if (!empty($arCoupons)) {
+                $arOrder['coupons'] = $arCoupons;
+            }
+
+            if (!empty($setBonusValue)) {
+                $arOrder['bonusPoints'] = [
+                    [
+                        'amount' => $setBonusValue
+                    ]
+                ];
+            }
+
+            $preorder->setField('order', $arOrder);
+            $customer = new CustomerRequestDTO();
+
+
+            if ($USER->IsAuthorized()) {
+                $orderUserId = $order->getUserId();
+                $mindboxId = Helper::getMindboxId($orderUserId);
+
+                /*if (!$mindboxId) {
+                    return new Main\EventResult(Main\EventResult::SUCCESS);
+                }*/
+
+                $customer->setId('mindboxId', $mindboxId);
+                $preorder->setCustomer($customer);
+
+                try {
+                    $preorderInfo = $mindbox->order()->calculateAuthorizedCart(
+                        $preorder,
+                        Options::getOperationName('calculateAuthorizedCart' . (Helper::isAdminSection()? 'Admin':''))
+                    )->sendRequest()->getResult()->getField('order');
+                    if (!empty($preorderInfo) && is_object($preorderInfo)) {
+                        return $preorderInfo;
+                    }
+                } catch (Exceptions\MindboxClientException $e) {
+                }
+            }
+        }
+
+        return $return;
+    }
+
+    public function getAvailableBonusForCurrentOrder($orderId)
+    {
+        $return = 0;
+        $getCalcOrderData = self::calculateAuthorizedCartByOrderId($orderId);
+
+        if (!empty($getCalcOrderData) && is_object($getCalcOrderData)) {
+            $totalBonusPointsInfo = $getCalcOrderData->getField('totalBonusPointsInfo');
+
+            if ($totalBonusPointsInfo['availableAmountForCurrentOrder']) {
+                $return = $totalBonusPointsInfo['availableAmountForCurrentOrder'];
+            }
+        }
+
+        return $return;
+    }
+    
+    /**
+     * Получение значение свойства заказа по коду.
+     * Функция с поддержкой версии Битрикс < 20.5
+     * @param $propertyCollection
+     * @param $code
+     * @param false $personType
+     * @return false
+     */
+    public static function getOrderPropertyValueByCode($propertyCollection, $code, $personType = false)
+    {
+        $return = false;
+
+        if ($propertyCollection instanceof \Bitrix\Sale\PropertyValueCollection) {
+            if (method_exists($propertyCollection, 'getItemByOrderPropertyCode')) {
+                $property = $propertyCollection->getItemByOrderPropertyCode($code);
+            } else {
+                $propertyData = self::getOrderPropertyByCode($code, $personType);
+
+                if (!empty($propertyData)) {
+                    $property = $propertyCollection->getItemByOrderPropertyId($propertyData['ID']);
+                }
+            }
+
+            if (!empty($property)) {
+                $return = $property->getValue();
+            }
+        }
+
+        return $return;
+    }
+    
+    /**
+     * Проверка, доступен ли данному пользователю процессинг
+     *
+     * @param $userId
+     *
+     * @return bool
+     */
+    public static function isInternalOrderUser($userId)
+    {
+        $return = false;
+        $internalUserGroups = self::getInternalGroups();
+        
+        if (!empty($userId) && (int)$userId > 0 && !empty($internalUserGroups)) {
+            $userGroup = \Bitrix\Main\UserTable::getUserGroupIds($userId);
+            
+            if (count(array_diff($userGroup, $internalUserGroups)) !== count($userGroup)) {
+                $return = true;
+            }
+        }
+
+        return $return;
+    }
+    
+    /**
+     * Возвращает группы пользователей, для которых процессинг не доступен
+     * @return array|false|string[]
+     */
+    public static function getInternalGroups()
+    {
+        $groups = [];
+        $stringGroup = Options::getModuleOption('CONTINUE_USER_GROUPS');
+        
+        if (!empty($stringGroup)) {
+            $groups = explode(',', $stringGroup);
+        }
+        
+        return $groups;
+    }
+
+    public static function isDeleteOrderAdminAction()
+    {
+        return (
+            ($_REQUEST['action_button'] === 'delete' || $_REQUEST['action'] === 'delete')
+            && self::isAdminSection()
+            && isset($_REQUEST['ID'])
+        );
+    }
+
+    public static function isDeleteOrderItemAdminAction()
+    {
+        return (self::isAdminSection() && $_REQUEST['additional']['operation'] === 'PRODUCT_DELETE');
+    }
+
+    /**
+     * @param $orderId
+     *
+     * @return false|DTO\V2\Responses\OrderResponseDTO
+     */
+    public static function getMindboxOrder($orderId)
+    {
+        if (empty($orderId)) {
+            return false;
+        }
+
+        $request = self::mindbox()->getClientV3()->prepareRequest(
+            'POST',
+            'Offline.GetOrder',
+                new DTO([
+                    'order' => [
+                        'ids' => [
+                            Options::getModuleOption('TRANSACTION_ID') => $orderId
+                        ],
+                    ]
+                ])
+        );
+
+        try {
+            $response = $request->sendRequest();
+
+            return $response->getResult()->getOrder();
+        } catch (Exceptions\MindboxClientException $e) {
+
+        }
+
+        return false;
+    }
+
+    /**
+     * @param $orderId
+     *
+     * @return bool
+     */
+    public static function isMindboxOrder($orderId)
+    {
+        //return true;
+        $order = self::getMindboxOrder($orderId);
+
+        if ($order && $order->getField('processingStatus') === 'Found') {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static function getBitrixOrderStatusList()
+    {
+        $statusList = [
+            'CANCEL' => Loc::getMessage('CANCEL_ORDER_LABEL'),
+            //'CANCEL_ABORT' => 'Отменить отмену заказа'
+        ];
+
+        $statusResult = \Bitrix\Sale\Internals\StatusTable::getList([
+            'order' => ['SORT'=>'ASC'],
+            'select' => ['ID'],
+            'filter' => ['TYPE' => 'O']
+        ]);
+
+        while ($statusItem = $statusResult->fetch()) {
+            $getStatusData = \CSaleStatus::GetByID($statusItem['ID']);
+            $statusList[$statusItem['ID']] = $getStatusData['NAME'] . ' [' . $statusItem['ID'] . ']';
+        }
+
+        return $statusList;
+    }
+
+    public static function getMindboxOrderStatusList()
+    {
+        return [
+            'CheckedOut' => 'CheckedOut',
+            'Delivered' => 'Delivered',
+            'Paid' => 'Paid',
+            'Cancelled' => 'Cancelled',
+            'Returned' => 'Returned'
+        ];
+    }
+
+    public static function getMindboxStatusByShopStatus($shopStatus)
+    {
+        $return = false;
+
+        if (!empty($shopStatus)) {
+            $statusOptionsJson = COption::GetOptionString('mindbox.marketing', 'ORDER_STATUS_FIELDS_MATCH', '{}');
+            $statusOptionsData = json_decode($statusOptionsJson, true);
+
+            if (!empty($statusOptionsData) && is_array($statusOptionsData)) {
+                foreach ($statusOptionsData as $item) {
+                    if ($shopStatus == $item['bitrix']) {
+                        $return = $item['mindbox'];
+                        break;
+                    }
+                }
+            }
+        }
+
+        return $return;
+    }
+
+    public static function updateMindboxOrderItems(\Bitrix\Sale\Order $order, $additionalFields = [])
+    {
+        $orderId = $order->getId();
+        $orderStatus = $order->getField('STATUS_ID');
+        $orderUserId = $order->getField('USER_ID');
+
+        $mindboxStatusCode = self::getMindboxStatusByShopStatus($orderStatus);
+
+        if (empty($mindboxStatusCode)) {
+            return false;
+        }
+
+        $orderBasket = $order->getBasket();
+
+        if ($orderBasket) {
+            $basketItems = $orderBasket->getBasketItems();
+            $lines = [];
+
+            foreach ($basketItems as $basketItem) {
+                $lines[] = [
+                    'lineId' => $basketItem->getId(),
+                    'quantity' => $basketItem->getQuantity(),
+                    'basePricePerItem' => $basketItem->getPrice(),
+                    'status' => $mindboxStatusCode,
+                    'product' => [
+                        'ids' => [
+                            Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getElementCode($basketItem->getProductId())
+                        ]
+                    ],
+                ];
+            }
+        }
+
+
+        $mindbox = Options::getConfig();
+        $requestFields = [
+            'ids' => [
+                Options::getModuleOption('TRANSACTION_ID') => $orderId
+            ],
+            'lines' => $lines
+        ];
+
+        if (!empty($additionalFields) && is_array($additionalFields)) {
+            $requestFields = $requestFields + $additionalFields;
+        }
+
+        $requestData = [
+            'customer' => [
+                'ids' => [
+                    Options::getModuleOption('WEBSITE_ID') => $orderUserId
+                ],
+            ],
+            'order' => $requestFields
+        ];
+
+        $request = $mindbox->getClientV3()->prepareRequest(
+            'POST',
+            Options::getOperationName('updateOrderItems'),
+            new DTO($requestData)
+        );
+
+        try {
+            $response = $request->sendRequest();
+        } catch (Exceptions\MindboxClientException $e) {
+            return false;
+        }
+    }
+
+
+    public static function updateMindboxOrderStatus($orderId, $statusCode)
+    {
+        $mindbox = Options::getConfig();
+
+        if ($mindbox) {
+            $mindboxStatusCode = Helper::getMindboxStatusByShopStatus($statusCode);
+            if ($mindboxStatusCode !== false) {
+                $request = $mindbox->getClientV3()->prepareRequest(
+                    'POST',
+                    Options::getOperationName('updateOrderStatus'),
+                    new DTO([
+                        'orderLinesStatus' => $mindboxStatusCode,
+                        'order' => [
+                            'ids' => [
+                                'websiteId' => $orderId
+                            ]
+                        ]
+                    ])
+                );
+
+                try {
+                    $response = $request->sendRequest();
+                } catch (Exceptions\MindboxClientException $e) {
+                    return false;
+                }
+            }
+        }
     }
 }

@@ -283,7 +283,6 @@ class EventController
         foreach ($allRegisteredEvent as $eventCode => $value) {
             $moduleEventData = $eventList[$eventCode];
             if (!empty($moduleEventData)) {
-
                 if ($moduleEventData['system']) {
                     continue;
                 }
@@ -373,7 +372,6 @@ class EventController
         $return = [];
 
         if (!empty($adminModuleName)) {
-
             $getActiveModuleEvents = \Mindbox\DataBase\ModuleToModuleTable::getList(
                 [
                     'filter' => [
@@ -387,7 +385,6 @@ class EventController
                     $return[] = $row;
                 }
             }
-
         }
 
         return $return;
@@ -405,9 +402,7 @@ class EventController
 
         if (!empty($dataBaseEventList) && is_array($dataBaseEventList)) {
             foreach ($dataBaseEventList as $item) {
-
                 if ($item['TO_CLASS'] === '\Mindbox\Event') {
-
                     $exist = false;
 
                     foreach ($declareEventList as $declareEvent) {

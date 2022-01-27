@@ -19,21 +19,28 @@
 
 * Операции реализованы через системные события 1С-Битрикс. На следующие события будут навешаны обработчики:
 
-| Операция | Событие                | Обработчик                   |
-| :--------------------: | :--------------------: | :----------------------------: |
-| AuthorizeCustomer | [OnAfterUserAuthorize](https://dev.1c-bitrix.ru/api_help/main/events/onafteruserauthorize.php) | OnAfterUserAuthorizeHandler |  |
-| RegisterCustomer | [OnBeforeUserRegister](https://dev.1c-bitrix.ru/api_help/main/events/onbeforeuserregister.php) | OnBeforeUserRegisterHandler |
-| RegisterCustomer | [OnAfterUserRegister](https://dev.1c-bitrix.ru/api_help/main/events/onafteruserregister.php) | OnAfterUserRegisterHandler |
-| EditCustomer | [OnBeforeUserUpdate](https://dev.1c-bitrix.ru/api_help/main/events/onbeforeuserupdate.php) | OnBeforeUserUpdateHandler |
-| BeginUnauthorizedOrderTransaction, BeginAuthorizedOrderTransaction, RollbackOrderTransaction | [OnSaleOrderBeforeSaved](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/order_saved.php) | OnSaleOrderBeforeSavedHandler |
-| CommitOrderTransaction, SaveOfflineOrder, CreateAuthorizedOrder, CreateUnauthorizedOrder | [OnSaleOrderSaved](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/order_saved.php) | OnSaleOrderSavedHandler |
-| SetCart | [OnSaleBasketSaved](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/basket_saved.php) | OnSaleBasketSavedHandler |
-| CalculateAuthorizedCart, CalculateUnauthorizedCart | [OnBeforeSaleOrderFinalAction](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/order_final_action.php) | OnBeforeSaleOrderFinalActionHandler |
-| SetWishList | [OnSaleBasketItemRefreshData](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/basket_updated.php) | OnSaleBasketItemRefreshDataHandler |
-| RegisterCustomer | [OnBeforeUserAdd](https://dev.1c-bitrix.ru/api_help/main/events/onbeforeuseradd.php) | OnAfterUserAddHandler |
-| RegisterCustomer | [OnAfterUserAdd](https://dev.1c-bitrix.ru/api_help/main/events/onafteruseradd.php) | OnAfterUserAddHandler |
-| Подключение кода трекера | [OnProlog](https://dev.1c-bitrix.ru/api_help/main/events/onprolog.php) | OnPrologHandler |
-| Подключение кода модуля глобально | [OnBeforeProlog](https://dev.1c-bitrix.ru/api_help/main/events/onbeforeprolog.php) | OnBeforePrologHandler |
+|                                           Операция                                           |                                                    Событие                                                    |              Обработчик              |
+|:--------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------:|:------------------------------------:|
+|                                      AuthorizeCustomer                                       |        [OnAfterUserAuthorize](https://dev.1c-bitrix.ru/api_help/main/events/onafteruserauthorize.php)         |     OnAfterUserAuthorizeHandler      |  |
+|                                       RegisterCustomer                                       |        [OnBeforeUserRegister](https://dev.1c-bitrix.ru/api_help/main/events/onbeforeuserregister.php)         |     OnBeforeUserRegisterHandler      |
+|                                       RegisterCustomer                                       |         [OnAfterUserRegister](https://dev.1c-bitrix.ru/api_help/main/events/onafteruserregister.php)          |      OnAfterUserRegisterHandler      |
+|                                         EditCustomer                                         |          [OnBeforeUserUpdate](https://dev.1c-bitrix.ru/api_help/main/events/onbeforeuserupdate.php)           |      OnBeforeUserUpdateHandler       |
+| BeginUnauthorizedOrderTransaction, BeginAuthorizedOrderTransaction, RollbackOrderTransaction |         [OnSaleOrderBeforeSaved](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/order_saved.php)          |    OnSaleOrderBeforeSavedHandler     |
+|   CommitOrderTransaction, SaveOfflineOrder, CreateAuthorizedOrder, CreateUnauthorizedOrder   |            [OnSaleOrderSaved](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/order_saved.php)             |       OnSaleOrderSavedHandler        |
+|                                           SetCart                                            |           [OnSaleBasketSaved](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/basket_saved.php)            |       OnSaleBasketSavedHandler       |
+|                      CalculateAuthorizedCart, CalculateUnauthorizedCart                      |   [OnBeforeSaleOrderFinalAction](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/order_final_action.php)   | OnBeforeSaleOrderFinalActionHandler  |
+|                                         SetWishList                                          |     [OnSaleBasketItemRefreshData](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/basket_updated.php)      |  OnSaleBasketItemRefreshDataHandler  |
+|                                       RegisterCustomer                                       |             [OnBeforeUserAdd](https://dev.1c-bitrix.ru/api_help/main/events/onbeforeuseradd.php)              |        OnAfterUserAddHandler         |
+|                                       RegisterCustomer                                       |              [OnAfterUserAdd](https://dev.1c-bitrix.ru/api_help/main/events/onafteruseradd.php)               |        OnAfterUserAddHandler         |
+|                                   Подключение кода трекера                                   |                    [OnProlog](https://dev.1c-bitrix.ru/api_help/main/events/onprolog.php)                     |           OnPrologHandler            |
+|                              Подключение кода модуля глобально                               |              [OnBeforeProlog](https://dev.1c-bitrix.ru/api_help/main/events/onbeforeprolog.php)               |        OnBeforePrologHandler         |
+|                                       UpdateOrderItems                                       |     [OnSalePropertyValueSetField](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/sale_setfields.php)      |  OnSalePropertyValueSetFieldHandler  |
+|                                       UpdateOrderItems                                       |    [OnSaleBasketItemEntitySaved](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/sale_entitysaved.php)     |  OnSaleBasketItemEntitySavedHandler  |
+|                           UpdateOrderItems, UpdateOrderItemsStatus                           |      [OnSaleBasketItemDeleted](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/sale_entitysaved.php)       | OnSaleBasketItemEntityDeletedHandler |
+|                                      UpdateOrderStatus                                       |     [OnBeforeSaleShipmentSetField](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/sale_setfields.php)     | OnBeforeSaleShipmentSetFieldHandler  |
+|                                      UpdateOrderStatus                                       |           [OnSaleStatusOrder](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/order_special.php)           | OnSaleStatusOrderHandler  |
+|                                      UpdateOrderStatus                                       |          [OnSaleCancelOrder](https://dev.1c-bitrix.ru/api_help/sale/events/events_status_order.php)           | OnSaleCancelOrderHandler  |
+|                    Возможность списания бонусов в администранивной части                     |         [OnAdminSaleOrderEdit](https://dev.1c-bitrix.ru/learning/course/?COURSE_ID=43&LESSON_ID=7957)         | OnAdminSaleOrderEditHandler  |
 
 Исходный код всех обработчиков можно посмотреть в этом файле: ```/bitrix/modules/mindbox/lib/Event.php```
 
@@ -80,7 +87,19 @@ __Примечание:__
 | UF_PHONE_CONFIRMED | Поле чекбокс предназначено для хранения информации о подтверждение пользователем телефона в mindbox. Данным полем можно воспользоваться для вывода подтверждения телефона в Вашем компоненте персональных данных. |
 | UF_EMAIL_CONFIRMED | Поле чекбокс предназначено для хранения информации о подтверждение пользователем email в mindbox. Данным полем можно воспользоваться для вывода подтверждения email в Вашем компоненте персональных данных. |
 
+* Созданы свойства заказа:
 
+| Поле                |                           Описание                            |
+| :--------------------: |:-------------------------------------------------------------:|
+| MINDBOX_BONUS | Строковое поле предназначено для хранения количества бонусов. |
+| MINDBOX_PROMO_CODE	 |     Строковое поле предназначено для хранения промокода.      |
+
+* Создан Highload-блок "Mindbox"  с полями:
+
+| Поле                |                                        Описание                                         |
+| :--------------------: |:---------------------------------------------------------------------------------------:|
+| UF_BASKET_ID | Числовое поле (целое число) предназначено для хранения идентификатора товара в корзине. |
+| UF_DISCOUNTED_PRICE	 |            Числовое поле предназначено для хранения финальной цены на товар.            |
 
 ### Интеграция модуля в стандартном режиме
 1. Интегрируем компоненты ```catalog.tracking``` модуля mindbox. Компоненты и их шаблоны находятся в директории - ```/bitrix/components/mindbox```
@@ -98,6 +117,7 @@ __Примечание:__
 | Параметр компонента | Описание | Значение по умолчанию |
 | :-------: | :-------: | :---------------------:|
 | PERSONAL_PAGE_URL   | URL личного кабинета, на которую будет совершен редирект после успешной авторизации. | / |
+| FILLUP_FORM_FIELDS   | Поля в форме дозаполнения данных. Возможные поля NAME, LAST_NAME, EMAIL, MOBILE_PHONE, PASSWORD, BIRTH_DATE, GENDER | Поля отсутствуют |
 
 2\. bonus.history - Компонент выводит историю бонусных баллов mindbox.
 

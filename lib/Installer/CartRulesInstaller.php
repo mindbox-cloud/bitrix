@@ -4,6 +4,7 @@ namespace Mindbox\Installer;
 
 use Bitrix\Main\Loader;
 use Bitrix\Highloadblock as HL;
+use Bitrix\Main\SiteTable;
 
 class CartRulesInstaller
 {
@@ -177,7 +178,11 @@ class CartRulesInstaller
     protected function getActiveSite()
     {
         $return = false;
-        $rsSites = \Bitrix\Main\SiteTable::getList(['filter' => ['ACTIVE' => 'Y']]);
+        $rsSites = SiteTable::getList([
+            'filter' => ['ACTIVE' => 'Y'],
+            'order' => ['DEF' => 'DESC', 'SORT' => 'ASC'],
+            'limit' => 1
+        ]);
 
         if ($arSite = $rsSites->fetch()) {
             $return = $arSite['LID'];

@@ -142,7 +142,7 @@ class ExtensionCartRulesActions extends \CSaleActionCtrlBasketGroup
             foreach ($arOrder['BASKET_ITEMS'] as &$product) {
                 $basketId = $product['ID'];
                 if ($discounts[$basketId]) {
-                    if ($discounts[$basketId]['UF_DISCOUNTED_PRICE']) {
+                    if ($discounts[$basketId]['UF_DISCOUNTED_PRICE'] >= 0) {
                         $discountPrice = $product['PRICE'] - $discounts[$basketId]['UF_DISCOUNTED_PRICE'];
                     }
 
