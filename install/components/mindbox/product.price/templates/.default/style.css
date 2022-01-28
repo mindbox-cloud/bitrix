@@ -1,0 +1,12 @@
+.mindbox-product-price {
+    font-size: 18px;
+    font-weight: bold;
+    line-height: 15px;
+    color: #1d2029;
+}
+
+.mindbox-product-price__discount {
+    text-decoration: line-through;
+    font-size: 14px;
+    font-weight: normal;
+}

@@ -26,6 +26,7 @@ use Mindbox\DTO\V2\Requests\LineRequestDTO;
 use Mindbox\DTO\V2\Requests\OrderCreateRequestDTO;
 use Mindbox\DTO\V2\Requests\OrderUpdateRequestDTO;
 use MongoDB\Driver\Exception\Exception;
+use Mindbox\Components\CalculateProductData;
 
 Loader::includeModule('catalog');
 Loader::includeModule('sale');
@@ -2506,5 +2507,17 @@ class Event
                 Asset::getInstance()->addString($jsString, true,AssetLocation::AFTER_JS);
             }
         }
+    }
+
+    /**
+     * @bitrixModuleId main
+     * @bitrixEventCode OnEndBufferContent
+     * @langEventName OnEndBufferContent
+     * @param $content
+     */
+    public function OnEndBufferContentHandler(&$content)
+    {
+        $calc = new CalculateProductData();
+        $calc->handle($content);
     }
 }
