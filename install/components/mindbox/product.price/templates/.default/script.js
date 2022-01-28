@@ -23,7 +23,6 @@ if (typeof window.loadMindboxProductPriceComponent === 'undefined') {
           if (response.data.type === 'success') {
             if (response.data.return.hasOwnProperty('MINDBOX_PRICE')) {
               target.querySelector('.mindbox-product-price__price').innerText = response.data.return['MINDBOX_PRICE'];
-              console.log(target.querySelector('.mindbox-product-price__price'));
             }
 
             if (!response.data.return.hasOwnProperty('MINDBOX_OLD_PRICE')) {

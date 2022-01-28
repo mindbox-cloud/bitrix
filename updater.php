@@ -10,8 +10,7 @@ if (IsModuleInstalled('mindbox.marketing')) {
     $updater->CopyFiles("lib", "modules/mindbox.marketing/lib");
 
     try {
-        $transactionTable = new \Mindbox\DataBase\MindboxTransactionTable();
-        $transactionTable->createTable();
+        (new \Mindbox\Installer\DeliveryCartRuleInstaller())->install();
     } catch (\Exception $e) {
 
     }
