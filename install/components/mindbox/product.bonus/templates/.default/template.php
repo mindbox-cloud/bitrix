@@ -4,10 +4,7 @@ global $APPLICATION;
 //CJSCore::Init(['fx', 'ajax']);
 ?>
 <div class="mindbox-product-bonus">
-    <?if (isset($arParams['LABEL']) && !empty($arParams['LABEL'])):?>
-        <span class="mindbox-product-bonus__label"><?=$arParams['LABEL']?></span>
-    <?endif;?>
-    <span class="mindbox-product-bonus__value"><?=$arResult['MINDBOX_BONUS']?></span>
+    <?=$arResult['MINDBOX_BONUS']?>
 </div>
 
 

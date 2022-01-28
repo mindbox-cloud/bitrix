@@ -19,7 +19,7 @@ class CalculateProductData
     protected $optionExternalSystem = '';
     protected $operationUnauthorized = '';
     //protected $placeholderRegEx = '/{{(MINDBOX_BONUS|MINDBOX_PRICE|MINDBOX_OLD_PRICE)\|(\d+)\|(\d+)}}/m';
-    protected $placeholderRegEx = '/{{(MINDBOX_BONUS|MINDBOX_PRICE|MINDBOX_OLD_PRICE)\|(.*)\|(.*)}}/m';
+    protected $placeholderRegEx = '/{{(MINDBOX_BONUS|MINDBOX_PRICE|MINDBOX_OLD_PRICE)\|(.*)\|(.*)\|(.*)\|(.*)}}/m';
     protected $placeholdersList = [];
 
     public function __construct()
@@ -44,7 +44,6 @@ class CalculateProductData
             }
 
             $requestProductList = $this->getCalculateProductsData($requestProductList);
-
             // получили данные и делаем замену в контенте
             foreach ($searchItems as $placeholderKey => $replaceItem) {
                 $replaceValue = '';
@@ -56,7 +55,39 @@ class CalculateProductData
                     $replaceValue = $requestProductList[$replaceItem['id']][$replaceItem['type']];
                 }
 
+                if (!empty($replaceValue)) {
+                    if (!empty($replaceItem['value'])) {
+                        $this->prepareValue($replaceValue, $replaceItem['value']);
+                    }
+
+                    if (!empty($replaceItem['label'])) {
+                        $this->prepareLabel($replaceValue, $replaceItem['label']);
+                    }
+
+                    $this->createHtmlProductCache($replaceItem['id'], $replaceItem['type'], $replaceValue);
+                } else {
+                    $replaceValue = '';
+                }
+
+
                 $content = str_replace($placeholderKey, $replaceValue, $content);
+            }
+        }
+    }
+
+    protected function prepareValue(&$value, $label)
+    {
+        $value = str_replace(':value:', $value, $label);
+    }
+
+    protected function prepareLabel(&$value, $label)
+    {
+        if (!empty($label)) {
+
+            if (strpos($label, 'before::') !== false) {
+                $value = str_replace('before::', '', $label) . ' ' . $value;
+            } elseif (strpos($label, 'after::') !== false) {
+                $value = $value . ' ' . str_replace('after::', '', $label);
             }
         }
     }
@@ -116,20 +147,32 @@ class CalculateProductData
         return self::CACHE_PREFIX . $productId;
     }
 
-    public function createProductCache($productId, $data)
+    public function createHtmlProductCache($productId, $type, $data)
+    {
+        $cacheId = 'HTML-' . $productId . $type;
+        $this->createProductCache($cacheId, $data);
+    }
+
+    public static function getHtmlProductCache($productId, $type)
+    {
+        $cacheId = 'HTML-' . $productId . $type;
+        return self::getProductCache($cacheId);
+    }
+
+    public function createProductCache($cacheId, $data)
     {
         $cache = Cache::createInstance();
-        $cache->initCache(self::CACHE_TIME, self::getCacheId($productId));
+        $cache->initCache(self::CACHE_TIME, self::getCacheId($cacheId));
         $cache->startDataCache();
         $cache->endDataCache(['data' => $data]);
     }
 
-    public static function getProductCache($productId)
+    public static function getProductCache($cacheId)
     {
         $return = false;
         $cache = Cache::createInstance();
 
-        if ($cache->initCache(self::CACHE_TIME, self::getCacheId($productId))) {
+        if ($cache->initCache(self::CACHE_TIME, self::getCacheId($cacheId))) {
             $cacheVars = $cache->getVars();
 
             if (!empty($cacheVars['data'])) {
@@ -154,6 +197,8 @@ class CalculateProductData
                     'type' => $item[1],
                     'id' => $item[2],
                     'price' => $item[3],
+                    'label' => $item[4],
+                    'value' => $item[5]
                 ];
             }
 
