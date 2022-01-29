@@ -265,7 +265,7 @@ class EventController
         ];
     }
 
-    protected function installDeliveryRulesHandler()
+    public function installDeliveryRulesHandler()
     {
         $this->registerEventHandler($this->getDeliveryRulesHandlerData());
     }
