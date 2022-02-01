@@ -1923,15 +1923,18 @@ class Event
             break;
         }
 
-        if ($deliveryPrice) {
-            $arOrder['deliveryCost']  = $deliveryPrice;
-        }
+        if ($deliveryId > 0) {
+            if ($deliveryPrice) {
+                $arOrder['deliveryCost']  = $deliveryPrice;
+            }
 
-        $arDelivery = \Bitrix\Sale\Delivery\Services\Table::getById($deliveryId)->fetch();
-        if (is_array($arDelivery) && !empty($arDelivery['NAME'])) {
-            $arOrder['customFields'] = [
-                    'deliveryType'  =>  $arDelivery['NAME']
-            ];
+            $arDelivery = \Bitrix\Sale\Delivery\Services\Table::getById($deliveryId)->fetch();
+
+            if (is_array($arDelivery) && !empty($arDelivery['NAME'])) {
+                $arOrder['customFields'] = [
+                        'deliveryType'  =>  $arDelivery['NAME']
+                ];
+            }
         }
 
         $preorder->setField('order', $arOrder);
