@@ -646,12 +646,19 @@ class Helper
     }
 
 
+    /**
+     * @param \Bitrix\Sale\BasketItem $basketItem
+     * @param $object
+     * @return void
+     * @throws Main\InvalidOperationException
+     */
     public static function getRequestedPromotions($basketItem, $object)
     {
 
         $requestedPromotions = [];
-        $arDiscountList = [];
         $arActualAction = [];
+        $basePrice = (float)$basketItem->getBasePrice();
+        $currentPrice = (float)$basePrice;
 
         if ($object instanceof \Bitrix\Sale\Basket) {
             $discounts = \Bitrix\Sale\Discount::buildFromBasket(
@@ -661,6 +668,7 @@ class Helper
         } elseif ($object instanceof \Bitrix\Sale\Order) {
             $discounts = \Bitrix\Sale\Discount::buildFromOrder($object);
         }
+
         $discounts->calculate();
         $result = $discounts->getApplyResult(true);
 
@@ -687,8 +695,9 @@ class Helper
         if (array_key_exists($basketItem->getId(), $arActualAction)) {
             foreach ($arActualAction[$basketItem->getId()] as $discountId) {
                 $discountPrice = 0;
-                $discountPercentValue = 0;
                 $externalId = '';
+                $quantity = $basketItem->getQuantity();
+
                 if (array_key_exists($discountId, $arDiscountList)) {
                     $arDiscount = $arDiscountList[$discountId];
                     $arActionDescrData = $arDiscount['ACTIONS_DESCR_DATA']['BASKET'][0];
@@ -696,24 +705,114 @@ class Helper
                         continue;
                     }
                     if ($arDiscount['MODULE_ID'] === 'sale') {
-                        if ($arActionDescrData['VALUE_ACTION'] === 'D' &&
-                            $arActionDescrData['VALUE_TYPE'] === 'P'
-                        ) {
-                            $discountPercentValue = $arActionDescrData['VALUE'];
-                            $externalId = "SCR-" . $arDiscount['REAL_DISCOUNT_ID'];
-                            $discountPrice = $basketItem->getBasePrice() * ($discountPercentValue / 100);
+                        if (isset($arActionDescrData['VALUE_TYPE'])) {
+                            switch ($arActionDescrData['VALUE_TYPE']) {
+                                case \Bitrix\Sale\Discount\Actions::VALUE_TYPE_PERCENT:
+                                    // процент скидки на товар
+                                    $percent = $arActionDescrData['VALUE_ACTION'] == \Bitrix\Sale\Discount\Formatter::VALUE_ACTION_DISCOUNT
+                                            ? $arActionDescrData['VALUE']
+                                            : 100 + $arActionDescrData['VALUE'];
+
+                                    $discountPrice = \Bitrix\Catalog\Product\Price\Calculation::roundPrecision((
+                                            self::isPercentFromBasePrice()
+                                                    ? $basePrice
+                                                    : $currentPrice
+                                            ) * ($percent / 100)
+                                    );
+
+                                    break;
+                                case \Bitrix\Sale\Discount\Actions::VALUE_TYPE_FIX:
+                                    // фиксированная скидка на товар
+                                    $discountPrice = (float) $arActionDescrData['VALUE'];
+                                    break;
+                                case \Bitrix\Sale\Discount\Actions::VALUE_TYPE_SUMM:
+                                    // установка стоимости на общую сумму товаров
+                                    $discountPrice = \Bitrix\Catalog\Product\Price\Calculation::roundPrecision(
+                                            $arActionDescrData['VALUE']
+                                    );
+
+                                    $quantity = 1;
+                                    break;
+                                case 'C':
+                                    // установка стоимости на каждый товар
+                                    $discountPrice = (float) $arActionDescrData['VALUE'];
+                                    break;
+                            }
+                        } elseif (isset($arActionDescrData['TYPE'])) {
+                            switch ($arActionDescrData['TYPE']) {
+                                case \Bitrix\Sale\Discount\Formatter::TYPE_SIMPLE:
+                                    // процент скидки на товар
+                                    $discountPrice = \Bitrix\Catalog\Product\Price\Calculation::roundPrecision(
+                                            $currentPrice * ($arActionDescrData['VALUE'] / 100)
+                                    );
+                                    break;
+                                case \Bitrix\Sale\Discount\Formatter::TYPE_LIMIT_VALUE:
+                                case \Bitrix\Sale\Discount\Formatter::TYPE_VALUE:
+                                    // фиксированная скидка на товар
+                                    $discountPrice = (float) $arActionDescrData['VALUE'];
+                                    break;
+                                case \Bitrix\Sale\Discount\Formatter::TYPE_FIXED:
+                                    // установка стоимости на товар
+                                    $discountPrice = (float) ($currentPrice - $arActionDescrData['VALUE']);
+                                    break;
+                            }
                         }
+
+                        $externalId = "SCR-" . $arDiscount['REAL_DISCOUNT_ID'];
+
                     } elseif ($arDiscount['MODULE_ID'] === 'catalog') {
                         if (array_key_exists('VALUE_EXACT', $arActionDescrData)) {
                             $discountPrice = $arActionDescrData['VALUE_EXACT'];
-                        } else {
-                            $discountPercentValue = $arActionDescrData['VALUE'];
-                            $discountPrice = $basketItem->getBasePrice() * ($discountPercentValue / 100);
                         }
+
+                        if (isset($arActionDescrData['VALUE_TYPE'])) {
+                            switch ($arActionDescrData['VALUE_TYPE']) {
+                                case \CCatalogDiscount::TYPE_PERCENT:
+                                    // процент скидки на товар
+                                    $discountPrice = (float) $currentPrice * ($arActionDescrData['VALUE'] / 100);
+                                    break;
+                                case \CCatalogDiscount::TYPE_FIX:
+                                    // фиксированная скидка на товар
+                                    $discountPrice = (float) $arActionDescrData['VALUE'];
+                                    break;
+                                case \CCatalogDiscount::TYPE_SALE:
+                                    // установка стоимости на товар
+                                    $discountPrice = (float) ($currentPrice - $arActionDescrData['VALUE']);
+                                    break;
+                                default:
+                                    $discountPrice = (float) $arActionDescrData['VALUE'];
+                                    break;
+                            }
+                        } elseif (isset($arActionDescrData['TYPE'])) {
+                            switch ($arActionDescrData['TYPE']) {
+                                case \Bitrix\Sale\Discount\Formatter::TYPE_SIMPLE:
+                                    // процент скидки на товар
+                                    $discountPrice = (float) $currentPrice * ($arActionDescrData['VALUE'] / 100);
+                                    break;
+                                case \Bitrix\Sale\Discount\Formatter::TYPE_LIMIT_VALUE:
+                                case \Bitrix\Sale\Discount\Formatter::TYPE_VALUE:
+                                    // фиксированная скидка на товар
+                                $discountPrice = (float) $arActionDescrData['VALUE'];
+                                    break;
+                                case \Bitrix\Sale\Discount\Formatter::TYPE_FIXED:
+                                    // установка стоимости на товар
+                                    $discountPrice = (float) ($currentPrice - $arActionDescrData['VALUE']);
+                                    break;
+                            }
+                        }
+
                         $externalId = "PD-" . $arDiscount['REAL_DISCOUNT_ID'];
                     }
 
-                    if ($discountPrice > 0 && !empty($externalId)) {
+                    if (isset($arActionDescrData['LIMIT_TYPE'])
+                            && isset($arActionDescrData['LIMIT_VALUE'])
+                            && $arActionDescrData['LIMIT_TYPE'] === \Bitrix\Sale\Discount\Formatter::LIMIT_MAX
+                            && $discountPrice > $arActionDescrData['LIMIT_VALUE']
+                    ) {
+                        $discountPrice = (float) $arActionDescrData['LIMIT_VALUE'];
+                    }
+
+                    if ($discountPrice != 0 && !empty($externalId)) {
                         $requestedPromotions[] = [
                             'type'      => 'discount',
                             'promotion' => [
@@ -721,14 +820,23 @@ class Helper
                                     'externalId' => $externalId
                                 ],
                             ],
-                            'amount'    => roundEx($discountPrice * $basketItem->getQuantity(), 2)
+                            'amount'    => roundEx($discountPrice * $quantity, 2)
                         ];
                     }
+                }
+
+                if (!self::isPercentFromBasePrice() && $discountPrice !== 0) {
+                    $currentPrice = $basePrice - $discountPrice;
                 }
             }
         }
 
         return $requestedPromotions;
+    }
+
+    public static function isPercentFromBasePrice()
+    {
+        return (string)\Bitrix\Main\Config\Option::get('sale', 'get_discount_percent_from_base_price') == 'Y';
     }
 
     private static function getDiscountByPriceType($basketItem)
