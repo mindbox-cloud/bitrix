@@ -421,9 +421,11 @@ class YmlFeedMindbox
 
         $addProps = Options::getModuleOption("CATALOG_OFFER_PROPS");
 
+        $info = self::getIblockInfo((int) Options::getModuleOption("CATALOG_IBLOCK_ID"));
+
         foreach ($offersByProducts as $productId => &$offers) {
             foreach ($offers as &$offer) {
-                $offer['prices'] = \CCatalogProduct::GetOptimalPrice($offer['ID']);
+                $offer['prices'] = \CCatalogProduct::GetOptimalPrice($offer['ID'], 1, [], 'N', [], $info['LID']);
                 $offer['props'] = [];
                 if ($offer['prices']['RESULT_PRICE']['PRICE_TYPE_ID'] !== $basePriceId) {
                     $offer['prices']['RESULT_PRICE'] = Helper::getPriceByType($offer);
@@ -514,11 +516,13 @@ class YmlFeedMindbox
             $arSelect
         );
 
+        $info = self::getIblockInfo((int) Options::getModuleOption("CATALOG_IBLOCK_ID"));
+
         while ($prod = $prods->GetNext()) {
             if (!$prod['XML_ID']) {
                 $prod['XML_ID'] = $prod['ID'];
             }
-            $prod['prices'] = \CCatalogProduct::GetOptimalPrice($prod['ID']);
+            $prod['prices'] = \CCatalogProduct::GetOptimalPrice($prod['ID'], 1, [], 'N', [], $info['LID']);
             if ($prod['prices']['RESULT_PRICE']['PRICE_TYPE_ID'] !== $basePriceId) {
                 $prod['prices']['RESULT_PRICE'] = Helper::getPriceByType($prod);
             }
