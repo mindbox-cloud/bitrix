@@ -1755,6 +1755,10 @@ class Event
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
+        if (!$order->isNew() && !Helper::isMindboxOrder($order->getId())) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+
         if (Helper::isInternalOrderUser($order->getUserId())) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
