@@ -2019,11 +2019,11 @@ class Event
                     && ($findRow = $deliveryDiscountEntity->getRowByFilter($mindboxDiscountParams))
             ) {
                 $deliveryDiscountEntity->update((int)$findRow['ID'], [
-                    'UF_DISCOUNTED_PRICE' => $mindboxDeliveryPrice
+                    'UF_DISCOUNTED_PRICE' => (float)$mindboxDeliveryPrice
                 ]);
             } elseif (isset($mindboxDeliveryPrice)) {
                 $deliveryDiscountEntity->add(array_merge([
-                    'UF_DISCOUNTED_PRICE' => $mindboxDeliveryPrice
+                    'UF_DISCOUNTED_PRICE' => (float)$mindboxDeliveryPrice
                 ], $mindboxDiscountParams));
             } else {
                 $deliveryDiscountEntity->deleteByFilter($mindboxDiscountParams);

@@ -1534,7 +1534,11 @@ class Helper
                             Options::getModuleOption('TRANSACTION_ID') => $orderId
                         ],
                     ]
-                ])
+                ]),
+                '',
+                [],
+                true,
+                false
         );
 
         try {
