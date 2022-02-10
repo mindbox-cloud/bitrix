@@ -255,6 +255,26 @@ class EventController
         $this->unRegisterEventHandler($this->getCartRulesHandlerData());
     }
 
+    protected function getDeliveryRulesHandlerData()
+    {
+        return [
+                'bitrixModule' => 'sale',
+                'bitrixEvent' => 'OnCondSaleActionsControlBuildList',
+                'class' => '\\Mindbox\\Discount\\MindboxDeliveryDiscountAction',
+                'method' => 'GetControlDescr'
+        ];
+    }
+
+    public function installDeliveryRulesHandler()
+    {
+        $this->registerEventHandler($this->getDeliveryRulesHandlerData());
+    }
+
+    protected function unInstallDeliveryRulesHandler()
+    {
+        $this->unRegisterEventHandler($this->getDeliveryRulesHandlerData());
+    }
+
     /**
      * Регистрация обработчика, ответствененного за изменения активности обработчиков
      */
@@ -317,6 +337,7 @@ class EventController
 
         $this->installEventControllerHandler();
         $this->installCartRulesHandler();
+        $this->installDeliveryRulesHandler();
     }
 
     /**
@@ -338,6 +359,7 @@ class EventController
 
         $this->unInstallEventControllerHandler();
         $this->unInstallCartRulesHandler();
+        $this->unInstallDeliveryRulesHandler();
         $this->setOptionValue('');
     }
 

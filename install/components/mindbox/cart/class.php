@@ -89,13 +89,19 @@ class Cart extends CBitrixComponent implements Controllerable
             Bitrix\Main\Context::getCurrent()->getSite()
         );
 
+        $order = $this->getOrder();
+        if ($order instanceof \Bitrix\Sale\Order) {
+            $object = $order;
+        } else {
+            $object = $basket;
+        }
 
         $preorder = new PreorderRequestDTO();
 
         foreach ($basket as $basketItem) {
             $bitrixBasket[$basketItem->getId()] = $basketItem;
             $productBasePrice = Helper::getBasePrice($basketItem);
-            $requestedPromotions = Helper::getRequestedPromotions($basketItem, $basket);
+            $requestedPromotions = Helper::getRequestedPromotions($basketItem, $object);
 
             $arLine = [
                 'basePricePerItem' => $productBasePrice,
@@ -288,6 +294,13 @@ class Cart extends CBitrixComponent implements Controllerable
         }
         $preorder = new PreorderRequestDTO();
 
+        $order = $this->getOrder();
+        if ($order instanceof \Bitrix\Sale\Order) {
+            $object = $order;
+        } else {
+            $object = $basket;
+        }
+
         $basketItems = $basket->getBasketItems();
         $lines = [];
         $bitrixBasket = [];
@@ -295,7 +308,7 @@ class Cart extends CBitrixComponent implements Controllerable
         foreach ($basketItems as $basketItem) {
             $bitrixBasket[$basketItem->getId()] = $basketItem;
             $productBasePrice = Helper::getBasePrice($basketItem);
-            $requestedPromotions = Helper::getRequestedPromotions($basketItem, $basket);
+            $requestedPromotions = Helper::getRequestedPromotions($basketItem, $object);
 
             $arLine = [
                 'basePricePerItem' => $productBasePrice,
@@ -473,6 +486,13 @@ class Cart extends CBitrixComponent implements Controllerable
         }
         $preorder = new PreorderRequestDTO();
 
+        $order = $this->getOrder();
+        if ($order instanceof \Bitrix\Sale\Order) {
+            $object = $order;
+        } else {
+            $object = $basket;
+        }
+
         $basketItems = $basket->getBasketItems();
         $lines = [];
         $bitrixBasket = [];
@@ -481,7 +501,7 @@ class Cart extends CBitrixComponent implements Controllerable
         foreach ($basketItems as $basketItem) {
             $bitrixBasket[$basketItem->getId()] = $basketItem;
             $productBasePrice = Helper::getBasePrice($basketItem);
-            $requestedPromotions = Helper::getRequestedPromotions($basketItem, $basket);
+            $requestedPromotions = Helper::getRequestedPromotions($basketItem, $object);
 
             $arLine = [
                 'basePricePerItem' => $productBasePrice,
@@ -566,7 +586,6 @@ class Cart extends CBitrixComponent implements Controllerable
                 )->sendRequest()->getResult()->getField('order');
             }
 
-
             $discounts = $preorderInfo->getDiscountsInfo();
 
             $couponsInfo = reset($preorderInfo->getField('couponsInfo'));
@@ -578,7 +597,6 @@ class Cart extends CBitrixComponent implements Controllerable
             }
 
             $lines = $preorderInfo->getLines();
-
 
             $mindboxBasket = [];
             $mindboxAdditional = [];
@@ -618,5 +636,35 @@ class Cart extends CBitrixComponent implements Controllerable
 
             return;
         }
+    }
+
+    public function getUserId()
+    {
+        global $USER;
+
+        return $USER instanceof \CUser ? $USER->GetID() : null;
+    }
+
+    public function getOrder()
+    {
+        $basket = \Bitrix\Sale\Basket\Storage::getInstance(\Bitrix\Sale\Fuser::getId(), $this->getSiteId())->getBasket();
+
+        $orderableBasket = $basket->getOrderableItems();
+
+        $userId = $this->getUserId() ?: CSaleUser::GetAnonymousUserID();
+
+        $registry = \Bitrix\Sale\Registry::getInstance(\Bitrix\Sale\Registry::REGISTRY_TYPE_ORDER);
+        /** @var \Bitrix\Sale\Order $orderClass */
+        $orderClass = $registry->getOrderClassName();
+
+        $order = $orderClass::create($this->getSiteId(), $userId);
+
+        $result = $order->appendBasket($orderableBasket);
+
+        if ($result->isSuccess()) {
+            return $order;
+        }
+
+        return false;
     }
 }

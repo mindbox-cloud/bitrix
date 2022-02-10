@@ -10,6 +10,8 @@ class YmlFeedMindbox
 
     private static $stepSize = 1000;
 
+    private static $prodsInfo = [];
+
     const DESCRIPTION_TEXT_LENGTH = 3000;
 
     public static function start($step = 1)
@@ -419,12 +421,19 @@ class YmlFeedMindbox
 
         $addProps = Options::getModuleOption("CATALOG_OFFER_PROPS");
 
-        foreach ($offersByProducts as &$offers) {
-            foreach ($offers as $offerId => &$offer) {
-                $offer['prices'] = \CCatalogProduct::GetOptimalPrice($offer['ID']);
+        $info = self::getIblockInfo((int) Options::getModuleOption("CATALOG_IBLOCK_ID"));
+
+        foreach ($offersByProducts as $productId => &$offers) {
+            foreach ($offers as &$offer) {
+                $offer['prices'] = \CCatalogProduct::GetOptimalPrice($offer['ID'], 1, [], 'N', [], $info['LID']);
                 $offer['props'] = [];
                 if ($offer['prices']['RESULT_PRICE']['PRICE_TYPE_ID'] !== $basePriceId) {
                     $offer['prices']['RESULT_PRICE'] = Helper::getPriceByType($offer);
+                }
+
+                if (array_key_exists($productId, self::$prodsInfo)) {
+                    $offer['ACTIVE'] = (self::$prodsInfo[$productId]['ACTIVE'] == 'N')? self::$prodsInfo[$productId]['ACTIVE']:$offer['ACTIVE'];
+                    $offer['CATALOG_AVAILABLE'] = (self::$prodsInfo[$productId]['CATALOG_AVAILABLE'] == 'N')? self::$prodsInfo[$productId]['CATALOG_AVAILABLE']:$offer['CATALOG_AVAILABLE'];
                 }
             }
         }
@@ -466,7 +475,7 @@ class YmlFeedMindbox
         return \CIBlock::GetByID($iblockId)->Fetch();
     }
 
-    protected static function getProdsCount()
+    public static function getProdsCount()
     {
         return (int) (\CIBlockElement::GetList(
             ['SORT' => 'ASC'],
@@ -507,11 +516,13 @@ class YmlFeedMindbox
             $arSelect
         );
 
+        $info = self::getIblockInfo((int) Options::getModuleOption("CATALOG_IBLOCK_ID"));
+
         while ($prod = $prods->GetNext()) {
             if (!$prod['XML_ID']) {
                 $prod['XML_ID'] = $prod['ID'];
             }
-            $prod['prices'] = \CCatalogProduct::GetOptimalPrice($prod['ID']);
+            $prod['prices'] = \CCatalogProduct::GetOptimalPrice($prod['ID'], 1, [], 'N', [], $info['LID']);
             if ($prod['prices']['RESULT_PRICE']['PRICE_TYPE_ID'] !== $basePriceId) {
                 $prod['prices']['RESULT_PRICE'] = Helper::getPriceByType($prod);
             }
@@ -530,6 +541,8 @@ class YmlFeedMindbox
                 $prodsInfo[$elementId]['props'] = [];
             }
         }
+
+        self::$prodsInfo = $prodsInfo;
 
         return $prodsInfo;
     }
