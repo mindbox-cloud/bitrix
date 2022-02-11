@@ -297,12 +297,37 @@ class Helper
 
     public static function getElementCode($elementId)
     {
-        $arProduct = \CIBlockElement::GetByID($elementId)->GetNext();
-        if ($arProduct['XML_ID']) {
-            $elementId = $arProduct['XML_ID'];
+        $fields = [
+            'ID' => (int)$elementId,
+            'IBLOCK_ID' => null,
+            'RESULT' => $elementId
+        ];
+
+        $iterator = \Bitrix\Iblock\ElementTable::getList([
+            'filter' => ['=ID' => (int)$elementId],
+            'select' => ['IBLOCK_ID', 'XML_ID'],
+            'limit' => 1
+        ]);
+
+        if ($el = $iterator->fetch()) {
+            $fields['IBLOCK_ID'] = $el['IBLOCK_ID'];
+            $fields['RESULT'] = !empty($el['XML_ID']) ? $el['XML_ID'] : $elementId;
         }
 
-        return $elementId;
+        $event = new \Bitrix\Main\Event('mindbox.marketing', 'onGetElementCode', $fields);
+        $event->send();
+
+        foreach ($event->getResults() as $eventResult) {
+            if ($eventResult->getType() !== \Bitrix\Main\EventResult::SUCCESS) {
+                continue;
+            }
+
+            $paramsEvent = $eventResult->getParameters();
+
+            $fields = array_merge($fields, $paramsEvent);
+        }
+
+        return $fields['RESULT'];
     }
 
     /**
@@ -314,12 +339,37 @@ class Helper
 
     public static function getSectionCode($sectionId)
     {
-        $arSection = \CIBlockSection::GetByID($sectionId)->GetNext();
-        if ($arSection['XML_ID']) {
-            $sectionId = $arSection['XML_ID'];
+        $fields = [
+            'ID' => (int)$sectionId,
+            'IBLOCK_ID' => null,
+            'RESULT' => $sectionId
+        ];
+
+        $iterator = \Bitrix\Iblock\SectionTable::getList([
+            'filter' => ['=ID' => (int)$sectionId],
+            'select' => ['IBLOCK_ID', 'XML_ID'],
+            'limit' => 1
+        ]);
+
+        if ($arSection = $iterator->fetch()) {
+            $fields['IBLOCK_ID'] = $arSection['IBLOCK_ID'];
+            $fields['RESULT'] = !empty($arSection['XML_ID']) ? $arSection['XML_ID'] : $sectionId;
         }
 
-        return $sectionId;
+        $event = new \Bitrix\Main\Event('mindbox.marketing', 'onGetSectionCode', $fields);
+        $event->send();
+
+        foreach ($event->getResults() as $eventResult) {
+            if ($eventResult->getType() !== \Bitrix\Main\EventResult::SUCCESS) {
+                continue;
+            }
+
+            $paramsEvent = $eventResult->getParameters();
+
+            $fields = array_merge($fields, $paramsEvent);
+        }
+
+        return $fields['RESULT'];
     }
 
     /**

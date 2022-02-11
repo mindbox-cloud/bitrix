@@ -43,12 +43,6 @@ class ProductPrice extends CBitrixComponent implements Controllerable
 
     public function onPrepareComponentParams($arParams)
     {
-        if (empty($arParams['ID'])) {
-            $productXmlId = \Mindbox\Helper::getElementCode($arParams['ID']);
-            $arParams['ID'] = $productXmlId;
-        }
-       // echo '<pre>'; print_r($arParams);
-
         return $arParams;
     }
 
