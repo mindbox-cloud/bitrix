@@ -131,17 +131,6 @@ class mindbox_marketing extends CModule
             30
         );
 
-        CAgent::AddAgent(
-            "\Mindbox\Helper::setLogAccess();",
-            $this->MODULE_ID,
-            "N",
-            60,
-            $now,
-            "Y",
-            $now,
-            30
-        );
-
         return true;
     }
 
@@ -161,11 +150,6 @@ class mindbox_marketing extends CModule
 
         CAgent::RemoveAgent(
             "\Mindbox\QueueTable::start();",
-            $this->MODULE_ID
-        );
-
-        CAgent::RemoveAgent(
-            "\Mindbox\Helper::setLogAccess();",
             $this->MODULE_ID
         );
     }

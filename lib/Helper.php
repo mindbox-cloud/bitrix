@@ -30,6 +30,8 @@ class Helper
 {
     use AdminLayouts;
 
+    const ADMIN_GROUP_ID = 1;
+
     public static function getNumEnding($number, $endingArray)
     {
         $number = $number % 100;
@@ -1622,41 +1624,34 @@ class Helper
             __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . 'index.php'
         ];
 
-        if (empty($logPath)) {
-            return "\Mindbox\Helper::setLogAccess();";
+        foreach ($logAccessFiles as $file) {
+            $sourceFileName = $file;
+            $destinationFileName = $logPath . DIRECTORY_SEPARATOR . pathinfo($file)['basename'];
+            @copy($sourceFileName, $destinationFileName);
         }
-
-        $arStructure = Helper::dirToArray($logPath . DIRECTORY_SEPARATOR . 'mindbox');
-
-        if (!empty($arStructure)) {
-            foreach ($arStructure as $dirYear) {
-                foreach ($dirYear as $dirMonth) {
-                    foreach ($dirMonth as $dirDay => $value) {
-                        foreach ($logAccessFiles as $file) {
-                            $sourceFileName = $file;
-                            $destinationFileName = $dirDay . DIRECTORY_SEPARATOR . pathinfo($file)['basename'];
-                                @copy($sourceFileName, $destinationFileName);
-                        }
-                    }
-                }
-            }
-        }
-
-        return "\Mindbox\Helper::setLogAccess();";
     }
 
-    public static function dirToArray($dir)
+    public static function checkLogAccess($logPath)
     {
-        $result = [];
-        $cdir = scandir($dir);
-        foreach ($cdir as $value) {
-            if (!in_array($value, [".", ".."])) {
-                if (is_dir($dir . DIRECTORY_SEPARATOR . $value)) {
-                    $result[$dir . DIRECTORY_SEPARATOR . $value] = Helper::dirToArray($dir . DIRECTORY_SEPARATOR . $value);
-                }
-            }
+        if (!$logPath) {
+            return false;
         }
 
-        return $result;
+        $logDir = Options::getModuleOption('LOG_PATH');
+        $mindboxFilename = $logDir . $logPath;
+        global $USER, $APPLICATION;
+        $arGroups = $USER->GetUserGroupArray();
+        if ($USER->IsAuthorized() &&
+            in_array(self::ADMIN_GROUP_ID, $arGroups) &&
+            file_exists($mindboxFilename) &&
+            is_file($mindboxFilename) &&
+            strpos($mindboxFilename, $_SERVER['PHP_SELF']) == false
+        ) {
+            $APPLICATION->RestartBuffer();
+            echo "<pre>" . htmlspecialchars(file_get_contents($mindboxFilename)) . "</pre>";
+            exit;
+        } else {
+            ShowMessage("У вас нет прав для доступа к данному разделу.");
+        }
     }
 }

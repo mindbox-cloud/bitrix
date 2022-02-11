@@ -1,2 +1,2 @@
 RewriteEngine on
-RewriteRule ^.*$ index.php [NC,L,QSA]
+RewriteRule ^(.*)$ index.php?path=$1 [NC,L,QSA]
