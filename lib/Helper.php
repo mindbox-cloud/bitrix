@@ -300,7 +300,7 @@ class Helper
         $fields = [
             'ID' => (int)$elementId,
             'IBLOCK_ID' => null,
-            'RESULT' => $elementId
+            'VALUE' => $elementId
         ];
 
         $iterator = \Bitrix\Iblock\ElementTable::getList([
@@ -311,7 +311,7 @@ class Helper
 
         if ($el = $iterator->fetch()) {
             $fields['IBLOCK_ID'] = $el['IBLOCK_ID'];
-            $fields['RESULT'] = !empty($el['XML_ID']) ? $el['XML_ID'] : $elementId;
+            $fields['VALUE'] = !empty($el['XML_ID']) ? $el['XML_ID'] : $elementId;
         }
 
         $event = new \Bitrix\Main\Event('mindbox.marketing', 'onGetElementCode', $fields);
@@ -322,12 +322,14 @@ class Helper
                 continue;
             }
 
-            $paramsEvent = $eventResult->getParameters();
-
-            $fields = array_merge($fields, $paramsEvent);
+            if ($eventResultData = $eventResult->getParameters()) {
+                if (isset($eventResultData['VALUE']) && $eventResultData['VALUE'] != $fields['VALUE']) {
+                    $fields['VALUE'] = $eventResultData['VALUE'];
+                }
+            }
         }
 
-        return $fields['RESULT'];
+        return $fields['VALUE'];
     }
 
     /**
@@ -342,7 +344,7 @@ class Helper
         $fields = [
             'ID' => (int)$sectionId,
             'IBLOCK_ID' => null,
-            'RESULT' => $sectionId
+            'VALUE' => $sectionId
         ];
 
         $iterator = \Bitrix\Iblock\SectionTable::getList([
@@ -353,7 +355,7 @@ class Helper
 
         if ($arSection = $iterator->fetch()) {
             $fields['IBLOCK_ID'] = $arSection['IBLOCK_ID'];
-            $fields['RESULT'] = !empty($arSection['XML_ID']) ? $arSection['XML_ID'] : $sectionId;
+            $fields['VALUE'] = !empty($arSection['XML_ID']) ? $arSection['XML_ID'] : $sectionId;
         }
 
         $event = new \Bitrix\Main\Event('mindbox.marketing', 'onGetSectionCode', $fields);
@@ -364,12 +366,14 @@ class Helper
                 continue;
             }
 
-            $paramsEvent = $eventResult->getParameters();
-
-            $fields = array_merge($fields, $paramsEvent);
+            if ($eventResultData = $eventResult->getParameters()) {
+                if (isset($eventResultData['VALUE']) && $eventResultData['VALUE'] != $fields['VALUE']) {
+                    $fields['VALUE'] = $eventResultData['VALUE'];
+                }
+            }
         }
 
-        return $fields['RESULT'];
+        return $fields['VALUE'];
     }
 
     /**
