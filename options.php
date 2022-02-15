@@ -33,6 +33,7 @@ $mayEmptyProps = [
 ];
 
 if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
+
     if (empty($_POST['MINDBOX_PROTOCOL']) || $_POST['MINDBOX_PROTOCOL'] !== 'Y') {
         $_POST['MINDBOX_PROTOCOL'] = 'N';
     }
@@ -66,7 +67,10 @@ if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
         );
     }
 
-    \Mindbox\Helper::setLogAccess();
+    if ($_REQUEST['MINDBOX_LOG_PATH'] !== COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'MINDBOX_LOG_PATH', '')) {
+        \Mindbox\Helper::setLogAccess();
+    }
+
 }
 
 IncludeModuleLangFile($_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/options.php');
@@ -410,7 +414,7 @@ $arAllOptions['COMMON'][] = [
 
 <form name='minboxoptions' method='POST'
       action='<?php echo $APPLICATION->GetCurPage() ?>?mid=<?= htmlspecialcharsbx($mid)
-        ?>&amp;lang=<?php echo LANG ?>'>
+      ?>&amp;lang=<?php echo LANG ?>'>
     <?= bitrix_sessid_post() ?>
     <?php
     $tabControl->Begin();
