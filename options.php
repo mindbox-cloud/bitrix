@@ -33,6 +33,7 @@ $mayEmptyProps = [
 ];
 
 if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
+
     if (empty($_POST['MINDBOX_PROTOCOL']) || $_POST['MINDBOX_PROTOCOL'] !== 'Y') {
         $_POST['MINDBOX_PROTOCOL'] = 'N';
     }
@@ -52,7 +53,7 @@ if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
         }
     }
 
-
+    $defaultOptions = \Bitrix\Main\Config\Option::getDefaults("mindbox.marketing");
     $trackerJsFilename = $_SERVER["DOCUMENT_ROOT"] . $defaultOptions['TRACKER_JS_FILENAME'];
     $trackerJsFilenameOrig = $_SERVER["DOCUMENT_ROOT"] . $defaultOptions['TRACKER_JS_FILENAME_ORIGINAL'];
     if (file_exists($trackerJsFilenameOrig)) {

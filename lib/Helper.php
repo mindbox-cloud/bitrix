@@ -1645,7 +1645,7 @@ class Helper
             in_array(self::ADMIN_GROUP_ID, $arGroups) &&
             file_exists($mindboxFilename) &&
             is_file($mindboxFilename) &&
-            strpos($mindboxFilename, $_SERVER['PHP_SELF']) == false
+            strpos($mindboxFilename, $_SERVER['PHP_SELF']) === false
         ) {
             $APPLICATION->RestartBuffer();
             echo "<pre>" . htmlspecialchars(file_get_contents($mindboxFilename)) . "</pre>";
