@@ -1098,9 +1098,9 @@ class Helper
         $request = \Bitrix\Main\Context::getCurrent()->getRequest();
 
         return ($request->isAdminSection() || strpos(
-            $currentPage,
-            '/bitrix/admin'
-        ) !== false || strpos($_SERVER['HTTP_REFERER'], '/bitrix/admin') !== false);
+                $currentPage,
+                '/bitrix/admin'
+            ) !== false || strpos($_SERVER['HTTP_REFERER'], '/bitrix/admin') !== false);
     }
 
     public static function checkBasketItem($basketItem)
@@ -1618,6 +1618,10 @@ class Helper
     public static function setLogAccess()
     {
         $logPath = Options::getModuleOption('LOG_PATH');
+
+        if (empty($logPath)) {
+            return false;
+        }
 
         $logAccessFiles = [
             __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . '.htaccess',
