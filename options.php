@@ -33,7 +33,6 @@ $mayEmptyProps = [
 ];
 
 if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
-
     if (empty($_POST['MINDBOX_PROTOCOL']) || $_POST['MINDBOX_PROTOCOL'] !== 'Y') {
         $_POST['MINDBOX_PROTOCOL'] = 'N';
     }
