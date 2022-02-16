@@ -37,6 +37,11 @@ if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
             if (is_array($option)) {
                 $option = implode(',', $option);
             }
+
+            if ($key === 'MINDBOX_LOG_LIFE_TIME' && preg_match('#\D#s'.BX_UTF_PCRE_MODIFIER, $option)) {
+                $option = 0;
+            }
+
             COption::SetOptionString(MINDBOX_ADMIN_MODULE_NAME, str_replace('MINDBOX_', '', $key), $option);
         }
     }
@@ -184,6 +189,12 @@ $arAllOptions['COMMON'] = [
         'LOG_PATH',
         getMessage('LOG_PATH'),
         COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'LOG_PATH', $_SERVER['DOCUMENT_ROOT'] . '/logs/'),
+        ['text']
+    ],
+    [
+        'LOG_LIFE_TIME',
+        getMessage('LOG_LIFE_TIME'),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'LOG_LIFE_TIME', 0),
         ['text']
     ],
 ];
@@ -473,10 +484,15 @@ $arAllOptions['COMMON'][] = [
 <script>
     document.addEventListener("DOMContentLoaded", () => {
         const settingForm = document.querySelector('form[name="minboxoptions"]');
-        const selectSettingGroup = settingForm.querySelector('select[name="MINDBOX_CONTINUE_USER_GROUPS[]"]');
-        const parrent_tr = selectSettingGroup.closest("tr");
-        const label = parrent_tr.firstElementChild;
 
+        const nodeLabelSettingGroup = settingForm.querySelector('select[name="MINDBOX_CONTINUE_USER_GROUPS[]"]').closest("tr").firstElementChild;;
+        createTooltip(nodeLabelSettingGroup, "<?= getMessage('CONTINUE_USER_GROUPS_TOOLTIP')?>");
+
+        const nodeLabelLogLifeTime = settingForm.querySelector('input[name="MINDBOX_LOG_LIFE_TIME"]').closest("tr").firstElementChild;
+        createTooltip(nodeLabelLogLifeTime, "<?= getMessage('LOG_LIFE_TIME_TOOLTIP')?>");
+    });
+
+    function createTooltip(label, message) {
         label.classList.add('mindbox-help');
 
         // Добавили иконку для тултипа
@@ -491,7 +507,7 @@ $arAllOptions['COMMON'][] = [
             // Добавляем тултип
             tooltipElem = document.createElement('div');
             tooltipElem.className = 'mindbox-help--tooltip ';
-            tooltipElem.innerHTML = "<?= getMessage('CONTINUE_USER_GROUPS_TOOLTIP')?>";
+            tooltipElem.innerHTML = message;
             label.append(tooltipElem);
 
             // спозиционируем его сверху от аннотируемого элемента (top-center)
@@ -518,5 +534,5 @@ $arAllOptions['COMMON'][] = [
             const tooltipElem = iconNode.parentNode.querySelector('.mindbox-help--tooltip');
             tooltipElem.remove();
         }
-    });
+    }
 </script>
