@@ -5,6 +5,7 @@ $MESS['ENDPOINT'] = 'Endpoint';
 $MESS['SECRET_KEY'] = 'Secret key';
 $MESS['LOG_PATH'] = 'Path to the log';
 $MESS['LOG_LIFE_TIME'] = 'Number of days to keep log files';
+$MESS['INCORRECT_VALUE'] = 'Incorrect value for input: #INPUT#';
 $MESS['LOG_LIFE_TIME_TOOLTIP'] = 'If 0 is set, then we do not rotate the logs';
 $MESS['TIMEOUT'] = 'Timeout in seconds';
 $MESS['QUEUE_TIMEOUT'] = 'Queue timeout in seconds';
