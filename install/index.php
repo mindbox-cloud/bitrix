@@ -143,6 +143,17 @@ class mindbox_marketing extends CModule
             30
         );
 
+        CAgent::AddAgent(
+                "\Mindbox\Agents::agentRotationLogs();",
+                $this->MODULE_ID,
+                "N",
+                86400,
+                $now,
+                "Y",
+                $now,
+                30
+        );
+
         return true;
     }
 
@@ -162,6 +173,11 @@ class mindbox_marketing extends CModule
 
         CAgent::RemoveAgent(
             "\Mindbox\QueueTable::start();",
+            $this->MODULE_ID
+        );
+
+        CAgent::RemoveAgent(
+        '\Mindbox\Agents::agentRotationLogs();',
             $this->MODULE_ID
         );
     }
