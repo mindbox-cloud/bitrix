@@ -21,7 +21,7 @@ class Agents
     {
         $pathArchive = str_replace(DIRECTORY_SEPARATOR.DIRECTORY_SEPARATOR,
                 DIRECTORY_SEPARATOR,
-                Options::getModuleOption('LOG_PATH') . DIRECTORY_SEPARATOR . self::$pathSaveArchive);
+                Options::getModuleOption('LOG_PATH') . DIRECTORY_SEPARATOR . self::$pathToLogs . DIRECTORY_SEPARATOR . self::$pathSaveArchive);
 
         if (!is_dir($pathArchive)) {
             mkdir($pathArchive, defined('BX_DIR_PERMISSIONS') ? BX_DIR_PERMISSIONS : 0755);
