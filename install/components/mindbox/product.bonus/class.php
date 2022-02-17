@@ -40,12 +40,6 @@ class ProductBonus extends CBitrixComponent implements Controllerable
 
     public function onPrepareComponentParams($arParams)
     {
-        if (empty($arParams['ID'])) {
-            $productXmlId = \Mindbox\Helper::getElementCode($arParams['ID']);
-            $arParams['ID'] = $productXmlId;
-        }
-
-
         return $arParams;
     }
 
