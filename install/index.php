@@ -143,14 +143,17 @@ class mindbox_marketing extends CModule
             30
         );
 
+        $tomorrow = DateTime::createFromTimestamp(strtotime('tomorrow'));
+        $tomorrow->setTime(3,0);
+
         CAgent::AddAgent(
                 "\Mindbox\Agents::agentRotationLogs();",
                 $this->MODULE_ID,
                 "N",
                 86400,
-                $now,
+                $tomorrow,
                 "Y",
-                $now,
+                $tomorrow,
                 30
         );
 
