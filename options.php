@@ -39,7 +39,7 @@ if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
             }
 
             if ($key === 'MINDBOX_LOG_LIFE_TIME' && preg_match('#\D#s'.BX_UTF_PCRE_MODIFIER, $option)) {
-                CAdminMessage::ShowMessage(['MESSAGE' => GetMessage('INCORRECT_VALUE', ['#INPUT#' => GetMessage('LOG_LIFE_TIME')]), 'HTML' => true, 'TYPE' => 'ERROR']);
+                CAdminMessage::ShowMessage(['MESSAGE' => GetMessage('INCORRECT_INTEGER_VALUE', ['#INPUT#' => GetMessage('LOG_LIFE_TIME')]), 'HTML' => true, 'TYPE' => 'ERROR']);
                 continue;
             }
 
