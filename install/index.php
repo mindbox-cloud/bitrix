@@ -147,7 +147,7 @@ class mindbox_marketing extends CModule
         $tomorrow->setTime(3,0);
 
         CAgent::AddAgent(
-                "\Mindbox\Agents::agentRotationLogs();",
+                "\Mindbox\LogsRotation::agentRotationLogs();",
                 $this->MODULE_ID,
                 "N",
                 86400,
@@ -180,7 +180,7 @@ class mindbox_marketing extends CModule
         );
 
         CAgent::RemoveAgent(
-        '\Mindbox\Agents::agentRotationLogs();',
+        '\Mindbox\LogsRotation::agentRotationLogs();',
             $this->MODULE_ID
         );
     }

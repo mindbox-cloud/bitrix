@@ -2,7 +2,7 @@
 
 namespace Mindbox;
 
-class Agents
+class LogsRotation
 {
     protected static $logFileName = 'mindbox.log';
 
