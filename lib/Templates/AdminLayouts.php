@@ -264,7 +264,6 @@ HTML;
                 
                 function createTableExt(tableClass, propName) {
                     let props = getProps(propName);
-                       console.log(props);
                     Object.keys(props).map((objectKey, index) => {
                         let value = props[objectKey];
                         addRow(value['bitrix'], value['mindbox'], tableClass, propName);
