@@ -4,7 +4,8 @@ require $_SERVER['DOCUMENT_ROOT'] . '/bitrix/header.php';
 
 <?php
 if (\Bitrix\Main\Loader::includeModule('mindbox.marketing')) {
-    \Mindbox\Helper::checkLogAccess($_GET['path']);
+    $mindboxLog = new \Mindbox\Log();
+    $mindboxLog->checkLogAccess($_GET['path']);
 }
 ?>
 

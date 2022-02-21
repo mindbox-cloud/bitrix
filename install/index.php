@@ -70,6 +70,9 @@ class mindbox_marketing extends CModule
         $orderPropertyInstaller = new \Mindbox\Installer\OrderPropertiesInstaller();
         $orderPropertyInstaller->install();
 
+        $mindboxLog = new \Mindbox\Log();
+        $mindboxLog->setLogAccess();
+
         $GLOBALS["APPLICATION"]->IncludeAdminFile(GetMessage("MINDBOX_INSTALL_TITLE"), __DIR__ . "/step1.php");
     }
 
