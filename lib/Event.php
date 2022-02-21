@@ -19,13 +19,11 @@ use CUser;
 use DateTime;
 use DateTimeZone;
 use Mindbox\DTO\DTO;
-use Mindbox\DTO\V2\Requests\DiscountRequestDTO;
+use Mindbox\DTO\V3\Requests\DiscountRequestDTO;
 use Mindbox\DTO\V3\Requests\CustomerRequestDTO;
-use Mindbox\DTO\V2\Requests\CustomerRequestDTO as CustomerRequestV2DTO;
-use Mindbox\DTO\V2\Requests\LineRequestDTO;
-use Mindbox\DTO\V2\Requests\OrderCreateRequestDTO;
-use Mindbox\DTO\V2\Requests\OrderUpdateRequestDTO;
-use MongoDB\Driver\Exception\Exception;
+use Mindbox\DTO\V3\Requests\LineRequestDTO;
+use Mindbox\DTO\V3\Requests\OrderCreateRequestDTO;
+use Mindbox\DTO\V3\Requests\OrderUpdateRequestDTO;
 
 Loader::includeModule('catalog');
 Loader::includeModule('sale');
@@ -538,10 +536,10 @@ class Event
         if (class_exists('\Bitrix\Main\UserPhoneAuthTable')) {
             $params['runtime'] = [
                     new \Bitrix\Main\Entity\ReferenceField(
-                            'R_PHONE_AUTH',
-                            '\Bitrix\Main\UserPhoneAuthTable',
-                            ['=this.ID' => 'ref.USER_ID'],
-                            ['join_type' => 'LEFT']
+                        'R_PHONE_AUTH',
+                        '\Bitrix\Main\UserPhoneAuthTable',
+                        ['=this.ID' => 'ref.USER_ID'],
+                        ['join_type' => 'LEFT']
                     ),
             ];
 
@@ -767,9 +765,7 @@ class Event
                     $request = $mindbox->order()->getRequest();
                     // закрываем транзакцию
                     Transaction::closeTransaction($existTransaction['id']);
-
                 } catch (\Exception $exception) {
-
                 }
             }
         }
@@ -908,7 +904,7 @@ class Event
             ];
         }
 
-        $customer = new CustomerRequestV2DTO();
+        $customer = new CustomerRequestDTO();
 
         if (is_object($USER) && $USER->IsAuthorized()) {
             $orderUserId = (Helper::isAdminSection()) ? $order->getUserId() : $USER->GetID();
@@ -1042,7 +1038,6 @@ class Event
             $createOrderResult = $createOrderResult->getResult()->getField('order');
             $_SESSION['MINDBOX_ORDER'] = $createOrderResult ? $createOrderResult->getId('mindboxId') : false;
         } catch (Exceptions\MindboxClientErrorException $e) {
-
             try {
                 $orderDTO = new OrderCreateRequestDTO();
                 $orderDTO->setField('order', [
@@ -1127,7 +1122,6 @@ class Event
         }
 
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'loyalty') {
-
             if (!$isNew && !Helper::isMindboxOrder($order->getId())) {
                 return new Main\EventResult(Main\EventResult::SUCCESS);
             }
@@ -1223,7 +1217,6 @@ class Event
             $arCoupons = [];
 
             if ($_SESSION['PROMO_CODE'] && !empty($_SESSION['PROMO_CODE'])) {
-
                 if (strpos($_SESSION['PROMO_CODE'], ',') !== false) {
                     $applyCouponsList = explode(',', $_SESSION['PROMO_CODE']);
 
@@ -1232,7 +1225,6 @@ class Event
                             $arCoupons[]['ids']['code'] = trim($couponItem);
                         }
                     }
-
                 } else {
                     $arCoupons[]['ids']['code'] = $_SESSION['PROMO_CODE'];
                 }
@@ -1261,7 +1253,7 @@ class Event
                 ];
             }
 
-            $customer = new CustomerRequestV2DTO();
+            $customer = new CustomerRequestDTO();
 
             $customFields = [];
             $propertyCollection = $order->getPropertyCollection();
@@ -1368,7 +1360,6 @@ class Event
                         Options::getOperationName('saveOfflineOrder')
                     )->sendRequest();
                 } catch (Exceptions\MindboxUnavailableException $e) {
-
                     $lastResponse = $mindbox->order()->getLastResponse();
 
                     if ($lastResponse) {
@@ -1397,7 +1388,6 @@ class Event
                         Options::getOperationName('saveOfflineOrder')
                     )->sendRequest();
                 } catch (Exceptions\MindboxUnavailableException $e) {
-
                     $lastResponse = $mindbox->order()->getLastResponse();
 
                     if ($lastResponse) {
@@ -1460,7 +1450,7 @@ class Event
                 return new Main\EventResult(Main\EventResult::SUCCESS);
             }
 
-            $customer = new CustomerRequestV2DTO();
+            $customer = new CustomerRequestDTO();
             $mindboxId = Helper::getMindboxId($order->getUserId());
             $customFields = [];
             $propertyCollection = $order->getPropertyCollection();
@@ -1524,7 +1514,6 @@ class Event
             }
 
             if ($_SESSION['PROMO_CODE'] && !empty($_SESSION['PROMO_CODE'])) {
-
                 if (strpos($_SESSION['PROMO_CODE'], ',') !== false) {
                     $applyCouponsList = explode(',', $_SESSION['PROMO_CODE']);
 
@@ -1719,8 +1708,7 @@ class Event
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
-        if (
-            Helper::isAdminSection()
+        if (Helper::isAdminSection()
             && isset($_REQUEST['action'])
             && $_REQUEST['action'] === 'refreshOrderData'
         ) {
@@ -1779,7 +1767,6 @@ class Event
         $preorder = new \Mindbox\DTO\V3\Requests\PreorderRequestDTO();
 
         foreach ($basketItems as $basketItem) {
-
             if (!$basketItem->getId()) {
                 continue;
             }
@@ -1822,7 +1809,6 @@ class Event
         $arCoupons = [];
 
         if ($_SESSION['PROMO_CODE'] && !empty($_SESSION['PROMO_CODE'])) {
-
             if (strpos($_SESSION['PROMO_CODE'], ',') !== false) {
                 $applyCouponsList = explode(',', $_SESSION['PROMO_CODE']);
 
@@ -1831,7 +1817,6 @@ class Event
                         $arCoupons[]['ids']['code'] = trim($couponItem);
                     }
                 }
-
             } else {
                 $arCoupons[]['ids']['code'] = $_SESSION['PROMO_CODE'];
             }
@@ -1894,7 +1879,6 @@ class Event
                     $preorder,
                     Options::getOperationName('calculateAuthorizedCart' . (Helper::isAdminSection()? 'Admin':''))
                 )->sendRequest()->getResult()->getField('order');
-
             } else {
                 $preorderInfo = $mindbox->order()->calculateUnauthorizedCart(
                     $preorder,
@@ -2399,7 +2383,6 @@ class Event
                     Helper::updateMindboxOrderItems($order);
                 }
             } else {
-
                 if (Helper::isDeleteOrderAdminAction() || Helper::isDeleteOrderItemAdminAction()) {
                     return new Main\EventResult(Main\EventResult::SUCCESS);
                 }
