@@ -18,6 +18,7 @@ use Bitrix\Sale;
 use CUser;
 use DateTime;
 use DateTimeZone;
+use Mindbox\Discount\DeliveryDiscountEntity;
 use Mindbox\DTO\DTO;
 use Mindbox\DTO\V2\Requests\DiscountRequestDTO;
 use Mindbox\DTO\V3\Requests\CustomerRequestDTO;
@@ -26,6 +27,7 @@ use Mindbox\DTO\V2\Requests\LineRequestDTO;
 use Mindbox\DTO\V2\Requests\OrderCreateRequestDTO;
 use Mindbox\DTO\V2\Requests\OrderUpdateRequestDTO;
 use MongoDB\Driver\Exception\Exception;
+use Mindbox\Components\CalculateProductData;
 
 Loader::includeModule('catalog');
 Loader::includeModule('sale');
@@ -538,10 +540,10 @@ class Event
         if (class_exists('\Bitrix\Main\UserPhoneAuthTable')) {
             $params['runtime'] = [
                     new \Bitrix\Main\Entity\ReferenceField(
-                            'R_PHONE_AUTH',
-                            '\Bitrix\Main\UserPhoneAuthTable',
-                            ['=this.ID' => 'ref.USER_ID'],
-                            ['join_type' => 'LEFT']
+                        'R_PHONE_AUTH',
+                        '\Bitrix\Main\UserPhoneAuthTable',
+                        ['=this.ID' => 'ref.USER_ID'],
+                        ['join_type' => 'LEFT']
                     ),
             ];
 
@@ -745,6 +747,33 @@ class Event
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
+        if (!$isNewOrder) {
+            $existTransaction = Transaction::existOpenTransaction($order->getId());
+
+            if (!empty($existTransaction)) {
+                try {
+                    $orderDTO = new OrderCreateRequestDTO();
+                    $orderDTO->setField('order', [
+                        'transaction' => [
+                            'ids' => [
+                                'externalId' => $existTransaction['transaction']
+                            ]
+                        ]
+                    ]);
+
+                    $mindbox->order()->rollbackOrderTransaction(
+                        $orderDTO,
+                        Options::getOperationName('rollbackOrderTransactionAdmin')
+                    )->sendRequest();
+
+                    $request = $mindbox->order()->getRequest();
+                    // закрываем транзакцию
+                    Transaction::closeTransaction($existTransaction['id']);
+                } catch (\Exception $exception) {
+                }
+            }
+        }
+
         if (!$isNewOrder && !Helper::isMindboxOrder($order->getId())) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
@@ -853,11 +882,11 @@ class Event
             'lines'        => $lines,
             'transaction'  => [
                 'ids' => [
-                    'externalId' => Helper::getTransactionId()
+                    'externalId' => Helper::getTransactionId($shopOrderId)
                 ]
             ],
             'deliveryCost' => $order->getDeliveryPrice(),
-            'totalPrice'   => $_SESSION['TOTAL_PRICE'] + $order->getDeliveryPrice()
+            'totalPrice'   => $_SESSION['TOTAL_PRICE']
         ];
 
         if ($mindboxOrderStatus !== 'Cancelled') {
@@ -955,7 +984,7 @@ class Event
                     $orderDTO->setField('order', [
                         'transaction' => [
                             'ids' => [
-                                'externalId' => Helper::getTransactionId()
+                                'externalId' => Helper::getTransactionId($shopOrderId)
                             ]
                         ]
                     ]);
@@ -1013,13 +1042,12 @@ class Event
             $createOrderResult = $createOrderResult->getResult()->getField('order');
             $_SESSION['MINDBOX_ORDER'] = $createOrderResult ? $createOrderResult->getId('mindboxId') : false;
         } catch (Exceptions\MindboxClientErrorException $e) {
-
             try {
                 $orderDTO = new OrderCreateRequestDTO();
                 $orderDTO->setField('order', [
                     'transaction' => [
                         'ids' => [
-                            'externalId' => Helper::getTransactionId()
+                            'externalId' => Helper::getTransactionId($shopOrderId)
                         ]
                     ]
                 ]);
@@ -1098,9 +1126,38 @@ class Event
         }
 
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'loyalty') {
-
             if (!$isNew && !Helper::isMindboxOrder($order->getId())) {
                 return new Main\EventResult(Main\EventResult::SUCCESS);
+            }
+
+            // data update in HL for shipping discount
+            if ($isNew) {
+                $deliveryId = 0;
+                /** @var \Bitrix\Sale\Shipment $shipment */
+                foreach ($order->getShipmentCollection() as $shipment) {
+                    if ($shipment->isSystem()) {
+                        continue;
+                    }
+
+                    $deliveryId = $shipment->getDeliveryId();
+                    break;
+                }
+
+                $fUserId = \Bitrix\Sale\Fuser::getIdByUserId((int)$order->getField('USER_ID'));
+
+                $mindboxDiscountParams = [];
+                $mindboxDiscountParams['UF_DELIVERY_ID'] = $deliveryId;
+                $mindboxDiscountParams['UF_ORDER_ID'] = null;
+
+                $deliveryDiscountEntity = new DeliveryDiscountEntity();
+
+                if ($findRow = $deliveryDiscountEntity->getRowByFilter($mindboxDiscountParams)) {
+                    $deliveryDiscountEntity->update((int)$findRow['ID'], [
+                            'UF_ORDER_ID' => $order->getId()
+                    ]);
+                }
+
+                $deliveryDiscountEntity->deleteByFilter(array_merge($mindboxDiscountParams, ['UF_FUSER_ID' => $fUserId]));
             }
 
             /** @var \Bitrix\Sale\Basket $basket */
@@ -1169,7 +1226,7 @@ class Event
                         $orderDTO->setField('order', [
                             'transaction' => [
                                 'ids' => [
-                                    'externalId' => Helper::getTransactionId()
+                                    'externalId' => Helper::getTransactionId($order->getId())
                                 ]
                             ]
                         ]);
@@ -1194,7 +1251,6 @@ class Event
             $arCoupons = [];
 
             if ($_SESSION['PROMO_CODE'] && !empty($_SESSION['PROMO_CODE'])) {
-
                 if (strpos($_SESSION['PROMO_CODE'], ',') !== false) {
                     $applyCouponsList = explode(',', $_SESSION['PROMO_CODE']);
 
@@ -1203,7 +1259,6 @@ class Event
                             $arCoupons[]['ids']['code'] = trim($couponItem);
                         }
                     }
-
                 } else {
                     $arCoupons[]['ids']['code'] = $_SESSION['PROMO_CODE'];
                 }
@@ -1275,7 +1330,7 @@ class Event
                     ],
                     'transaction' => [
                         'ids' => [
-                            "externalId" => Helper::getTransactionId()
+                            "externalId" => Helper::getTransactionId($order->getId())
                         ]
                     ]
                 ]);
@@ -1313,7 +1368,7 @@ class Event
                     }
                 }
 
-                Transaction::getInstance()->clear();
+                Transaction::getInstance()->close();
 
                 unset($_SESSION['PROMO_CODE_AMOUNT']);
                 unset($_SESSION['PROMO_CODE']);
@@ -1339,7 +1394,6 @@ class Event
                         Options::getOperationName('saveOfflineOrder')
                     )->sendRequest();
                 } catch (Exceptions\MindboxUnavailableException $e) {
-
                     $lastResponse = $mindbox->order()->getLastResponse();
 
                     if ($lastResponse) {
@@ -1368,7 +1422,6 @@ class Event
                         Options::getOperationName('saveOfflineOrder')
                     )->sendRequest();
                 } catch (Exceptions\MindboxUnavailableException $e) {
-
                     $lastResponse = $mindbox->order()->getLastResponse();
 
                     if ($lastResponse) {
@@ -1495,7 +1548,6 @@ class Event
             }
 
             if ($_SESSION['PROMO_CODE'] && !empty($_SESSION['PROMO_CODE'])) {
-
                 if (strpos($_SESSION['PROMO_CODE'], ',') !== false) {
                     $applyCouponsList = explode(',', $_SESSION['PROMO_CODE']);
 
@@ -1664,6 +1716,14 @@ class Event
         self::finalAction($order, $basket);
     }
 
+    /**
+     * @param \Bitrix\Sale\Order $order
+     * @param $basket
+     * @return Main\EventResult|false
+     * @throws Main\ArgumentException
+     * @throws Main\ObjectPropertyException
+     * @throws Main\SystemException
+     */
     public static function finalAction($order, $basket)
     {
         if (Helper::isDeleteOrderAdminAction()) {
@@ -1686,12 +1746,15 @@ class Event
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
+        if (!$order->isNew() && !Helper::isMindboxOrder($order->getId())) {
+            return new Main\EventResult(Main\EventResult::SUCCESS);
+        }
+
         if (Helper::isInternalOrderUser($order->getUserId())) {
             return new Main\EventResult(Main\EventResult::SUCCESS);
         }
 
-        if (
-            Helper::isAdminSection()
+        if (Helper::isAdminSection()
             && isset($_REQUEST['action'])
             && $_REQUEST['action'] === 'refreshOrderData'
         ) {
@@ -1750,7 +1813,6 @@ class Event
         $preorder = new \Mindbox\DTO\V3\Requests\PreorderRequestDTO();
 
         foreach ($basketItems as $basketItem) {
-
             if (!$basketItem->getId()) {
                 continue;
             }
@@ -1793,7 +1855,6 @@ class Event
         $arCoupons = [];
 
         if ($_SESSION['PROMO_CODE'] && !empty($_SESSION['PROMO_CODE'])) {
-
             if (strpos($_SESSION['PROMO_CODE'], ',') !== false) {
                 $applyCouponsList = explode(',', $_SESSION['PROMO_CODE']);
 
@@ -1802,7 +1863,6 @@ class Event
                         $arCoupons[]['ids']['code'] = trim($couponItem);
                     }
                 }
-
             } else {
                 $arCoupons[]['ids']['code'] = $_SESSION['PROMO_CODE'];
             }
@@ -1843,6 +1903,31 @@ class Event
             ];
         }
 
+        $deliveryId = 0;
+        /** @var \Bitrix\Sale\Shipment $shipment */
+        foreach ($order->getShipmentCollection() as $shipment) {
+            if ($shipment->isSystem()) {
+                continue;
+            }
+            $deliveryPrice = $shipment->getField('BASE_PRICE_DELIVERY');
+            $deliveryId = $shipment->getDeliveryId();
+            break;
+        }
+
+        if ($deliveryId > 0) {
+            if ($deliveryPrice) {
+                $arOrder['deliveryCost']  = $deliveryPrice;
+            }
+
+            $arDelivery = \Bitrix\Sale\Delivery\Services\Table::getById($deliveryId)->fetch();
+
+            if (is_array($arDelivery) && !empty($arDelivery['NAME'])) {
+                $arOrder['customFields'] = [
+                        'deliveryType'  =>  $arDelivery['NAME']
+                ];
+            }
+        }
+
         $preorder->setField('order', $arOrder);
 
         $customer = new CustomerRequestDTO();
@@ -1865,7 +1950,6 @@ class Event
                     $preorder,
                     Options::getOperationName('calculateAuthorizedCart' . (Helper::isAdminSection()? 'Admin':''))
                 )->sendRequest()->getResult()->getField('order');
-
             } else {
                 $preorderInfo = $mindbox->order()->calculateUnauthorizedCart(
                     $preorder,
@@ -1876,7 +1960,6 @@ class Event
             if (!$preorderInfo) {
                 return new Main\EventResult(Main\EventResult::SUCCESS);
             }
-
 
             if (Helper::isAdminSection()) {
                 // @info функционал для процессинга в админке. Передаем OnBeforeOrderSaved ошибку применения купона
@@ -1896,8 +1979,6 @@ class Event
                 }
             }
 
-
-
             $_SESSION['TOTAL_PRICE'] = $preorderInfo->getField('totalPrice');
 
             $totalBonusPointInfo = $preorderInfo->getField('totalBonusPointsInfo');
@@ -1906,6 +1987,36 @@ class Event
                 if (!empty($totalBonusPointInfo) && $totalBonusPointInfo['availableAmountForCurrentOrder'] < $_SESSION['PAY_BONUSES']) {
                     $_SESSION['PAY_BONUSES'] = $totalBonusPointInfo['availableAmountForCurrentOrder'];
                 }
+            }
+
+            /** функционал применения скидки на доставку Mindbox  */
+            $mindboxDeliveryPrice = $preorderInfo->getField('deliveryCost');
+
+            if ($USER->IsAuthorized() && (int)$order->getField('USER_ID') > 0) {
+                $fUserId = \Bitrix\Sale\Fuser::getIdByUserId((int)$order->getField('USER_ID'));
+            } elseif (!$USER->IsAuthorized()) {
+                $fUserId = \Bitrix\Sale\Fuser::getId();
+            }
+
+            $mindboxDiscountParams = [];
+            $mindboxDiscountParams['UF_FUSER_ID'] = $fUserId ? $fUserId : null;
+            $mindboxDiscountParams['UF_DELIVERY_ID'] = $deliveryId ? $deliveryId : null;
+            $mindboxDiscountParams['UF_ORDER_ID'] = $order->getId() > 0 ? $order->getId() : null;
+
+            $deliveryDiscountEntity = new DeliveryDiscountEntity();
+
+            if (isset($mindboxDeliveryPrice)
+                    && ($findRow = $deliveryDiscountEntity->getRowByFilter($mindboxDiscountParams))
+            ) {
+                $deliveryDiscountEntity->update((int)$findRow['ID'], [
+                    'UF_DISCOUNTED_PRICE' => (float)$mindboxDeliveryPrice
+                ]);
+            } elseif (isset($mindboxDeliveryPrice)) {
+                $deliveryDiscountEntity->add(array_merge([
+                    'UF_DISCOUNTED_PRICE' => (float)$mindboxDeliveryPrice
+                ], $mindboxDiscountParams));
+            } else {
+                $deliveryDiscountEntity->deleteByFilter($mindboxDiscountParams);
             }
 
             $discounts = $preorderInfo->getDiscountsInfo();
@@ -2277,12 +2388,12 @@ class Event
      * @param $arFields
      * @return false
      */
-    public function OnPrologHandler()
+    public static function OnPrologHandler()
     {
         $defaultOptions = \Bitrix\Main\Config\Option::getDefaults("mindbox.marketing");
         $jsString = "<script data-skip-moving=\"true\">\r\n" . file_get_contents($_SERVER['DOCUMENT_ROOT'] . $defaultOptions['TRACKER_JS_FILENAME']) . "</script>\r\n";
         $jsString .= '<script data-skip-moving="true" src="' . self::TRACKER_JS_FILENAME . '" async></script>';
-        Asset::getInstance()->addString($jsString);
+        Asset::getInstance()->addString($jsString, true);
     }
 
     /**
@@ -2370,7 +2481,6 @@ class Event
                     Helper::updateMindboxOrderItems($order);
                 }
             } else {
-
                 if (Helper::isDeleteOrderAdminAction() || Helper::isDeleteOrderItemAdminAction()) {
                     return new Main\EventResult(Main\EventResult::SUCCESS);
                 }
@@ -2442,9 +2552,7 @@ class Event
      */
     public function OnSaleStatusOrderHandler($orderId, $newOrderStatus)
     {
-        if (Helper::isStandardMode()) {
-            Helper::updateMindboxOrderStatus($orderId, $newOrderStatus);
-        }
+        Helper::updateMindboxOrderStatus($orderId, $newOrderStatus);
     }
 
     /**
@@ -2465,19 +2573,49 @@ class Event
     }
 
     /**
+     * @bitrixModuleId sale
+     * @bitrixEventCode OnSaleUserDelete
+     * @langEventName OnSaleUserDelete
+     * @isSystem true
+     * @return void
+     */
+    public static function OnSaleUserDeleteHandler($id)
+    {
+        if (class_exists('\\Mindbox\\Discount\\DeliveryDiscountEntity')) {
+            $deliveryDiscountEntity = new \Mindbox\Discount\DeliveryDiscountEntity();
+            $deliveryDiscountEntity->deleteByFilter([
+                'UF_FUSER_ID' => $id,
+                'UF_ORDER_ID' => null
+            ]);
+        }
+    }
+
+    /**
      * @bitrixModuleId main
      * @bitrixEventCode OnAdminSaleOrderEdit
      * @langEventName OnAdminSaleOrderEdit
      * @return false
      */
-    public function OnAdminSaleOrderEditHandler()
+    public static function OnAdminSaleOrderEditHandler()
     {
         if (\COption::GetOptionString('mindbox.marketing', 'MODE') == 'loyalty') {
             $jsString = Helper::getAdditionalScriptForOrderEditPage();
 
             if (isset($jsString) && !empty($jsString)) {
-                Asset::getInstance()->addString($jsString, AssetLocation::AFTER_JS);
+                Asset::getInstance()->addString($jsString, true, AssetLocation::AFTER_JS);
             }
         }
+    }
+
+    /**
+     * @bitrixModuleId main
+     * @bitrixEventCode OnEndBufferContent
+     * @langEventName OnEndBufferContent
+     * @param $content
+     */
+    public function OnEndBufferContentHandler(&$content)
+    {
+        $calc = new CalculateProductData();
+        $calc->handle($content);
     }
 }

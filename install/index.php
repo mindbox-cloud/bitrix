@@ -64,11 +64,19 @@ class mindbox_marketing extends CModule
         $this->InstallDB();
         $this->InstallUserFields();
 
-        $cartRuleInstaller = new \Mindbox\Installer\CartRulesInstaller();
-        $cartRuleInstaller->install();
+        // установка правила работы с корзиной для расчета скидки на товар
+        $productCartRuleInstaller = new \Mindbox\Installer\ProductCartRuleInstaller();
+        $productCartRuleInstaller->install();
+
+        // установка правила работы с корзиной для расчета скидки на доставку
+        $deliveryCartRuleInstaller = new \Mindbox\Installer\DeliveryCartRuleInstaller();
+        $deliveryCartRuleInstaller->install();
 
         $orderPropertyInstaller = new \Mindbox\Installer\OrderPropertiesInstaller();
         $orderPropertyInstaller->install();
+
+        $transactionTable = new \Mindbox\DataBase\MindboxTransactionTable();
+        $transactionTable->createTable();
 
         $mindboxLog = new \Mindbox\Log();
         $mindboxLog->setLogAccess();
@@ -96,8 +104,12 @@ class mindbox_marketing extends CModule
             if ($request["savedata"] != "Y") {
                 $this->UnInstallUserFields();
                 $this->UnInstallDB();
-                $cartRuleInstaller = new \Mindbox\Installer\CartRulesInstaller();
-                $cartRuleInstaller->unInstall();
+                $productCartRuleInstaller = new \Mindbox\Installer\ProductCartRuleInstaller();
+                $productCartRuleInstaller->unInstall();
+
+                $deliveryCartRuleInstaller = new \Mindbox\Installer\DeliveryCartRuleInstaller();
+                $deliveryCartRuleInstaller->unInstall();
+
                 $orderPropertyInstaller = new \Mindbox\Installer\OrderPropertiesInstaller();
                 $orderPropertyInstaller->uninstall();
             }

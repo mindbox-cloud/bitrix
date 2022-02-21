@@ -297,12 +297,39 @@ class Helper
 
     public static function getElementCode($elementId)
     {
-        $arProduct = \CIBlockElement::GetByID($elementId)->GetNext();
-        if ($arProduct['XML_ID']) {
-            $elementId = $arProduct['XML_ID'];
+        $fields = [
+            'ID' => (int)$elementId,
+            'IBLOCK_ID' => null,
+            'VALUE' => $elementId
+        ];
+
+        $iterator = \Bitrix\Iblock\ElementTable::getList([
+            'filter' => ['=ID' => (int)$elementId],
+            'select' => ['IBLOCK_ID', 'XML_ID'],
+            'limit' => 1
+        ]);
+
+        if ($el = $iterator->fetch()) {
+            $fields['IBLOCK_ID'] = $el['IBLOCK_ID'];
+            $fields['VALUE'] = !empty($el['XML_ID']) ? $el['XML_ID'] : $elementId;
         }
 
-        return $elementId;
+        $event = new \Bitrix\Main\Event('mindbox.marketing', 'onGetElementCode', $fields);
+        $event->send();
+
+        foreach ($event->getResults() as $eventResult) {
+            if ($eventResult->getType() !== \Bitrix\Main\EventResult::SUCCESS) {
+                continue;
+            }
+
+            if ($eventResultData = $eventResult->getParameters()) {
+                if (isset($eventResultData['VALUE']) && $eventResultData['VALUE'] != $fields['VALUE']) {
+                    $fields['VALUE'] = $eventResultData['VALUE'];
+                }
+            }
+        }
+
+        return $fields['VALUE'];
     }
 
     /**
@@ -314,12 +341,39 @@ class Helper
 
     public static function getSectionCode($sectionId)
     {
-        $arSection = \CIBlockSection::GetByID($sectionId)->GetNext();
-        if ($arSection['XML_ID']) {
-            $sectionId = $arSection['XML_ID'];
+        $fields = [
+            'ID' => (int)$sectionId,
+            'IBLOCK_ID' => null,
+            'VALUE' => $sectionId
+        ];
+
+        $iterator = \Bitrix\Iblock\SectionTable::getList([
+            'filter' => ['=ID' => (int)$sectionId],
+            'select' => ['IBLOCK_ID', 'XML_ID'],
+            'limit' => 1
+        ]);
+
+        if ($arSection = $iterator->fetch()) {
+            $fields['IBLOCK_ID'] = $arSection['IBLOCK_ID'];
+            $fields['VALUE'] = !empty($arSection['XML_ID']) ? $arSection['XML_ID'] : $sectionId;
         }
 
-        return $sectionId;
+        $event = new \Bitrix\Main\Event('mindbox.marketing', 'onGetSectionCode', $fields);
+        $event->send();
+
+        foreach ($event->getResults() as $eventResult) {
+            if ($eventResult->getType() !== \Bitrix\Main\EventResult::SUCCESS) {
+                continue;
+            }
+
+            if ($eventResultData = $eventResult->getParameters()) {
+                if (isset($eventResultData['VALUE']) && $eventResultData['VALUE'] != $fields['VALUE']) {
+                    $fields['VALUE'] = $eventResultData['VALUE'];
+                }
+            }
+        }
+
+        return $fields['VALUE'];
     }
 
     /**
@@ -586,9 +640,9 @@ class Helper
      *
      * @return int
      */
-    public static function getTransactionId()
+    public static function getTransactionId($orderId = false)
     {
-        return Transaction::getInstance()->get();
+        return Transaction::getInstance($orderId)->get();
     }
 
     public static function processHlbBasketRule($lineId, $mindboxPrice)
@@ -632,11 +686,11 @@ class Helper
             }
         } else {
             $rsData = $entityDataClass::getList([
-                "select" => ["*"],
-                "order"  => ["ID" => "ASC"],
-                "filter" => [
-                    "UF_BASKET_ID" => $lineId
-                ]
+                    "select" => ["*"],
+                    "order"  => ["ID" => "ASC"],
+                    "filter" => [
+                            "UF_BASKET_ID" => $lineId
+                    ]
             ]);
 
             if ($arData = $rsData->fetch()) {
@@ -646,12 +700,19 @@ class Helper
     }
 
 
+    /**
+     * @param \Bitrix\Sale\BasketItem $basketItem
+     * @param $object
+     * @return void
+     * @throws Main\InvalidOperationException
+     */
     public static function getRequestedPromotions($basketItem, $object)
     {
 
         $requestedPromotions = [];
-        $arDiscountList = [];
         $arActualAction = [];
+        $basePrice = (float)$basketItem->getBasePrice();
+        $currentPrice = (float)$basePrice;
 
         if ($object instanceof \Bitrix\Sale\Basket) {
             $discounts = \Bitrix\Sale\Discount::buildFromBasket(
@@ -661,6 +722,7 @@ class Helper
         } elseif ($object instanceof \Bitrix\Sale\Order) {
             $discounts = \Bitrix\Sale\Discount::buildFromOrder($object);
         }
+
         $discounts->calculate();
         $result = $discounts->getApplyResult(true);
 
@@ -687,8 +749,9 @@ class Helper
         if (array_key_exists($basketItem->getId(), $arActualAction)) {
             foreach ($arActualAction[$basketItem->getId()] as $discountId) {
                 $discountPrice = 0;
-                $discountPercentValue = 0;
                 $externalId = '';
+                $quantity = $basketItem->getQuantity();
+
                 if (array_key_exists($discountId, $arDiscountList)) {
                     $arDiscount = $arDiscountList[$discountId];
                     $arActionDescrData = $arDiscount['ACTIONS_DESCR_DATA']['BASKET'][0];
@@ -696,24 +759,112 @@ class Helper
                         continue;
                     }
                     if ($arDiscount['MODULE_ID'] === 'sale') {
-                        if ($arActionDescrData['VALUE_ACTION'] === 'D' &&
-                            $arActionDescrData['VALUE_TYPE'] === 'P'
-                        ) {
-                            $discountPercentValue = $arActionDescrData['VALUE'];
-                            $externalId = "SCR-" . $arDiscount['REAL_DISCOUNT_ID'];
-                            $discountPrice = $basketItem->getBasePrice() * ($discountPercentValue / 100);
+                        if (isset($arActionDescrData['VALUE_TYPE'])) {
+                            switch ($arActionDescrData['VALUE_TYPE']) {
+                                case \Bitrix\Sale\Discount\Actions::VALUE_TYPE_PERCENT:
+                                    // процент скидки на товар
+                                    $percent = $arActionDescrData['VALUE_ACTION'] == \Bitrix\Sale\Discount\Formatter::VALUE_ACTION_DISCOUNT
+                                            ? $arActionDescrData['VALUE']
+                                            : 100 + $arActionDescrData['VALUE'];
+
+                                    $discountPrice = \Bitrix\Catalog\Product\Price\Calculation::roundPrecision((
+                                            self::isPercentFromBasePrice()
+                                                    ? $basePrice
+                                                    : $currentPrice
+                                            ) * ($percent / 100));
+
+                                    break;
+                                case \Bitrix\Sale\Discount\Actions::VALUE_TYPE_FIX:
+                                    // фиксированная скидка на товар
+                                    $discountPrice = (float) $arActionDescrData['VALUE'];
+                                    break;
+                                case \Bitrix\Sale\Discount\Actions::VALUE_TYPE_SUMM:
+                                    // установка стоимости на общую сумму товаров
+                                    $discountPrice = \Bitrix\Catalog\Product\Price\Calculation::roundPrecision(
+                                        $arActionDescrData['VALUE']
+                                    );
+
+                                    $quantity = 1;
+                                    break;
+                                case 'C':
+                                    // установка стоимости на каждый товар
+                                    $discountPrice = (float) $arActionDescrData['VALUE'];
+                                    break;
+                            }
+                        } elseif (isset($arActionDescrData['TYPE'])) {
+                            switch ($arActionDescrData['TYPE']) {
+                                case \Bitrix\Sale\Discount\Formatter::TYPE_SIMPLE:
+                                    // процент скидки на товар
+                                    $discountPrice = \Bitrix\Catalog\Product\Price\Calculation::roundPrecision(
+                                        $currentPrice * ($arActionDescrData['VALUE'] / 100)
+                                    );
+                                    break;
+                                case \Bitrix\Sale\Discount\Formatter::TYPE_LIMIT_VALUE:
+                                case \Bitrix\Sale\Discount\Formatter::TYPE_VALUE:
+                                    // фиксированная скидка на товар
+                                    $discountPrice = (float) $arActionDescrData['VALUE'];
+                                    break;
+                                case \Bitrix\Sale\Discount\Formatter::TYPE_FIXED:
+                                    // установка стоимости на товар
+                                    $discountPrice = (float) ($currentPrice - $arActionDescrData['VALUE']);
+                                    break;
+                            }
                         }
+
+                        $externalId = "SCR-" . $arDiscount['REAL_DISCOUNT_ID'];
                     } elseif ($arDiscount['MODULE_ID'] === 'catalog') {
                         if (array_key_exists('VALUE_EXACT', $arActionDescrData)) {
                             $discountPrice = $arActionDescrData['VALUE_EXACT'];
-                        } else {
-                            $discountPercentValue = $arActionDescrData['VALUE'];
-                            $discountPrice = $basketItem->getBasePrice() * ($discountPercentValue / 100);
                         }
+
+                        if (isset($arActionDescrData['VALUE_TYPE'])) {
+                            switch ($arActionDescrData['VALUE_TYPE']) {
+                                case \CCatalogDiscount::TYPE_PERCENT:
+                                    // процент скидки на товар
+                                    $discountPrice = (float) $currentPrice * ($arActionDescrData['VALUE'] / 100);
+                                    break;
+                                case \CCatalogDiscount::TYPE_FIX:
+                                    // фиксированная скидка на товар
+                                    $discountPrice = (float) $arActionDescrData['VALUE'];
+                                    break;
+                                case \CCatalogDiscount::TYPE_SALE:
+                                    // установка стоимости на товар
+                                    $discountPrice = (float) ($currentPrice - $arActionDescrData['VALUE']);
+                                    break;
+                                default:
+                                    $discountPrice = (float) $arActionDescrData['VALUE'];
+                                    break;
+                            }
+                        } elseif (isset($arActionDescrData['TYPE'])) {
+                            switch ($arActionDescrData['TYPE']) {
+                                case \Bitrix\Sale\Discount\Formatter::TYPE_SIMPLE:
+                                    // процент скидки на товар
+                                    $discountPrice = (float) $currentPrice * ($arActionDescrData['VALUE'] / 100);
+                                    break;
+                                case \Bitrix\Sale\Discount\Formatter::TYPE_LIMIT_VALUE:
+                                case \Bitrix\Sale\Discount\Formatter::TYPE_VALUE:
+                                    // фиксированная скидка на товар
+                                    $discountPrice = (float) $arActionDescrData['VALUE'];
+                                    break;
+                                case \Bitrix\Sale\Discount\Formatter::TYPE_FIXED:
+                                    // установка стоимости на товар
+                                    $discountPrice = (float) ($currentPrice - $arActionDescrData['VALUE']);
+                                    break;
+                            }
+                        }
+
                         $externalId = "PD-" . $arDiscount['REAL_DISCOUNT_ID'];
                     }
 
-                    if ($discountPrice > 0 && !empty($externalId)) {
+                    if (isset($arActionDescrData['LIMIT_TYPE'])
+                            && isset($arActionDescrData['LIMIT_VALUE'])
+                            && $arActionDescrData['LIMIT_TYPE'] === \Bitrix\Sale\Discount\Formatter::LIMIT_MAX
+                            && $discountPrice > $arActionDescrData['LIMIT_VALUE']
+                    ) {
+                        $discountPrice = (float) $arActionDescrData['LIMIT_VALUE'];
+                    }
+
+                    if ($discountPrice != 0 && !empty($externalId)) {
                         $requestedPromotions[] = [
                             'type'      => 'discount',
                             'promotion' => [
@@ -721,14 +872,23 @@ class Helper
                                     'externalId' => $externalId
                                 ],
                             ],
-                            'amount'    => roundEx($discountPrice * $basketItem->getQuantity(), 2)
+                            'amount'    => roundEx($discountPrice * $quantity, 2)
                         ];
                     }
+                }
+
+                if (!self::isPercentFromBasePrice() && $discountPrice !== 0) {
+                    $currentPrice = $basePrice - $discountPrice;
                 }
             }
         }
 
         return $requestedPromotions;
+    }
+
+    public static function isPercentFromBasePrice()
+    {
+        return (string)\Bitrix\Main\Config\Option::get('sale', 'get_discount_percent_from_base_price') == 'Y';
     }
 
     private static function getDiscountByPriceType($basketItem)
@@ -937,18 +1097,15 @@ class Helper
                 continue;
             }
             $productId = $basketItem->getProductId();
-            $arLines[$productId]['basketItem'] = $basketItem;
-            $arLines[$productId]['quantity'] += $basketItem->getQuantity();
-            $arLines[$productId]['priceOfLine'] += $basketItem->getPrice();
+            $arLines[ $productId ]['basketItem'] = $basketItem;
+            $arLines[ $productId ]['quantity'] += $basketItem->getQuantity();
+            $arLines[ $productId ]['priceOfLine'] += $basketItem->getPrice();
         }
 
         $lines = [];
         foreach ($arLines as $arLine) {
             $product = new ProductRequestDTO();
-            $product->setId(
-                Options::getModuleOption('EXTERNAL_SYSTEM'),
-                Helper::getElementCode($arLine['basketItem']->getProductId())
-            );
+            $product->setId(Options::getModuleOption('EXTERNAL_SYSTEM'), Helper::getElementCode($arLine['basketItem']->getProductId()));
             $line = new ProductListItemRequestDTO();
             $line->setProduct($product);
             $line->setCount($arLine['quantity']);
@@ -1072,10 +1229,10 @@ class Helper
     public static function isNewOrder($values)
     {
         $isNewOrder = false;
-        if (array_key_exists('LID', $values) && empty($values['LID']) &&
-            array_key_exists('USER_ID', $values) && empty($values['USER_ID']) &&
-            array_key_exists('PRICE', $values) && empty($values['PRICE']) &&
-            array_key_exists('DELIVERY_ID', $values) && empty($values['DELIVERY_ID']) &&
+        if (array_key_exists('LID', $values) && empty($values['LID'])                       &&
+            array_key_exists('USER_ID', $values) && empty($values['USER_ID'])               &&
+            array_key_exists('PRICE', $values) && empty($values['PRICE'])                   &&
+            array_key_exists('DELIVERY_ID', $values) && empty($values['DELIVERY_ID'])       &&
             array_key_exists('PAY_SYSTEM_ID', $values) && empty($values['PAY_SYSTEM_ID'])
         ) {
             $isNewOrder = true;
@@ -1095,10 +1252,7 @@ class Helper
         $currentPage = $APPLICATION->GetCurPage();
         $request = \Bitrix\Main\Context::getCurrent()->getRequest();
 
-        return ($request->isAdminSection() || strpos(
-            $currentPage,
-            '/bitrix/admin'
-        ) !== false || strpos($_SERVER['HTTP_REFERER'], '/bitrix/admin') !== false);
+        return  ($request->isAdminSection() || strpos($currentPage, '/bitrix/admin') !== false || strpos($_SERVER['HTTP_REFERER'], '/bitrix/admin') !== false);
     }
 
     public static function checkBasketItem($basketItem)
@@ -1182,7 +1336,7 @@ class Helper
         if ((int)$orderId > 0) {
             $mindbox = static::mindbox();
 
-            $order = \Bitrix\Sale\Order::load($orderId);
+            $order =  \Bitrix\Sale\Order::load($orderId);
             $basket = $order->getBasket();
             $basketItems = $basket->getBasketItems();
             $orderPersonType = $order->getPersonTypeId();
@@ -1299,7 +1453,7 @@ class Helper
                 try {
                     $preorderInfo = $mindbox->order()->calculateAuthorizedCart(
                         $preorder,
-                        Options::getOperationName('calculateAuthorizedCart' . (Helper::isAdminSection() ? 'Admin' : ''))
+                        Options::getOperationName('calculateAuthorizedCart' . (Helper::isAdminSection()? 'Admin':''))
                     )->sendRequest()->getResult()->getField('order');
                     if (!empty($preorderInfo) && is_object($preorderInfo)) {
                         return $preorderInfo;
@@ -1327,7 +1481,7 @@ class Helper
 
         return $return;
     }
-
+    
     /**
      * Получение значение свойства заказа по коду.
      * Функция с поддержкой версии Битрикс < 20.5
@@ -1358,7 +1512,7 @@ class Helper
 
         return $return;
     }
-
+    
     /**
      * Проверка, доступен ли данному пользователю процессинг
      *
@@ -1370,10 +1524,10 @@ class Helper
     {
         $return = false;
         $internalUserGroups = self::getInternalGroups();
-
+        
         if (!empty($userId) && (int)$userId > 0 && !empty($internalUserGroups)) {
             $userGroup = \Bitrix\Main\UserTable::getUserGroupIds($userId);
-
+            
             if (count(array_diff($userGroup, $internalUserGroups)) !== count($userGroup)) {
                 $return = true;
             }
@@ -1381,7 +1535,7 @@ class Helper
 
         return $return;
     }
-
+    
     /**
      * Возвращает группы пользователей, для которых процессинг не доступен
      * @return array|false|string[]
@@ -1390,11 +1544,11 @@ class Helper
     {
         $groups = [];
         $stringGroup = Options::getModuleOption('CONTINUE_USER_GROUPS');
-
+        
         if (!empty($stringGroup)) {
             $groups = explode(',', $stringGroup);
         }
-
+        
         return $groups;
     }
 
@@ -1427,12 +1581,16 @@ class Helper
             'POST',
             'Offline.GetOrder',
             new DTO([
-                'order' => [
-                    'ids' => [
-                        Options::getModuleOption('TRANSACTION_ID') => $orderId
-                    ],
-                ]
-            ])
+                    'order' => [
+                        'ids' => [
+                            Options::getModuleOption('TRANSACTION_ID') => $orderId
+                        ],
+                    ]
+                ]),
+            '',
+            [],
+            true,
+            false
         );
 
         try {
@@ -1470,7 +1628,7 @@ class Helper
         ];
 
         $statusResult = \Bitrix\Sale\Internals\StatusTable::getList([
-            'order'  => ['SORT' => 'ASC'],
+            'order' => ['SORT'=>'ASC'],
             'select' => ['ID'],
             'filter' => ['TYPE' => 'O']
         ]);
@@ -1487,10 +1645,10 @@ class Helper
     {
         return [
             'CheckedOut' => 'CheckedOut',
-            'Delivered'  => 'Delivered',
-            'Paid'       => 'Paid',
-            'Cancelled'  => 'Cancelled',
-            'Returned'   => 'Returned'
+            'Delivered' => 'Delivered',
+            'Paid' => 'Paid',
+            'Cancelled' => 'Cancelled',
+            'Returned' => 'Returned'
         ];
     }
 
@@ -1535,11 +1693,11 @@ class Helper
 
             foreach ($basketItems as $basketItem) {
                 $lines[] = [
-                    'lineId'           => $basketItem->getId(),
-                    'quantity'         => $basketItem->getQuantity(),
+                    'lineId' => $basketItem->getId(),
+                    'quantity' => $basketItem->getQuantity(),
                     'basePricePerItem' => $basketItem->getPrice(),
-                    'status'           => $mindboxStatusCode,
-                    'product'          => [
+                    'status' => $mindboxStatusCode,
+                    'product' => [
                         'ids' => [
                             Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getElementCode($basketItem->getProductId())
                         ]
@@ -1551,7 +1709,7 @@ class Helper
 
         $mindbox = Options::getConfig();
         $requestFields = [
-            'ids'   => [
+            'ids' => [
                 Options::getModuleOption('TRANSACTION_ID') => $orderId
             ],
             'lines' => $lines
@@ -1567,7 +1725,7 @@ class Helper
                     Options::getModuleOption('WEBSITE_ID') => $orderUserId
                 ],
             ],
-            'order'    => $requestFields
+            'order' => $requestFields
         ];
 
         $request = $mindbox->getClientV3()->prepareRequest(
@@ -1596,12 +1754,16 @@ class Helper
                     Options::getOperationName('updateOrderStatus'),
                     new DTO([
                         'orderLinesStatus' => $mindboxStatusCode,
-                        'order'            => [
+                        'order' => [
                             'ids' => [
                                 'websiteId' => $orderId
                             ]
                         ]
-                    ])
+                    ]),
+                    '',
+                    [],
+                    true,
+                    false
                 );
 
                 try {
