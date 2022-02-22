@@ -67,7 +67,7 @@ if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
     }
 
     if ($_REQUEST['MINDBOX_LOG_PATH'] !== COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'MINDBOX_LOG_PATH', '')) {
-        $mindboxLog = new \Mindbox\Log();
+        $mindboxLog = new \Mindbox\AccessLogs();
         $mindboxLog->setLogAccess();
     }
 }

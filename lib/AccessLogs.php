@@ -4,7 +4,7 @@ namespace Mindbox;
 
 use Mindbox\Options;
 
-class Log
+class AccessLogs
 {
 
     const ADMIN_GROUP_ID = 1;
