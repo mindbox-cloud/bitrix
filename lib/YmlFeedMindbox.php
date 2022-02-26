@@ -155,10 +155,12 @@ class YmlFeedMindbox
             foreach ($cats as $cat) {
                 $category = $dom->createElement("category", self::yandexText2xml($cat["NAME"]));
                 $category->setAttribute("id", Helper::getSectionCode($cat['ID']));
+
                 if (isset($cat["IBLOCK_SECTION_ID"]) && !empty($cat["IBLOCK_SECTION_ID"])) {
                     $parentId = (!empty($catId[$cat['IBLOCK_SECTION_ID']]) ? $catId[$cat['IBLOCK_SECTION_ID']] : $cat["IBLOCK_SECTION_ID"]);
                     $category->setAttribute("parentId", Helper::getSectionCode($parentId));
                 }
+
                 $categories->appendChild($category);
             }
 
@@ -180,24 +182,31 @@ class YmlFeedMindbox
             foreach ($prodsOfrs as $prodId => $ofrs) {
                 foreach ($ofrs as $ofr) {
                     $offer = $dom->createElement("offer");
-                    $offer->setAttribute("group_id", $prods[$prodId]['XML_ID']);
+
+                    $offer->setAttribute("group_id", Helper::getElementCode($prods[$prodId]['ID']));
                     $offer->setAttribute("id", Helper::getElementCode($ofr["ID"]));
+
                     $available = ($ofr['CATALOG_AVAILABLE'] === 'Y' && $ofr['ACTIVE'] === 'Y') ? 'true' : 'false';
                     $offer->setAttribute("available", $available);
+
                     unset($available);
+
                     $offer = $offers->appendChild($offer);
                     if (!empty($ofr["NAME"])) {
                         $name = self::yandexText2xml($ofr["NAME"]);
                     } else {
                         $name = self::yandexText2xml($prods[$prodId]["NAME"]);
                     }
+
                     $offerName = $dom->createElement("name", $name);
                     $offer->appendChild($offerName);
+
                     if (!empty($ofr["~DETAIL_TEXT"])) {
                         $description = TruncateText($ofr["~DETAIL_TEXT"], self::DESCRIPTION_TEXT_LENGTH);
                     } else {
                         $description = TruncateText($prods[$prodId]["~DETAIL_TEXT"], self::DESCRIPTION_TEXT_LENGTH);
                     }
+
                     if (empty($description)) {
                         if (!empty($ofr["~PREVIEW_TEXT"])) {
                             $description = TruncateText($ofr["~PREVIEW_TEXT"], self::DESCRIPTION_TEXT_LENGTH);
@@ -205,12 +214,14 @@ class YmlFeedMindbox
                             $description = TruncateText($prods[$prodId]["~PREVIEW_TEXT"], self::DESCRIPTION_TEXT_LENGTH);
                         }
                     }
+
                     if (!empty($description)) {
                         $cdataDescription = $dom->createCDATASection($description);
                         $offerDescription = $dom->createElement("description");
                         $offerDescription->appendChild($cdataDescription);
                         $offer->appendChild($offerDescription);
                     }
+
                     if ($prods[$prodId]["DETAIL_PAGE_URL"]) {
                         $offerUrl = $dom->createElement("url", self::yandexText2xml(self::getProtocol() . $_SERVER["SERVER_NAME"] . $prods[$prodId]["DETAIL_PAGE_URL"]));
                         $offer->appendChild($offerUrl);
@@ -225,6 +236,7 @@ class YmlFeedMindbox
                         $offerPrice = $dom->createElement("price", $ofr["CATALOG_PRICE_" . $basePriceId]);
                         $offer->appendChild($offerPrice);
                     }
+
                     $offerCurrencyId = $dom->createElement("currencyId", self::yandexText2xml($ofr["CATALOG_CURRENCY_" . $basePriceId]));
                     $offer->appendChild($offerCurrencyId);
 
@@ -236,7 +248,6 @@ class YmlFeedMindbox
                         $offer->appendChild($offerCategoryId);
                     }
 
-
                     $img = $ofr['DETAIL_PICTURE'] ?: $ofr['PREVIEW_PICTURE'];
                     if (!empty($img)) {
                         $url = self::getPictureUrl($img);
@@ -244,10 +255,12 @@ class YmlFeedMindbox
                         $img = $prods[$prodId]['DETAIL_PICTURE'] ?: $prods[$prodId]['PREVIEW_PICTURE'];
                         $url = self::getPictureUrl($img);
                     }
+
                     if ($url) {
                         $offerPicture = $dom->createElement("picture", self::yandexText2xml(self::getProtocol() . $url));
                         $offer->appendChild($offerPicture);
                     }
+
                     $ofr['props'] = array_merge($ofr['props'], $prods[$prodId]["props"]);
                     if (!empty($ofr['props'])) {
                         foreach ($ofr['props'] as $prop) {
@@ -267,6 +280,7 @@ class YmlFeedMindbox
                         }
                     }
                 }
+
                 if (array_key_exists($prodId, $prods)) {
                     unset($prods[$prodId]);
                 }
@@ -277,16 +291,21 @@ class YmlFeedMindbox
             foreach ($prods as $prod) {
                 $offer = $dom->createElement("offer");
                 $offer->setAttribute("id", Helper::getElementCode($prod["ID"]));
+
                 $available = ($prod['CATALOG_AVAILABLE'] === 'Y' && $prod['ACTIVE'] === 'Y') ? 'true' : 'false';
+
                 $offer->setAttribute("available", $available);
                 unset($available);
+
                 $offer = $offers->appendChild($offer);
                 $offerName = $dom->createElement("name", self::yandexText2xml($prod["NAME"]));
                 $offer->appendChild($offerName);
+
                 if (!empty($prod["PREVIEW_TEXT"])) {
                     $offerDescription = $dom->createElement("description", self::yandexText2xml($prod["PREVIEW_TEXT"]));
                     $offer->appendChild($offerDescription);
                 }
+
                 if ($prod["DETAIL_PAGE_URL"]) {
                     $offerUrl = $dom->createElement("url", self::yandexText2xml(self::getProtocol() . $_SERVER["SERVER_NAME"] . $prod["DETAIL_PAGE_URL"]));
                     $offer->appendChild($offerUrl);
@@ -301,6 +320,7 @@ class YmlFeedMindbox
                     $offerPrice = $dom->createElement("price", $prod["CATALOG_PRICE_" . $basePriceId]);
                     $offer->appendChild($offerPrice);
                 }
+
                 $offerCurrencyId = $dom->createElement("currencyId", self::yandexText2xml($prod["CATALOG_CURRENCY_" . $basePriceId]));
                 $offer->appendChild($offerCurrencyId);
 
@@ -318,6 +338,7 @@ class YmlFeedMindbox
                     $offerPicture = $dom->createElement("picture", self::yandexText2xml(self::getProtocol() . $url));
                     $offer->appendChild($offerPicture);
                 }
+
                 if (!empty($prod['props'])) {
                     foreach ($prod['props'] as $prop) {
                         if (!empty($prop['VALUE'])) {
@@ -367,10 +388,12 @@ class YmlFeedMindbox
             "IBLOCK_SECTION_ID",
             "NAME"
         );
+
         $arFilter = array(
             "IBLOCK_ID" => intval(Options::getModuleOption("CATALOG_IBLOCK_ID")),
             "ACTIVE" => "Y"
         );
+
         return \CIBlockSection::GetList(
             array("SORT" => "ASC"),
             $arFilter,
@@ -522,10 +545,13 @@ class YmlFeedMindbox
             if (!$prod['XML_ID']) {
                 $prod['XML_ID'] = $prod['ID'];
             }
+
             $prod['prices'] = \CCatalogProduct::GetOptimalPrice($prod['ID'], 1, [], 'N', [], $info['LID']);
+
             if ($prod['prices']['RESULT_PRICE']['PRICE_TYPE_ID'] !== $basePriceId) {
                 $prod['prices']['RESULT_PRICE'] = Helper::getPriceByType($prod);
             }
+
             $prodsInfo[$prod["ID"]] = $prod;
         }
 

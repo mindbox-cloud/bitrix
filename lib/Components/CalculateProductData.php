@@ -222,7 +222,7 @@ class CalculateProductData
                 $return['productList']['items'][] = [
                     'product' => [
                         'ids' => [
-                            $this->optionExternalSystem => $item['id']
+                            $this->optionExternalSystem => Helper::getElementCode($item['id'])
                         ]
                     ],
                     'basePricePerItem' => $item['price']
