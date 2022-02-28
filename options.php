@@ -216,9 +216,13 @@ $arAllOptions['FEED'] = [
         COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'YML_NAME', 'upload/mindbox.xml'),
         ['text']
     ],
-    'CATALOG_PROPS_UPGRADE'       => '',
+    [
+            'YML_CHUNK_SIZE',
+            getMessage('YML_CHUNK_SIZE'),
+            COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'YML_CHUNK_SIZE', 1000),
+            ['text']
+    ],
     'CATALOG_PROPS'               => '',
-    'CATALOG_OFFER_PROPS_UPGRADE' => '',
     'CATALOG_OFFER_PROPS'         => '',
 ];
 
@@ -324,18 +328,6 @@ $arAllOptions['ORDERS'] = [
 ];
 
 if (!empty(COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', ''))) {
-    if (YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['VERSION'] === '1') {
-        $arAllOptions['FEED']['CATALOG_PROPS_UPGRADE'] = [
-            'note' => getMessage(
-                'NEED_TABLE_UPGRADE',
-                [
-                    '#LINK#' => '/bitrix/admin/iblock_edit.php?type=' . YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['IBLOCK_TYPE_ID'] . '&ID=' . YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['ID']
-                ]
-            )
-        ];
-    } else {
-        unset($arAllOptions['FEED']['CATALOG_PROPS_UPGRADE']);
-    }
     $arAllOptions['FEED']['CATALOG_PROPS'] = [
         'CATALOG_PROPS',
         getMessage('CATALOG_PROPS'),
@@ -348,18 +340,6 @@ if (!empty(COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_I
 }
 
 if (!empty(\Mindbox\Helper::getOffersCatalogId(COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '')))) {
-    if (YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['VERSION'] === '1') {
-        $arAllOptions['FEED']['CATALOG_OFFER_PROPS_UPGRADE'] = [
-            'note' => getMessage(
-                'NEED_TABLE_UPGRADE',
-                [
-                    '#LINK#' => '/bitrix/admin/iblock_edit.php?type=' . YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['IBLOCK_TYPE_ID'] . '&ID=' . YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['ID']
-                ]
-            )
-        ];
-    } else {
-        unset($arAllOptions['FEED']['CATALOG_OFFER_PROPS_UPGRADE']);
-    }
     $arAllOptions['FEED']['CATALOG_OFFER_PROPS'] = [
         'CATALOG_OFFER_PROPS',
         getMessage('CATALOG_OFFER_PROPS'),
