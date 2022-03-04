@@ -1,9 +1,5 @@
-$(document).ready(function() {
-    var phone = localStorage.getItem('phone');
-    var $error = $('#mindbox-auth-sms-error');
-    var $success = $('#mindbox-auth-sms-success');
-
-    var validationMap  = {
+$(document).ready(function () {
+    var mindboxValidationMap = {
         '/customer/birthDate': $('#mindbox-fillup-birth-date-error'),
         '/customer/mobilePhone': $('#mindbox-fillup-phone-error'),
         '/customer/lastName': $('#mindbox-fillup-last-name-error'),
@@ -11,35 +7,29 @@ $(document).ready(function() {
         '/customer/email': $('#mindbox-fillup-email-error'),
     };
 
-    var inputCode = function(phone) {
-        $('#mindbox-input-phone').hide();
-        $('#mindbox-auth-sms--mobile-phone').text(phone);
-        $('#mindbox-input-code').show();
-    };
-    
-    var captchaReload = function() {
-        var request = BX.ajax.runComponentAction('mindbox:auth.sms', 'captchaUpdate', {
-            mode:'class',
+    var mindboxCaptchaReload = function () {
+        let request = BX.ajax.runComponentAction('mindbox:auth.sms', 'captchaUpdate', {
+            mode: 'class',
         });
 
         request.then(function (response) {
-            var data = response.data;
-            $('#mindbox---captcha_sid').val(data.captcha_sid);
-            $('#mindbox--captcha_img').attr("src", "/bitrix/tools/captcha.php?captcha_sid=" + data.captcha_sid);
+            $('#mindbox---captcha_sid').val(response.data.captcha_sid);
+            $('#mindbox--captcha_img').attr("src", "/bitrix/tools/captcha.php?captcha_sid=" + response.data.captcha_sid);
         });
     };
 
     $('#mindbox-input-phone').on('submit', function (event) {
-        var $targetForLoader = $('#mindbox-input-phone');
+        let $targetForLoader = $('#mindbox-input-phone');
 
         loader.show($targetForLoader);
         event.preventDefault();
 
-        phone = $('#mindbox-num').val();
+        let phone = $('#mindbox-num').val();
+
         localStorage.setItem('phone', phone);
 
-        var request = BX.ajax.runComponentAction('mindbox:auth.sms', 'sendCode', {
-            mode:'class',
+        let request = BX.ajax.runComponentAction('mindbox:auth.sms', 'sendCode', {
+            mode: 'class',
             data: {
                 phone: phone
             }
@@ -48,19 +38,19 @@ $(document).ready(function() {
         request.then(function (response) {
             loader.hide($targetForLoader);
 
-            if(response.data.type === 'success') {
-                $error.hide();
-                inputCode(phone);
-            }
-            else if(response.data.type === 'error') {
-                $error.text(response.data.message);
-                $error.show();
+            if (response.data.type === 'success') {
+                $('#mindbox-auth-sms-error').hide();
+                $('#mindbox-input-phone').hide();
+                $('#mindbox-auth-sms--mobile-phone').text(phone);
+                $('#mindbox-input-code').show();
+            } else if (response.data.type === 'error') {
+                $('#mindbox-auth-sms-error').text(response.data.message).show();
             }
         });
     });
 
     $('#mindbox-submit-code--reset').on('click', function () {
-        $error.hide();
+        $('#mindbox-auth-sms-error').hide();
         localStorage.setItem('phone', '');
         $('#mindbox-input-phone').show();
 
@@ -68,9 +58,12 @@ $(document).ready(function() {
     });
 
     $('#mindbox-submit-code--resend').on('click', function () {
-        $error.hide();
-        var request = BX.ajax.runComponentAction('mindbox:auth.sms', 'resend', {
-            mode:'class',
+        let phone = localStorage.getItem('phone');
+
+        $('#mindbox-auth-sms-error').hide();
+
+        let request = BX.ajax.runComponentAction('mindbox:auth.sms', 'resend', {
+            mode: 'class',
             data: {
                 phone: phone
             }
@@ -78,15 +71,17 @@ $(document).ready(function() {
     });
 
     $('#mindbox-input-code').on('submit', function (event) {
-        var $targetForLoader = $('#mindbox-input-code');
-
-        loader.show($targetForLoader);
         event.preventDefault();
 
-        var code = $('#mindbox-code').val();
+        let phone = localStorage.getItem('phone');
+        let $targetForLoader = $('#mindbox-input-code');
 
-        var request = BX.ajax.runComponentAction('mindbox:auth.sms', 'checkCode', {
-            mode:'class',
+        loader.show($targetForLoader);
+
+        let code = $('#mindbox-code').val();
+
+        let request = BX.ajax.runComponentAction('mindbox:auth.sms', 'checkCode', {
+            mode: 'class',
             data: {
                 code: code,
                 phone: phone
@@ -100,12 +95,11 @@ $(document).ready(function() {
                 localStorage.setItem('phone', '');
                 window.location.reload()
             } else if (response.data.type === 'error') {
-                $error.text(response.data.message);
-                $error.show();
-            } else if(response.data.type === 'fillup') {
+                $('#mindbox-auth-sms-error').text(response.data.message).show();
+            } else if (response.data.type === 'fillup') {
 
                 if ($('#mindbox-fillup-profile').length) {
-                    let $genderId = (response.data.sex === 'male')? 1:2;
+                    let $genderId = (response.data.sex === 'male') ? 1 : 2;
 
                     $('#mindbox-input-code').hide();
                     $('#mindbox-fillup-profile').show();
@@ -120,7 +114,6 @@ $(document).ready(function() {
                     localStorage.setItem('phone', '');
                     window.location.reload()
                 }
-
             }
         });
     });
@@ -155,8 +148,8 @@ $(document).ready(function() {
             fields['captcha_sid'] = 0;
         }
 
-        var request = BX.ajax.runComponentAction('mindbox:auth.sms', 'fillup', {
-            mode:'class',
+        let request = BX.ajax.runComponentAction('mindbox:auth.sms', 'fillup', {
+            mode: 'class',
             data: {
                 fields: fields
             }
@@ -164,23 +157,22 @@ $(document).ready(function() {
 
         request.then(function (response) {
             loader.hide($targetForLoader);
-            var data = response.data;
 
-            if (data.type === 'error') {
-                $error.html(data.message);
-                $error.show();
-                
-                captchaReload();
-            } else if (data.type === 'validation errors') {
-                for (var error of data.errors) {
-                    var $field = validationMap[error.location];
+            if (response.data.type === 'error') {
+                $('#mindbox-auth-sms-error').html(response.data.message).show();
+
+                mindboxCaptchaReload();
+            } else if (response.data.type === 'validation errors') {
+                for (let error of response.data.errors) {
+                    let $field = mindboxValidationMap[error.location];
+
                     $field.text(error.message);
                     $field.closest($('.form-group')).addClass('has-error');
                 }
-                
-                captchaReload();
-            } else if (data.type === 'success') {
-               window.location.reload()
+
+                mindboxCaptchaReload();
+            } else if (response.data.type === 'success') {
+                window.location.reload()
             }
         });
     })
