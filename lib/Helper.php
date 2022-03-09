@@ -1370,10 +1370,6 @@ class Helper
                     continue;
                 }
 
-                if ($basketItem->getQuantity() < 1) {
-                    continue;
-                }
-
                 $requestedPromotions = Helper::getRequestedPromotions($basketItem, $order);
                 $bitrixBasket[$basketItem->getId()] = $basketItem;
                 $catalogPrice = Helper::getBasePrice($basketItem);
