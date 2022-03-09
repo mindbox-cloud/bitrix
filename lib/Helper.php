@@ -1759,7 +1759,7 @@ class Helper
                         'orderLinesStatus' => $mindboxStatusCode,
                         'order' => [
                             'ids' => [
-                                'websiteId' => $orderId
+                                Options::getModuleOption('TRANSACTION_ID') => $orderId
                             ]
                         ]
                     ]),
