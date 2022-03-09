@@ -1,0 +1,5 @@
+parameters:
+	tmpDir: tmp
+	paths:
+	    - lib
+	    - install/components
