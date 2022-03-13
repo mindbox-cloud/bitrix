@@ -1334,11 +1334,24 @@ class Helper
     {
         global $USER;
         $return = null;
+        $orderId = (int)$orderId;
 
-        if ((int)$orderId > 0) {
+        if ($orderId > 0) {
             $mindbox = static::mindbox();
 
-            $order =  \Bitrix\Sale\Order::load($orderId);
+            if (!$mindbox) {
+                return;
+            }
+
+            if (!Helper::isMindboxOrder($orderId)) {
+                return;
+            }
+
+            $order = \Bitrix\Sale\Order::load($orderId);
+            if (!($order instanceof \Bitrix\Sale\Order)) {
+                return;
+            }
+
             $basket = $order->getBasket();
             $basketItems = $basket->getBasketItems();
             $orderPersonType = $order->getPersonTypeId();
@@ -1361,7 +1374,6 @@ class Helper
                     $orderPersonType
                 );
             }
-
 
             $preorder = new \Mindbox\DTO\V3\Requests\PreorderRequestDTO();
 
@@ -1471,6 +1483,7 @@ class Helper
     public function getAvailableBonusForCurrentOrder($orderId)
     {
         $return = 0;
+
         $getCalcOrderData = self::calculateAuthorizedCartByOrderId($orderId);
 
         if (!empty($getCalcOrderData) && is_object($getCalcOrderData)) {
