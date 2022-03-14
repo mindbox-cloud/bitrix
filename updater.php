@@ -3,6 +3,9 @@
 if (IsModuleInstalled('mindbox.marketing')) {
     \CModule::IncludeModule('mindbox.marketing');
 
+    if (is_dir(dirname(__FILE__).'/install/components')) {
+        $updater->CopyFiles("install/components", "components/");
+    }
 
     $eventController = new \Mindbox\EventController();
     $eventController->unRegisterEventHandler([
