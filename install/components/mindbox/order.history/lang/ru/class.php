@@ -9,3 +9,4 @@ $MESS['ORDER_START_HEAD'] = '<p>';
 $MESS['ORDER_START_TABLE'] = '<table class="table table-bordered table-striped"><tr><th>Название товара</th><th>Цена</th></tr>';
 $MESS['ORDER_END_TABLE'] = '</table>';
 $MESS['ORDER_LINE'] = '<tr><td><a href="#LINK#" target="_blank">#NAME#</a></td><td>#PRICE#</td></tr>';
+$MESS['ORDER_ERROR_MESSAGE'] = 'История бонусов временно недоступна';

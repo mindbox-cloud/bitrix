@@ -3,7 +3,6 @@
 
 namespace Mindbox\Components;
 
-
 use Intensa\Logger\ILog;
 use Mindbox\DTO\DTO;
 use Mindbox\Helper;
@@ -48,8 +47,7 @@ class CalculateProductData
             foreach ($searchItems as $placeholderKey => $replaceItem) {
                 $replaceValue = '';
 
-                if (
-                    array_key_exists($replaceItem['id'], $requestProductList)
+                if (array_key_exists($replaceItem['id'], $requestProductList)
                 && isset($requestProductList[$replaceItem['id']][$replaceItem['type']])
                 ) {
                     $replaceValue = $requestProductList[$replaceItem['id']][$replaceItem['type']];
@@ -83,7 +81,6 @@ class CalculateProductData
     protected function prepareLabel(&$value, $label)
     {
         if (!empty($label)) {
-
             if (strpos($label, 'before::') !== false) {
                 $value = str_replace('before::', '', $label) . ' ' . $value;
             } elseif (strpos($label, 'after::') !== false) {
@@ -112,8 +109,7 @@ class CalculateProductData
             foreach ($mindboxResponse as $productId => $responseItem) {
                 $productResponseData = [];
 
-                if (
-                    !empty($responseItem['priceForCustomer'])
+                if (!empty($responseItem['priceForCustomer'])
                     && $responseItem['priceForCustomer'] < $responseItem['basePricePerItem']
                 ) {
                     $productResponseData['MINDBOX_PRICE'] = $responseItem['priceForCustomer'];
@@ -124,7 +120,6 @@ class CalculateProductData
 
                 if (!empty($responseItem['appliedPromotions'])) {
                     foreach ($responseItem['appliedPromotions'] as $promotion) {
-
                         if ($promotion['type'] === 'earnedBonusPoints' && !empty($promotion['amount'])) {
                             $productResponseData['MINDBOX_BONUS'] = $promotion['amount'];
                         }
@@ -217,7 +212,6 @@ class CalculateProductData
         ];
 
         foreach ($productList as $item) {
-
             if (!empty($item['id']) && !empty($item['price'])) {
                 $return['productList']['items'][] = [
                     'product' => [
@@ -254,7 +248,6 @@ class CalculateProductData
                         $return[$item['product']['ids'][$this->optionExternalSystem]] = $item;
                     }
                 }
-
             }
 
             return $return;

@@ -771,8 +771,7 @@ class Helper
                                             self::isPercentFromBasePrice()
                                                     ? $basePrice
                                                     : $currentPrice
-                                            ) * ($percent / 100)
-                                    );
+                                            ) * ($percent / 100));
 
                                     break;
                                 case \Bitrix\Sale\Discount\Actions::VALUE_TYPE_FIX:
@@ -782,7 +781,7 @@ class Helper
                                 case \Bitrix\Sale\Discount\Actions::VALUE_TYPE_SUMM:
                                     // установка стоимости на общую сумму товаров
                                     $discountPrice = \Bitrix\Catalog\Product\Price\Calculation::roundPrecision(
-                                            $arActionDescrData['VALUE']
+                                        $arActionDescrData['VALUE']
                                     );
 
                                     $quantity = 1;
@@ -797,7 +796,7 @@ class Helper
                                 case \Bitrix\Sale\Discount\Formatter::TYPE_SIMPLE:
                                     // процент скидки на товар
                                     $discountPrice = \Bitrix\Catalog\Product\Price\Calculation::roundPrecision(
-                                            $currentPrice * ($arActionDescrData['VALUE'] / 100)
+                                        $currentPrice * ($arActionDescrData['VALUE'] / 100)
                                     );
                                     break;
                                 case \Bitrix\Sale\Discount\Formatter::TYPE_LIMIT_VALUE:
@@ -813,7 +812,6 @@ class Helper
                         }
 
                         $externalId = "SCR-" . $arDiscount['REAL_DISCOUNT_ID'];
-
                     } elseif ($arDiscount['MODULE_ID'] === 'catalog') {
                         if (array_key_exists('VALUE_EXACT', $arActionDescrData)) {
                             $discountPrice = $arActionDescrData['VALUE_EXACT'];
@@ -846,7 +844,7 @@ class Helper
                                 case \Bitrix\Sale\Discount\Formatter::TYPE_LIMIT_VALUE:
                                 case \Bitrix\Sale\Discount\Formatter::TYPE_VALUE:
                                     // фиксированная скидка на товар
-                                $discountPrice = (float) $arActionDescrData['VALUE'];
+                                    $discountPrice = (float) $arActionDescrData['VALUE'];
                                     break;
                                 case \Bitrix\Sale\Discount\Formatter::TYPE_FIXED:
                                     // установка стоимости на товар
@@ -1595,17 +1593,17 @@ class Helper
         $request = self::mindbox()->getClientV3()->prepareRequest(
             'POST',
             'Offline.GetOrder',
-                new DTO([
+            new DTO([
                     'order' => [
                         'ids' => [
                             Options::getModuleOption('TRANSACTION_ID') => $orderId
                         ],
                     ]
                 ]),
-                '',
-                [],
-                true,
-                false
+            '',
+            [],
+            true,
+            false
         );
 
         try {
@@ -1613,7 +1611,6 @@ class Helper
 
             return $response->getResult()->getOrder();
         } catch (Exceptions\MindboxClientException $e) {
-
         }
 
         return false;
@@ -1776,10 +1773,10 @@ class Helper
                             ]
                         ]
                     ]),
-                        '',
-                        [],
-                        true,
-                        false
+                    '',
+                    [],
+                    true,
+                    false
                 );
 
                 try {
