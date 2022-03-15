@@ -764,7 +764,7 @@ class YmlFeedMindbox
             ],
         ]);
 
-        while ($price = $iterator->fetch()) {
+        if ($price = $iterator->fetch()) {
             $arResultPrices['BASE_PRICE'] = roundEx($price['PRICE'], 2);
             $arResultPrices['UNROUND_BASE_PRICE'] = $price['PRICE'];
         }
