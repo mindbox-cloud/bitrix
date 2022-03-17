@@ -7,15 +7,17 @@ if (IsModuleInstalled('mindbox.marketing')) {
         $updater->CopyFiles("install/components", "components/");
     }
 
-    $updater->CopyFiles("lib", "modules/mindbox.marketing/lib");
-
-    try {
-        (new \Mindbox\EventController())->installDeliveryRulesHandler();
-    } catch (\Exception $e) {
-    }
-
-    try {
-        (new \Mindbox\Installer\DeliveryCartRuleInstaller())->install();
-    } catch (\Exception $e) {
-    }
+    $eventController = new \Mindbox\EventController();
+    $eventController->unRegisterEventHandler([
+        'bitrixModule' => 'main',
+        'bitrixEvent' => 'OnBeforeUserRegister',
+        'class' => '\Mindbox\Event',
+        'method' => 'OnBeforeUserRegisterHandler',
+    ]);
+    $eventController->unRegisterEventHandler([
+        'bitrixModule' => 'main',
+        'bitrixEvent' => 'OnAfterUserRegister',
+        'class' => '\Mindbox\Event',
+        'method' => 'OnAfterUserRegisterHandler',
+    ]);
 }

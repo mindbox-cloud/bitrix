@@ -30,7 +30,7 @@
 |                                           SetCart                                            |           [OnSaleBasketSaved](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/basket_saved.php)            |       OnSaleBasketSavedHandler       |
 |                      CalculateAuthorizedCart, CalculateUnauthorizedCart                      |   [OnBeforeSaleOrderFinalAction](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/order_final_action.php)   | OnBeforeSaleOrderFinalActionHandler  |
 |                                         SetWishList                                          |     [OnSaleBasketItemRefreshData](https://dev.1c-bitrix.ru/api_d7/bitrix/sale/events/basket_updated.php)      |  OnSaleBasketItemRefreshDataHandler  |
-|                                       RegisterCustomer                                       |             [OnBeforeUserAdd](https://dev.1c-bitrix.ru/api_help/main/events/onbeforeuseradd.php)              |        OnAfterUserAddHandler         |
+|                                       RegisterCustomer                                       |             [OnBeforeUserAdd](https://dev.1c-bitrix.ru/api_help/main/events/onbeforeuseradd.php)              |        OnBeforeUserAddHandler         |
 |                                       RegisterCustomer                                       |              [OnAfterUserAdd](https://dev.1c-bitrix.ru/api_help/main/events/onafteruseradd.php)               |        OnAfterUserAddHandler         |
 |                                   Подключение кода трекера                                   |                    [OnProlog](https://dev.1c-bitrix.ru/api_help/main/events/onprolog.php)                     |           OnPrologHandler            |
 |                              Подключение кода модуля глобально                               |              [OnBeforeProlog](https://dev.1c-bitrix.ru/api_help/main/events/onbeforeprolog.php)               |        OnBeforePrologHandler         |
@@ -48,12 +48,12 @@
 
 | Агент                | Описание                     |
 | :--------------------: | :----------------------------: |
-| Агент выгрузки каталога | Данный агент служит для выгрузки товаров и их торговоых предложений в xml формате. Обращается к функции ```\Mindbox\YmlFeedMindbox::start();``` |
+| Агент выгрузки каталога | Данный агент служит для выгрузки товаров и их торговых предложений в xml формате. Обращается к функции ```\Mindbox\YmlFeedMindbox::start();``` |
 | Агент очереди | Данный агент служит для отправки запросов к Mindbox, добавленных в очередь запросов. Обращается к функции ```\Mindbox\QueueTable::start();``` |
 
 __Примечание:__ 
 1. Для проектов с большим каталогом рекомендуется перевести выгрузку каталога на крон.
-2. Назавание сайта и компании в выгрузке берется из поля "Название веб-сайта" в настройках сайта.
+2. Название сайта и компании в выгрузке берется из поля "Название веб-сайта" в настройках сайта.
 
 Пример скрипта
 ```php

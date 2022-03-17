@@ -189,7 +189,7 @@ class EventController
      * Регистрация обработчика
      * @param $params
      */
-    protected function registerEventHandler($params)
+    public function registerEventHandler($params)
     {
         $method = 'registerEventHandlerCompatible';
 
@@ -211,7 +211,7 @@ class EventController
      * Удаление обработчика
      * @param $params
      */
-    protected function unRegisterEventHandler($params)
+    public function unRegisterEventHandler($params)
     {
         $this->eventManager->unRegisterEventHandler(
             $params['bitrixModule'],
