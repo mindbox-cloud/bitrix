@@ -78,6 +78,9 @@ class mindbox_marketing extends CModule
         $transactionTable = new \Mindbox\DataBase\MindboxTransactionTable();
         $transactionTable->createTable();
 
+        $mindboxLog = new \Mindbox\AccessLogs();
+        $mindboxLog->setLogAccess();
+
         $GLOBALS["APPLICATION"]->IncludeAdminFile(GetMessage("MINDBOX_INSTALL_TITLE"), __DIR__ . "/step1.php");
     }
 
