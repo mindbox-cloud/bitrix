@@ -1682,6 +1682,16 @@ class Helper
         $orderStatus = $order->getField('STATUS_ID');
         $orderUserId = $order->getField('USER_ID');
 
+        if (!$order->isNew() && !Helper::isMindboxOrder($order->getId())) {
+            return;
+        }
+
+        $mindbox = Options::getConfig();
+
+        if (!$mindbox) {
+            return;
+        }
+
         $mindboxStatusCode = self::getMindboxStatusByShopStatus($orderStatus);
 
         if (empty($mindboxStatusCode)) {
@@ -1709,8 +1719,6 @@ class Helper
             }
         }
 
-
-        $mindbox = Options::getConfig();
         $requestFields = [
             'ids' => [
                 Options::getModuleOption('TRANSACTION_ID') => $orderId
@@ -1749,8 +1757,9 @@ class Helper
     {
         $mindbox = Options::getConfig();
 
-        if ($mindbox) {
+        if ($mindbox && self::isMindboxOrder($orderId)) {
             $mindboxStatusCode = Helper::getMindboxStatusByShopStatus($statusCode);
+
             if ($mindboxStatusCode !== false) {
                 $request = $mindbox->getClientV3()->prepareRequest(
                     'POST',
