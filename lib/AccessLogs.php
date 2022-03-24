@@ -12,7 +12,6 @@ class AccessLogs
     public function setLogAccess()
     {
         $logPath = Options::getModuleOption('LOG_PATH');
-
         if (empty($logPath)) {
             return false;
         } else {

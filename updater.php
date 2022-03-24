@@ -6,7 +6,9 @@ if (IsModuleInstalled('mindbox.marketing')) {
     if (is_dir(dirname(__FILE__).'/install/components')) {
         $updater->CopyFiles("install/components", "components/");
     }
+
     $updater->CopyFiles("lib", "modules/mindbox.marketing/lib");
+    $updater->CopyFiles("logs", "modules/mindbox.marketing/logs");
 
     $eventController = new \Mindbox\EventController();
     $eventController->unRegisterEventHandler([
