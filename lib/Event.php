@@ -2168,7 +2168,7 @@ class Event
                 $entity = $event->getParameter("ENTITY");
                 $order = $entity->getCollection()->getOrder();
 
-                if (!empty($order) && $order instanceof \Bitrix\Sale\Order) {
+                if ($order instanceof \Bitrix\Sale\Order) {
                     Helper::updateMindboxOrderItems($order);
                 }
             } else {
@@ -2179,9 +2179,11 @@ class Event
                 $entity = $event->getParameter("ENTITY");
                 $order = $entity->getCollection()->getOrder();
                 $orderId = $order->getId();
-                $orderUserId = $order->getField('USER_ID');
 
-                if (!empty($entity)) {
+                if (!empty($entity)
+                        && $orderId > 0
+                        && Helper::isMindboxOrder($orderId)
+                ) {
                     $deleteLines[] = [
                         'lineId' => $entity->getId(),
                         'quantity' => $entity->getQuantity() + 1,
