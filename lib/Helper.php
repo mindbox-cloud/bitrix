@@ -189,8 +189,8 @@ class Helper
 
         $fields['subscriptions'] = [
             [
-                'brand' => Options::getModuleOption('BRAND'),
-                'isSubscribed'   => true,
+                'brand'        => Options::getModuleOption('BRAND'),
+                'isSubscribed' => true,
             ]
         ];
 
@@ -464,23 +464,23 @@ class Helper
 
         return $offerProps;
     }
-    
+
     public static function getGroups()
     {
         $arGroup = [];
-        
+
         $iterator = \Bitrix\Main\GroupTable::getList([
             'filter' => ['ACTIVE' => 'Y'],
             'select' => ['ID', 'NAME']
         ]);
-        
+
         while ($group = $iterator->fetch()) {
             $arGroup[$group['ID']] = $group['NAME'] . ' [' . $group['ID'] . ']';
         }
-        
+
         return $arGroup;
     }
-    
+
     /**
      * @return array
      */
@@ -771,8 +771,7 @@ class Helper
                                             self::isPercentFromBasePrice()
                                                     ? $basePrice
                                                     : $currentPrice
-                                            ) * ($percent / 100)
-                                    );
+                                            ) * ($percent / 100));
 
                                     break;
                                 case \Bitrix\Sale\Discount\Actions::VALUE_TYPE_FIX:
@@ -782,7 +781,7 @@ class Helper
                                 case \Bitrix\Sale\Discount\Actions::VALUE_TYPE_SUMM:
                                     // установка стоимости на общую сумму товаров
                                     $discountPrice = \Bitrix\Catalog\Product\Price\Calculation::roundPrecision(
-                                            $arActionDescrData['VALUE']
+                                        $arActionDescrData['VALUE']
                                     );
 
                                     $quantity = 1;
@@ -797,7 +796,7 @@ class Helper
                                 case \Bitrix\Sale\Discount\Formatter::TYPE_SIMPLE:
                                     // процент скидки на товар
                                     $discountPrice = \Bitrix\Catalog\Product\Price\Calculation::roundPrecision(
-                                            $currentPrice * ($arActionDescrData['VALUE'] / 100)
+                                        $currentPrice * ($arActionDescrData['VALUE'] / 100)
                                     );
                                     break;
                                 case \Bitrix\Sale\Discount\Formatter::TYPE_LIMIT_VALUE:
@@ -813,7 +812,6 @@ class Helper
                         }
 
                         $externalId = "SCR-" . $arDiscount['REAL_DISCOUNT_ID'];
-
                     } elseif ($arDiscount['MODULE_ID'] === 'catalog') {
                         if (array_key_exists('VALUE_EXACT', $arActionDescrData)) {
                             $discountPrice = $arActionDescrData['VALUE_EXACT'];
@@ -846,7 +844,7 @@ class Helper
                                 case \Bitrix\Sale\Discount\Formatter::TYPE_LIMIT_VALUE:
                                 case \Bitrix\Sale\Discount\Formatter::TYPE_VALUE:
                                     // фиксированная скидка на товар
-                                $discountPrice = (float) $arActionDescrData['VALUE'];
+                                    $discountPrice = (float) $arActionDescrData['VALUE'];
                                     break;
                                 case \Bitrix\Sale\Discount\Formatter::TYPE_FIXED:
                                     // установка стоимости на товар
@@ -1334,11 +1332,24 @@ class Helper
     {
         global $USER;
         $return = null;
+        $orderId = (int)$orderId;
 
-        if ((int)$orderId > 0) {
+        if ($orderId > 0) {
             $mindbox = static::mindbox();
 
-            $order =  \Bitrix\Sale\Order::load($orderId);
+            if (!$mindbox) {
+                return;
+            }
+
+            if (!Helper::isMindboxOrder($orderId)) {
+                return;
+            }
+
+            $order = \Bitrix\Sale\Order::load($orderId);
+            if (!($order instanceof \Bitrix\Sale\Order)) {
+                return;
+            }
+
             $basket = $order->getBasket();
             $basketItems = $basket->getBasketItems();
             $orderPersonType = $order->getPersonTypeId();
@@ -1361,7 +1372,6 @@ class Helper
                     $orderPersonType
                 );
             }
-
 
             $preorder = new \Mindbox\DTO\V3\Requests\PreorderRequestDTO();
 
@@ -1471,6 +1481,7 @@ class Helper
     public function getAvailableBonusForCurrentOrder($orderId)
     {
         $return = 0;
+
         $getCalcOrderData = self::calculateAuthorizedCartByOrderId($orderId);
 
         if (!empty($getCalcOrderData) && is_object($getCalcOrderData)) {
@@ -1582,17 +1593,17 @@ class Helper
         $request = self::mindbox()->getClientV3()->prepareRequest(
             'POST',
             'Offline.GetOrder',
-                new DTO([
+            new DTO([
                     'order' => [
                         'ids' => [
                             Options::getModuleOption('TRANSACTION_ID') => $orderId
                         ],
                     ]
                 ]),
-                '',
-                [],
-                true,
-                false
+            '',
+            [],
+            true,
+            false
         );
 
         try {
@@ -1600,7 +1611,6 @@ class Helper
 
             return $response->getResult()->getOrder();
         } catch (Exceptions\MindboxClientException $e) {
-
         }
 
         return false;
@@ -1682,6 +1692,16 @@ class Helper
         $orderStatus = $order->getField('STATUS_ID');
         $orderUserId = $order->getField('USER_ID');
 
+        if (!$order->isNew() && !Helper::isMindboxOrder($order->getId())) {
+            return;
+        }
+
+        $mindbox = Options::getConfig();
+
+        if (!$mindbox) {
+            return;
+        }
+
         $mindboxStatusCode = self::getMindboxStatusByShopStatus($orderStatus);
 
         if (empty($mindboxStatusCode)) {
@@ -1709,8 +1729,6 @@ class Helper
             }
         }
 
-
-        $mindbox = Options::getConfig();
         $requestFields = [
             'ids' => [
                 Options::getModuleOption('TRANSACTION_ID') => $orderId
@@ -1749,8 +1767,9 @@ class Helper
     {
         $mindbox = Options::getConfig();
 
-        if ($mindbox) {
+        if ($mindbox && self::isMindboxOrder($orderId)) {
             $mindboxStatusCode = Helper::getMindboxStatusByShopStatus($statusCode);
+
             if ($mindboxStatusCode !== false) {
                 $request = $mindbox->getClientV3()->prepareRequest(
                     'POST',
@@ -1763,10 +1782,10 @@ class Helper
                             ]
                         ]
                     ]),
-                        '',
-                        [],
-                        true,
-                        false
+                    '',
+                    [],
+                    true,
+                    false
                 );
 
                 try {
