@@ -3,7 +3,6 @@
 
 namespace Mindbox;
 
-
 use Mindbox\DataBase\MindboxTransactionTable;
 
 class Transaction
@@ -83,7 +82,6 @@ class Transaction
     public function close()
     {
         if (!empty($this->orderId)) {
-
             if ($existTransaction = self::existOpenTransaction($this->orderId)) {
                 self::closeTransaction($existTransaction['id']);
             }
