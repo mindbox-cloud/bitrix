@@ -623,6 +623,11 @@ class Helper
         return COption::GetOptionString('mindbox.marketing', 'MODE') === 'standard';
     }
 
+    public static function isLoyaltyMode()
+    {
+        return Main\Config\Option::get('mindbox.marketing', 'MODE') === 'loyalty';
+    }
+
 
     /**
      * Check if order is unauthorized
