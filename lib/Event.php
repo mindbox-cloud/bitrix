@@ -47,7 +47,6 @@ class Event
      * @bitrixEventCode OnAfterUserAuthorize
      * @langEventName OnAfterUserAuthorize
      * @param $arUser
-     * @return bool
      */
     public function OnAfterUserAuthorizeHandler($arUser)
     {
@@ -88,12 +87,70 @@ class Event
      * @bitrixEventCode OnAfterUserAdd
      * @langEventName OnAfterUserAdd
      * @param $arFields
-     * @return false
      */
     public static function OnAfterUserAddHandler(&$arFields)
     {
         \Mindbox\Handlers\User::onAfterUserAdd($arFields);
     }
+
+    /**
+     * @bitrixModuleId sale
+     * @bitrixEventCode OnSaleBasketSaved
+     * @langEventName OnSaleBasketSaved
+     * @param $basket
+     * @return Main\EventResult|false
+     */
+    public static function OnSaleBasketSavedHandler($basket)
+    {
+        \Mindbox\Handlers\Basket::onSaleBasketSaved($basket);
+
+        return new Main\EventResult(Main\EventResult::SUCCESS);
+    }
+
+    /**
+     * @bitrixModuleId sale
+     * @bitrixEventCode OnSaleBasketItemRefreshData
+     * @langEventName OnSaleBasketItemRefreshData
+     * @param $event
+     * @return \Bitrix\Main\EventResult
+     */
+    public static function OnSaleBasketItemRefreshDataHandler($event)
+    {
+        \Mindbox\Handlers\Basket::onSaleBasketItemRefreshData($event);
+
+        return new Main\EventResult(Main\EventResult::SUCCESS);
+    }
+
+    /**
+     * @bitrixModuleId sale
+     * @bitrixEventCode OnSaleBasketItemEntitySaved
+     * @langEventName OnSaleBasketItemEntitySaved
+     * @notCompatible truel
+     */
+    public static function OnSaleBasketItemEntitySavedHandler(\Bitrix\Main\Event $event)
+    {
+        if (Helper::isAdminSection() && Helper::isStandardMode()) {
+            \Mindbox\Handlers\Basket::onSaleBasketItemEntitySavedStandart($event);
+        }
+    }
+
+    /**
+     * @bitrixModuleId sale
+     * @bitrixEventCode OnSaleBasketItemEntityDeleted
+     * @langEventName OnSaleBasketItemEntityDeleted
+     * @notCompatible true
+     */
+    public static function OnSaleBasketItemDeletedHandler(\Bitrix\Main\Event $event)
+    {
+        if (Helper::isAdminSection()) {
+            if (Helper::isStandardMode()) {
+                \Mindbox\Handlers\Basket::OnSaleBasketItemEntityDeletedStandart($event);
+            } else {
+                \Mindbox\Handlers\Basket::onSaleBasketItemEntityDeletedLoyalty($event);
+            }
+        }
+    }
+
 
     /**
      * @bitrixModuleId sale
@@ -1100,27 +1157,6 @@ class Event
         return new Main\EventResult(Main\EventResult::SUCCESS);
     }
 
-    /**
-     * @bitrixModuleId sale
-     * @bitrixEventCode OnSaleBasketSaved
-     * @langEventName OnSaleBasketSaved
-     * @param $basket
-     * @return Main\EventResult|false
-     */
-    public function OnSaleBasketSavedHandler($basket)
-    {
-        $mindbox = static::mindbox();
-        if (!$mindbox) {
-            return new Main\EventResult(Main\EventResult::SUCCESS);
-        }
-        $basketItems = $basket->getBasketItems();
-        Helper::setCartMindbox($basketItems);
-        if (empty($basketItems)) {
-            $_SESSION['MB_CLEAR_CART'] = 'Y';
-        }
-
-        return new Main\EventResult(Main\EventResult::SUCCESS);
-    }
 
     /**
      * @bitrixModuleId sale
@@ -1501,52 +1537,10 @@ class Event
     }
 
     /**
-     * @bitrixModuleId sale
-     * @bitrixEventCode OnSaleBasketItemRefreshData
-     * @langEventName OnSaleBasketItemRefreshData
-     * @param $event
-     * @return \Bitrix\Main\EventResult
-     */
-    public function OnSaleBasketItemRefreshDataHandler($event)
-    {
-        $basketItem = $event;
-        $basket = Sale\Basket::loadItemsForFUser(Sale\Fuser::getId(), Main\Context::getCurrent()->getSite());
-        $basketItems = $basket->getBasketItems();
-
-        if (empty($basketItems)) {
-            $_SESSION['MB_CLEAR_CART'] = 'Y';
-        } else {
-            unset($_SESSION['MB_CLEAR_CART']);
-        }
-
-        if ($basketItem->getField('DELAY') === 'Y') {
-            $_SESSION['MB_WISHLIST'][$basketItem->getProductId()] = $basketItem;
-        } else {
-            if ($basketItem->getField('DELAY') === 'N' && array_key_exists(
-                $basketItem->getProductId(),
-                $_SESSION['MB_WISHLIST']
-            )) {
-                unset($_SESSION['MB_WISHLIST'][$basketItem->getProductId()]);
-            }
-        }
-
-        if (!empty($_SESSION['MB_WISHLIST']) && count($_SESSION['MB_WISHLIST']) !== $_SESSION['MB_WISHLIST_COUNT']) {
-            Helper::setWishList();
-        }
-
-        if (empty($_SESSION['MB_WISHLIST']) && isset($_SESSION['MB_WISHLIST_COUNT'])) {
-            Helper::clearWishList();
-        }
-
-        return new Main\EventResult(Main\EventResult::SUCCESS);
-    }
-
-    /**
      * @bitrixModuleId main
      * @bitrixEventCode OnProlog
      * @langEventName OnProlog
      * @param $arFields
-     * @return false
      */
     public static function OnPrologHandler()
     {
@@ -1561,7 +1555,6 @@ class Event
      * @bitrixEventCode OnBeforeProlog
      * @langEventName OnBeforeProlog
      * @isSystem true
-     * @return false
      */
     public static function OnBeforePrologHandler()
     {
@@ -1574,7 +1567,6 @@ class Event
      * @langEventName OnSalePropertyValueSetField
      * @notCompatible true
      * @param Main\Event $event
-     * @return bool
      */
     public function OnSalePropertyValueSetFieldHandler(Main\Event $event)
     {
@@ -1592,86 +1584,6 @@ class Event
                 ];
 
                 Helper::updateMindboxOrderItems($order, $additionFields);
-            }
-        }
-    }
-
-    /**
-     * @bitrixModuleId sale
-     * @bitrixEventCode OnSaleBasketItemEntitySaved
-     * @langEventName OnSaleBasketItemEntitySaved
-     * @notCompatible true
-     * @return bool
-     */
-    public static function OnSaleBasketItemEntitySavedHandler(\Bitrix\Main\Event $event)
-    {
-        if (Helper::isStandardMode() && Helper::isAdminSection()) {
-            $entity = $event->getParameter("ENTITY");
-            $order = $entity->getCollection()->getOrder();
-
-            if (!empty($order) && $order instanceof \Bitrix\Sale\Order) {
-                Helper::updateMindboxOrderItems($order);
-            }
-        }
-    }
-
-    /**
-     * @bitrixModuleId sale
-     * @bitrixEventCode OnSaleBasketItemEntityDeleted
-     * @langEventName OnSaleBasketItemEntityDeleted
-     * @notCompatible true
-     * @return bool
-     */
-    public function OnSaleBasketItemDeletedHandler(\Bitrix\Main\Event $event)
-    {
-        if (Helper::isAdminSection()) {
-            if (Helper::isStandardMode()) {
-                $entity = $event->getParameter("ENTITY");
-                $order = $entity->getCollection()->getOrder();
-
-                if ($order instanceof \Bitrix\Sale\Order) {
-                    Helper::updateMindboxOrderItems($order);
-                }
-            } else {
-                if (Helper::isDeleteOrderAdminAction() || Helper::isDeleteOrderItemAdminAction()) {
-                    return new Main\EventResult(Main\EventResult::SUCCESS);
-                }
-
-                $entity = $event->getParameter("ENTITY");
-                $order = $entity->getCollection()->getOrder();
-                $orderId = $order->getId();
-
-                if (!empty($entity)
-                        && $orderId > 0
-                        && Helper::isMindboxOrder($orderId)
-                ) {
-                    $deleteLines[] = [
-                        'lineId' => $entity->getId(),
-                        'quantity' => $entity->getQuantity() + 1,
-                        'status' => 'Cancelled',
-                    ];
-
-                    $requestData = [
-                        'order' => [
-                            'ids' => [
-                                Options::getModuleOption('TRANSACTION_ID') => $orderId
-                            ],
-                            'lines' => $deleteLines
-                        ]
-                    ];
-
-                    $request = Helper::mindbox()->getClientV3()->prepareRequest(
-                        'POST',
-                        Options::getOperationName('updateOrderItemsStatus'),
-                        new DTO($requestData)
-                    );
-
-                    try {
-                        $response = $request->sendRequest();
-                    } catch (Exceptions\MindboxClientException $e) {
-                        // return false;
-                    }
-                }
             }
         }
     }
