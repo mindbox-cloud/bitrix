@@ -11,16 +11,24 @@ use Mindbox\Exceptions;
 
 class Basket
 {
+    /**
+     * @param Main\Event $event
+     * @return void
+     */
     public static function onSaleBasketItemEntityDeletedStandart(\Bitrix\Main\Event $event)
     {
         $entity = $event->getParameter("ENTITY");
         $order = $entity->getCollection()->getOrder();
 
         if ($order instanceof \Bitrix\Sale\Order) {
-            Helper::updateMindboxOrderItems($order);
+            \Mindbox\Handlers\Order::updateMindboxOrderItems($order);
         }
     }
 
+    /**
+     * @param Main\Event $event
+     * @return Main\EventResult|void
+     */
     public static function onSaleBasketItemEntityDeletedLoyalty(\Bitrix\Main\Event $event)
     {
         if (Helper::isDeleteOrderAdminAction() || Helper::isDeleteOrderItemAdminAction()) {
@@ -63,6 +71,10 @@ class Basket
         }
     }
 
+    /**
+     * @param Main\Event $event
+     * @return void
+     */
     public static function onSaleBasketItemEntitySavedStandart(\Bitrix\Main\Event $event)
     {
         if (Helper::isStandardMode() && Helper::isAdminSection()) {
@@ -70,11 +82,18 @@ class Basket
             $order = $entity->getCollection()->getOrder();
 
             if (!empty($order) && $order instanceof \Bitrix\Sale\Order) {
-                Helper::updateMindboxOrderItems($order);
+                \Mindbox\Handlers\Order::updateMindboxOrderItems($order);
             }
         }
     }
 
+    /**
+     * @param $event
+     * @return void
+     * @throws Main\ArgumentException
+     * @throws Main\ArgumentTypeException
+     * @throws Main\NotImplementedException
+     */
     public static function onSaleBasketItemRefreshData($event)
     {
         $basketItem = $event;
@@ -107,6 +126,10 @@ class Basket
         }
     }
 
+    /**
+     * @param $basket
+     * @return void
+     */
     public static function onSaleBasketSaved($basket)
     {
         $basketItems = $basket->getBasketItems();
