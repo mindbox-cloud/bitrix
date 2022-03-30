@@ -579,4 +579,15 @@ class User
             }
         }
     }
+
+    public static function onSaleUserDelete($id)
+    {
+        if (class_exists('\\Mindbox\\Discount\\DeliveryDiscountEntity')) {
+            $deliveryDiscountEntity = new \Mindbox\Discount\DeliveryDiscountEntity();
+            $deliveryDiscountEntity->deleteByFilter([
+                    'UF_FUSER_ID' => $id,
+                    'UF_ORDER_ID' => null
+            ]);
+        }
+    }
 }

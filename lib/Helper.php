@@ -28,7 +28,7 @@ use Mindbox\DTO\V3\Requests\SubscriptionRequestCollection;
 
 class Helper
 {
-    use AdminLayouts;
+    use AdminLayouts, Core;
 
     public static function getNumEnding($number, $endingArray)
     {
@@ -1219,14 +1219,6 @@ class Helper
     }
 
     /**
-     * @return Mindbox
-     */
-    public static function mindbox()
-    {
-        return Options::getConfig();
-    }
-
-    /**
      * Check if order is new
      *
      * @return boolean
@@ -1689,116 +1681,5 @@ class Helper
         }
 
         return $return;
-    }
-
-    public static function updateMindboxOrderItems(\Bitrix\Sale\Order $order, $additionalFields = [])
-    {
-        $orderId = $order->getId();
-        $orderStatus = $order->getField('STATUS_ID');
-        $orderUserId = $order->getField('USER_ID');
-
-        if (!$order->isNew() && !Helper::isMindboxOrder($order->getId())) {
-            return;
-        }
-
-        $mindbox = Options::getConfig();
-
-        if (!$mindbox) {
-            return;
-        }
-
-        $mindboxStatusCode = self::getMindboxStatusByShopStatus($orderStatus);
-
-        if (empty($mindboxStatusCode)) {
-            return false;
-        }
-
-        $orderBasket = $order->getBasket();
-
-        if ($orderBasket) {
-            $basketItems = $orderBasket->getBasketItems();
-            $lines = [];
-
-            foreach ($basketItems as $basketItem) {
-                $lines[] = [
-                    'lineId' => $basketItem->getId(),
-                    'quantity' => $basketItem->getQuantity(),
-                    'basePricePerItem' => $basketItem->getPrice(),
-                    'status' => $mindboxStatusCode,
-                    'product' => [
-                        'ids' => [
-                            Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getElementCode($basketItem->getProductId())
-                        ]
-                    ],
-                ];
-            }
-        }
-
-        $requestFields = [
-            'ids' => [
-                Options::getModuleOption('TRANSACTION_ID') => $orderId
-            ],
-            'lines' => $lines
-        ];
-
-        if (!empty($additionalFields) && is_array($additionalFields)) {
-            $requestFields = $requestFields + $additionalFields;
-        }
-
-        $requestData = [
-            'customer' => [
-                'ids' => [
-                    Options::getModuleOption('WEBSITE_ID') => $orderUserId
-                ],
-            ],
-            'order' => $requestFields
-        ];
-
-        $request = $mindbox->getClientV3()->prepareRequest(
-            'POST',
-            Options::getOperationName('updateOrderItems'),
-            new DTO($requestData)
-        );
-
-        try {
-            $response = $request->sendRequest();
-        } catch (Exceptions\MindboxClientException $e) {
-            return false;
-        }
-    }
-
-
-    public static function updateMindboxOrderStatus($orderId, $statusCode)
-    {
-        $mindbox = Options::getConfig();
-
-        if ($mindbox && self::isMindboxOrder($orderId)) {
-            $mindboxStatusCode = Helper::getMindboxStatusByShopStatus($statusCode);
-
-            if ($mindboxStatusCode !== false) {
-                $request = $mindbox->getClientV3()->prepareRequest(
-                    'POST',
-                    Options::getOperationName('updateOrderStatus'),
-                    new DTO([
-                        'orderLinesStatus' => $mindboxStatusCode,
-                        'order' => [
-                            'ids' => [
-                                'websiteId' => $orderId
-                            ]
-                        ]
-                    ]),
-                    '',
-                    [],
-                    true,
-                    false
-                );
-
-                try {
-                    $response = $request->sendRequest();
-                } catch (Exceptions\MindboxClientException $e) {
-                    return false;
-                }
-            }
-        }
     }
 }
