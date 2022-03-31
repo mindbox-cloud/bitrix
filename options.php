@@ -25,7 +25,12 @@ function ShowParamsHTMLByarray($arParams)
     }
 }
 
-$mayEmptyProps = ['MINDBOX_CATALOG_PROPS', 'MINDBOX_CATALOG_OFFER_PROPS', 'MINDBOX_ENABLE_EVENT_LIST', 'MINDBOX_CONTINUE_USER_GROUPS'];
+$mayEmptyProps = [
+    'MINDBOX_CATALOG_PROPS',
+    'MINDBOX_CATALOG_OFFER_PROPS',
+    'MINDBOX_ENABLE_EVENT_LIST',
+    'MINDBOX_CONTINUE_USER_GROUPS'
+];
 
 if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
     if (empty($_POST['MINDBOX_PROTOCOL']) || $_POST['MINDBOX_PROTOCOL'] !== 'Y') {
@@ -59,6 +64,11 @@ if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
                 file_get_contents($trackerJsFilenameOrig)
             )
         );
+    }
+
+    if ($_REQUEST['MINDBOX_LOG_PATH'] !== COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'MINDBOX_LOG_PATH', '')) {
+        $mindboxLog = new \Mindbox\AccessLogs();
+        $mindboxLog->setLogAccess();
     }
 }
 
@@ -254,7 +264,7 @@ $arAllOptions['CLIENTS'] = [
         COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'USER_FIELDS_MATCH', ''),
         ['text']
     ],
-    ];
+];
 
 $arAllOptions['ORDERS'] = [
     [
@@ -347,7 +357,11 @@ if (!empty(COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_I
     ];
 }
 
-if (!empty(\Mindbox\Helper::getOffersCatalogId(COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '')))) {
+if (!empty(\Mindbox\Helper::getOffersCatalogId(COption::GetOptionString(
+    MINDBOX_ADMIN_MODULE_NAME,
+    'CATALOG_IBLOCK_ID',
+    ''
+)))) {
     if (YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['VERSION'] === '1') {
         $arAllOptions['FEED']['CATALOG_OFFER_PROPS_UPGRADE'] = [
             'note' => getMessage(
@@ -387,13 +401,13 @@ $arAllOptions['COMMON'][] = [
 
 
 $arAllOptions['COMMON'][] = [
-        'CONTINUE_USER_GROUPS',
-        getMessage('CONTINUE_USER_GROUPS'),
-        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'CONTINUE_USER_GROUPS', ''),
-        [
-                'multiselectbox',
-                \Mindbox\Helper::getGroups(),
-        ]
+    'CONTINUE_USER_GROUPS',
+    getMessage('CONTINUE_USER_GROUPS'),
+    COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'CONTINUE_USER_GROUPS', ''),
+    [
+        'multiselectbox',
+        \Mindbox\Helper::getGroups(),
+    ]
 ];
 ?>
 
@@ -432,16 +446,19 @@ $arAllOptions['COMMON'][] = [
         min-width: 300px;
         width: 300px;
     }
+
     input[type="text"] {
         min-width: 288px;
         width: 288px;
     }
+
     input[name=MINDBOX_MODULE_VERSION] {
         pointer-events: none !important;
         background-color: #fff !important;
         border-color: #ccc !important;
         opacity: 0.4 !important;
     }
+
     .mindbox-help--icon:before {
         cursor: help;
         content: url("/bitrix/js/main/core/images/hint.gif");
@@ -450,6 +467,7 @@ $arAllOptions['COMMON'][] = [
         width: 5px;
         height: 5px;
     }
+
     .mindbox-help--tooltip {
         position: fixed;
         padding: 10px 20px;
@@ -463,9 +481,11 @@ $arAllOptions['COMMON'][] = [
         box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
         display: none;
     }
-    .mindbox-help--icon:hover ~ .mindbox-help--tooltip{
+
+    .mindbox-help--icon:hover ~ .mindbox-help--tooltip {
         display: block;
     }
+
     select option:checked {
         background-color: rgb(206, 206, 206);
     }
@@ -484,7 +504,7 @@ $arAllOptions['COMMON'][] = [
         iconNode.className = 'mindbox-help--icon ';
         label.prepend(iconNode);
 
-        iconNode.onmouseover =  function (event) {
+        iconNode.onmouseover = function (event) {
             const iconNode = event.target;
             const label = iconNode.parentNode;
 

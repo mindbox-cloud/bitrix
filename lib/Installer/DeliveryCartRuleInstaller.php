@@ -141,5 +141,4 @@ class DeliveryCartRuleInstaller extends CartRuleInstaller
 
         \CSaleDiscount::Add($discountFields);
     }
-
 }

@@ -8,16 +8,16 @@
     "packages": [
         {
             "name": "mindbox/sdk",
-            "version": "1.0.4",
+            "version": "1.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mindbox-moscow/php-sdk.git",
-                "reference": "f5ff507c6ebe9693ac003422f2e0df12ae502386"
+                "reference": "108e646da8c7cade6229257cb8fdfd181faf2692"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mindbox-moscow/php-sdk/zipball/f5ff507c6ebe9693ac003422f2e0df12ae502386",
-                "reference": "f5ff507c6ebe9693ac003422f2e0df12ae502386",
+                "url": "https://api.github.com/repos/mindbox-moscow/php-sdk/zipball/108e646da8c7cade6229257cb8fdfd181faf2692",
+                "reference": "108e646da8c7cade6229257cb8fdfd181faf2692",
                 "shasum": ""
             },
             "require": {
@@ -47,7 +47,7 @@
                 "mindbox",
                 "sdk"
             ],
-            "time": "2021-10-14T08:28:33+00:00"
+            "time": "2022-03-13T20:23:09+00:00"
         },
         {
             "name": "psr/log",
