@@ -1,13 +1,15 @@
 <?php
+
 require  __DIR__ . '/../include.php';
 
 use Bitrix\Main\Application;
 use Bitrix\Main\Config\Option;
-use \Bitrix\Main\Loader;
-use \Bitrix\Main\Entity\Base;
-use \Bitrix\Main\Type\DateTime;
+use Bitrix\Main\Loader;
+use Bitrix\Main\Entity\Base;
+use Bitrix\Main\Type\DateTime;
 
-IncludeModuleLangFile(__FILE__);
+// phpcs:disable
+\Bitrix\Main\Localization\Loc::loadMessages(__FILE__);
 
 class mindbox_marketing extends CModule
 {
@@ -27,7 +29,7 @@ class mindbox_marketing extends CModule
         "UF_EMAIL_CONFIRMED"
     ];
 
-    function mindbox_marketing()
+    public function __construct()
     {
         $arModuleVersion = [];
 
@@ -52,7 +54,7 @@ class mindbox_marketing extends CModule
     /**
      * Устанавливаем модуль
      */
-    function DoInstall()
+    public function DoInstall()
     {
         $this->InstallEvents();
 
@@ -87,7 +89,7 @@ class mindbox_marketing extends CModule
     /**
      * Удаляем модуль
      */
-    function DoUninstall()
+    public function DoUninstall()
     {
         global $APPLICATION;
 
@@ -121,7 +123,7 @@ class mindbox_marketing extends CModule
         }
     }
 
-    function InstallAgents()
+    public function InstallAgents()
     {
         $now = new DateTime();
         CAgent::AddAgent(
@@ -149,7 +151,7 @@ class mindbox_marketing extends CModule
         return true;
     }
 
-    function UnInstallAgents()
+    public function UnInstallAgents()
     {
         $agents = CAgent::GetList(['ID' => 'DESC'], ['NAME' => '\Mindbox\YmlFeedMindbox::start(%']);
 
@@ -169,7 +171,7 @@ class mindbox_marketing extends CModule
         );
     }
 
-    function InstallDB()
+    public function InstallDB()
     {
         Loader::includeModule($this->MODULE_ID);
 
@@ -183,7 +185,7 @@ class mindbox_marketing extends CModule
         COption::SetOptionString('main', 'new_user_email_uniq_check', 'Y');
     }
 
-    function UnInstallDB()
+    public function UnInstallDB()
     {
         Loader::includeModule($this->MODULE_ID);
 
@@ -197,7 +199,7 @@ class mindbox_marketing extends CModule
      * Добавляем события
      * @return bool
      */
-    function InstallEvents()
+    public function InstallEvents()
     {
         $moduleEventController = new \Mindbox\EventController();
         $moduleEventController->installEvents();
@@ -208,14 +210,14 @@ class mindbox_marketing extends CModule
      * Удаляем события
      * @return bool
      */
-    function UnInstallEvents()
+    public function UnInstallEvents()
     {
         $moduleEventController = new \Mindbox\EventController();
         $moduleEventController->unInstallEvents();
         return true;
     }
 
-    function InstallFiles()
+    public function InstallFiles()
     {
         mkdir($_SERVER["DOCUMENT_ROOT"] . "/bitrix/js/mindbox");
         mkdir($_SERVER["DOCUMENT_ROOT"] . "/bitrix/css/mindbox");
@@ -255,7 +257,7 @@ class mindbox_marketing extends CModule
         return true;
     }
 
-    function UnInstallFiles()
+    public function UnInstallFiles()
     {
         if (!DeleteDirFilesEx("/bitrix/components/mindbox")) {
             return false;
@@ -274,7 +276,7 @@ class mindbox_marketing extends CModule
         return true;
     }
 
-    function InstallUserFields()
+    public function InstallUserFields()
     {
         $existFields = [];
         $oUserTypeEntity = new CUserTypeEntity();
@@ -392,7 +394,7 @@ class mindbox_marketing extends CModule
         return true;
     }
 
-    function UnInstallUserFields()
+    public function UnInstallUserFields()
     {
         $oUserTypeEntity = new CUserTypeEntity();
         foreach ($this->userFields as $field) {
@@ -414,7 +416,7 @@ class mindbox_marketing extends CModule
      * Получим путь до модуля
      * @return string
      */
-    function getPath()
+    public function getPath()
     {
         if (empty($this->PATH)) {
             $path = str_replace("\\", "/", __FILE__);
@@ -424,3 +426,4 @@ class mindbox_marketing extends CModule
         return $this->PATH;
     }
 }
+// phpcs:enable
