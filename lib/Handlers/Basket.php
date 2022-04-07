@@ -5,12 +5,19 @@ namespace Mindbox\Handlers;
 use Bitrix\Main;
 use Bitrix\Sale;
 use Mindbox\DTO\DTO;
+use Mindbox\DTO\V3\Requests\CustomerIdentityRequestDTO;
+use Mindbox\DTO\V3\Requests\ProductListItemRequestCollection;
+use Mindbox\DTO\V3\Requests\ProductListItemRequestDTO;
+use Mindbox\DTO\V3\Requests\ProductRequestDTO;
+use Mindbox\Core;
 use Mindbox\Helper;
 use Mindbox\Options;
 use Mindbox\Exceptions;
+use Mindbox\QueueTable;
 
 class Basket
 {
+    use Core;
     /**
      * @param Main\Event $event
      * @return void
@@ -118,11 +125,11 @@ class Basket
         }
 
         if (!empty($_SESSION['MB_WISHLIST']) && count($_SESSION['MB_WISHLIST']) !== $_SESSION['MB_WISHLIST_COUNT']) {
-            Helper::setWishList();
+            self::setWishList();
         }
 
         if (empty($_SESSION['MB_WISHLIST']) && isset($_SESSION['MB_WISHLIST_COUNT'])) {
-            Helper::clearWishList();
+            self::clearWishList();
         }
     }
 
@@ -134,10 +141,198 @@ class Basket
     {
         $basketItems = $basket->getBasketItems();
 
-        Helper::setCartMindbox($basketItems);
+        self::setCartMindbox($basketItems);
 
         if (empty($basketItems)) {
             $_SESSION['MB_CLEAR_CART'] = 'Y';
+        }
+    }
+
+    /**
+     * @param $basketItems
+     */
+    public static function setCartMindbox($basketItems)
+    {
+        global $USER;
+
+        $mindbox = static::mindbox();
+        if (!$mindbox) {
+            return;
+        }
+
+        $arLines = [];
+        $arAllLines = [];
+        foreach ($basketItems as $basketItem) {
+            $arAllLines[$basketItem->getProductId()] = $basketItem->getProductId();
+            if ($basketItem->getField('DELAY') === 'Y') {
+                continue;
+            }
+
+            $productId = $basketItem->getProductId();
+            $arLines[$productId]['basketItem'] = $basketItem;
+            $arLines[$productId]['quantity'] += $basketItem->getQuantity();
+            $arLines[$productId]['priceOfLine'] += $basketItem->getPrice() * $basketItem->getQuantity();
+        }
+
+        $lines = [];
+        foreach ($arLines as $arLine) {
+            $product = new ProductRequestDTO();
+            $product->setId(
+                    Options::getModuleOption('EXTERNAL_SYSTEM'),
+                    Helper::getElementCode($arLine['basketItem']->getProductId())
+            );
+
+            $line = new ProductListItemRequestDTO();
+            $line->setProduct($product);
+            $line->setCount($arLine['quantity']);
+            $line->setPriceOfLine($arLine['priceOfLine']);
+            $lines[] = $line;
+        }
+
+        if (is_object($USER) && $USER->IsAuthorized() && !empty($USER->GetEmail())) {
+            $fields = [
+                    'email' => $USER->GetEmail()
+            ];
+            $customer = Helper::iconvDTO(new CustomerIdentityRequestDTO($fields));
+        }
+
+        if (empty($arAllLines) && count($_SESSION['MB_WISHLIST_COUNT'])) {
+            self::clearWishList();
+        }
+
+        if (empty($arLines)) {
+            if (!isset($_SESSION['MB_CLEAR_CART'])) {
+                self::clearCart();
+            }
+
+            return;
+        }
+
+        try {
+            $mindbox->productList()->setProductList(
+                    new ProductListItemRequestCollection($lines),
+                    Options::getOperationName('setProductList'),
+                    $customer
+            )->sendRequest();
+        } catch (Exceptions\MindboxClientErrorException $e) {
+        } catch (Exceptions\MindboxClientException $e) {
+            $lastResponse = $mindbox->productList()->getLastResponse();
+            if ($lastResponse) {
+                $request = $lastResponse->getRequest();
+                QueueTable::push($request);
+            }
+        }
+    }
+
+    public static function setWishList()
+    {
+        $mindbox = static::mindbox();
+        if (!$mindbox) {
+            return false;
+        }
+
+        $basket = Sale\Basket::loadItemsForFUser(Sale\Fuser::getId(), Main\Context::getCurrent()->getSite());
+        $basketItems = $basket->getBasketItems();
+        $arLines = [];
+        foreach ($basketItems as $basketItem) {
+            if ($basketItem->getField('DELAY') === 'N') {
+                continue;
+            }
+            $productId = $basketItem->getProductId();
+            $arLines[ $productId ]['basketItem'] = $basketItem;
+            $arLines[ $productId ]['quantity'] += $basketItem->getQuantity();
+            $arLines[ $productId ]['priceOfLine'] += $basketItem->getPrice();
+        }
+
+        $lines = [];
+        foreach ($arLines as $arLine) {
+            $product = new ProductRequestDTO();
+            $product->setId(Options::getModuleOption('EXTERNAL_SYSTEM'), Helper::getElementCode($arLine['basketItem']->getProductId()));
+            $line = new ProductListItemRequestDTO();
+            $line->setProduct($product);
+            $line->setCount($arLine['quantity']);
+            $line->setPriceOfLine($arLine['priceOfLine']);
+            $lines[] = $line;
+        }
+
+        if (empty($lines)) {
+            return false;
+        }
+
+        try {
+            $mindbox->productList()->setWishList(
+                    new ProductListItemRequestCollection($lines),
+                    Options::getOperationName('setWishList')
+            )->sendRequest();
+            $_SESSION['MB_WISHLIST_COUNT'] = count($_SESSION['MB_WISHLIST']);
+            self::setCartMindbox($basketItems);
+        } catch (Exceptions\MindboxClientErrorException $e) {
+            $lastResponse = $mindbox->productList()->getLastResponse();
+            if ($lastResponse) {
+                $request = $lastResponse->getRequest();
+                QueueTable::push($request);
+            }
+        } catch (Exceptions\MindboxClientException $e) {
+            $lastResponse = $mindbox->productList()->getLastResponse();
+            if ($lastResponse) {
+                $request = $lastResponse->getRequest();
+                QueueTable::push($request);
+            }
+        }
+    }
+
+    public static function clearWishList()
+    {
+        $mindbox = static::mindbox();
+        if (!$mindbox) {
+            return false;
+        }
+
+        $basket = Sale\Basket::loadItemsForFUser(Sale\Fuser::getId(), Main\Context::getCurrent()->getSite());
+        $basketItems = $basket->getBasketItems();
+
+        try {
+            $mindbox->productList()->clearWishList(Options::getOperationName('clearWishList'))->sendRequest();
+            unset($_SESSION['MB_WISHLIST_COUNT']);
+            self::setCartMindbox($basketItems);
+        } catch (Exceptions\MindboxClientErrorException $e) {
+            $lastResponse = $mindbox->productList()->getLastResponse();
+            if ($lastResponse) {
+                $request = $lastResponse->getRequest();
+                QueueTable::push($request);
+            }
+        } catch (Exceptions\MindboxClientException $e) {
+            $lastResponse = $mindbox->productList()->getLastResponse();
+            if ($lastResponse) {
+                $request = $lastResponse->getRequest();
+                QueueTable::push($request);
+            }
+        }
+    }
+
+    private static function clearCart()
+    {
+        $mindbox = static::mindbox();
+        if (!$mindbox) {
+            return false;
+        }
+
+        $_SESSION['MB_CLEAR_CART'] = 'Y';
+
+        try {
+            $mindbox->productList()->clearCart(Options::getOperationName('clearCart'))->sendRequest();
+        } catch (Exceptions\MindboxClientErrorException $e) {
+            $lastResponse = $mindbox->productList()->getLastResponse();
+            if ($lastResponse) {
+                $request = $lastResponse->getRequest();
+                QueueTable::push($request);
+            }
+        } catch (Exceptions\MindboxClientException $e) {
+            $lastResponse = $mindbox->productList()->getLastResponse();
+            if ($lastResponse) {
+                $request = $lastResponse->getRequest();
+                QueueTable::push($request);
+            }
         }
     }
 }
