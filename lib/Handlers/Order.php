@@ -3,6 +3,7 @@
 namespace Mindbox\Handlers;
 
 use Bitrix\Main;
+use Bitrix\Main\Config\Option;
 use Bitrix\Main\Localization\Loc;
 use DateTime;
 use DateTimeZone;
@@ -108,7 +109,7 @@ class Order
 
         if (is_object($order)) {
             $orderStatusId = $order->getField('STATUS_ID');
-            $getMindboxStatus = Helper::getMindboxStatusByShopStatus($orderStatusId);
+            $getMindboxStatus = self::getMindboxStatusByShopStatus($orderStatusId);
 
             if (!empty($getMindboxStatus)) {
                 $mindboxOrderStatus = $getMindboxStatus;
@@ -514,7 +515,7 @@ class Order
 
         if (is_object($order)) {
             $orderStatusId = $order->getField('STATUS_ID');
-            $getMindboxStatus = Helper::getMindboxStatusByShopStatus($orderStatusId);
+            $getMindboxStatus = self::getMindboxStatusByShopStatus($orderStatusId);
 
             if (!empty($getMindboxStatus)) {
                 $mindboxOrderStatus = $getMindboxStatus;
@@ -870,7 +871,7 @@ class Order
 
         if (is_object($order)) {
             $orderStatusId = $order->getField('STATUS_ID');
-            $getMindboxStatus = Helper::getMindboxStatusByShopStatus($orderStatusId);
+            $getMindboxStatus = self::getMindboxStatusByShopStatus($orderStatusId);
 
             if (!empty($getMindboxStatus)) {
                 $mindboxOrderStatus = $getMindboxStatus;
@@ -1493,7 +1494,7 @@ class Order
         $mindbox = static::mindbox();
 
         if ($mindbox && Helper::isMindboxOrder($orderId)) {
-            $mindboxStatusCode = Helper::getMindboxStatusByShopStatus($statusCode);
+            $mindboxStatusCode = self::getMindboxStatusByShopStatus($statusCode);
 
             if ($mindboxStatusCode !== false) {
                 $request = $mindbox->getClientV3()->prepareRequest(
@@ -1601,5 +1602,27 @@ class Order
         } catch (Exceptions\MindboxClientException $e) {
             return false;
         }
+    }
+
+
+    public static function getMindboxStatusByShopStatus($shopStatus)
+    {
+        $return = false;
+
+        if (!empty($shopStatus)) {
+            $statusOptionsJson = Option::get('mindbox.marketing', 'ORDER_STATUS_FIELDS_MATCH', '{}');
+            $statusOptionsData = json_decode($statusOptionsJson, true);
+
+            if (!empty($statusOptionsData) && is_array($statusOptionsData)) {
+                foreach ($statusOptionsData as $item) {
+                    if ($shopStatus == $item['bitrix']) {
+                        $return = $item['mindbox'];
+                        break;
+                    }
+                }
+            }
+        }
+
+        return $return;
     }
 }

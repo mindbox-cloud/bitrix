@@ -2,6 +2,8 @@
 
 namespace Mindbox;
 
+use Bitrix\Main\Config\Option;
+
 trait Core
 {
     /**
