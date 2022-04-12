@@ -169,6 +169,7 @@ $arAllOptions['COMMON'] = [
             [
                 'ru'    => 'api.mindbox.ru',
                 'cloud' => 'api.mindbox.cloud',
+                'api-ru' => 'api-ru.mindbox.cloud',
             ]
         ]
     ],

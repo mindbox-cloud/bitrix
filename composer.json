@@ -3,7 +3,7 @@
     "type": "bitrix-module",
     "license": "MIT",
     "require": {
-        "mindbox/sdk": "1.0.6"
+        "mindbox/sdk": "1.0.7"
     },
     "autoload": {
         "psr-4": {
