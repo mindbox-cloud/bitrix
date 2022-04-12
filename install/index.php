@@ -146,6 +146,20 @@ class mindbox_marketing extends CModule
             30
         );
 
+        $tomorrow = DateTime::createFromTimestamp(strtotime('tomorrow'));
+        $tomorrow->setTime(3,0);
+
+        CAgent::AddAgent(
+                "\Mindbox\LogsRotation::agentRotationLogs();",
+                $this->MODULE_ID,
+                "N",
+                86400,
+                $tomorrow,
+                "Y",
+                $tomorrow,
+                30
+        );
+
         return true;
     }
 
@@ -165,6 +179,11 @@ class mindbox_marketing extends CModule
 
         CAgent::RemoveAgent(
             "\Mindbox\QueueTable::start();",
+            $this->MODULE_ID
+        );
+
+        CAgent::RemoveAgent(
+        '\Mindbox\LogsRotation::agentRotationLogs();',
             $this->MODULE_ID
         );
     }
