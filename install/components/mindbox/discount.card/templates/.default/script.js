@@ -1,47 +1,42 @@
 $(document).ready(function() {
-    var $error = $('#mindbox-card-error');
-    var $success = $('#mindbox-card-success');
-
    $('#mindbox-card-input').on('submit', function (e) {
        e.preventDefault();
-       var $targetForLoader = $(this);
+       let $targetForLoader = $(this);
+
        loader.show($targetForLoader);
 
-       var card = $('#mindbox-card').val();
+       let card = $('#mindbox-card').val();
 
-       var request = BX.ajax.runComponentAction('mindbox:discount.card', 'sendCard', {
+       let request = BX.ajax.runComponentAction('mindbox:discount.card', 'sendCard', {
            mode:'class',
            data: {
                card: card
            }
        });
 
-
        request.then(function (response) {
            loader.hide($targetForLoader);
-            var data = response.data;
 
-            if(data.type === 'error') {
-                $error.text(data.message);
-                $error.show();
-            }
-            if(data.type === 'warning') {
-                $error.text(data.message);
-                $error.show();
+            if (response.data.type === 'error') {
+                $('#mindbox-card-error').text(response.data.message).show();
             }
 
-            if(data.type === 'success') {
-                localStorage.setItem('phone', data.phone);
+            if (response.data.type === 'warning') {
+                $('#mindbox-card-error').text(response.data.message).show();
+            }
+
+            if (response.data.type === 'success') {
+                localStorage.setItem('phone', response.data.phone);
                 $('#mindbox-card-input').hide();
-                $error.hide();
+                $('#mindbox-card-error').hide();
                 $('#mindbox-code-confirm').show();
             }
        });
    });
 
    $('#mindbox-code-resend').on('click', function () {
-       var phone = localStorage.getItem('phone');
-       var request = BX.ajax.runComponentAction('mindbox:discount.card', 'resend', {
+       let phone = localStorage.getItem('phone');
+       let request = BX.ajax.runComponentAction('mindbox:discount.card', 'resend', {
            mode:'class',
            data: {
                phone: phone
@@ -51,12 +46,14 @@ $(document).ready(function() {
 
    $('#mindbox-code-confirm').on('submit', function (e) {
        e.preventDefault();
-       var $targetForLoader = $(this);
+
+       let $targetForLoader = $(this);
+
        loader.show($targetForLoader);
 
-       var code = $('#mindbox-code').val();
-       var phone = localStorage.getItem('phone');
-       var request = BX.ajax.runComponentAction('mindbox:discount.card', 'sendCode', {
+       let code = $('#mindbox-code').val();
+       let phone = localStorage.getItem('phone');
+       let request = BX.ajax.runComponentAction('mindbox:discount.card', 'sendCode', {
            mode:'class',
            data: {
                code: code,
@@ -66,22 +63,16 @@ $(document).ready(function() {
 
        request.then(function (response) {
            loader.hide($targetForLoader);
-           var data = response.data;
 
-           if(data.type === 'error') {
-               $error.text(data.message);
-               $error.show();
-           }
+           if(response.data.type === 'error') {
+               $('#mindbox-card-error').text(response.data.message).show();
+           } else if (response.data.type ==='success') {
+               $('#mindbox-card-error').hide();
+               $('#mindbox-card-success').text(response.data.message).show();
 
-           else if(data.type ==='success') {
-               $error.hide();
-               $success.text(data.message);
-               $success.show();
-
-               var url = data.url;
-               if(url) {
+               if (response.data.url) {
                    setTimeout(function () {
-                       window.location.replace(url)
+                       window.location.replace(response.data.url)
                    }, 500);
                }
            }
@@ -89,7 +80,7 @@ $(document).ready(function() {
    });
 
    $('#mindbox-cancel-button').on('click', function () {
-       $error.hide();
+       $('#mindbox-card-error').hide();
        $('#mindbox-code-confirm').hide();
        $('#mindbox-card-input').show();
    })

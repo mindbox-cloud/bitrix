@@ -1,112 +1,101 @@
-$(document).ready(function() {
-    var $success = $('#mindbox-cart-success');
-    var $error = $('#mindbox-cart-error');
-    var $bonus = $('#mindbox-cart-bonus');
+$(document).ready(function () {
     var limitMessage = '';
 
-    var request = BX.ajax.runComponentAction('mindbox:cart', 'getBalance', {
-        mode:'class',
+    let request = BX.ajax.runComponentAction('mindbox:cart', 'getBalance', {
+        mode: 'class',
     });
 
     request.then(function (response) {
-        var balance = response.data.balance;
-        $bonus.data('limit', balance);
+        let balance = response.data.balance;
+
+        $('#mindbox-cart-bonus').data('limit', balance);
+
         limitMessage = response.data.message;
+
         $('#mindbox-available_bonuses').text(balance);
     });
 
-   $('#mindbox-promocode-submit').on('click', function () {
-       var $targetForLoadder = $('#mindbox-cart');
-       loader.show($targetForLoadder);
+    $('#mindbox-promocode-submit').on('click', function () {
+        let $targetForLoadder = $('#mindbox-cart');
 
+        loader.show($targetForLoadder);
 
-       let promoInput = $('#mindbox-cart-promo');
-       var code = promoInput.val();
+        let promoInput = $('#mindbox-cart-promo');
+        let code = promoInput.val();
 
+        if (!$.trim(promoInput.val())) {
+            return;
+        }
 
-       if(isEmpty(promoInput)) {
-           return;
-       }
+        let request = BX.ajax.runComponentAction('mindbox:cart', 'applyCode', {
+            mode: 'class',
+            data: {
+                code: code
+            }
+        });
 
+        request.then(function (response) {
+            loader.hide($targetForLoadder);
 
-       var request = BX.ajax.runComponentAction('mindbox:cart', 'applyCode', {
-           mode:'class',
-           data: {
-               code: code
-           }
-       });
+            if (response.data.type === 'error') {
+                $('#mindbox-cart-success').hide();
 
-       request.then(function (response) {
-           loader.hide($targetForLoadder);
-           var data = response.data;
+                $('#mindbox-cart-error').text(response.data.message).show();
+            } else if (response.data.type === 'success') {
+                $('#mindbox-cart-error').hide();
 
-           if(data.type === 'error') {
-               $success.hide();
-               $error.text(data.message);
-               $error.show();
-           }
+                $('#mindbox-cart-success').text(response.data.message).show();
 
-           else if(data.type === 'success') {
-               $error.hide();
-               $success.text(data.message);
-               $success.show();
-               setTimeout(function () {
-                   window.location.reload()
-               }, 500);
+                setTimeout(function () {
+                    window.location.reload()
+                }, 500);
 
-           }
-       })
-   });
+            }
+        })
+    });
 
-   $('#mindbox-pay-bonuses').on('click', function () {
+    $('#mindbox-pay-bonuses').on('click', function () {
+        let bonuses = $('#mindbox-cart-bonus').val();
+        let limit = $('#mindbox-cart-bonus').data('limit');
 
-       //if(isEmpty($bonus)) return;
+        if (bonuses === '') {
+            bonuses = 0;
+        }
 
-       var bonuses = $bonus.val();
+        if (bonuses > limit) {
+            $('#mindbox-cart-success').hide();
 
-       if (bonuses === '') {
-           bonuses = 0;
-       }
-       var limit = $bonus.data('limit');
+            $('#mindbox-cart-error').text(limitMessage).show();
 
-       if(bonuses > limit) {
-           $success.hide();
-           $error.text(limitMessage);
-           $error.show();
+            return;
+        }
 
-           return;
-       }
+        let $targetForLoadder = $('#mindbox-cart');
 
-       var $targetForLoadder = $('#mindbox-cart');
-       loader.show($targetForLoadder);
+        loader.show($targetForLoadder);
 
-       var request = BX.ajax.runComponentAction('mindbox:cart', 'applyBonuses', {
-           mode:'class',
-           data: {
-               bonuses: bonuses
-           }
-       });
+        let request = BX.ajax.runComponentAction('mindbox:cart', 'applyBonuses', {
+            mode: 'class',
+            data: {
+                bonuses: bonuses
+            }
+        });
 
-       request.then(function (response) {
-           loader.hide($targetForLoadder);
-           var data = response.data;
-           if(data.type === 'success') {
-               window.location.reload();
-           }
-       });
-   });
+        request.then(function (response) {
+            loader.hide($targetForLoadder);
+
+            if (response.data.type === 'success') {
+                window.location.reload();
+            }
+        });
+    });
 
     $('#mindbox-cart-clear-bonus').on('click', function () {
         $('#mindbox-pay-bonuses').trigger('click');
     });
 
     $('#mindbox-clear-code').on('click', function () {
-        $error.hide();
+        $('#mindbox-cart-error').hide();
         $('#mindbox-promocode-submit').trigger('click');
     })
-
 });
-
-function isEmpty( el ){
-    return !$.trim(el.val())
-}

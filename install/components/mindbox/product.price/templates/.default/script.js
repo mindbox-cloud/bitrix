@@ -1,4 +1,3 @@
-
 if (typeof window.loadMindboxProductPriceComponent === 'undefined') {
   window.loadMindboxProductPriceComponent = true;
 
