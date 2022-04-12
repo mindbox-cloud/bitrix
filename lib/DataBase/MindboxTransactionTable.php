@@ -3,14 +3,12 @@
 
 namespace Mindbox\DataBase;
 
-
-use Bitrix\Main\ORM\Data\DataManager,
-    Bitrix\Main\ORM\Fields\IntegerField,
-    Bitrix\Main\ORM\Fields\StringField,
-    Bitrix\Main\ORM\Fields\Validators\LengthValidator,
-    Bitrix\Main\Application,
-    Bitrix\Main\Entity\Base;
-
+use Bitrix\Main\ORM\Data\DataManager;
+use Bitrix\Main\ORM\Fields\IntegerField;
+use Bitrix\Main\ORM\Fields\StringField;
+use Bitrix\Main\ORM\Fields\Validators\LengthValidator;
+use Bitrix\Main\Application;
+use Bitrix\Main\Entity\Base;
 
 /**
  * Class TransactionTable

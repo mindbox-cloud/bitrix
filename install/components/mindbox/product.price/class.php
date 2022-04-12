@@ -31,7 +31,8 @@ class ProductPrice extends CBitrixComponent implements Controllerable
                 return;
             }
         } catch (LoaderException $e) {
-            ShowError(GetMessage('MB_AUS_MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));;
+            ShowError(GetMessage('MB_AUS_MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));
+            ;
             return;
         }
     }

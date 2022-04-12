@@ -1,38 +1,31 @@
 $(function () {
-    var $bonusMore  = $('#mindbox-bonus-more');
+    $('#mindbox-bonus-history--load-more').on('click', function () {
+        let $bonusMore = $('#mindbox-bonus-more');
+        loader.show($bonusMore);
 
-   $('#mindbox-bonus-history--load-more').on('click', function () {
-       var $targetForLoader = $bonusMore;
-       loader.show($targetForLoader);
+        let page = parseInt($bonusMore.data('page')) + 1;
 
-       var page = parseInt($bonusMore.data('page'))  + 1;
+        let request = BX.ajax.runComponentAction('mindbox:bonus.history', 'page', {
+            mode: 'class',
+            data: {
+                page: page
+            }
+        });
 
-       var request = BX.ajax.runComponentAction('mindbox:bonus.history', 'page', {
-           mode:'class',
-           data: {
-               page: page
-           }
-       });
+        request.then(function (response) {
+            loader.hide($bonusMore);
 
-       request.then(function(response) {
-           loader.hide($targetForLoader);
-           var data = response.data;
+            if (response.data.type === 'error') {
+                $bonusMore.hide();
+            } else if (response.data.type === 'success') {
+                $bonusMore.data('page', response.data.page);
 
-           if(data.type === 'error') {
-               $bonusMore.hide();
-           }
+                $('#mindbox-bonus-history').append(response.data.html);
 
-           else if(data.type === 'success') {
-               $bonusMore.data('page', data.page);
-               var $html = data.html;
-
-               $('#mindbox-bonus-history').append($html);
-
-               if(data.more === false) {
-                   $bonusMore.hide();
-               }
-           }
-       });
-   });
-
+                if (response.data.more === false) {
+                    $bonusMore.hide();
+                }
+            }
+        });
+    });
 });

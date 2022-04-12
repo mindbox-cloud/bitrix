@@ -1,8 +1,8 @@
 $(document).ready(function () {
-    var func = {
+    var mindboxSettingDefault = {
         jsMask: function () {
             $('.js-mask').each(function () {
-                var $input = $(this),
+                let $input = $(this),
                     inputType = $input.data('type'),
                     maskOptions = {};
 
@@ -39,19 +39,17 @@ $(document).ready(function () {
         },
 
         jsTimer: function () {
-            var _this = this;
+            let _this = this;
 
             $('.js-auth-code').each(function () {
-                var authButton = {};
+                let authButton = {};
 
                 authButton.$elem = $(this),
                     authButton.$elemText = authButton.$elem.find('.js-auth-code-text'),
                     authButton.$elemTimer = authButton.$elem.find('.js-auth-code-timer');
 
-                var lastTime = new Date().getTime();
-
                 authButton.$elem.on('click', function () {
-                    var lastTime = new Date().getTime();
+                    let lastTime = new Date().getTime();
 
                     _this._timer(lastTime, authButton);
                 });
@@ -61,7 +59,7 @@ $(document).ready(function () {
         _timer: function (lastTime, authButton) {
             if (!lastTime) return;
 
-            var intervalID;
+            let intervalID;
 
             startTimer(lastTime);
 
@@ -75,7 +73,7 @@ $(document).ready(function () {
             }
 
             function timer(endTime) {
-                var nowTime = new Date().getTime(),
+                let nowTime = new Date().getTime(),
                     secondsLeft = Math.floor((nowTime - lastTime) / 1000),
                     secondsRemaining = 30 - secondsLeft;
 
@@ -91,7 +89,7 @@ $(document).ready(function () {
 
         jsClearField: function () {
             $('.js-clear-field').each(function () {
-                var $clearField = $(this),
+                let $clearField = $(this),
                     $clearInput = $clearField.find('.js-clear-field-input'),
                     $clearBtn = $clearField.find('.js-clear-field-btn');
 
@@ -110,7 +108,7 @@ $(document).ready(function () {
     };
 
     function toggleValue($clearInput, $clearBtn) {
-        var value = $clearInput.val();
+        let value = $clearInput.val();
 
         if (value) {
             $clearBtn.show();
@@ -129,7 +127,7 @@ $(document).ready(function () {
         }
     };
 
-    func.jsMask();
-    func.jsTimer();
-    func.jsClearField();
+    mindboxSettingDefault.jsMask();
+    mindboxSettingDefault.jsTimer();
+    mindboxSettingDefault.jsClearField();
 });

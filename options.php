@@ -25,7 +25,12 @@ function ShowParamsHTMLByarray($arParams)
     }
 }
 
-$mayEmptyProps = ['MINDBOX_CATALOG_PROPS', 'MINDBOX_CATALOG_OFFER_PROPS', 'MINDBOX_ENABLE_EVENT_LIST', 'MINDBOX_CONTINUE_USER_GROUPS'];
+$mayEmptyProps = [
+    'MINDBOX_CATALOG_PROPS',
+    'MINDBOX_CATALOG_OFFER_PROPS',
+    'MINDBOX_ENABLE_EVENT_LIST',
+    'MINDBOX_CONTINUE_USER_GROUPS'
+];
 
 if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
     if (empty($_POST['MINDBOX_PROTOCOL']) || $_POST['MINDBOX_PROTOCOL'] !== 'Y') {
@@ -37,6 +42,12 @@ if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
             if (is_array($option)) {
                 $option = implode(',', $option);
             }
+
+            if ($key === 'MINDBOX_LOG_LIFE_TIME' && preg_match('#\D#s'.BX_UTF_PCRE_MODIFIER, $option)) {
+                CAdminMessage::ShowMessage(['MESSAGE' => GetMessage('INCORRECT_INTEGER_VALUE', ['#INPUT#' => GetMessage('LOG_LIFE_TIME')]), 'HTML' => true, 'TYPE' => 'ERROR']);
+                continue;
+            }
+
             COption::SetOptionString(MINDBOX_ADMIN_MODULE_NAME, str_replace('MINDBOX_', '', $key), $option);
         }
     }
@@ -59,6 +70,11 @@ if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
                 file_get_contents($trackerJsFilenameOrig)
             )
         );
+    }
+
+    if ($_REQUEST['MINDBOX_LOG_PATH'] !== COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'MINDBOX_LOG_PATH', '')) {
+        $mindboxLog = new \Mindbox\AccessLogs();
+        $mindboxLog->setLogAccess();
     }
 }
 
@@ -187,6 +203,12 @@ $arAllOptions['COMMON'] = [
         COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'LOG_PATH', $_SERVER['DOCUMENT_ROOT'] . '/logs/'),
         ['text']
     ],
+    [
+        'LOG_LIFE_TIME',
+        getMessage('LOG_LIFE_TIME'),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'LOG_LIFE_TIME', 0),
+        ['text']
+    ],
 ];
 
 $arAllOptions['FEED'] = [
@@ -255,7 +277,7 @@ $arAllOptions['CLIENTS'] = [
         COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'USER_FIELDS_MATCH', ''),
         ['text']
     ],
-    ];
+];
 
 $arAllOptions['ORDERS'] = [
     [
@@ -348,7 +370,11 @@ if (!empty(COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_I
     ];
 }
 
-if (!empty(\Mindbox\Helper::getOffersCatalogId(COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '')))) {
+if (!empty(\Mindbox\Helper::getOffersCatalogId(COption::GetOptionString(
+    MINDBOX_ADMIN_MODULE_NAME,
+    'CATALOG_IBLOCK_ID',
+    ''
+)))) {
     if (YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['VERSION'] === '1') {
         $arAllOptions['FEED']['CATALOG_OFFER_PROPS_UPGRADE'] = [
             'note' => getMessage(
@@ -388,13 +414,13 @@ $arAllOptions['COMMON'][] = [
 
 
 $arAllOptions['COMMON'][] = [
-        'CONTINUE_USER_GROUPS',
-        getMessage('CONTINUE_USER_GROUPS'),
-        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'CONTINUE_USER_GROUPS', ''),
-        [
-                'multiselectbox',
-                \Mindbox\Helper::getGroups(),
-        ]
+    'CONTINUE_USER_GROUPS',
+    getMessage('CONTINUE_USER_GROUPS'),
+    COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'CONTINUE_USER_GROUPS', ''),
+    [
+        'multiselectbox',
+        \Mindbox\Helper::getGroups(),
+    ]
 ];
 ?>
 
@@ -433,16 +459,19 @@ $arAllOptions['COMMON'][] = [
         min-width: 300px;
         width: 300px;
     }
+
     input[type="text"] {
         min-width: 288px;
         width: 288px;
     }
+
     input[name=MINDBOX_MODULE_VERSION] {
         pointer-events: none !important;
         background-color: #fff !important;
         border-color: #ccc !important;
         opacity: 0.4 !important;
     }
+
     .mindbox-help--icon:before {
         cursor: help;
         content: url("/bitrix/js/main/core/images/hint.gif");
@@ -451,6 +480,7 @@ $arAllOptions['COMMON'][] = [
         width: 5px;
         height: 5px;
     }
+
     .mindbox-help--tooltip {
         position: fixed;
         padding: 10px 20px;
@@ -464,9 +494,11 @@ $arAllOptions['COMMON'][] = [
         box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
         display: none;
     }
-    .mindbox-help--icon:hover ~ .mindbox-help--tooltip{
+
+    .mindbox-help--icon:hover ~ .mindbox-help--tooltip {
         display: block;
     }
+
     select option:checked {
         background-color: rgb(206, 206, 206);
     }
@@ -474,10 +506,15 @@ $arAllOptions['COMMON'][] = [
 <script>
     document.addEventListener("DOMContentLoaded", () => {
         const settingForm = document.querySelector('form[name="minboxoptions"]');
-        const selectSettingGroup = settingForm.querySelector('select[name="MINDBOX_CONTINUE_USER_GROUPS[]"]');
-        const parrent_tr = selectSettingGroup.closest("tr");
-        const label = parrent_tr.firstElementChild;
 
+        const nodeLabelSettingGroup = settingForm.querySelector('select[name="MINDBOX_CONTINUE_USER_GROUPS[]"]').closest("tr").firstElementChild;;
+        createTooltip(nodeLabelSettingGroup, "<?= getMessage('CONTINUE_USER_GROUPS_TOOLTIP')?>");
+
+        const nodeLabelLogLifeTime = settingForm.querySelector('input[name="MINDBOX_LOG_LIFE_TIME"]').closest("tr").firstElementChild;
+        createTooltip(nodeLabelLogLifeTime, "<?= getMessage('LOG_LIFE_TIME_TOOLTIP')?>");
+    });
+
+    function createTooltip(label, message) {
         label.classList.add('mindbox-help');
 
         // Добавили иконку для тултипа
@@ -485,14 +522,14 @@ $arAllOptions['COMMON'][] = [
         iconNode.className = 'mindbox-help--icon ';
         label.prepend(iconNode);
 
-        iconNode.onmouseover =  function (event) {
+        iconNode.onmouseover = function (event) {
             const iconNode = event.target;
             const label = iconNode.parentNode;
 
             // Добавляем тултип
             tooltipElem = document.createElement('div');
             tooltipElem.className = 'mindbox-help--tooltip ';
-            tooltipElem.innerHTML = "<?= getMessage('CONTINUE_USER_GROUPS_TOOLTIP')?>";
+            tooltipElem.innerHTML = message;
             label.append(tooltipElem);
 
             // спозиционируем его сверху от аннотируемого элемента (top-center)
@@ -519,5 +556,5 @@ $arAllOptions['COMMON'][] = [
             const tooltipElem = iconNode.parentNode.querySelector('.mindbox-help--tooltip');
             tooltipElem.remove();
         }
-    });
+    }
 </script>

@@ -8,14 +8,22 @@ if (IsModuleInstalled('mindbox.marketing')) {
     }
 
     $updater->CopyFiles("lib", "modules/mindbox.marketing/lib");
+    $updater->CopyFiles("logs", "modules/mindbox.marketing/logs");
 
-    try {
-        (new \Mindbox\EventController())->installDeliveryRulesHandler();
-    } catch (\Exception $e) {
-    }
+    $eventController = new \Mindbox\EventController();
+    $eventController->unRegisterEventHandler([
+        'bitrixModule' => 'main',
+        'bitrixEvent' => 'OnBeforeUserRegister',
+        'class' => '\Mindbox\Event',
+        'method' => 'OnBeforeUserRegisterHandler',
+    ]);
+    $eventController->unRegisterEventHandler([
+        'bitrixModule' => 'main',
+        'bitrixEvent' => 'OnAfterUserRegister',
+        'class' => '\Mindbox\Event',
+        'method' => 'OnAfterUserRegisterHandler',
+    ]);
 
-    try {
-        (new \Mindbox\Installer\DeliveryCartRuleInstaller())->install();
-    } catch (\Exception $e) {
-    }
+    $mindboxLog = new \Mindbox\AccessLogs();
+    $mindboxLog->setLogAccess();
 }
