@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1d842e3d67a83a320b85d85044bb0b3e",
+    "content-hash": "9a22928ca903820be13131eeba3b56ba",
     "packages": [
         {
             "name": "mindbox/sdk",
-            "version": "1.0.6",
+            "version": "1.0.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mindbox-moscow/php-sdk.git",
-                "reference": "108e646da8c7cade6229257cb8fdfd181faf2692"
+                "reference": "465216bb10e16432b9b490b295b82bae3980aa89"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mindbox-moscow/php-sdk/zipball/108e646da8c7cade6229257cb8fdfd181faf2692",
-                "reference": "108e646da8c7cade6229257cb8fdfd181faf2692",
+                "url": "https://api.github.com/repos/mindbox-moscow/php-sdk/zipball/465216bb10e16432b9b490b295b82bae3980aa89",
+                "reference": "465216bb10e16432b9b490b295b82bae3980aa89",
                 "shasum": ""
             },
             "require": {
@@ -47,7 +47,7 @@
                 "mindbox",
                 "sdk"
             ],
-            "time": "2022-03-13T20:23:09+00:00"
+            "time": "2022-04-12T09:18:30+00:00"
         },
         {
             "name": "psr/log",
