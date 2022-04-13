@@ -6,7 +6,6 @@ use Mindbox\Options;
 
 class AccessLogs
 {
-
     const ADMIN_GROUP_ID = 1;
 
     public function setLogAccess()
@@ -42,12 +41,12 @@ class AccessLogs
 
         $logDir = Options::getModuleOption('LOG_PATH');
         $mindboxFilename = $logDir . $logPath;
+        // phpcs:disable
         $arGroups = $USER->GetUserGroupArray();
-        if ($USER->IsAuthorized() &&
-            in_array(self::ADMIN_GROUP_ID, $arGroups) &&
-            file_exists($mindboxFilename) &&
-            is_file($mindboxFilename) &&
-            strpos($mindboxFilename, $_SERVER['PHP_SELF']) === false
+        if ($USER->IsAuthorized() && in_array(self::ADMIN_GROUP_ID, $arGroups)
+                && file_exists($mindboxFilename)
+                && is_file($mindboxFilename)
+                && strpos($mindboxFilename, $_SERVER['PHP_SELF']) === false
         ) {
             $APPLICATION->RestartBuffer();
             echo "<pre>" . htmlspecialchars(file_get_contents($mindboxFilename)) . "</pre>";
@@ -55,5 +54,6 @@ class AccessLogs
         } else {
             ShowMessage(GetMessage('LOG_DENIED_ERROR_MESSAGE'));
         }
+        // phpcs:enable
     }
 }
