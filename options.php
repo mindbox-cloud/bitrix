@@ -326,7 +326,13 @@ $arAllOptions['ORDERS'] = [
         COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'ORDER_STATUS_MINDBOX_LIST', ''),
         [
             'selectbox',
-            Helper::getMindboxOrderStatusList()
+            [
+                'CheckedOut' => 'CheckedOut',
+                'Delivered' => 'Delivered',
+                'Paid' => 'Paid',
+                'Cancelled' => 'Cancelled',
+                'Returned' => 'Returned'
+            ]
         ]
     ],
     [
