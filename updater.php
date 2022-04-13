@@ -10,20 +10,43 @@ if (IsModuleInstalled('mindbox.marketing')) {
     $updater->CopyFiles("lib", "modules/mindbox.marketing/lib");
     $updater->CopyFiles("logs", "modules/mindbox.marketing/logs");
 
-    $eventController = new \Mindbox\EventController();
-    $eventController->unRegisterEventHandler([
-        'bitrixModule' => 'main',
-        'bitrixEvent' => 'OnBeforeUserRegister',
-        'class' => '\Mindbox\Event',
-        'method' => 'OnBeforeUserRegisterHandler',
-    ]);
-    $eventController->unRegisterEventHandler([
-        'bitrixModule' => 'main',
-        'bitrixEvent' => 'OnAfterUserRegister',
-        'class' => '\Mindbox\Event',
-        'method' => 'OnAfterUserRegisterHandler',
-    ]);
+    $moduleName = 'mindbox.marketing';
 
-    $mindboxLog = new \Mindbox\AccessLogs();
-    $mindboxLog->setLogAccess();
+    CAgent::RemoveModuleAgents($moduleName);
+    $now = new DateTime();
+    CAgent::AddAgent(
+        "\Mindbox\YmlFeedMindbox::start();",
+        $moduleName,
+        "N",
+        86400,
+        $now,
+        "Y",
+        $now,
+        30
+    );
+
+    CAgent::AddAgent(
+        "\Mindbox\QueueTable::start();",
+        $moduleName,
+        "N",
+        60,
+        $now,
+        "Y",
+        $now,
+        30
+    );
+
+    $tomorrow = DateTime::createFromTimestamp(strtotime('tomorrow'));
+    $tomorrow->setTime(3,0);
+
+    CAgent::AddAgent(
+        "\Mindbox\LogsRotation::agentRotationLogs();",
+        $moduleName,
+        "N",
+        86400,
+        $tomorrow,
+        "Y",
+        $tomorrow,
+        30
+    );
 }
