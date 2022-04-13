@@ -127,7 +127,7 @@ class mindbox_marketing extends CModule
     {
         $now = new DateTime();
         CAgent::AddAgent(
-            "\Mindbox\YmlFeedMindbox::start(1);",
+            "\Mindbox\YmlFeedMindbox::start();",
             $this->MODULE_ID,
             "N",
             86400,

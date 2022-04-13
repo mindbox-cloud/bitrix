@@ -306,4 +306,46 @@ class Event
         $calc = new CalculateProductData();
         $calc->handle($content);
     }
+
+    /**
+     * @bitrixModuleId main
+     * @bitrixEventCode OnAfterSetOption_YML_CHUNK_SIZE
+     * @langEventName onAfterSetOption_YML_CHUNK_SIZE
+     * @notCompatible true
+     * @isSystem true
+     */
+    public static function onAfterSetOption_YML_CHUNK_SIZE(\Bitrix\Main\Event $event)
+    {
+        $agents = \CAgent::GetList(['ID' => 'DESC'], ['NAME' => '\Mindbox\YmlFeedMindbox::start(%']);
+
+        $existingAgents = [];
+
+        while ($agent = $agents->Fetch()) {
+            $regex = '#(?<=\().+?(?=\))#';
+
+            preg_match($regex, $agent['NAME'], $match);
+
+            if (!empty($match) && intval($match[0]) > 0) {
+                $existingAgents[] = $agent['ID'];
+            }
+        }
+
+        foreach ($existingAgents as $num) {
+            \CAgent::Delete($num);
+        }
+
+        if (!empty($existingAgents)) {
+            $now = new \Bitrix\Main\Type\DateTime();
+            \CAgent::AddAgent(
+                    "\Mindbox\YmlFeedMindbox::start(1);",
+                    MINDBOX_ADMIN_MODULE_NAME,
+                    'N',
+                    86400,
+                    $now,
+                    'Y',
+                    $now,
+                    30
+            );
+        }
+    }
 }
