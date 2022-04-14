@@ -559,11 +559,7 @@ class YmlFeedMindbox
      */
     public static function getIblockInfo($iblockId)
     {
-        return IblockTable::getList([
-            'filter' => ['=ID' => $iblockId],
-            'select' => ['ID', 'LID'],
-            'limit' => 1
-        ])->fetch();
+        return \CIBlock::GetArrayByID($iblockId);
     }
 
     /**
