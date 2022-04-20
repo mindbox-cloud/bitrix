@@ -38,22 +38,23 @@ class LogsRotation
     public static function agentRotationLogs()
     {
         $optionLifeDay = self::getLogLifeTime();
-        $optionPathLogs = self::getLogPath();
-        $optionPathArchive = self::getArchivePath();
-
-        $logFiles = self::findLogFiles($optionPathLogs, (new \DateTime())->setTime(0, 0, 0));
-
-        if (extension_loaded('zlib')) {
-            self::createArchiveZlib($optionPathArchive, $logFiles);
-        } elseif (extension_loaded('zip')) {
-            self::createArchiveZip($optionPathArchive, $logFiles);
-        } elseif (extension_loaded('bz2')) {
-            self::createArchiveBzip2($optionPathArchive, $logFiles);
-        }
-
-        self::removeLogs($optionPathLogs, (new \DateTime())->setTime(0, 0, 0));
 
         if ($optionLifeDay > 0) {
+            $optionPathLogs = self::getLogPath();
+            $optionPathArchive = self::getArchivePath();
+
+            $logFiles = self::findLogFiles($optionPathLogs, (new \DateTime())->setTime(0, 0, 0));
+
+            if (extension_loaded('zlib')) {
+                self::createArchiveZlib($optionPathArchive, $logFiles);
+            } elseif (extension_loaded('zip')) {
+                self::createArchiveZip($optionPathArchive, $logFiles);
+            } elseif (extension_loaded('bz2')) {
+                self::createArchiveBzip2($optionPathArchive, $logFiles);
+            }
+
+            self::removeLogs($optionPathLogs, (new \DateTime())->setTime(0, 0, 0));
+
             $lifeDays = new \DateTime(sprintf('-%s days', $optionLifeDay));
             self::removeArchive($optionPathArchive, $lifeDays);
         }
