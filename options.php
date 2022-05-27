@@ -42,6 +42,12 @@ if (isset($_REQUEST['save']) && check_bitrix_sessid()) {
             if (is_array($option)) {
                 $option = implode(',', $option);
             }
+
+            if ($key === 'MINDBOX_LOG_LIFE_TIME' && preg_match('#\D#s'.BX_UTF_PCRE_MODIFIER, $option)) {
+                CAdminMessage::ShowMessage(['MESSAGE' => GetMessage('INCORRECT_INTEGER_VALUE', ['#INPUT#' => GetMessage('LOG_LIFE_TIME')]), 'HTML' => true, 'TYPE' => 'ERROR']);
+                continue;
+            }
+
             COption::SetOptionString(MINDBOX_ADMIN_MODULE_NAME, str_replace('MINDBOX_', '', $key), $option);
         }
     }
@@ -163,6 +169,7 @@ $arAllOptions['COMMON'] = [
             [
                 'ru'    => 'api.mindbox.ru',
                 'cloud' => 'api.mindbox.cloud',
+                'api-ru' => 'api-ru.mindbox.cloud',
             ]
         ]
     ],
@@ -196,6 +203,12 @@ $arAllOptions['COMMON'] = [
         COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'LOG_PATH', $_SERVER['DOCUMENT_ROOT'] . '/logs/'),
         ['text']
     ],
+    [
+        'LOG_LIFE_TIME',
+        getMessage('LOG_LIFE_TIME'),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'LOG_LIFE_TIME', 0),
+        ['text']
+    ],
 ];
 
 $arAllOptions['FEED'] = [
@@ -224,6 +237,12 @@ $arAllOptions['FEED'] = [
         'YML_NAME',
         getMessage('YML_NAME'),
         COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'YML_NAME', 'upload/mindbox.xml'),
+        ['text']
+    ],
+    [
+        'YML_CHUNK_SIZE',
+        getMessage('YML_CHUNK_SIZE'),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'YML_CHUNK_SIZE', 1000),
         ['text']
     ],
     'CATALOG_PROPS_UPGRADE'       => '',
@@ -313,7 +332,13 @@ $arAllOptions['ORDERS'] = [
         COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'ORDER_STATUS_MINDBOX_LIST', ''),
         [
             'selectbox',
-            Helper::getMindboxOrderStatusList()
+            [
+                'CheckedOut' => 'CheckedOut',
+                'Delivered' => 'Delivered',
+                'Paid' => 'Paid',
+                'Cancelled' => 'Cancelled',
+                'Returned' => 'Returned'
+            ]
         ]
     ],
     [
@@ -334,18 +359,6 @@ $arAllOptions['ORDERS'] = [
 ];
 
 if (!empty(COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', ''))) {
-    if (YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['VERSION'] === '1') {
-        $arAllOptions['FEED']['CATALOG_PROPS_UPGRADE'] = [
-            'note' => getMessage(
-                'NEED_TABLE_UPGRADE',
-                [
-                    '#LINK#' => '/bitrix/admin/iblock_edit.php?type=' . YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['IBLOCK_TYPE_ID'] . '&ID=' . YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['ID']
-                ]
-            )
-        ];
-    } else {
-        unset($arAllOptions['FEED']['CATALOG_PROPS_UPGRADE']);
-    }
     $arAllOptions['FEED']['CATALOG_PROPS'] = [
         'CATALOG_PROPS',
         getMessage('CATALOG_PROPS'),
@@ -357,23 +370,7 @@ if (!empty(COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_I
     ];
 }
 
-if (!empty(\Mindbox\Helper::getOffersCatalogId(COption::GetOptionString(
-    MINDBOX_ADMIN_MODULE_NAME,
-    'CATALOG_IBLOCK_ID',
-    ''
-)))) {
-    if (YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['VERSION'] === '1') {
-        $arAllOptions['FEED']['CATALOG_OFFER_PROPS_UPGRADE'] = [
-            'note' => getMessage(
-                'NEED_TABLE_UPGRADE',
-                [
-                    '#LINK#' => '/bitrix/admin/iblock_edit.php?type=' . YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['IBLOCK_TYPE_ID'] . '&ID=' . YmlFeedMindbox::getIblockInfo(Options::getModuleOption("CATALOG_IBLOCK_ID"))['ID']
-                ]
-            )
-        ];
-    } else {
-        unset($arAllOptions['FEED']['CATALOG_OFFER_PROPS_UPGRADE']);
-    }
+if (!empty(\Mindbox\Helper::getOffersCatalogId(COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '')))) {
     $arAllOptions['FEED']['CATALOG_OFFER_PROPS'] = [
         'CATALOG_OFFER_PROPS',
         getMessage('CATALOG_OFFER_PROPS'),
@@ -493,10 +490,15 @@ $arAllOptions['COMMON'][] = [
 <script>
     document.addEventListener("DOMContentLoaded", () => {
         const settingForm = document.querySelector('form[name="minboxoptions"]');
-        const selectSettingGroup = settingForm.querySelector('select[name="MINDBOX_CONTINUE_USER_GROUPS[]"]');
-        const parrent_tr = selectSettingGroup.closest("tr");
-        const label = parrent_tr.firstElementChild;
 
+        const nodeLabelSettingGroup = settingForm.querySelector('select[name="MINDBOX_CONTINUE_USER_GROUPS[]"]').closest("tr").firstElementChild;;
+        createTooltip(nodeLabelSettingGroup, "<?= getMessage('CONTINUE_USER_GROUPS_TOOLTIP')?>");
+
+        const nodeLabelLogLifeTime = settingForm.querySelector('input[name="MINDBOX_LOG_LIFE_TIME"]').closest("tr").firstElementChild;
+        createTooltip(nodeLabelLogLifeTime, "<?= getMessage('LOG_LIFE_TIME_TOOLTIP')?>");
+    });
+
+    function createTooltip(label, message) {
         label.classList.add('mindbox-help');
 
         // Добавили иконку для тултипа
@@ -511,7 +513,7 @@ $arAllOptions['COMMON'][] = [
             // Добавляем тултип
             tooltipElem = document.createElement('div');
             tooltipElem.className = 'mindbox-help--tooltip ';
-            tooltipElem.innerHTML = "<?= getMessage('CONTINUE_USER_GROUPS_TOOLTIP')?>";
+            tooltipElem.innerHTML = message;
             label.append(tooltipElem);
 
             // спозиционируем его сверху от аннотируемого элемента (top-center)
@@ -538,5 +540,5 @@ $arAllOptions['COMMON'][] = [
             const tooltipElem = iconNode.parentNode.querySelector('.mindbox-help--tooltip');
             tooltipElem.remove();
         }
-    });
+    }
 </script>

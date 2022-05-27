@@ -1,39 +1,39 @@
-$(document).ready(function() {
-    var $moreButton = $('#mindbox-order-more');
+$(document).ready(function () {
     $('#mindbox-order-history--load-more').on('click', function () {
-        var $targetForLoader = $moreButton;
+        let $moreButton = $('#mindbox-order-more');
+        let $targetForLoader = $moreButton;
+
         loader.show($targetForLoader);
 
-        var page = parseInt($moreButton.data('page'))  + 1;
+        let page = parseInt($moreButton.data('page')) + 1;
 
-        var request = BX.ajax.runComponentAction('mindbox:order.history', 'page', {
-            mode:'class',
+        let request = BX.ajax.runComponentAction('mindbox:order.history', 'page', {
+            mode: 'class',
             data: {
                 page: page,
             }
         });
 
-        request.then(function(response) {
+        request.then(function (response) {
             loader.hide($targetForLoader);
-            var data = response.data;
-            if(data.type === 'error') {
+
+            if (response.data.type === 'error') {
                 $moreButton.hide();
             }
 
-            if(data.type === 'success') {
-                $moreButton.data('page', data.page);
-                var $html = data.html;
-                if($html === '') {
+            if (response.data.type === 'success') {
+                $moreButton.data('page', response.data.page);
+
+                if (response.data.html === '') {
                     $moreButton.hide();
                 }
 
-                if(data.more === false) {
+                if (response.data.more === false) {
                     $moreButton.hide();
                 }
 
-                $('#mindbox-orders-history').append($html);
+                $('#mindbox-orders-history').append(response.data.html);
             }
         });
     });
-
 });

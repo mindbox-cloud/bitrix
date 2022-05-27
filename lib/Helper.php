@@ -2,6 +2,7 @@
 
 namespace Mindbox;
 
+use Bitrix\Main\Config\Option;
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\UserTable;
@@ -28,7 +29,7 @@ use Mindbox\DTO\V3\Requests\SubscriptionRequestCollection;
 
 class Helper
 {
-    use AdminLayouts;
+    use AdminLayouts, Core;
 
     public static function getNumEnding($number, $endingArray)
     {
@@ -54,6 +55,65 @@ class Helper
         return $ending;
     }
 
+    public static function formatPhone($phone)
+    {
+        return str_replace([' ', '(', ')', '-', '+'], "", $phone);
+    }
+
+    public static function formatDate($date)
+    {
+        return ConvertDateTime($date, "YYYY-MM-DD") ?: null;
+    }
+
+    public static function iconvDTO(DTO $dto, $in = true)
+    {
+        if (LANG_CHARSET === 'UTF-8') {
+            return $dto;
+        }
+
+        if ($in) {
+            return self::convertDTO($dto, LANG_CHARSET, 'UTF-8');
+        } else {
+            return self::convertDTO($dto, 'UTF-8', LANG_CHARSET);
+        }
+    }
+
+    private static function normalizePhoneNumber($in)
+    {
+        $in = substr($in, 0, 11);
+        $out = preg_replace(
+                '/^(\d)(\d{3})(\d{3})(\d{2})(\d{2})$/',
+                '+\1 (\2) \3 \4 \5',
+                (string)$in
+        );
+
+        return $out;
+    }
+
+    /**
+     *
+     * @return boolean
+     */
+    public static function isStandardMode()
+    {
+        return Option::get('mindbox.marketing', 'MODE') === 'standard';
+    }
+
+    public static function isLoyaltyMode()
+    {
+        return Option::get('mindbox.marketing', 'MODE') === 'loyalty';
+    }
+
+    /**
+     * Is operations sync?
+     *
+     * @return bool
+     */
+    public static function isSync()
+    {
+        return  self::isLoyaltyMode();
+    }
+
     public static function getMindboxId($id)
     {
         $logger = new \Mindbox\Loggers\MindboxFileLogger(Options::getModuleOption('LOG_PATH'));
@@ -73,7 +133,7 @@ class Helper
             $mindboxId = $rsUser['UF_MINDBOX_ID'];
         }
 
-        if (!$mindboxId && \COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {
+        if (!$mindboxId && self::isLoyaltyMode()) {
             $mindbox = Options::getConfig();
             $request = $mindbox->getClientV3()->prepareRequest(
                 'POST',
@@ -127,33 +187,8 @@ class Helper
         return $mindboxId;
     }
 
-    public static function formatPhone($phone)
-    {
-        return str_replace([' ', '(', ')', '-', '+'], "", $phone);
-    }
-
-    public static function formatDate($date)
-    {
-        return ConvertDateTime($date, "YYYY-MM-DD") ?: null;
-    }
-
-    public static function iconvDTO(DTO $dto, $in = true)
-    {
-        if (LANG_CHARSET === 'UTF-8') {
-            return $dto;
-        }
-
-        if ($in) {
-            return self::convertDTO($dto, LANG_CHARSET, 'UTF-8');
-        } else {
-            return self::convertDTO($dto, 'UTF-8', LANG_CHARSET);
-        }
-    }
-
     private static function registerCustomer($websiteUserId)
     {
-        global $APPLICATION, $USER;
-
         $rsUser = \CUser::GetByID($websiteUserId);
         $arFields = $rsUser->Fetch();
 
@@ -232,7 +267,6 @@ class Helper
 
             $customer = $registerResponse->getCustomer();
 
-
             if (!$customer) {
                 return false;
             }
@@ -255,18 +289,6 @@ class Helper
         }
 
         return false;
-    }
-
-    private function normalizePhoneNumber($in)
-    {
-        $in = substr($in, 0, 11);
-        $out = preg_replace(
-            '/^(\d)(\d{3})(\d{3})(\d{2})(\d{2})$/',
-            '+\1 (\2) \3 \4 \5',
-            (string)$in
-        );
-
-        return $out;
     }
 
     public static function convertDTO(DTO $DTO, $in, $out)
@@ -404,9 +426,10 @@ class Helper
     {
         $props = [];
 
-        $catalogId = COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '0');
+        $catalogId = Option::get(MINDBOX_ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '0');
         if (!empty($catalogId) && $catalogId !== '0') {
             $iblockProperties = CIBlock::GetProperties($catalogId);
+
             while ($iblockProperty = $iblockProperties->Fetch()) {
                 $props['PROPERTY_' . $iblockProperty['CODE']] = $iblockProperty['NAME'];
             }
@@ -447,7 +470,7 @@ class Helper
             return $offerProps;
         }
 
-        $catalogId = COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '0');
+        $catalogId = Option::get(MINDBOX_ADMIN_MODULE_NAME, 'CATALOG_IBLOCK_ID', '0');
 
         if (!empty($catalogId) && $catalogId !== '0') {
             $select = ['ID', 'IBLOCK_ID', 'OFFERS_IBLOCK_ID'];
@@ -512,7 +535,9 @@ class Helper
             false,
             []
         );
+
         $orderProps = [];
+
         while ($prop = $dbProps->Fetch()) {
             $orderProps[$prop['CODE']] = $prop['NAME'];
         }
@@ -525,6 +550,7 @@ class Helper
         if (empty($matches)) {
             $matches = self::getOrderFieldsMatch();
         }
+
         $matches = array_change_key_case($matches, CASE_UPPER);
         $code = mb_strtoupper($code);
 
@@ -540,7 +566,7 @@ class Helper
      */
     public static function getOrderFieldsMatch()
     {
-        $fields = \COption::GetOptionString('mindbox.marketing', 'ORDER_FIELDS_MATCH', '{[]}');
+        $fields = Option::get('mindbox.marketing', 'ORDER_FIELDS_MATCH', '{[]}');
 
         return json_decode($fields, true);
     }
@@ -550,7 +576,7 @@ class Helper
      */
     public static function getUserFieldsMatch()
     {
-        $fields = \COption::GetOptionString('mindbox.marketing', 'USER_FIELDS_MATCH', '{[]}');
+        $fields = Option::get('mindbox.marketing', 'USER_FIELDS_MATCH', '{[]}');
 
         return json_decode($fields, true);
     }
@@ -595,32 +621,6 @@ class Helper
         }
 
         return '';
-    }
-
-    /**
-     * Is operations sync?
-     *
-     * @return $isSync
-     */
-    public static function isSync()
-    {
-        if (COption::GetOptionString('mindbox.marketing', 'MODE') == 'standard') {
-            $isSync = false;
-        } else {
-            $isSync = true;
-        }
-
-        return $isSync;
-    }
-
-    /**
-     * What is mode?
-     *
-     * @return boolean
-     */
-    public static function isStandardMode()
-    {
-        return COption::GetOptionString('mindbox.marketing', 'MODE') === 'standard';
     }
 
 
@@ -698,7 +698,6 @@ class Helper
             }
         }
     }
-
 
     /**
      * @param \Bitrix\Sale\BasketItem $basketItem
@@ -991,211 +990,6 @@ class Helper
     }
 
     /**
-     * @param $id
-     * @return bool
-     */
-    private static function isAnonym($id)
-    {
-        $mindboxId = Helper::getMindboxId($id);
-
-        if (!$mindboxId) {
-            return true;
-        }
-
-        return false;
-    }
-
-
-    /**
-     * @param $basketItems
-     */
-    public static function setCartMindbox($basketItems)
-    {
-        global $USER;
-
-        $mindbox = static::mindbox();
-        if (!$mindbox) {
-            return;
-        }
-
-        $arLines = [];
-        $arAllLines = [];
-        foreach ($basketItems as $basketItem) {
-            $arAllLines[$basketItem->getProductId()] = $basketItem->getProductId();
-            if ($basketItem->getField('DELAY') === 'Y') {
-                continue;
-            }
-
-            $productId = $basketItem->getProductId();
-            $arLines[$productId]['basketItem'] = $basketItem;
-            $arLines[$productId]['quantity'] += $basketItem->getQuantity();
-            $arLines[$productId]['priceOfLine'] += $basketItem->getPrice() * $basketItem->getQuantity();
-        }
-
-        $lines = [];
-        foreach ($arLines as $arLine) {
-            $product = new ProductRequestDTO();
-            $product->setId(
-                Options::getModuleOption('EXTERNAL_SYSTEM'),
-                Helper::getElementCode($arLine['basketItem']->getProductId())
-            );
-
-            $line = new ProductListItemRequestDTO();
-            $line->setProduct($product);
-            $line->setCount($arLine['quantity']);
-            $line->setPriceOfLine($arLine['priceOfLine']);
-            $lines[] = $line;
-        }
-
-        if (is_object($USER) && $USER->IsAuthorized() && !empty($USER->GetEmail())) {
-            $fields = [
-                'email' => $USER->GetEmail()
-            ];
-            $customer = Helper::iconvDTO(new CustomerIdentityRequestDTO($fields));
-        }
-
-        if (empty($arAllLines) && count($_SESSION['MB_WISHLIST_COUNT'])) {
-            self::clearWishList();
-        }
-
-        if (empty($arLines)) {
-            if (!isset($_SESSION['MB_CLEAR_CART'])) {
-                self::clearCart();
-            }
-
-            return;
-        }
-
-        try {
-            $mindbox->productList()->setProductList(
-                new ProductListItemRequestCollection($lines),
-                Options::getOperationName('setProductList'),
-                $customer
-            )->sendRequest();
-        } catch (Exceptions\MindboxClientErrorException $e) {
-        } catch (Exceptions\MindboxClientException $e) {
-            $lastResponse = $mindbox->productList()->getLastResponse();
-            if ($lastResponse) {
-                $request = $lastResponse->getRequest();
-                QueueTable::push($request);
-            }
-        }
-    }
-
-    public static function setWishList()
-    {
-        $mindbox = static::mindbox();
-        if (!$mindbox) {
-            return false;
-        }
-
-        $basket = Sale\Basket::loadItemsForFUser(Sale\Fuser::getId(), Main\Context::getCurrent()->getSite());
-        $basketItems = $basket->getBasketItems();
-        $arLines = [];
-        foreach ($basketItems as $basketItem) {
-            if ($basketItem->getField('DELAY') === 'N') {
-                continue;
-            }
-            $productId = $basketItem->getProductId();
-            $arLines[ $productId ]['basketItem'] = $basketItem;
-            $arLines[ $productId ]['quantity'] += $basketItem->getQuantity();
-            $arLines[ $productId ]['priceOfLine'] += $basketItem->getPrice();
-        }
-
-        $lines = [];
-        foreach ($arLines as $arLine) {
-            $product = new ProductRequestDTO();
-            $product->setId(Options::getModuleOption('EXTERNAL_SYSTEM'), Helper::getElementCode($arLine['basketItem']->getProductId()));
-            $line = new ProductListItemRequestDTO();
-            $line->setProduct($product);
-            $line->setCount($arLine['quantity']);
-            $line->setPriceOfLine($arLine['priceOfLine']);
-            $lines[] = $line;
-        }
-
-        if (empty($lines)) {
-            return false;
-        }
-
-        try {
-            $mindbox->productList()->setWishList(
-                new ProductListItemRequestCollection($lines),
-                Options::getOperationName('setWishList')
-            )->sendRequest();
-            $_SESSION['MB_WISHLIST_COUNT'] = count($_SESSION['MB_WISHLIST']);
-            self::setCartMindbox($basketItems);
-        } catch (Exceptions\MindboxClientErrorException $e) {
-            $lastResponse = $mindbox->productList()->getLastResponse();
-            if ($lastResponse) {
-                $request = $lastResponse->getRequest();
-                QueueTable::push($request);
-            }
-        } catch (Exceptions\MindboxClientException $e) {
-            $lastResponse = $mindbox->productList()->getLastResponse();
-            if ($lastResponse) {
-                $request = $lastResponse->getRequest();
-                QueueTable::push($request);
-            }
-        }
-    }
-
-    public static function clearWishList()
-    {
-        $mindbox = static::mindbox();
-        if (!$mindbox) {
-            return false;
-        }
-
-        $basket = Sale\Basket::loadItemsForFUser(Sale\Fuser::getId(), Main\Context::getCurrent()->getSite());
-        $basketItems = $basket->getBasketItems();
-
-        try {
-            $mindbox->productList()->clearWishList(Options::getOperationName('clearWishList'))->sendRequest();
-            unset($_SESSION['MB_WISHLIST_COUNT']);
-            self::setCartMindbox($basketItems);
-        } catch (Exceptions\MindboxClientErrorException $e) {
-            $lastResponse = $mindbox->productList()->getLastResponse();
-            if ($lastResponse) {
-                $request = $lastResponse->getRequest();
-                QueueTable::push($request);
-            }
-        } catch (Exceptions\MindboxClientException $e) {
-            $lastResponse = $mindbox->productList()->getLastResponse();
-            if ($lastResponse) {
-                $request = $lastResponse->getRequest();
-                QueueTable::push($request);
-            }
-        }
-    }
-
-    private static function clearCart()
-    {
-
-        $mindbox = static::mindbox();
-        if (!$mindbox) {
-            return false;
-        }
-
-        $_SESSION['MB_CLEAR_CART'] = 'Y';
-
-        try {
-            $mindbox->productList()->clearCart(Options::getOperationName('clearCart'))->sendRequest();
-        } catch (Exceptions\MindboxClientErrorException $e) {
-            $lastResponse = $mindbox->productList()->getLastResponse();
-            if ($lastResponse) {
-                $request = $lastResponse->getRequest();
-                QueueTable::push($request);
-            }
-        } catch (Exceptions\MindboxClientException $e) {
-            $lastResponse = $mindbox->productList()->getLastResponse();
-            if ($lastResponse) {
-                $request = $lastResponse->getRequest();
-                QueueTable::push($request);
-            }
-        }
-    }
-
-    /**
      * @param $errors
      * @return string
      */
@@ -1211,14 +1005,6 @@ class Helper
         $strError = rtrim($strError, PHP_EOL);
 
         return $strError;
-    }
-
-    /**
-     * @return Mindbox
-     */
-    public static function mindbox()
-    {
-        return Options::getConfig();
     }
 
     /**
@@ -1380,10 +1166,6 @@ class Helper
                     continue;
                 }
 
-                if ($basketItem->getQuantity() < 1) {
-                    continue;
-                }
-
                 $requestedPromotions = Helper::getRequestedPromotions($basketItem, $order);
                 $bitrixBasket[$basketItem->getId()] = $basketItem;
                 $catalogPrice = Helper::getBasePrice($basketItem);
@@ -1478,7 +1260,7 @@ class Helper
         return $return;
     }
 
-    public function getAvailableBonusForCurrentOrder($orderId)
+    public static function getAvailableBonusForCurrentOrder($orderId)
     {
         $return = 0;
 
@@ -1623,7 +1405,6 @@ class Helper
      */
     public static function isMindboxOrder($orderId)
     {
-        //return true;
         $order = self::getMindboxOrder($orderId);
 
         if ($order && $order->getField('processingStatus') === 'Found') {
@@ -1652,148 +1433,5 @@ class Helper
         }
 
         return $statusList;
-    }
-
-    public static function getMindboxOrderStatusList()
-    {
-        return [
-            'CheckedOut' => 'CheckedOut',
-            'Delivered' => 'Delivered',
-            'Paid' => 'Paid',
-            'Cancelled' => 'Cancelled',
-            'Returned' => 'Returned'
-        ];
-    }
-
-    public static function getMindboxStatusByShopStatus($shopStatus)
-    {
-        $return = false;
-
-        if (!empty($shopStatus)) {
-            $statusOptionsJson = COption::GetOptionString('mindbox.marketing', 'ORDER_STATUS_FIELDS_MATCH', '{}');
-            $statusOptionsData = json_decode($statusOptionsJson, true);
-
-            if (!empty($statusOptionsData) && is_array($statusOptionsData)) {
-                foreach ($statusOptionsData as $item) {
-                    if ($shopStatus == $item['bitrix']) {
-                        $return = $item['mindbox'];
-                        break;
-                    }
-                }
-            }
-        }
-
-        return $return;
-    }
-
-    public static function updateMindboxOrderItems(\Bitrix\Sale\Order $order, $additionalFields = [])
-    {
-        $orderId = $order->getId();
-        $orderStatus = $order->getField('STATUS_ID');
-        $orderUserId = $order->getField('USER_ID');
-
-        if (!$order->isNew() && !Helper::isMindboxOrder($order->getId())) {
-            return;
-        }
-
-        $mindbox = Options::getConfig();
-
-        if (!$mindbox) {
-            return;
-        }
-
-        $mindboxStatusCode = self::getMindboxStatusByShopStatus($orderStatus);
-
-        if (empty($mindboxStatusCode)) {
-            return false;
-        }
-
-        $orderBasket = $order->getBasket();
-
-        if ($orderBasket) {
-            $basketItems = $orderBasket->getBasketItems();
-            $lines = [];
-
-            foreach ($basketItems as $basketItem) {
-                $lines[] = [
-                    'lineId' => $basketItem->getId(),
-                    'quantity' => $basketItem->getQuantity(),
-                    'basePricePerItem' => $basketItem->getPrice(),
-                    'status' => $mindboxStatusCode,
-                    'product' => [
-                        'ids' => [
-                            Options::getModuleOption('EXTERNAL_SYSTEM') => Helper::getElementCode($basketItem->getProductId())
-                        ]
-                    ],
-                ];
-            }
-        }
-
-        $requestFields = [
-            'ids' => [
-                Options::getModuleOption('TRANSACTION_ID') => $orderId
-            ],
-            'lines' => $lines
-        ];
-
-        if (!empty($additionalFields) && is_array($additionalFields)) {
-            $requestFields = $requestFields + $additionalFields;
-        }
-
-        $requestData = [
-            'customer' => [
-                'ids' => [
-                    Options::getModuleOption('WEBSITE_ID') => $orderUserId
-                ],
-            ],
-            'order' => $requestFields
-        ];
-
-        $request = $mindbox->getClientV3()->prepareRequest(
-            'POST',
-            Options::getOperationName('updateOrderItems'),
-            new DTO($requestData)
-        );
-
-        try {
-            $response = $request->sendRequest();
-        } catch (Exceptions\MindboxClientException $e) {
-            return false;
-        }
-    }
-
-
-    public static function updateMindboxOrderStatus($orderId, $statusCode)
-    {
-        $mindbox = Options::getConfig();
-
-        if ($mindbox && self::isMindboxOrder($orderId)) {
-            $mindboxStatusCode = Helper::getMindboxStatusByShopStatus($statusCode);
-
-            if ($mindboxStatusCode !== false) {
-                $request = $mindbox->getClientV3()->prepareRequest(
-                    'POST',
-                    Options::getOperationName('updateOrderStatus'),
-                    new DTO([
-                        'orderLinesStatus' => $mindboxStatusCode,
-                        'order' => [
-                            'ids' => [
-                                'websiteId' => $orderId
-                            ]
-                        ]
-                    ]),
-                    '',
-                    [],
-                    true,
-                    false
-                );
-
-                try {
-                    $response = $request->sendRequest();
-                } catch (Exceptions\MindboxClientException $e) {
-                    return false;
-                }
-            }
-        }
     }
 }

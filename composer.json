@@ -2,12 +2,16 @@
     "name": "mindbox/marketing",
     "type": "bitrix-module",
     "license": "MIT",
+    "minimum-stability": "stable",
     "require": {
-        "mindbox/sdk": "1.0.6"
+        "mindbox/sdk": "1.0.7"
     },
     "autoload": {
         "psr-4": {
             "Mindbox\\": "lib/"
         }
+    },
+    "require-dev": {
+        "squizlabs/php_codesniffer": "^3.6"
     }
 }

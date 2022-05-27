@@ -2,82 +2,372 @@
 
 namespace Mindbox;
 
+use Bitrix\Catalog\PriceTable;
+use Bitrix\Iblock\ElementTable;
+use Bitrix\Iblock\IblockTable;
+use Bitrix\Iblock\SectionTable;
+use Bitrix\Main\Text\Encoding;
 use domDocument;
-use Mindbox\Helper;
 
 class YmlFeedMindbox
 {
-
-    private static $stepSize = 1000;
-
-    private static $prodsInfo = [];
-
     const DESCRIPTION_TEXT_LENGTH = 3000;
+
+    protected $iblockId = 0;
+
+    protected $lid = '';
+
+    protected $protocol = 'https://';
+
+    protected $basePriceId = 0;
+
+    protected $productCount = 0;
+
+    protected $stepSize = 1000;
+
+    protected $products = [];
+    protected $offers = [];
+
+    protected $catalogPropertyCode = [];
+    protected $offersPropertyCode = [];
+
+    public function __construct()
+    {
+        $this->setIblockId(Options::getModuleOption('CATALOG_IBLOCK_ID'));
+        $this->setLid();
+        $this->setProtocol();
+        $this->setBasePriceId();
+        $this->setProductCount();
+        $this->setStepSize(Options::getModuleOption('YML_CHUNK_SIZE'));
+        $this->setCatalogPropertyCode(Options::getModuleOption('CATALOG_PROPS'));
+        $this->setOffersPropertyCode(Options::getModuleOption('CATALOG_OFFER_PROPS'));
+    }
 
     public static function start($step = 1)
     {
-        $step = (int) $step;
-
-        if (!isset($_SERVER["SERVER_NAME"]) || empty($_SERVER["SERVER_NAME"])) {
-            $_SERVER["SERVER_NAME"] = SITE_SERVER_NAME;
+        if (!isset($_SERVER['SERVER_NAME']) || empty($_SERVER['SERVER_NAME'])) {
+            $_SERVER['SERVER_NAME'] = SITE_SERVER_NAME;
         }
 
-        $cond = empty(Options::getModuleOption("YML_NAME")) || empty(Options::getModuleOption("CATALOG_IBLOCK_ID"));
+        $cond = empty(Options::getModuleOption('YML_NAME')) || empty(Options::getModuleOption('CATALOG_IBLOCK_ID'));
 
         if ($cond) {
-            return "\Mindbox\YmlFeedMindbox::start($step);";
-        } elseif (!\CModule::IncludeModule("currency")) {
-            return "\Mindbox\YmlFeedMindbox::start($step);";
-        } elseif (!\CModule::IncludeModule("iblock")) {
-            return "\Mindbox\YmlFeedMindbox::start($step);";
-        } elseif (!\CModule::IncludeModule("catalog")) {
-            return "\Mindbox\YmlFeedMindbox::start($step);";
+            return "\Mindbox\YmlFeedMindbox::start();";
+        } elseif (!\Bitrix\Main\Loader::includeModule('currency')) {
+            return "\Mindbox\YmlFeedMindbox::start();";
+        } elseif (!\Bitrix\Main\Loader::includeModule('iblock')) {
+            return "\Mindbox\YmlFeedMindbox::start();";
+        } elseif (!\Bitrix\Main\Loader::includeModule('catalog')) {
+            return "\Mindbox\YmlFeedMindbox::start();";
         }
 
-        $prodsCount = self::getProdsCount();
-        if ($step === 1 && $prodsCount > self::$stepSize) {
-            self::checkAgents($prodsCount);
-        }
+        $ymlObj = new self();
 
-        self::generateYml($step);
+        $ymlObj->generateYml();
 
-        return "\Mindbox\YmlFeedMindbox::start($step);";
+        return "\Mindbox\YmlFeedMindbox::start();";
     }
 
-    protected static function checkAgents($prodsCount)
+    public function generateYml()
     {
-        $agents = \CAgent::GetList(['ID' => 'DESC'], ['NAME' => '\Mindbox\YmlFeedMindbox::start(%']);
+        $dom = new domDocument('1.0', 'utf-8');
 
-        $existingAgents = [];
+        $root = $dom->createElement('yml_catalog');
+        $root->setAttribute('date', date('Y-m-d H:i'));
+        $dom->appendChild($root);
 
-        while ($agent = $agents->Fetch()) {
-            $regex = '/(?<=\().+?(?=\))/m';
+        $shop = $dom->createElement('shop');
+        $shop = $root->appendChild($shop);
 
-            preg_match($regex, $agent['NAME'], $match, PREG_SET_ORDER, 0);
+        $name = self::yandexText2xml(self::getSiteName());
 
-            if (!empty($match)) {
-                $existingAgents[] = $match;
+        $siteName = $dom->createElement('name', $name);
+        $shop->appendChild($siteName);
+
+        $companyName = $dom->createElement('company', $name);
+        $shop->appendChild($companyName);
+
+        $siteUrl = $dom->createElement('url', self::yandexText2xml($this->getProtocol() . $_SERVER['SERVER_NAME']));
+        $shop->appendChild($siteUrl);
+
+        $currencies = $dom->createElement('currencies');
+        $currencies = $shop->appendChild($currencies);
+
+        $crncs = self::getCurrencies();
+        while ($crnc = $crncs->Fetch()) {
+            $currencie = $dom->createElement('currency');
+            $currencie->setAttribute('id', self::yandexText2xml($crnc['CURRENCY']));
+            $currencie->setAttribute('rate', self::yandexText2xml((int)$crnc['AMOUNT']));
+            $currencies->appendChild($currencie);
+        }
+
+        $categories = $dom->createElement('categories');
+        $categories = $shop->appendChild($categories);
+
+        $dbCats = $this->getCategories();
+        while ($cat = $dbCats->fetch()) {
+            $category = $dom->createElement('category', self::yandexText2xml($cat['NAME']));
+            $category->setAttribute('id', Helper::getSectionCode($cat['ID']));
+
+            if (isset($cat['IBLOCK_SECTION_ID']) && !empty($cat['IBLOCK_SECTION_ID'])) {
+                $category->setAttribute('parentId', Helper::getSectionCode($cat['IBLOCK_SECTION_ID']));
             }
+
+            $categories->appendChild($category);
         }
 
-        if ($prodsCount / count($existingAgents) > self::$stepSize) {
-            foreach ($existingAgents as $num) {
-                \CAgent::RemoveAgent(
-                    "\Mindbox\QueueTable::start($num);",
-                    "mindbox.marketing"
-                );
+        $offers = $dom->createElement('offers');
+        $offers = $shop->appendChild($offers);
+
+        $countChunk = ceil($this->getProductCount() / $this->getStepSize());
+
+        for ($step = 1; $step <= $countChunk; $step++) {
+            $this->loadProducts($this->getStepSize(), $step);
+            $this->loadOffers();
+
+            foreach ($this->offers as $prodId => $ofrs) {
+                foreach ($ofrs as $ofr) {
+                    $offer = $dom->createElement('offer');
+
+                    $offer->setAttribute('group_id', Helper::getElementCode($this->products[$prodId]['ID']));
+                    $offer->setAttribute('id', Helper::getElementCode($ofr['ID']));
+
+                    $available = ($ofr['CATALOG_AVAILABLE'] === 'Y' && $ofr['ACTIVE'] === 'Y') ? 'true' : 'false';
+                    $offer->setAttribute('available', $available);
+
+                    unset($available);
+
+                    $offer = $offers->appendChild($offer);
+                    if (!empty($ofr['NAME'])) {
+                        $name = self::yandexText2xml($ofr['NAME']);
+                    } else {
+                        $name = self::yandexText2xml($this->products[$prodId]['NAME']);
+                    }
+
+                    $offerName = $dom->createElement('name', $name);
+                    $offer->appendChild($offerName);
+
+                    // description
+                    if (!empty($ofr['~DETAIL_TEXT'])) {
+                        $description = TruncateText($ofr['~DETAIL_TEXT'], self::DESCRIPTION_TEXT_LENGTH);
+                    } else {
+                        $description = TruncateText($this->products[$prodId]['~DETAIL_TEXT'], self::DESCRIPTION_TEXT_LENGTH);
+                    }
+
+                    if (empty($description)) {
+                        if (!empty($ofr['~PREVIEW_TEXT'])) {
+                            $description = TruncateText($ofr['~PREVIEW_TEXT'], self::DESCRIPTION_TEXT_LENGTH);
+                        } else {
+                            $description = TruncateText($this->products[$prodId]['~PREVIEW_TEXT'], self::DESCRIPTION_TEXT_LENGTH);
+                        }
+                    }
+
+                    if (!empty($description)) {
+                        $cdataDescription = $dom->createCDATASection($description);
+                        $offerDescription = $dom->createElement('description');
+                        $offerDescription->appendChild($cdataDescription);
+                        $offer->appendChild($offerDescription);
+                    }
+
+                    // url
+                    if ($this->products[$prodId]['DETAIL_PAGE_URL']) {
+                        $offerUrl = $dom->createElement('url', self::yandexText2xml($this->getProtocol() . $_SERVER['SERVER_NAME'] . $this->products[$prodId]['DETAIL_PAGE_URL']));
+                        $offer->appendChild($offerUrl);
+                    }
+
+                    // prices
+                    if (!empty($ofr['prices']) && $ofr['prices']['RESULT_PRICE']['BASE_PRICE'] !== $ofr['prices']['RESULT_PRICE']['DISCOUNT_PRICE']) {
+                        $offerPrice = $dom->createElement('price', $ofr['prices']['RESULT_PRICE']['DISCOUNT_PRICE']);
+                        $offer->appendChild($offerPrice);
+                        $oldPrice = $dom->createElement('oldprice', $ofr['prices']['RESULT_PRICE']['BASE_PRICE']);
+                        $offer->appendChild($oldPrice);
+                    } else {
+                        $offerPrice = $dom->createElement('price', $ofr['CATALOG_PRICE_' . $this->getBasePriceId()]);
+                        $offer->appendChild($offerPrice);
+                    }
+
+                    $offerCurrencyId = $dom->createElement('currencyId', self::yandexText2xml($ofr['CATALOG_CURRENCY_' . $this->getBasePriceId()]));
+                    $offer->appendChild($offerCurrencyId);
+
+                    // categories
+                    $productCategoryList = $this->getProductGroups($prodId);
+                    foreach ($productCategoryList as $productCategoryId) {
+                        $offerCategoryId = $dom->createElement('categoryId', Helper::getSectionCode($productCategoryId));
+                        $offer->appendChild($offerCategoryId);
+                    }
+
+                    // picture
+                    $img = $ofr['DETAIL_PICTURE'] ?: $ofr['PREVIEW_PICTURE'];
+                    if (!empty($img)) {
+                        $url = self::getPictureUrl($img);
+                    } else {
+                        $img = $this->products[$prodId]['DETAIL_PICTURE'] ?: $this->products[$prodId]['PREVIEW_PICTURE'];
+                        $url = self::getPictureUrl($img);
+                    }
+                    if ($url) {
+                        $offerPicture = $dom->createElement('picture', self::yandexText2xml($this->getProtocol() . $url));
+                        $offer->appendChild($offerPicture);
+                    }
+
+                    // properties
+                    $ofr['properties'] = array_merge($ofr['properties'], $this->products[$prodId]['properties']);
+
+                    foreach ($ofr['properties'] as $property) {
+                        if (!empty($property['VALUE'])) {
+                            if (is_array($property['VALUE'])) {
+                                $property['VALUE'] = implode('|', $property['VALUE']);
+                            }
+
+                            if (empty($property['CODE'])) {
+                                $prop['CODE'] = $property['XML_ID'];
+                            }
+
+                            $property['CODE'] = str_replace('_', '', $property['CODE']);
+                            $param = $dom->createElement('param', self::yandexText2xml($property['VALUE']));
+                            $param->setAttribute('name', $property['CODE']);
+
+                            $offer->appendChild($param);
+                        }
+                    }
+                }
+
+                if (array_key_exists($prodId, $this->products)) {
+                    unset($this->products[$prodId]);
+                }
             }
+            $this->offers = [];
 
-            $existingAgents = [];
+            foreach ($this->products as $product) {
+                $offer = $dom->createElement('offer');
+                $offer->setAttribute('id', Helper::getElementCode($product['ID']));
+
+                $available = ($product['CATALOG_AVAILABLE'] === 'Y' && $product['ACTIVE'] === 'Y') ? 'true' : 'false';
+
+                $offer->setAttribute('available', $available);
+                unset($available);
+
+                $offer = $offers->appendChild($offer);
+                $offerName = $dom->createElement('name', self::yandexText2xml($product['NAME']));
+                $offer->appendChild($offerName);
+
+                // description
+                if (!empty($product['PREVIEW_TEXT'])) {
+                    $offerDescription = $dom->createElement('description', self::yandexText2xml($product['PREVIEW_TEXT']));
+                    $offer->appendChild($offerDescription);
+                }
+
+                // url
+                if ($product['DETAIL_PAGE_URL']) {
+                    $offerUrl = $dom->createElement('url', self::yandexText2xml($this->getProtocol() . $_SERVER['SERVER_NAME'] . $product['DETAIL_PAGE_URL']));
+                    $offer->appendChild($offerUrl);
+                }
+
+                if (!empty($product['prices']) && $product['prices']['RESULT_PRICE']['BASE_PRICE'] !== $product['prices']['RESULT_PRICE']['DISCOUNT_PRICE']) {
+                    $offerPrice = $dom->createElement('price', $product['prices']['RESULT_PRICE']['DISCOUNT_PRICE']);
+                    $offer->appendChild($offerPrice);
+                    $oldPrice = $dom->createElement('oldprice', $product['prices']['RESULT_PRICE']['BASE_PRICE']);
+                    $offer->appendChild($oldPrice);
+                } else {
+                    $offerPrice = $dom->createElement('price', $product['CATALOG_PRICE_' . $this->getBasePriceId()]);
+                    $offer->appendChild($offerPrice);
+                }
+
+                $offerCurrencyId = $dom->createElement('currencyId', self::yandexText2xml($product['CATALOG_CURRENCY_' . $this->getBasePriceId()]));
+                $offer->appendChild($offerCurrencyId);
+
+                // category
+                $productCategoryList = $this->getProductGroups($product['ID']);
+
+                foreach ($productCategoryList as $productCategoryId) {
+                    $offerCategoryId = $dom->createElement('categoryId', Helper::getSectionCode($productCategoryId));
+                    $offer->appendChild($offerCategoryId);
+                }
+
+                // picture
+                $img = $product['DETAIL_PICTURE'] ?: $product['PREVIEW_PICTURE'];
+                $url = self::getPictureUrl($img);
+                if ($url) {
+                    $offerPicture = $dom->createElement('picture', self::yandexText2xml($this->getProtocol() . $url));
+                    $offer->appendChild($offerPicture);
+                }
+
+                // property
+                foreach ($product['properties'] as $property) {
+                    if (!empty($property['VALUE'])) {
+                        if (is_array($property['VALUE'])) {
+                            $property['VALUE'] = implode('|', $property['VALUE']);
+                        }
+
+                        if (empty($property['CODE'])) {
+                            $property['CODE'] = $property['XML_ID'];
+                        }
+
+                        $property['CODE'] = str_replace('_', '', $property['CODE']);
+                        $param = $dom->createElement('param', self::yandexText2xml($property['VALUE']));
+                        $param->setAttribute('name', $property['CODE']);
+
+                        $offer->appendChild($param);
+                    }
+                }
+            }
+            $this->products = [];
         }
 
-        if (empty($existingAgents)) {
-            $newAgentsMax = ceil($prodsCount / self::$stepSize);
-            self::createAgents($newAgentsMax);
-        }
+        $dom->save($_SERVER['DOCUMENT_ROOT'] . '/' . Options::getModuleOption('YML_NAME'));
     }
 
-    protected static function getProductGroups($productId)
+    public function setProtocol(): void
+    {
+        $this->protocol = Options::getModuleOption('PROTOCOL') === 'Y' ? 'https://' : 'http://';
+    }
+
+    /**
+     * Получает протокол.
+     * @return string
+     */
+    public function getProtocol()
+    {
+        return $this->protocol;
+    }
+
+    /**
+     * Возвращает категории.
+     */
+    public function getCategories()
+    {
+        $arSelect = [
+            'ID',
+            'IBLOCK_SECTION_ID',
+            'NAME'
+        ];
+
+        $arFilter = [
+            '=IBLOCK_ID' => $this->getIblockId(),
+            '=ACTIVE' => 'Y'
+        ];
+
+        return SectionTable::getList([
+            'filter' => $arFilter,
+            'select' => $arSelect,
+            'order' => ['SORT' => 'ASC']
+        ]);
+    }
+
+    /**
+     * Возвращает валюты.
+     * @return mixed (CIBlockResult)
+     */
+    protected static function getCurrencies()
+    {
+        return \CCurrency::GetList(($by = 'name'), ($order = 'asc'), LANGUAGE_ID);
+    }
+
+    /**
+     * Возвращает список категорий, к которому принадлежит элемент
+     * @param int $productId
+     * @return array
+     */
+    public function getProductGroups($productId)
     {
         $return = [];
 
@@ -91,540 +381,165 @@ class YmlFeedMindbox
             }
         }
 
+        unset($getElementGroups, $item);
+
         return $return;
     }
 
-    protected static function createAgents($max)
-    {
-        for ($i = 1; $i <= $max; $i++) {
-            $now = new \Bitrix\Main\Type\DateTime();
-            $nextSeconds = $i * 180;
-            $next = \Bitrix\Main\Type\DateTime::createFromPhp(new \DateTime("now + ".$nextSeconds." sec"));
-            \CAgent::AddAgent(
-                "\Mindbox\YmlFeedMindbox::start($i);",
-                "mindbox.marketing",
-                "N",
-                86400,
-                $now,
-                "Y",
-                $next,
-                30
-            );
-        }
-    }
-
-    protected static function generateYml($step)
-    {
-        if ($step === 1) {
-            $dom = new domDocument("1.0", "utf-8");
-
-            $root = $dom->createElement("yml_catalog");
-            $root->setAttribute("date", date('Y-m-d H:i'));
-            $dom->appendChild($root);
-
-            $shop = $dom->createElement("shop");
-            $shop = $root->appendChild($shop);
-
-            $name = self::yandexText2xml(self::getSiteName());
-            $siteName = $dom->createElement("name", $name);
-            $shop->appendChild($siteName);
-
-            $companyName = $dom->createElement("company", $name);
-            $shop->appendChild($companyName);
-
-            $siteUrl = $dom->createElement("url", self::yandexText2xml(self::getProtocol() . $_SERVER["SERVER_NAME"]));
-            $shop->appendChild($siteUrl);
-
-            $currencies = $dom->createElement("currencies");
-            $currencies = $shop->appendChild($currencies);
-            $crncs = self::getCurrencies();
-            while ($crnc = $crncs->Fetch()) {
-                $currencie = $dom->createElement("currency");
-                $currencie->setAttribute("id", self::yandexText2xml($crnc["CURRENCY"]));
-                $currencie->setAttribute("rate", self::yandexText2xml((int)$crnc["AMOUNT"]));
-                $currencies->appendChild($currencie);
-            }
-
-            $categories = $dom->createElement("categories");
-            $categories = $shop->appendChild($categories);
-            $dbCats = self::getCategories();
-            $catId = [];
-            while ($cat = $dbCats->GetNext()) {
-                $cats[] = $cat;
-            }
-            foreach ($cats as $cat) {
-                $category = $dom->createElement("category", self::yandexText2xml($cat["NAME"]));
-                $category->setAttribute("id", Helper::getSectionCode($cat['ID']));
-
-                if (isset($cat["IBLOCK_SECTION_ID"]) && !empty($cat["IBLOCK_SECTION_ID"])) {
-                    $parentId = (!empty($catId[$cat['IBLOCK_SECTION_ID']]) ? $catId[$cat['IBLOCK_SECTION_ID']] : $cat["IBLOCK_SECTION_ID"]);
-                    $category->setAttribute("parentId", Helper::getSectionCode($parentId));
-                }
-
-                $categories->appendChild($category);
-            }
-
-            $offers = $dom->createElement("offers");
-            $offers = $shop->appendChild($offers);
-        } else {
-            $dom = new domDocument();
-            $dom->load($_SERVER["DOCUMENT_ROOT"] . "/" . Options::getModuleOption("YML_NAME").'.raw');
-            $offers = $dom->getElementsByTagName("offers")->item(0);
-        }
-
-        $basePriceId = self::getBasePriceId();
-        $prods = self::getProds($basePriceId, $step);
-
-        $prodIds = self::getProdsIds($prods);
-        $prodsOfrs = self::getOffers($basePriceId, $prodIds);
-
-        if (!empty($prodsOfrs)) {
-            foreach ($prodsOfrs as $prodId => $ofrs) {
-                foreach ($ofrs as $ofr) {
-                    $offer = $dom->createElement("offer");
-
-                    $offer->setAttribute("group_id", Helper::getElementCode($prods[$prodId]['ID']));
-                    $offer->setAttribute("id", Helper::getElementCode($ofr["ID"]));
-
-                    $available = ($ofr['CATALOG_AVAILABLE'] === 'Y' && $ofr['ACTIVE'] === 'Y') ? 'true' : 'false';
-                    $offer->setAttribute("available", $available);
-
-                    unset($available);
-
-                    $offer = $offers->appendChild($offer);
-                    if (!empty($ofr["NAME"])) {
-                        $name = self::yandexText2xml($ofr["NAME"]);
-                    } else {
-                        $name = self::yandexText2xml($prods[$prodId]["NAME"]);
-                    }
-
-                    $offerName = $dom->createElement("name", $name);
-                    $offer->appendChild($offerName);
-
-                    if (!empty($ofr["~DETAIL_TEXT"])) {
-                        $description = TruncateText($ofr["~DETAIL_TEXT"], self::DESCRIPTION_TEXT_LENGTH);
-                    } else {
-                        $description = TruncateText($prods[$prodId]["~DETAIL_TEXT"], self::DESCRIPTION_TEXT_LENGTH);
-                    }
-
-                    if (empty($description)) {
-                        if (!empty($ofr["~PREVIEW_TEXT"])) {
-                            $description = TruncateText($ofr["~PREVIEW_TEXT"], self::DESCRIPTION_TEXT_LENGTH);
-                        } else {
-                            $description = TruncateText($prods[$prodId]["~PREVIEW_TEXT"], self::DESCRIPTION_TEXT_LENGTH);
-                        }
-                    }
-
-                    if (!empty($description)) {
-                        $cdataDescription = $dom->createCDATASection($description);
-                        $offerDescription = $dom->createElement("description");
-                        $offerDescription->appendChild($cdataDescription);
-                        $offer->appendChild($offerDescription);
-                    }
-
-                    if ($prods[$prodId]["DETAIL_PAGE_URL"]) {
-                        $offerUrl = $dom->createElement("url", self::yandexText2xml(self::getProtocol() . $_SERVER["SERVER_NAME"] . $prods[$prodId]["DETAIL_PAGE_URL"]));
-                        $offer->appendChild($offerUrl);
-                    }
-
-                    if (!empty($ofr['prices']) && $ofr['prices']['RESULT_PRICE']['BASE_PRICE'] !== $ofr['prices']['RESULT_PRICE']['DISCOUNT_PRICE']) {
-                        $offerPrice = $dom->createElement("price", $ofr['prices']['RESULT_PRICE']['DISCOUNT_PRICE']);
-                        $offer->appendChild($offerPrice);
-                        $oldPrice = $dom->createElement("oldprice", $ofr['prices']['RESULT_PRICE']['BASE_PRICE']);
-                        $offer->appendChild($oldPrice);
-                    } else {
-                        $offerPrice = $dom->createElement("price", $ofr["CATALOG_PRICE_" . $basePriceId]);
-                        $offer->appendChild($offerPrice);
-                    }
-
-                    $offerCurrencyId = $dom->createElement("currencyId", self::yandexText2xml($ofr["CATALOG_CURRENCY_" . $basePriceId]));
-                    $offer->appendChild($offerCurrencyId);
-
-                    // установка категорий у товара
-                    $productCategoryList = self::getProductGroups($prodId);
-
-                    foreach ($productCategoryList as $productCategoryId) {
-                        $offerCategoryId = $dom->createElement("categoryId", Helper::getSectionCode($productCategoryId));
-                        $offer->appendChild($offerCategoryId);
-                    }
-
-                    $img = $ofr['DETAIL_PICTURE'] ?: $ofr['PREVIEW_PICTURE'];
-                    if (!empty($img)) {
-                        $url = self::getPictureUrl($img);
-                    } else {
-                        $img = $prods[$prodId]['DETAIL_PICTURE'] ?: $prods[$prodId]['PREVIEW_PICTURE'];
-                        $url = self::getPictureUrl($img);
-                    }
-
-                    if ($url) {
-                        $offerPicture = $dom->createElement("picture", self::yandexText2xml(self::getProtocol() . $url));
-                        $offer->appendChild($offerPicture);
-                    }
-
-                    $ofr['props'] = array_merge($ofr['props'], $prods[$prodId]["props"]);
-                    if (!empty($ofr['props'])) {
-                        foreach ($ofr['props'] as $prop) {
-                            if (!empty($prop['VALUE'])) {
-                                if (is_array($prop['VALUE'])) {
-                                    $prop['VALUE'] = implode('|', $prop['VALUE']);
-                                }
-                                if (empty($prop['CODE'])) {
-                                    $prop['CODE'] = $prop['XML_ID'];
-                                }
-                                $prop['CODE'] = str_replace('_', '', $prop['CODE']);
-                                $param = $dom->createElement('param', self::yandexText2xml($prop['VALUE']));
-                                $param->setAttribute("name", $prop["CODE"]);
-
-                                $offer->appendChild($param);
-                            }
-                        }
-                    }
-                }
-
-                if (array_key_exists($prodId, $prods)) {
-                    unset($prods[$prodId]);
-                }
-            }
-        }
-
-        if (!empty($prods)) {
-            foreach ($prods as $prod) {
-                $offer = $dom->createElement("offer");
-                $offer->setAttribute("id", Helper::getElementCode($prod["ID"]));
-
-                $available = ($prod['CATALOG_AVAILABLE'] === 'Y' && $prod['ACTIVE'] === 'Y') ? 'true' : 'false';
-
-                $offer->setAttribute("available", $available);
-                unset($available);
-
-                $offer = $offers->appendChild($offer);
-                $offerName = $dom->createElement("name", self::yandexText2xml($prod["NAME"]));
-                $offer->appendChild($offerName);
-
-                if (!empty($prod["PREVIEW_TEXT"])) {
-                    $offerDescription = $dom->createElement("description", self::yandexText2xml($prod["PREVIEW_TEXT"]));
-                    $offer->appendChild($offerDescription);
-                }
-
-                if ($prod["DETAIL_PAGE_URL"]) {
-                    $offerUrl = $dom->createElement("url", self::yandexText2xml(self::getProtocol() . $_SERVER["SERVER_NAME"] . $prod["DETAIL_PAGE_URL"]));
-                    $offer->appendChild($offerUrl);
-                }
-
-                if (!empty($prod['prices']) && $prod['prices']['RESULT_PRICE']['BASE_PRICE'] !== $prod['prices']['RESULT_PRICE']['DISCOUNT_PRICE']) {
-                    $offerPrice = $dom->createElement("price", $prod['prices']['RESULT_PRICE']['DISCOUNT_PRICE']);
-                    $offer->appendChild($offerPrice);
-                    $oldPrice = $dom->createElement("oldprice", $prod['prices']['RESULT_PRICE']['BASE_PRICE']);
-                    $offer->appendChild($oldPrice);
-                } else {
-                    $offerPrice = $dom->createElement("price", $prod["CATALOG_PRICE_" . $basePriceId]);
-                    $offer->appendChild($offerPrice);
-                }
-
-                $offerCurrencyId = $dom->createElement("currencyId", self::yandexText2xml($prod["CATALOG_CURRENCY_" . $basePriceId]));
-                $offer->appendChild($offerCurrencyId);
-
-                // установка категорий у товара
-                $productCategoryList = self::getProductGroups($prod['ID']);
-
-                foreach ($productCategoryList as $productCategoryId) {
-                    $offerCategoryId = $dom->createElement("categoryId", Helper::getSectionCode($productCategoryId));
-                    $offer->appendChild($offerCategoryId);
-                }
-
-                $img = $prod['DETAIL_PICTURE'] ?: $prod['PREVIEW_PICTURE'];
-                $url = self::getPictureUrl($img);
-                if ($url) {
-                    $offerPicture = $dom->createElement("picture", self::yandexText2xml(self::getProtocol() . $url));
-                    $offer->appendChild($offerPicture);
-                }
-
-                if (!empty($prod['props'])) {
-                    foreach ($prod['props'] as $prop) {
-                        if (!empty($prop['VALUE'])) {
-                            if (is_array($prop['VALUE'])) {
-                                $prop['VALUE'] = implode('|', $prop['VALUE']);
-                            }
-                            if (empty($prop['CODE'])) {
-                                $prop['CODE'] = $prop['XML_ID'];
-                            }
-                            $prop['CODE'] = str_replace('_', '', $prop['CODE']);
-                            $param = $dom->createElement('param', self::yandexText2xml($prop['VALUE']));
-                            $param->setAttribute("name", $prop["CODE"]);
-
-                            $offer->appendChild($param);
-                        }
-                    }
-                }
-            }
-        }
-
-        if ($step === (int) ceil(self::getProdsCount() / self::$stepSize)) {
-            $dom->save($_SERVER["DOCUMENT_ROOT"] . "/" . Options::getModuleOption("YML_NAME"));
-        } else {
-            $dom->save($_SERVER["DOCUMENT_ROOT"] . "/" . Options::getModuleOption("YML_NAME").'.raw');
-        }
-    }
-
     /**
-     * Получает протокол.
-     * @return string
+     * Загружаем товары
+     * @param integer $limit  Количество выбираемых данныхы
+     * @param integer $offset Шаг смещения в запросе
      */
-    protected static function getProtocol()
-    {
-        return Options::getModuleOption('PROTOCOL') === 'Y' ? 'https://' : 'http://';
-    }
-
-    /**
-     * Возвращает категории.
-     * @return mixed (CIBlockResult)
-     */
-    protected static function getCategories()
+    public function loadProducts($limit, $offset)
     {
         $arSelect = array(
-            "ID",
-            "XML_ID",
-            "IBLOCK_ID",
-            "IBLOCK_SECTION_ID",
-            "NAME"
+            'ID',
+            'IBLOCK_ID',
+            'IBLOCK_SECTION_ID',
+            'DETAIL_PAGE_URL',
+            'CATALOG_GROUP_' . $this->getBasePriceId(),
+            'NAME',
+            'DETAIL_PICTURE',
+            'DETAIL_TEXT',
+            'PREVIEW_PICTURE',
+            'PREVIEW_TEXT',
+            'ACTIVE'
         );
 
-        $arFilter = array(
-            "IBLOCK_ID" => intval(Options::getModuleOption("CATALOG_IBLOCK_ID")),
-            "ACTIVE" => "Y"
-        );
-
-        return \CIBlockSection::GetList(
-            array("SORT" => "ASC"),
-            $arFilter,
+        $iterator = \CIBlockElement::GetList(
+            [],
+            ['=IBLOCK_ID' => $this->getIblockId()],
             false,
-            $arSelect,
-            false
-        );
-    }
-
-    /**
-     * Возвращает валюты.
-     * @return mixed (CIBlockResult)
-     */
-    protected static function getCurrencies()
-    {
-        return \CCurrency::GetList(($by = "name"), ($order = "asc"), LANGUAGE_ID);
-    }
-
-    /**
-     * Возвращает список торговых предложений
-     * @param string $basePriceId id базовой цены
-     * @param array $prodIds Массив id товаров
-     * @return mixed
-     */
-    protected static function getOffers($basePriceId, $prodIds)
-    {
-        $offersCatalogId = \CCatalog::GetList([], ['IBLOCK_ID' => Options::getModuleOption("CATALOG_IBLOCK_ID")], false, [], ['ID', 'IBLOCK_ID', 'OFFERS_IBLOCK_ID'])->Fetch()['OFFERS_IBLOCK_ID'];
-
-        $arSelect = array("ID",
-            "IBLOCK_ID",
-            "NAME",
-            "DETAIL_PAGE_URL",
-            "CATALOG_GROUP_" . $basePriceId,
-            "IBLOCK_SECTION_ID",
-            "DETAIL_PICTURE",
-            "PREVIEW_PICTURE",
-            "XML_ID",
-            "ACTIVE"
-        );
-
-        $offersByProducts = \CCatalogSKU::getOffersList(
-            $prodIds,
-            (int) Options::getModuleOption("CATALOG_IBLOCK_ID"),
-            array(),
-            $arSelect,
-            array()
-        );
-
-        $addProps = Options::getModuleOption("CATALOG_OFFER_PROPS");
-
-        $info = self::getIblockInfo((int) Options::getModuleOption("CATALOG_IBLOCK_ID"));
-
-        foreach ($offersByProducts as $productId => &$offers) {
-            foreach ($offers as &$offer) {
-                $offer['prices'] = \CCatalogProduct::GetOptimalPrice($offer['ID'], 1, [], 'N', [], $info['LID']);
-                $offer['props'] = [];
-                if ($offer['prices']['RESULT_PRICE']['PRICE_TYPE_ID'] !== $basePriceId) {
-                    $offer['prices']['RESULT_PRICE'] = Helper::getPriceByType($offer);
-                }
-
-                if (array_key_exists($productId, self::$prodsInfo)) {
-                    $offer['ACTIVE'] = (self::$prodsInfo[$productId]['ACTIVE'] == 'N')? self::$prodsInfo[$productId]['ACTIVE']:$offer['ACTIVE'];
-                    $offer['CATALOG_AVAILABLE'] = (self::$prodsInfo[$productId]['CATALOG_AVAILABLE'] == 'N')? self::$prodsInfo[$productId]['CATALOG_AVAILABLE']:$offer['CATALOG_AVAILABLE'];
-                }
-            }
-        }
-
-        if (!empty($addProps)) {
-            $addProps = explode(',', $addProps);
-            $props = self::getProps($addProps, $offersCatalogId);
-            foreach ($offersByProducts as &$offers) {
-                foreach ($offers as $offerId => &$offer) {
-                    if (!empty($props[$offerId])) {
-                        $offer['props'] = $props[$offerId];
-                    }
-                }
-            }
-        }
-
-        return $offersByProducts;
-    }
-
-    /**
-     * Возвращает id базовой цены
-     * @return string
-     */
-    protected static function getBasePriceId()
-    {
-        $price = \CCatalogGroup::GetList(
-            array(),
-            array("BASE" => "Y"),
-            false,
-            false,
-            array("ID")
-        );
-        $price = $price->GetNext();
-        return $price["ID"];
-    }
-
-    public static function getIblockInfo($iblockId)
-    {
-        return \CIBlock::GetByID($iblockId)->Fetch();
-    }
-
-    public static function getProdsCount()
-    {
-        return (int) (\CIBlockElement::GetList(
-            ['SORT' => 'ASC'],
-            ['IBLOCK_ID' => (int) Options::getModuleOption('CATALOG_IBLOCK_ID')],
-            false,
-            false,
-            ['IBLOCK_ID', 'ID']
-        ))->result->num_rows;
-    }
-
-    /**
-     * Возвращает массив с информацией о продуктах, где ключ - это id продукта
-     * @param string $basePriceId id базовой цены
-     * @return array
-     */
-    protected static function getProds($basePriceId, $step)
-    {
-        $arSelect = array(
-            "IBLOCK_ID",
-            "ID",
-            "IBLOCK_SECTION_ID",
-            "DETAIL_PAGE_URL",
-            "CATALOG_GROUP_" . $basePriceId,
-            "NAME",
-            "DETAIL_PICTURE",
-            "DETAIL_TEXT",
-            "PREVIEW_PICTURE",
-            "PREVIEW_TEXT",
-            "XML_ID",
-            "ACTIVE"
-        );
-
-        $prods = \CIBlockElement::GetList(
-            array("SORT" => "ASC"),
-            array("IBLOCK_ID" => (int)Options::getModuleOption("CATALOG_IBLOCK_ID")),
-            false,
-            ['nPageSize' => self::$stepSize, 'iNumPage' => $step],
+            ['nPageSize' => $limit, 'iNumPage' => $offset],
             $arSelect
         );
 
-        $info = self::getIblockInfo((int) Options::getModuleOption("CATALOG_IBLOCK_ID"));
+        $arProductId = [];
 
-        while ($prod = $prods->GetNext()) {
-            if (!$prod['XML_ID']) {
-                $prod['XML_ID'] = $prod['ID'];
+        while ($prod = $iterator->GetNext()) {
+            $arProductId[] = $prod['ID'];
+
+            $prod['prices'] = \CCatalogProduct::GetOptimalPrice($prod['ID'], 1, [], 'N', [], $this->getLid());
+
+            if ($prod['prices']['RESULT_PRICE']['PRICE_TYPE_ID'] !== $this->getBasePriceId()) {
+                $prod['prices']['RESULT_PRICE'] = $this->getResultPrice($prod);
             }
 
-            $prod['prices'] = \CCatalogProduct::GetOptimalPrice($prod['ID'], 1, [], 'N', [], $info['LID']);
+            $prod['properties'] = [];
 
-            if ($prod['prices']['RESULT_PRICE']['PRICE_TYPE_ID'] !== $basePriceId) {
-                $prod['prices']['RESULT_PRICE'] = Helper::getPriceByType($prod);
-            }
-
-            $prodsInfo[$prod["ID"]] = $prod;
+            $this->products[$prod['ID']] = $prod;
         }
 
-        $addProps = Options::getModuleOption("CATALOG_PROPS");
-        if (!empty($addProps)) {
-            $addProps = explode(',', $addProps);
-            $props = self::getProps($addProps, Options::getModuleOption("CATALOG_IBLOCK_ID"), self::getProdsIds($prodsInfo));
-            foreach ($props as $elementId => $prop) {
-                $prodsInfo[$elementId]['props'] = $prop;
-            }
-        } else {
-            foreach ($prodsInfo as $elementId => $product) {
-                $prodsInfo[$elementId]['props'] = [];
+        if (!empty($addProps = $this->getCatalogPropertyCode()) && !empty($arProductId)) {
+
+            $properties = $this->getProperties($addProps, $this->getIblockId(), $arProductId);
+
+            foreach ($properties as $elementId => $prop) {
+                $this->products[$elementId]['properties'] = $prop;
             }
         }
 
-        self::$prodsInfo = $prodsInfo;
-
-        return $prodsInfo;
+        unset($arSelect, $iterator, $prod, $addProps, $arProductId, $props, $prop);
     }
 
-    protected static function getProps($propSelect, $iblockId, $prodsId = [])
+    /**
+     * Загружает список торговых предложений
+     */
+    public function loadOffers()
     {
-        $propNames = array_map(static function ($prop) {
-            return str_replace('PROPERTY_', '', $prop);
-        }, $propSelect);
+        $offersCatalogId = (int)(\CCatalog::GetList(
+                [],
+                ['IBLOCK_ID' => $this->getIblockId()],
+                false,
+                [],
+                ['ID', 'IBLOCK_ID', 'OFFERS_IBLOCK_ID']
+        )->Fetch())['OFFERS_IBLOCK_ID'];
 
-        $info = self::getIblockInfo($iblockId);
-        $minimalSelect = ['ID', 'IBLOCK_ID'];
-        $prodsInfo = [];
+        if ($offersCatalogId <= 0) {
+            return;
+        }
 
-        if ($info['VERSION'] === '1' && count($propSelect) > 25) {
-            $propSelect = array_chunk($propSelect, 17);
+        $arSelect = [
+            'ID',
+            'IBLOCK_ID',
+            'NAME',
+            'DETAIL_PAGE_URL',
+            'CATALOG_GROUP_' . $this->getBasePriceId(),
+            'IBLOCK_SECTION_ID',
+            'DETAIL_PICTURE',
+            'PREVIEW_PICTURE',
+            'ACTIVE'
+        ];
 
-            foreach ($propSelect as $select) {
-                $select = array_merge($select, $minimalSelect);
+        $this->offers = \CCatalogSKU::getOffersList(
+                array_keys($this->products),
+                $this->getIblockId(),
+                [],
+                $arSelect,
+                []
+        );
 
-                $prods = \CIBlockElement::GetList(
-                    ['sort' => 'asc'],
-                    ["IBLOCK_ID" => $iblockId, 'ID' => $prodsId],
-                    false,
-                    false,
-                    $select
-                );
+        $arOfferId = [];
+        foreach ($this->offers as $productId => &$offers) {
+            foreach ($offers as &$offer) {
+                $arOfferId[] = $offer['ID'];
 
-                while ($prod = $prods->GetNextElement()) {
-                    $fields = $prod->GetFields();
-                    $properties = $prod->GetProperties();
-                    $prodsInfo[$fields["ID"]] = array_filter($properties, static function ($prop) use ($propNames) {
-                        return in_array($prop['CODE'], $propNames, true);
-                    });
+                $offer['prices'] = \CCatalogProduct::GetOptimalPrice($offer['ID'], 1, [], 'N', [],  $this->getLid());
+
+                $offer['properties'] = [];
+
+                if ($offer['prices']['RESULT_PRICE']['PRICE_TYPE_ID'] !== $this->getBasePriceId()) {
+                    $offer['prices']['RESULT_PRICE'] = $this->getResultPrice($offer);
                 }
-            }
-        } else {
-            $propSelect = array_merge($propSelect, $minimalSelect);
-            $prods = \CIBlockElement::GetList(
-                ['sort' => 'asc'],
-                ["IBLOCK_ID" => $iblockId, 'ID' => $prodsId],
-                false,
-                false,
-                $propSelect
-            );
 
-            while ($prod = $prods->GetNextElement()) {
-                $fields = $prod->GetFields();
-                $properties = $prod->GetProperties();
-                $prodsInfo[$fields["ID"]] = array_filter($properties, static function ($prop) use ($propNames) {
-                    return in_array($prop['CODE'], $propNames, true);
-                });
+                if (array_key_exists($productId, $this->products)) {
+                    $offer['ACTIVE'] = ($this->products[$productId]['ACTIVE'] == 'N')
+                            ? $this->products[$productId]['ACTIVE']
+                            : $offer['ACTIVE'];
+
+                    $offer['CATALOG_AVAILABLE'] = ($this->products[$productId]['CATALOG_AVAILABLE'] == 'N')
+                            ? $this->products[$productId]['CATALOG_AVAILABLE']
+                            : $offer['CATALOG_AVAILABLE'];
+                }
             }
         }
 
-        return $prodsInfo;
+        if (!empty($addProps = $this->getOffersPropertyCode()) && !empty($arOfferId)) {
+            $properties = $this->getProperties($addProps, $offersCatalogId, $arOfferId);
+
+            foreach ($this->offers as &$offers) {
+                foreach ($offers as $offerId => &$offer) {
+                    if (!empty($properties[$offerId])) {
+                        $offer['properties'] = $properties[$offerId];
+                    }
+                }
+            }
+        }
+
+        unset($arOfferId, $addProps, $properties, $arSelect, $offersCatalogId);
+    }
+
+    /**
+     * Получение значения свойст товаров
+     * @param array $propertyCode - массив кодов свойств
+     * @param int $iblockId - ID инфоблока
+     * @param array $productIds - ID товаров
+     * @return array|false
+     */
+    public function getProperties($propertyCode, $iblockId, &$productIds)
+    {
+        $elementIndex = array_combine($productIds, $productIds);
+
+        \CIBlockElement::GetPropertyValuesArray(
+                $elementIndex,
+                $iblockId,
+                ['ID' => $elementIndex],
+                ['CODE' => $propertyCode],
+                ['GET_RAW_DATA' => 'Y']
+        );
+
+        return $elementIndex;
     }
 
     /**
@@ -632,9 +547,19 @@ class YmlFeedMindbox
      * @param array $prods массив с продуктами, где ключ - это id продукта
      * @return array
      */
-    protected static function getProdsIds($prods)
+    protected static function getProductIds($productIds)
     {
-        return array_keys($prods);
+        return array_keys($productIds);
+    }
+
+    /**
+     * Возвращает информацию по инфоблоку
+     * @param int $iblockId
+     * @return array|false
+     */
+    public static function getIblockInfo($iblockId)
+    {
+        return \CIBlock::GetArrayByID($iblockId);
     }
 
     /**
@@ -642,46 +567,204 @@ class YmlFeedMindbox
      * @param string $id id изображения
      * @return string
      */
-    protected static function getPictureUrl($id)
+    public static function getPictureUrl($id)
     {
         $url = \CFile::GetPath($id);
+
         if (!$url) {
             return false;
         }
-        return $_SERVER["SERVER_NAME"] . $url;
+
+        return $_SERVER['SERVER_NAME'] . $url;
     }
 
     /**
      * Возвращает название сайта
      * @return string
      */
-    protected static function getSiteName()
+    public static function getSiteName()
     {
-        $siteInfo = \CSite::GetList($by = "sort", $order = "asc", ["ACTIVE" => "Y"]);
+        $siteInfo = \CSite::GetList($by = 'sort', $order = 'asc', ['ACTIVE' => 'Y']);
         $siteInfo = $siteInfo->Fetch();
-        $siteName = '';
+
         if (!$siteInfo) {
             $siteName = 'sitename';
         } else {
             $siteName = $siteInfo['SITE_NAME'];
         }
+
         return !empty($siteName) ? $siteName : 'sitename';
     }
 
     private static function yandexText2xml($text, $bHSC = true, $bDblQuote = false)
     {
-        global $APPLICATION;
-        $bHSC = (true == $bHSC ? true : false);
-        $bDblQuote = (true == $bDblQuote ? true: false);
+        $bHSC = true == $bHSC;
+        $bDblQuote = true == $bDblQuote;
+
         if ($bHSC) {
             $text = htmlspecialcharsbx($text);
             if ($bDblQuote) {
                 $text = str_replace('&quot;', '"', $text);
             }
         }
-        $text = preg_replace("/[\x1-\x8\xB-\xC\xE-\x1F]/", "", $text);
+
+        $text = preg_replace('/[\x1-\x8\xB-\xC\xE-\x1F]/', '', $text);
         $text = str_replace("'", "&apos;", $text);
-        $text = $APPLICATION->ConvertCharset($text, LANG_CHARSET, 'UTF-8');
+        $text = Encoding::convertEncoding($text, LANG_CHARSET, 'UTF-8');
+
         return $text;
+    }
+
+    protected function setLid()
+    {
+        $info = self::getIblockInfo($this->getIblockId());
+
+        $this->lid = $info['LID'];
+    }
+
+    /**
+     * Возвращает ID сайта
+     * @return string
+     */
+    public function getLid()
+    {
+        return $this->lid;
+    }
+
+    protected function setBasePriceId()
+    {
+        $priceGroup = \Bitrix\Catalog\GroupTable::getList([
+            'filter' =>  ['BASE' => 'Y'],
+            'select' => ['ID'],
+            'limit' => 1
+        ])->fetch();
+
+        $this->basePriceId = $priceGroup['ID'];
+    }
+
+    /**
+     * Возвращает ID группы базовой цены
+     * @return int
+     */
+    public function getBasePriceId()
+    {
+        return $this->basePriceId;
+    }
+
+    protected function setStepSize($stepSize)
+    {
+        $stepSize = (int) $stepSize;
+
+        if ($stepSize > 0) {
+            $this->stepSize = $stepSize;
+        }
+    }
+
+    /**
+     * Возвращает размер чанка для товаров
+     * @return int
+     */
+    public function getStepSize()
+    {
+        return $this->stepSize;
+    }
+
+    protected function setIblockId($iblockId)
+    {
+        $this->iblockId = (int)$iblockId;
+    }
+
+    /**
+     * Возвращает ID инфоблока
+     * @return int
+     */
+    public function getIblockId()
+    {
+        return $this->iblockId;
+    }
+
+    protected function setProductCount()
+    {
+        $iter = ElementTable::getList([
+            'filter' => [
+                '=WF_STATUS_ID' => 1,
+                '=WF_PARENT_ELEMENT_ID' => null,
+                '=IBLOCK_ID' => $this->getIblockId()
+            ],
+            'select' => ['ID']
+        ]);
+
+        $this->productCount = $iter->getSelectedRowsCount();
+
+        unset($iter);
+    }
+
+    /**
+     * Возвращает общее количество товаров
+     * @return int
+     */
+    public function getProductCount()
+    {
+        return $this->productCount;
+    }
+
+    protected function setCatalogPropertyCode($strProperty)
+    {
+        if (!empty($strProperty)) {
+            $arProperty = explode(',', $strProperty);
+
+            $this->catalogPropertyCode = array_map(static function ($prop) {
+                return str_replace('PROPERTY_', '', $prop);
+            }, $arProperty);
+        }
+    }
+
+    /**
+     * Возвращает массив кодов свойств для товаров
+     * @return array
+     */
+    public function getCatalogPropertyCode()
+    {
+        return $this->catalogPropertyCode;
+    }
+
+    protected function setOffersPropertyCode($strProperty)
+    {
+        if (!empty($strProperty)) {
+            $arProperty = explode(',', $strProperty);
+
+            $this->offersPropertyCode = array_map(static function ($prop) {
+                return str_replace('PROPERTY_', '', $prop);
+            }, $arProperty);
+        }
+    }
+
+    /**
+     * Возвращает массив кодов свойств для торговых предложений
+     * @return array
+     */
+    public function getOffersPropertyCode()
+    {
+        return $this->offersPropertyCode;
+    }
+
+    public function getResultPrice($element)
+    {
+        $arResultPrices = $element['prices']['RESULT_PRICE'];
+
+        $iterator = PriceTable::getList([
+            'select' => ['CATALOG_GROUP_ID', 'PRICE'],
+            'filter' => [
+                '=PRODUCT_ID' => (int)$element['ID'],
+                '=CATALOG_GROUP_ID' => $this->getBasePriceId()
+            ],
+        ]);
+
+        if ($price = $iterator->fetch()) {
+            $arResultPrices['BASE_PRICE'] = roundEx($price['PRICE'], 2);
+            $arResultPrices['UNROUND_BASE_PRICE'] = $price['PRICE'];
+        }
+
+        return $arResultPrices;
     }
 }
