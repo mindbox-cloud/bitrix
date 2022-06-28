@@ -62,7 +62,8 @@ class Options
         'updateOrderStatus' => 'UpdateOrderStatus',
         'updateOrderItems' => 'UpdateOrderItems',
         'getOrdersList'  =>  'GetOrdersList',
-        'calculateUnauthorizedProduct' => 'CalculateUnauthorizedProduct'
+        'calculateUnauthorizedProduct' => 'CalculateUnauthorizedProduct',
+        'checkCustomerByEmail'  =>  'CheckCustomerByEmail'
     ];
 
     private static $sdkOptions = [

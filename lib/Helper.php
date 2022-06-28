@@ -82,9 +82,9 @@ class Helper
     {
         $in = substr($in, 0, 11);
         $out = preg_replace(
-                '/^(\d)(\d{3})(\d{3})(\d{2})(\d{2})$/',
-                '+\1 (\2) \3 \4 \5',
-                (string)$in
+            '/^(\d)(\d{3})(\d{3})(\d{2})(\d{2})$/',
+            '+\1 (\2) \3 \4 \5',
+            (string)$in
         );
 
         return $out;
@@ -111,7 +111,7 @@ class Helper
      */
     public static function isSync()
     {
-        return  self::isLoyaltyMode();
+        return self::isLoyaltyMode();
     }
 
     public static function getMindboxId($id)
@@ -320,15 +320,15 @@ class Helper
     public static function getElementCode($elementId)
     {
         $fields = [
-            'ID' => (int)$elementId,
+            'ID'        => (int)$elementId,
             'IBLOCK_ID' => null,
-            'VALUE' => $elementId
+            'VALUE'     => $elementId
         ];
 
         $iterator = \Bitrix\Iblock\ElementTable::getList([
             'filter' => ['=ID' => (int)$elementId],
             'select' => ['IBLOCK_ID', 'XML_ID'],
-            'limit' => 1
+            'limit'  => 1
         ]);
 
         if ($el = $iterator->fetch()) {
@@ -364,15 +364,15 @@ class Helper
     public static function getSectionCode($sectionId)
     {
         $fields = [
-            'ID' => (int)$sectionId,
+            'ID'        => (int)$sectionId,
             'IBLOCK_ID' => null,
-            'VALUE' => $sectionId
+            'VALUE'     => $sectionId
         ];
 
         $iterator = \Bitrix\Iblock\SectionTable::getList([
             'filter' => ['=ID' => (int)$sectionId],
             'select' => ['IBLOCK_ID', 'XML_ID'],
-            'limit' => 1
+            'limit'  => 1
         ]);
 
         if ($arSection = $iterator->fetch()) {
@@ -686,11 +686,11 @@ class Helper
             }
         } else {
             $rsData = $entityDataClass::getList([
-                    "select" => ["*"],
-                    "order"  => ["ID" => "ASC"],
-                    "filter" => [
-                            "UF_BASKET_ID" => $lineId
-                    ]
+                "select" => ["*"],
+                "order"  => ["ID" => "ASC"],
+                "filter" => [
+                    "UF_BASKET_ID" => $lineId
+                ]
             ]);
 
             if ($arData = $rsData->fetch()) {
@@ -763,19 +763,19 @@ class Helper
                                 case \Bitrix\Sale\Discount\Actions::VALUE_TYPE_PERCENT:
                                     // процент скидки на товар
                                     $percent = $arActionDescrData['VALUE_ACTION'] == \Bitrix\Sale\Discount\Formatter::VALUE_ACTION_DISCOUNT
-                                            ? $arActionDescrData['VALUE']
-                                            : 100 + $arActionDescrData['VALUE'];
+                                        ? $arActionDescrData['VALUE']
+                                        : 100 + $arActionDescrData['VALUE'];
 
                                     $discountPrice = \Bitrix\Catalog\Product\Price\Calculation::roundPrecision((
-                                            self::isPercentFromBasePrice()
-                                                    ? $basePrice
-                                                    : $currentPrice
-                                            ) * ($percent / 100));
+                                        self::isPercentFromBasePrice()
+                                            ? $basePrice
+                                            : $currentPrice
+                                        ) * ($percent / 100));
 
                                     break;
                                 case \Bitrix\Sale\Discount\Actions::VALUE_TYPE_FIX:
                                     // фиксированная скидка на товар
-                                    $discountPrice = (float) $arActionDescrData['VALUE'];
+                                    $discountPrice = (float)$arActionDescrData['VALUE'];
                                     break;
                                 case \Bitrix\Sale\Discount\Actions::VALUE_TYPE_SUMM:
                                     // установка стоимости на общую сумму товаров
@@ -787,7 +787,7 @@ class Helper
                                     break;
                                 case 'C':
                                     // установка стоимости на каждый товар
-                                    $discountPrice = (float) $arActionDescrData['VALUE'];
+                                    $discountPrice = (float)$arActionDescrData['VALUE'];
                                     break;
                             }
                         } elseif (isset($arActionDescrData['TYPE'])) {
@@ -801,11 +801,11 @@ class Helper
                                 case \Bitrix\Sale\Discount\Formatter::TYPE_LIMIT_VALUE:
                                 case \Bitrix\Sale\Discount\Formatter::TYPE_VALUE:
                                     // фиксированная скидка на товар
-                                    $discountPrice = (float) $arActionDescrData['VALUE'];
+                                    $discountPrice = (float)$arActionDescrData['VALUE'];
                                     break;
                                 case \Bitrix\Sale\Discount\Formatter::TYPE_FIXED:
                                     // установка стоимости на товар
-                                    $discountPrice = (float) ($currentPrice - $arActionDescrData['VALUE']);
+                                    $discountPrice = (float)($currentPrice - $arActionDescrData['VALUE']);
                                     break;
                             }
                         }
@@ -820,34 +820,34 @@ class Helper
                             switch ($arActionDescrData['VALUE_TYPE']) {
                                 case \CCatalogDiscount::TYPE_PERCENT:
                                     // процент скидки на товар
-                                    $discountPrice = (float) $currentPrice * ($arActionDescrData['VALUE'] / 100);
+                                    $discountPrice = (float)$currentPrice * ($arActionDescrData['VALUE'] / 100);
                                     break;
                                 case \CCatalogDiscount::TYPE_FIX:
                                     // фиксированная скидка на товар
-                                    $discountPrice = (float) $arActionDescrData['VALUE'];
+                                    $discountPrice = (float)$arActionDescrData['VALUE'];
                                     break;
                                 case \CCatalogDiscount::TYPE_SALE:
                                     // установка стоимости на товар
-                                    $discountPrice = (float) ($currentPrice - $arActionDescrData['VALUE']);
+                                    $discountPrice = (float)($currentPrice - $arActionDescrData['VALUE']);
                                     break;
                                 default:
-                                    $discountPrice = (float) $arActionDescrData['VALUE'];
+                                    $discountPrice = (float)$arActionDescrData['VALUE'];
                                     break;
                             }
                         } elseif (isset($arActionDescrData['TYPE'])) {
                             switch ($arActionDescrData['TYPE']) {
                                 case \Bitrix\Sale\Discount\Formatter::TYPE_SIMPLE:
                                     // процент скидки на товар
-                                    $discountPrice = (float) $currentPrice * ($arActionDescrData['VALUE'] / 100);
+                                    $discountPrice = (float)$currentPrice * ($arActionDescrData['VALUE'] / 100);
                                     break;
                                 case \Bitrix\Sale\Discount\Formatter::TYPE_LIMIT_VALUE:
                                 case \Bitrix\Sale\Discount\Formatter::TYPE_VALUE:
                                     // фиксированная скидка на товар
-                                    $discountPrice = (float) $arActionDescrData['VALUE'];
+                                    $discountPrice = (float)$arActionDescrData['VALUE'];
                                     break;
                                 case \Bitrix\Sale\Discount\Formatter::TYPE_FIXED:
                                     // установка стоимости на товар
-                                    $discountPrice = (float) ($currentPrice - $arActionDescrData['VALUE']);
+                                    $discountPrice = (float)($currentPrice - $arActionDescrData['VALUE']);
                                     break;
                             }
                         }
@@ -856,11 +856,11 @@ class Helper
                     }
 
                     if (isset($arActionDescrData['LIMIT_TYPE'])
-                            && isset($arActionDescrData['LIMIT_VALUE'])
-                            && $arActionDescrData['LIMIT_TYPE'] === \Bitrix\Sale\Discount\Formatter::LIMIT_MAX
-                            && $discountPrice > $arActionDescrData['LIMIT_VALUE']
+                        && isset($arActionDescrData['LIMIT_VALUE'])
+                        && $arActionDescrData['LIMIT_TYPE'] === \Bitrix\Sale\Discount\Formatter::LIMIT_MAX
+                        && $discountPrice > $arActionDescrData['LIMIT_VALUE']
                     ) {
-                        $discountPrice = (float) $arActionDescrData['LIMIT_VALUE'];
+                        $discountPrice = (float)$arActionDescrData['LIMIT_VALUE'];
                     }
 
                     if ($discountPrice != 0 && !empty($externalId)) {
@@ -1015,10 +1015,10 @@ class Helper
     public static function isNewOrder($values)
     {
         $isNewOrder = false;
-        if (array_key_exists('LID', $values) && empty($values['LID'])                       &&
-            array_key_exists('USER_ID', $values) && empty($values['USER_ID'])               &&
-            array_key_exists('PRICE', $values) && empty($values['PRICE'])                   &&
-            array_key_exists('DELIVERY_ID', $values) && empty($values['DELIVERY_ID'])       &&
+        if (array_key_exists('LID', $values) && empty($values['LID']) &&
+            array_key_exists('USER_ID', $values) && empty($values['USER_ID']) &&
+            array_key_exists('PRICE', $values) && empty($values['PRICE']) &&
+            array_key_exists('DELIVERY_ID', $values) && empty($values['DELIVERY_ID']) &&
             array_key_exists('PAY_SYSTEM_ID', $values) && empty($values['PAY_SYSTEM_ID'])
         ) {
             $isNewOrder = true;
@@ -1038,7 +1038,8 @@ class Helper
         $currentPage = $APPLICATION->GetCurPage();
         $request = \Bitrix\Main\Context::getCurrent()->getRequest();
 
-        return  ($request->isAdminSection() || strpos($currentPage, '/bitrix/admin') !== false || strpos($_SERVER['HTTP_REFERER'], '/bitrix/admin') !== false);
+        return ($request->isAdminSection() || strpos($currentPage,
+                '/bitrix/admin') !== false || strpos($_SERVER['HTTP_REFERER'], '/bitrix/admin') !== false);
     }
 
     public static function checkBasketItem($basketItem)
@@ -1247,7 +1248,7 @@ class Helper
                 try {
                     $preorderInfo = $mindbox->order()->calculateAuthorizedCart(
                         $preorder,
-                        Options::getOperationName('calculateAuthorizedCart' . (Helper::isAdminSection()? 'Admin':''))
+                        Options::getOperationName('calculateAuthorizedCart' . (Helper::isAdminSection() ? 'Admin' : ''))
                     )->sendRequest()->getResult()->getField('order');
                     if (!empty($preorderInfo) && is_object($preorderInfo)) {
                         return $preorderInfo;
@@ -1276,7 +1277,7 @@ class Helper
 
         return $return;
     }
-    
+
     /**
      * Получение значение свойства заказа по коду.
      * Функция с поддержкой версии Битрикс < 20.5
@@ -1307,7 +1308,7 @@ class Helper
 
         return $return;
     }
-    
+
     /**
      * Проверка, доступен ли данному пользователю процессинг
      *
@@ -1319,10 +1320,10 @@ class Helper
     {
         $return = false;
         $internalUserGroups = self::getInternalGroups();
-        
+
         if (!empty($userId) && (int)$userId > 0 && !empty($internalUserGroups)) {
             $userGroup = \Bitrix\Main\UserTable::getUserGroupIds($userId);
-            
+
             if (count(array_diff($userGroup, $internalUserGroups)) !== count($userGroup)) {
                 $return = true;
             }
@@ -1330,7 +1331,7 @@ class Helper
 
         return $return;
     }
-    
+
     /**
      * Возвращает группы пользователей, для которых процессинг не доступен
      * @return array|false|string[]
@@ -1339,11 +1340,11 @@ class Helper
     {
         $groups = [];
         $stringGroup = Options::getModuleOption('CONTINUE_USER_GROUPS');
-        
+
         if (!empty($stringGroup)) {
             $groups = explode(',', $stringGroup);
         }
-        
+
         return $groups;
     }
 
@@ -1376,12 +1377,12 @@ class Helper
             'POST',
             'Offline.GetOrder',
             new DTO([
-                    'order' => [
-                        'ids' => [
-                            Options::getModuleOption('TRANSACTION_ID') => $orderId
-                        ],
-                    ]
-                ]),
+                'order' => [
+                    'ids' => [
+                        Options::getModuleOption('TRANSACTION_ID') => $orderId
+                    ],
+                ]
+            ]),
             '',
             [],
             true,
@@ -1422,7 +1423,7 @@ class Helper
         ];
 
         $statusResult = \Bitrix\Sale\Internals\StatusTable::getList([
-            'order' => ['SORT'=>'ASC'],
+            'order'  => ['SORT' => 'ASC'],
             'select' => ['ID'],
             'filter' => ['TYPE' => 'O']
         ]);
@@ -1433,5 +1434,37 @@ class Helper
         }
 
         return $statusList;
+    }
+
+
+    /**
+     * Проверка клиента по емейл
+     *
+     * @param $email
+     * @return bool
+     */
+    public static function isCustomerExist($email): bool
+    {
+        $mindbox = Options::getConfig();
+        $request = $mindbox->getClientV3()->prepareRequest(
+            'POST',
+            Options::getOperationName('checkCustomerByEmail'),
+            new DTO([
+                'customer' => [
+                    'email' => $email
+                ]
+            ])
+        );
+        try {
+            $response = $request->sendRequest();
+            if ($response->getResult()->getStatus() == 'Success') {
+                return true;
+            }
+
+            return false;
+        } catch (Exceptions\MindboxClientException $e) {
+            return false;
+        }
+
     }
 }

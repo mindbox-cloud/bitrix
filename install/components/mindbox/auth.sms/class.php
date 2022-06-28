@@ -320,6 +320,13 @@ class AuthSms extends CBitrixComponent implements Controllerable
             ];
         }
 
+        if (Helper::isCustomerExist($fields['EMAIL'])) {
+            return [
+                'type'   => 'validation errors',
+                'errors' => GetMessage('MB_AUS_USER_ALREADY_EXISTS')
+            ];
+        }
+
         $customer->setId('mindboxId', $mindboxId);
 
         $_SESSION['OFFLINE_REGISTER'] = true;
