@@ -152,7 +152,7 @@ class User
 
     public static function onBeforeUserUpdate(&$arFields)
     {
-        global $APPLICATION;
+        global $APPLICATION, $USER;
 
         if (isset($_REQUEST['c']) &&
             $_REQUEST['c'] === 'mindbox:auth.sms' &&
@@ -168,7 +168,7 @@ class User
             return;
         }
 
-        if (Helper::isCustomerExist($arFields['EMAIL'])) {
+        if ($arFields['EMAIL'] != $USER->GetEmail() && Helper::isCustomerExist($arFields['EMAIL'])) {
             $APPLICATION->ThrowException(Loc::getMessage("MB_USER_REGISTER_ALREADY_EXISTS"));
 
             return false;
