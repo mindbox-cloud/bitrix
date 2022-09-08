@@ -520,6 +520,23 @@ class Helper
     }
 
     /**
+     * @return array
+     */
+    public static function getPrices()
+    {
+        $query = \Bitrix\Catalog\GroupTable::getList([
+            'select' => ['ID', 'NAME'],
+        ]);
+
+        $prices = [];
+        while ($price = $query->Fetch()) {
+            $prices[$price['ID']] = $price['NAME'];
+        }
+
+        return $prices;
+    }
+
+    /**
      * Get order fields
      *
      * @return array $orderFields

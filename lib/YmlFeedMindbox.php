@@ -6,6 +6,7 @@ use Bitrix\Catalog\PriceTable;
 use Bitrix\Iblock\ElementTable;
 use Bitrix\Iblock\IblockTable;
 use Bitrix\Iblock\SectionTable;
+use Bitrix\Main\Config\Option;
 use Bitrix\Main\Text\Encoding;
 use domDocument;
 
@@ -633,13 +634,17 @@ class YmlFeedMindbox
 
     protected function setBasePriceId()
     {
-        $priceGroup = \Bitrix\Catalog\GroupTable::getList([
-            'filter' =>  ['BASE' => 'Y'],
-            'select' => ['ID'],
-            'limit' => 1
-        ])->fetch();
+        if ($priceId = Option::get(MINDBOX_ADMIN_MODULE_NAME, 'YML_PRICE_ID', false)) {
+            $this->basePriceId = $priceId;
+        } else {
+            $priceGroup = \Bitrix\Catalog\GroupTable::getList([
+                'filter' => ['BASE' => 'Y'],
+                'select' => ['ID'],
+                'limit' => 1
+            ])->fetch();
 
-        $this->basePriceId = $priceGroup['ID'];
+            $this->basePriceId = $priceGroup['ID'];
+        }
     }
 
     /**

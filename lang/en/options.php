@@ -16,6 +16,7 @@ $MESS['TRANSACTION_ID'] = 'Site Order Id';
 $MESS['USE_BONUSES'] = 'Use bonus points';
 $MESS['CATALOG_IBLOCK_ID'] = 'Directory Infoblock ID';
 $MESS['YML_NAME'] = 'Yml file name';
+$MESS['YML_PRICE_ID'] = 'The type of price to export';
 $MESS['EXTERNAL_SYSTEM'] = 'External system';
 $MESS['POINT_OF_CONTACT'] = 'Point of contact';
 $MESS['WEBSITE_ID'] = 'Website ID';

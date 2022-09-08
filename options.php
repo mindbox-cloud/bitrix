@@ -245,6 +245,15 @@ $arAllOptions['FEED'] = [
         COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'YML_CHUNK_SIZE', 1000),
         ['text']
     ],
+    [
+        'YML_PRICE_ID',
+        getMessage('YML_PRICE_ID'),
+        COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'YML_PRICE_ID', ''),
+        [
+            'selectbox',
+            Helper::getPrices()
+        ]
+    ],
     'CATALOG_PROPS_UPGRADE'       => '',
     'CATALOG_PROPS'               => '',
     'CATALOG_OFFER_PROPS_UPGRADE' => '',
