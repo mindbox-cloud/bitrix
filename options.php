@@ -106,6 +106,15 @@ $tabControl = new CAdminTabControl('tabControl', [
     ]
 ]);
 
+$arMode = [
+    'standard' => getMessage('STANDARD'),
+    'loyalty'  => getMessage('LOYALTY'),
+];
+
+if (Options::getModuleOption('new_install') === 'Y') {
+    unset($arMode['loyalty']);
+}
+
 
 $arAllOptions['COMMON'] = [
     ['', '', Helper::adminTableScripts(), ['statichtml']],
@@ -123,10 +132,7 @@ $arAllOptions['COMMON'] = [
         COption::GetOptionString(MINDBOX_ADMIN_MODULE_NAME, 'MODE', 'standard'),
         [
             'selectbox',
-            [
-                'standard' => getMessage('STANDARD'),
-                'loyalty'  => getMessage('LOYALTY'),
-            ]
+            $arMode
         ]
     ],
     [

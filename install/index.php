@@ -83,6 +83,8 @@ class mindbox_marketing extends CModule
         $mindboxLog = new \Mindbox\AccessLogs();
         $mindboxLog->setLogAccess();
 
+        Option::set($this->MODULE_ID, 'new_install', 'Y');
+
         $GLOBALS["APPLICATION"]->IncludeAdminFile(GetMessage("MINDBOX_INSTALL_TITLE"), __DIR__ . "/step1.php");
     }
 
