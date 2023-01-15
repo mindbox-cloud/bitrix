@@ -130,6 +130,7 @@ Asset::getInstance()->addCss("/bitrix/css/mindbox/style.css");
                 </div>
 
                 <div class="col col-md-8">
+                    <input type="hidden" id="mindbox-fillup-email-original" name="mindbox-fillup-email-original" value="">
                     <input type="text" class="form-control js-mask" name="mindbox-fillup-email"
                            id="mindbox-fillup-email" data-type="email" required>
                 </div>

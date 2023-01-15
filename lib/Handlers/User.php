@@ -26,13 +26,13 @@ class User
 
         $userMindboxId = false;
         $rsUser = UserTable::getList(
-                [
-                        'select' => [
-                                'UF_MINDBOX_ID'
-                        ],
-                        'filter' => ['ID' => $arUser['user_fields']['ID']],
-                        'limit'  => 1
-                ]
+            [
+                'select' => [
+                    'UF_MINDBOX_ID'
+                ],
+                'filter' => ['ID' => $arUser['user_fields']['ID']],
+                'limit'  => 1
+            ]
         )->fetch();
 
         if ($rsUser && isset($rsUser['UF_MINDBOX_ID']) && $rsUser['UF_MINDBOX_ID'] > 0) {
@@ -63,15 +63,15 @@ class User
 
         if (empty($mindboxId) && Helper::isLoyaltyMode()) {
             $request = $mindbox->getClientV3()->prepareRequest(
-                    'POST',
-                    Options::getOperationName('getCustomerInfo'),
-                    new DTO([
-                            'customer' => [
-                                    'ids' => [
-                                            Options::getModuleOption('WEBSITE_ID') => $arUser['user_fields']['ID']
-                                    ]
-                            ]
-                    ])
+                'POST',
+                Options::getOperationName('getCustomerInfo'),
+                new DTO([
+                    'customer' => [
+                        'ids' => [
+                            Options::getModuleOption('WEBSITE_ID') => $arUser['user_fields']['ID']
+                        ]
+                    ]
+                ])
             );
 
             try {
@@ -88,8 +88,8 @@ class User
 
                 $user = new CUser;
                 $user->Update(
-                        $arUser['user_fields']['ID'],
-                        $fields
+                    $arUser['user_fields']['ID'],
+                    $fields
                 );
             } else {
                 return;
@@ -97,9 +97,9 @@ class User
         }
 
         $customer = new CustomerRequestDTO([
-                'ids' => [
-                        Options::getModuleOption('WEBSITE_ID') => $arUser['user_fields']['ID']
-                ]
+            'ids' => [
+                Options::getModuleOption('WEBSITE_ID') => $arUser['user_fields']['ID']
+            ]
         ]);
 
         $lastName = trim($arUser['user_fields']['LAST_NAME']);
@@ -135,8 +135,8 @@ class User
 
         try {
             $mindbox->customer()->authorize(
-                    $customer,
-                    Options::getOperationName('authorize')
+                $customer,
+                Options::getOperationName('authorize')
             )->sendRequest();
         } catch (Exceptions\MindboxUnavailableException $e) {
             $lastResponse = $mindbox->customer()->getLastResponse();
@@ -152,12 +152,12 @@ class User
 
     public static function onBeforeUserUpdate(&$arFields)
     {
-        global $APPLICATION;
+        global $APPLICATION, $USER;
 
         if (isset($_REQUEST['c']) &&
-                $_REQUEST['c'] === 'mindbox:auth.sms' &&
-                isset($_REQUEST['action']) &&
-                $_REQUEST['action'] === 'checkCode'
+            $_REQUEST['c'] === 'mindbox:auth.sms' &&
+            isset($_REQUEST['action']) &&
+            $_REQUEST['action'] === 'checkCode'
         ) {
             return;
         }
@@ -168,20 +168,26 @@ class User
             return;
         }
 
+        if ($arFields['EMAIL'] != $USER->GetEmail() && Helper::isCustomerExist($arFields['EMAIL'])) {
+            $APPLICATION->ThrowException(Loc::getMessage("MB_USER_REGISTER_ALREADY_EXISTS"));
+
+            return false;
+        }
+
         $params = [
-                'select' => ['EMAIL', 'PERSONAL_PHONE', 'UF_MINDBOX_ID'],
-                'filter' => ['=ID' => $arFields['ID']],
-                'limit' => 1
+            'select' => ['EMAIL', 'PERSONAL_PHONE', 'UF_MINDBOX_ID'],
+            'filter' => ['=ID' => $arFields['ID']],
+            'limit'  => 1
         ];
 
         if (class_exists('\Bitrix\Main\UserPhoneAuthTable')) {
             $params['runtime'] = [
-                    new \Bitrix\Main\Entity\ReferenceField(
-                            'R_PHONE_AUTH',
-                            '\Bitrix\Main\UserPhoneAuthTable',
-                            ['=this.ID' => 'ref.USER_ID'],
-                            ['join_type' => 'LEFT']
-                    ),
+                new \Bitrix\Main\Entity\ReferenceField(
+                    'R_PHONE_AUTH',
+                    '\Bitrix\Main\UserPhoneAuthTable',
+                    ['=this.ID' => 'ref.USER_ID'],
+                    ['join_type' => 'LEFT']
+                ),
             ];
 
             $params['select']['PHONE_NUMBER'] = 'R_PHONE_AUTH.PHONE_NUMBER';
@@ -255,7 +261,7 @@ class User
                     new DTO([
                         'customer' => [
                             'ids' => [
-                                    Options::getModuleOption('WEBSITE_ID') => $arFields['ID']
+                                Options::getModuleOption('WEBSITE_ID') => $arFields['ID']
                             ]
                         ]
                     ])
@@ -319,19 +325,18 @@ class User
         }
 
         if ($_REQUEST['mode'] == 'class'
-                && $_REQUEST['c'] == 'mindbox:auth.sms'
-                && $_REQUEST['action'] == 'checkCode'
+            && $_REQUEST['c'] == 'mindbox:auth.sms'
+            && $_REQUEST['action'] == 'checkCode'
         ) {
             return;
         }
 
         if ($_REQUEST['mode'] == 'class'
-                && $_REQUEST['c'] == 'mindbox:auth.sms'
-                && $_REQUEST['action'] == 'fillup'
+            && $_REQUEST['c'] == 'mindbox:auth.sms'
+            && $_REQUEST['action'] == 'fillup'
         ) {
             return;
         }
-
 
 
         if (!$USER || is_string($USER)) {
@@ -342,6 +347,13 @@ class User
         if (!$mindbox) {
             return;
         }
+
+        if (Helper::isCustomerExist($arFields['EMAIL'])) {
+            $APPLICATION->ThrowException(Loc::getMessage("MB_USER_REGISTER_ALREADY_EXISTS"));
+
+            return false;
+        }
+
 
         if (!isset($arFields['PERSONAL_PHONE']) && isset($arFields['PERSONAL_MOBILE'])) {
             $arFields['PERSONAL_PHONE'] = $arFields['PERSONAL_MOBILE'];
@@ -357,13 +369,13 @@ class User
 
         $sex = substr(ucfirst($arFields['PERSONAL_GENDER']), 0, 1) ?: null;
         $fields = [
-                'email'       => $arFields['EMAIL'],
-                'lastName'    => $arFields['LAST_NAME'],
-                'middleName'  => $arFields['SECOND_NAME'],
-                'firstName'   => $arFields['NAME'],
-                'mobilePhone' => $arFields['PERSONAL_PHONE'],
-                'birthDate'   => Helper::formatDate($arFields['PERSONAL_BIRTHDAY']),
-                'sex'         => $sex,
+            'email'       => $arFields['EMAIL'],
+            'lastName'    => $arFields['LAST_NAME'],
+            'middleName'  => $arFields['SECOND_NAME'],
+            'firstName'   => $arFields['NAME'],
+            'mobilePhone' => $arFields['PERSONAL_PHONE'],
+            'birthDate'   => Helper::formatDate($arFields['PERSONAL_BIRTHDAY']),
+            'sex'         => $sex,
         ];
 
         $fields = array_filter($fields);
@@ -389,10 +401,10 @@ class User
         }
 
         $fields['subscriptions'] = [
-                [
-                        'brand'        => Options::getModuleOption('BRAND'),
-                        'isSubscribed' => $isSubscribed
-                ]
+            [
+                'brand'        => Options::getModuleOption('BRAND'),
+                'isSubscribed' => $isSubscribed
+            ]
         ];
 
         $customer = Helper::iconvDTO(new CustomerRequestDTO($fields));
@@ -401,10 +413,10 @@ class User
 
         try {
             $registerResponse = $mindbox->customer()->register(
-                    $customer,
-                    Options::getOperationName('register'),
-                    true,
-                    Helper::isSync()
+                $customer,
+                Options::getOperationName('register'),
+                true,
+                Helper::isSync()
             )->sendRequest()->getResult();
         } catch (Exceptions\MindboxUnavailableException $e) {
             $APPLICATION->ThrowException(Loc::getMessage("MB_USER_REGISTER_LOYALTY_ERROR"));
@@ -427,16 +439,16 @@ class User
             if ($status === 'ValidationError') {
                 try {
                     $fields = [
-                            'email'       => $arFields['EMAIL'],
-                            'mobilePhone' => $arFields['PERSONAL_PHONE'],
+                        'email'       => $arFields['EMAIL'],
+                        'mobilePhone' => $arFields['PERSONAL_PHONE'],
                     ];
 
                     $customer = Helper::iconvDTO(new CustomerRequestDTO($fields));
 
                     $registerResponse = $mindbox->customer()->CheckCustomer(
-                            $customer,
-                            Options::getOperationName('check'),
-                            true
+                        $customer,
+                        Options::getOperationName('check'),
+                        true
                     )->sendRequest()->getResult();
                 } catch (\Exception $e) {
                     $errors = $registerResponse->getValidationMessages();
@@ -463,7 +475,6 @@ class User
         if (!$mindbox) {
             return;
         }
-
 
 
         if (Helper::isStandardMode()) {
@@ -550,9 +561,9 @@ class User
                 Options::getOperationName('getCustomerInfo'),
                 new DTO([
                     'customer' => [
-                            'ids' => [
-                                    'mindboxId' => $mindBoxId
-                            ]
+                        'ids' => [
+                            'mindboxId' => $mindBoxId
+                        ]
                     ]
                 ])
             );
@@ -573,8 +584,8 @@ class User
 
                 $user = new CUser;
                 $user->Update(
-                        $arFields['ID'],
-                        $fields
+                    $arFields['ID'],
+                    $fields
                 );
             }
         }
@@ -585,8 +596,8 @@ class User
         if (class_exists('\\Mindbox\\Discount\\DeliveryDiscountEntity')) {
             $deliveryDiscountEntity = new \Mindbox\Discount\DeliveryDiscountEntity();
             $deliveryDiscountEntity->deleteByFilter([
-                    'UF_FUSER_ID' => $id,
-                    'UF_ORDER_ID' => null
+                'UF_FUSER_ID' => $id,
+                'UF_ORDER_ID' => null
             ]);
         }
     }
