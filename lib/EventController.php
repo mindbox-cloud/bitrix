@@ -377,7 +377,7 @@ class EventController
      * Изменения списка обработчиков.
      * @param $value
      */
-    public function onAfterSetOption($value)
+    public static function onAfterSetOption($value)
     {
         $arEventOptions = explode(',', $value);
         $self = new EventController();
