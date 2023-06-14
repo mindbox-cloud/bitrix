@@ -13,15 +13,12 @@ use Bitrix\Main\Type\DateTime;
 
 class mindbox_marketing extends CModule
 {
-    var $MODULE_ID = "mindbox.marketing";
-    var $MODULE_VERSION;
-    var $MODULE_VERSION_DATE;
-    var $MODULE_NAME;
-    var $MODULE_DESCRIPTION;
-    var $MODULE_CSS;
-    var $PATH;
-
-    var $PATH_INST = "/";
+    public $MODULE_ID = "mindbox.marketing";
+    public $MODULE_VERSION;
+    public $MODULE_VERSION_DATE;
+    public $MODULE_NAME;
+    public $MODULE_DESCRIPTION;
+    public $PATH;
 
     private $userFields = [
         "UF_MINDBOX_ID",
