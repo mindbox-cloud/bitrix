@@ -116,10 +116,11 @@ class Basket
         if ($basketItem->getField('DELAY') === 'Y') {
             $_SESSION['MB_WISHLIST'][$basketItem->getProductId()] = $basketItem;
         } else {
-            if ($basketItem->getField('DELAY') === 'N' && array_key_exists(
-                            $basketItem->getProductId(),
-                            $_SESSION['MB_WISHLIST']
-                    )) {
+            if (
+                    $basketItem->getField('DELAY') === 'N'
+                    && is_array($_SESSION['MB_WISHLIST'])
+                    && array_key_exists($basketItem->getProductId(),$_SESSION['MB_WISHLIST'])
+            ) {
                 unset($_SESSION['MB_WISHLIST'][$basketItem->getProductId()]);
             }
         }
@@ -196,7 +197,7 @@ class Basket
             $customer = Helper::iconvDTO(new CustomerIdentityRequestDTO($fields));
         }
 
-        if (empty($arAllLines) && count($_SESSION['MB_WISHLIST_COUNT'])) {
+        if (empty($arAllLines) && is_array($_SESSION['MB_WISHLIST_COUNT']) && count($_SESSION['MB_WISHLIST_COUNT'])) {
             self::clearWishList();
         }
 
@@ -264,7 +265,7 @@ class Basket
                     new ProductListItemRequestCollection($lines),
                     Options::getOperationName('setWishList')
             )->sendRequest();
-            $_SESSION['MB_WISHLIST_COUNT'] = count($_SESSION['MB_WISHLIST']);
+            $_SESSION['MB_WISHLIST_COUNT'] = is_array($_SESSION['MB_WISHLIST']) ? count($_SESSION['MB_WISHLIST']) : 0;
             self::setCartMindbox($basketItems);
         } catch (Exceptions\MindboxClientErrorException $e) {
             $lastResponse = $mindbox->productList()->getLastResponse();

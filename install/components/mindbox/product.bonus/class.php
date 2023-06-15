@@ -29,7 +29,6 @@ class ProductBonus extends CBitrixComponent implements Controllerable
             }
         } catch (LoaderException $e) {
             ShowError(GetMessage('MB_AUS_MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));
-            ;
             return;
         }
     }

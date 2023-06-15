@@ -8,7 +8,6 @@ use Bitrix\Main\Loader;
 use Bitrix\Main\Entity\Base;
 use Bitrix\Main\Type\DateTime;
 
-// phpcs:disable
 \Bitrix\Main\Localization\Loc::loadMessages(__FILE__);
 
 class mindbox_marketing extends CModule
@@ -444,4 +443,3 @@ class mindbox_marketing extends CModule
         return $this->PATH;
     }
 }
-// phpcs:enable

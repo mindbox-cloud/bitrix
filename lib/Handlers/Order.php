@@ -636,7 +636,7 @@ class Order
         foreach ($ar['properties'] as $arProperty) {
             $arProperty['CODE'] = Helper::sanitizeNamesForMindbox($arProperty['CODE']);
 
-            if (count($arProperty['VALUE']) === 1) {
+            if (is_array($arProperty['VALUE']) && count($arProperty['VALUE']) === 1) {
                 $value = current($arProperty['VALUE']);
             } else {
                 $value = $arProperty['VALUE'];
@@ -1217,7 +1217,7 @@ class Order
 
         foreach ($ar['properties'] as $arProperty) {
             $arProperty['CODE'] = Helper::sanitizeNamesForMindbox($arProperty['CODE']);
-            if (count($arProperty['VALUE']) === 1) {
+            if (is_array($arProperty['VALUE']) && count($arProperty['VALUE']) === 1) {
                 $value = current($arProperty['VALUE']);
             } else {
                 $value = $arProperty['VALUE'];

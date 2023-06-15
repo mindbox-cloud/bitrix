@@ -95,7 +95,7 @@ class Transaction
         self::$instance = null;
     }
 
-    static function getInstance($orderId = false)
+    public static function getInstance($orderId = false)
     {
         if (is_null(self::$instance)) {
             self::$instance = new self($orderId);

@@ -15,8 +15,8 @@ class ProductPrice extends CBitrixComponent implements Controllerable
 {
     const PLACEHOLDER_PRICE_PREFIX = 'MINDBOX_PRICE';
     const PLACEHOLDER_OLD_PRICE_PREFIX = 'MINDBOX_OLD_PRICE';
-    const LABEL_POSITION = 'after'
-    ;
+    const LABEL_POSITION = 'after';
+
     protected $actions = [
         'changeProduct'
     ];
@@ -32,7 +32,6 @@ class ProductPrice extends CBitrixComponent implements Controllerable
             }
         } catch (LoaderException $e) {
             ShowError(GetMessage('MB_AUS_MODULE_NOT_INCLUDED', ['#MODULE#' => 'mindbox.marketing']));
-            ;
             return;
         }
     }
