@@ -272,7 +272,8 @@ class Order
 
             if (Helper::isAdminSection()) {
                 // @info функционал для процессинга в админке. Передаем OnBeforeOrderSaved ошибку применения купона
-                $couponsInfo = reset($preorderInfo->getField('couponsInfo'));
+                $couponsInfo = $preorderInfo->getField('couponsInfo');
+                $couponsInfo = is_array($couponsInfo) ? reset($couponsInfo) : [];
                 $setCouponError = false;
 
                 if ($couponsInfo['coupon']['status'] == 'NotFound') {

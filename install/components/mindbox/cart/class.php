@@ -177,7 +177,7 @@ class Cart extends CBitrixComponent implements Controllerable
             'message' => GetMessage('MB_CART_PROMOCODE_SUCCESS')
         ];
 
-        if (\COption::GetOptionString('mindbox.marketing', 'MODE') != 'standard') {
+        if (\Mindbox\Helper::isLoyaltyMode()) {
             try {
                 if ($USER->IsAuthorized()) {
                     $preorderInfo = $mindbox->order()->calculateAuthorizedCart(
@@ -192,8 +192,8 @@ class Cart extends CBitrixComponent implements Controllerable
                 }
 
                 if ($preorderInfo) {
-                    $discounts = $preorderInfo->getDiscountsInfo();
-                    $couponsInfo = reset($preorderInfo->getField('couponsInfo'));
+                    $couponsInfo = $preorderInfo->getField('couponsInfo');
+                    $couponsInfo = is_array($couponsInfo) ? reset($couponsInfo) : [];
                     $totalBonusPointsInfo = $preorderInfo->getField('totalBonusPointsInfo');
 
                     if (!empty($couponsInfo)) {
@@ -588,7 +588,8 @@ class Cart extends CBitrixComponent implements Controllerable
 
             $discounts = $preorderInfo->getDiscountsInfo();
 
-            $couponsInfo = reset($preorderInfo->getField('couponsInfo'));
+            $couponsInfo = $preorderInfo->getField('couponsInfo');
+            $couponsInfo = is_array($couponsInfo) ? reset($couponsInfo) : [];
             $totalBonusPointsInfo = $preorderInfo->getField('totalBonusPointsInfo');
 
 
@@ -631,8 +632,6 @@ class Cart extends CBitrixComponent implements Controllerable
                 $basketItem->setField('CUSTOM_PRICE', 'N');
                 $basketItem->save();
             }
-
-            //die($e->getMessage());
 
             return;
         }
