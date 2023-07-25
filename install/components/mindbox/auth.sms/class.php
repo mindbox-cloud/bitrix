@@ -67,8 +67,9 @@ class AuthSms extends CBitrixComponent implements Controllerable
         }
 
         $validationErrors = $response->getValidationErrors();
-        if (!empty($validationErrors)) {
-            return Ajax::errorResponse(reset($validationErrors)->getMessage());
+        if (isset($validationErrors)) {
+            $error = $validationErrors->getFieldsAsArray();
+            return Ajax::errorResponse(reset($error)->getMessage());
         }
 
         if ($response->getResult()->getCustomer()->getProcessingStatus() !== 'Found') {
