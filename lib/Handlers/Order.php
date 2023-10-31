@@ -272,7 +272,8 @@ class Order
 
             if (Helper::isAdminSection()) {
                 // @info функционал для процессинга в админке. Передаем OnBeforeOrderSaved ошибку применения купона
-                $couponsInfo = reset($preorderInfo->getField('couponsInfo'));
+                $couponsInfo = $preorderInfo->getField('couponsInfo');
+                $couponsInfo = is_array($couponsInfo) ? reset($couponsInfo) : [];
                 $setCouponError = false;
 
                 if ($couponsInfo['coupon']['status'] == 'NotFound') {
@@ -636,7 +637,7 @@ class Order
         foreach ($ar['properties'] as $arProperty) {
             $arProperty['CODE'] = Helper::sanitizeNamesForMindbox($arProperty['CODE']);
 
-            if (count($arProperty['VALUE']) === 1) {
+            if (is_array($arProperty['VALUE']) && count($arProperty['VALUE']) === 1) {
                 $value = current($arProperty['VALUE']);
             } else {
                 $value = $arProperty['VALUE'];
@@ -1217,7 +1218,7 @@ class Order
 
         foreach ($ar['properties'] as $arProperty) {
             $arProperty['CODE'] = Helper::sanitizeNamesForMindbox($arProperty['CODE']);
-            if (count($arProperty['VALUE']) === 1) {
+            if (is_array($arProperty['VALUE']) && count($arProperty['VALUE']) === 1) {
                 $value = current($arProperty['VALUE']);
             } else {
                 $value = $arProperty['VALUE'];

@@ -72,7 +72,6 @@ class BonusHistory extends CBitrixComponent implements Controllerable
         }
     }
 
-
     /**
      * @param $page
      * @return array
@@ -176,7 +175,8 @@ class BonusHistory extends CBitrixComponent implements Controllerable
 
         try {
             $response = $request->sendRequest()->getResult();
-            $arBalances = reset($response->getBalances()->getFieldsAsArray());
+            $balanceFields = $response->getBalances()->getFieldsAsArray();
+            $arBalances = is_array($balanceFields) ? reset($balanceFields) : [];
             $this->arResult['BALANCE'] = [
                 'available' => $arBalances['available'],
                 'blocked' => $arBalances['blocked']
